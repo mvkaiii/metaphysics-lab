@@ -3,7 +3,7 @@
 - 日期：2026-08-20
 - 對應工作：PR #3
 - Branch：`feature/ziwei-flow-hour-capability`
-- 狀態：Design approved；尚未進入 implementation plan
+- 狀態：聊天室設計已核准；等待書面 spec review，尚未進入 implementation plan
 - 目標 capability：`ziwei.flow_hour_palaces`
 
 ## 一、目的
@@ -207,15 +207,15 @@ core 就視為「初八子時」，不自行改成初九。
 
 ```text
 policy A:
-23:00–23:59 → previous civil date metaphysical day
-00:00–00:59 → current civil date metaphysical day
+23:00–23:59 → 仍使用民用日期所對應的命理日
+00:00–00:59 → 使用當下民用日期所對應的命理日
 ```
 
 或：
 
 ```text
 policy B:
-23:00 起 → next metaphysical day
+23:00 起 → 命理有效日期切換到下一日
 ```
 
 不得只用模糊名稱如「早子派」「晚子派」而沒有明確時間區間與日期歸屬。
@@ -298,7 +298,7 @@ flow_hour_default_routing = false
 hourly_four_transformations_implemented = false
 hourly_flowing_stars_implemented = false
 fine_flying_implemented = false
-calendar_resolver_implemented = false   # 若 PR #3 時仍未有正式 Resolver
+calendar_resolver_implemented = false
 ```
 
 輸出不得冒充 Astralium、iztro 或其他第三方排盤系統直接結果。
@@ -312,7 +312,7 @@ Resolver 不在 PR #3 實作，但 PR #3 必須保持可被它乾淨呼叫。
 ```text
 civil_datetime = 2026-09-18 14:00
 timezone = Asia/Taipei
-ziwei_day_boundary_policy = <versioned policy>
+ziwei_day_boundary_policy = ziwei.day_boundary.v1
 ```
 
 Resolver 的輸出至少應可形成：
@@ -379,15 +379,27 @@ PR #3 在標記 `implemented / experimental / on_demand` 之前，至少必須�
 3. 人工回歸案例。
 4. 至少兩個可信外部來源交叉驗證流時起法。
 
-目前已知第一個可重現來源是 iztro 固定程式版本，其運限實作採等價公式：
+### Source A：iztro 固定程式版本
+
+Metaphysics Lab 對 PR #3 的第一個可重現程式來源固定使用與流日驗證相同的 iztro commit：
+
+```text
+814b77e6371e1050cac31bbf674db3c3138fcfde
+```
+
+該版本運限實作採等價公式：
 
 ```text
 hourlyIndex = fixIndex(dailyIndex + hourBranchIndex)
 ```
 
-實作階段必須 pin 到固定 commit，不得只引用 mutable `main`。
+正式規則文件必須引用固定 commit URL，不得只引用 mutable `main`。
 
-第二個來源必須是獨立於 iztro 的公開排法／文件／可重現輸出，且需在規則文件中標示來源層級。若只有二手資料，可作佐證但不得單獨構成 Stable 充分依據。
+### Source B：獨立外部來源
+
+實作完成前必須再找到至少一個獨立於 iztro 的公開排法、文件或可重現輸出，交叉驗證「流日命宮起子時、每時辰順行一宮」的流時起法，並在 `core/紫微流時推導規則.md` 中標示來源層級。
+
+若 Source B 只有二手資料，可作佐證，但不得被描述成一手程式輸出或 Stable 的充分依據。
 
 若最低兩來源門檻未達成，PR #3 不得把 capability 從 `planned` 提升為可正式調用的 `implemented / experimental`。
 
