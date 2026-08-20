@@ -41,7 +41,7 @@ Metaphysics Lab v1.1 正式版目前納入：
 - 節氣交界警告
 - 問事追蹤與結果驗證制度
 
-v1.2 開發分支另已加入：
+v1.2 開發線另已加入：
 
 - 紫微 capability registry：把「是否已實作」「成熟度」「預設調度」分開管理
 - Project 紫微流日定位：`implemented / experimental / on_demand`
@@ -86,7 +86,7 @@ routing        = default / on_demand
 
 ## v1.2 引擎模組化
 
-目前開發分支已把正式 Python 實作拆成：
+目前開發線已把正式 Python 實作拆成：
 
 ```text
 engine/bazi/   八字正式模組
@@ -102,6 +102,8 @@ engine/project_bazi_calendar.py
 engine/project_ziwei_month.py
 engine/project_ziwei_day.py
 ```
+
+這些 `project_*.py` 保留相容呼叫名稱，但已是薄 wrapper，**不是可獨立執行的單檔引擎**。若要實際執行 Python，必須同時具備對應 package；只複製 wrapper 而缺少 `engine/bazi/` 或 `engine/ziwei/` 會因 import 依賴缺失而失敗。
 
 完整 Python 環境與未來 Skill 可直接使用：
 
@@ -142,12 +144,26 @@ engine/project_bazi_calendar.py
 engine/project_ziwei_month.py
 ```
 
+如果只是讓 AI 閱讀正式入口，上述 wrapper 可作為索引；如果環境要**實際執行**八字／流月 wrapper，還要同步：
+
+```text
+engine/bazi/__init__.py
+engine/bazi/calendar.py
+engine/ziwei/__init__.py
+engine/ziwei/common.py
+engine/ziwei/month.py
+```
+
 若要使用 v1.2 紫微流日 on-demand capability，再同步：
 
 ```text
 core/紫微流日推導規則.md
 engine/project_ziwei_day.py
+engine/ziwei/capabilities.py
+engine/ziwei/day.py
 ```
+
+`project_ziwei_day.py` 同樣依賴 `engine/ziwei/` package，不是獨立單檔。
 
 詳細步驟請看 [安裝到 ChatGPT Project](docs/安裝到ChatGPT-Project.md)。
 
@@ -277,7 +293,7 @@ routing = on_demand
 
 把 `.py` 放進 Project，代表 Project 保存正式算法來源；**不代表每次對話都會自動執行 Python**。
 
-如果 GitHub 的引擎更新，Project 中的 Python 副本也需要同步更新。詳細規則請看 [更新與版本同步](docs/更新與版本同步.md)。
+如果 GitHub 的引擎更新，Project 中的 Python 副本也需要同步更新。若使用 compatibility wrapper 執行程式，wrapper 與其 package 依賴必須保持同版。詳細規則請看 [更新與版本同步](docs/更新與版本同步.md)。
 
 ---
 
