@@ -57,7 +57,7 @@ engine/project_ziwei_month.py
 用途：
 
 - `命理分析作業規範.md`：最高層分析流程與資料治理規則。
-- `命理推導計算規則.md`：八字流年／流月／流日／流時的固定算法與邊界。
+- `命理推導計算規則.md`：八字流年／流月／流日／流時與 Project 細時間 capability 的固定算法與邊界。
 - `紫微流月推導規則.md`：紫微流月斗君、流月命宮、十二宮與月份邊界。
 - `project_bazi_calendar.py`：八字相容入口。
 - `project_ziwei_month.py`：紫微流月相容入口。
@@ -93,12 +93,35 @@ engine/ziwei/month.py
 engine/ziwei/day.py
 ```
 
+### 要使用 v1.2 紫微流時 On-demand Capability
+
+再加入：
+
+```text
+core/紫微流時推導規則.md
+engine/project_ziwei_hour.py
+```
+
+若實際環境要執行流時 wrapper，還必須同時具備同版：
+
+```text
+engine/ziwei/__init__.py
+engine/ziwei/common.py
+engine/ziwei/capabilities.py
+engine/ziwei/month.py
+engine/ziwei/day.py
+engine/ziwei/hour.py
+```
+
+流時 core 採 1.5 架構，只接受已解析的農曆日期與 `hour_branch`。它不自行處理民用 datetime、timezone、DST、國曆轉農曆或 23:00 日界 policy；這些責任留給未來 Calendar / Input Resolver。
+
 完整 Python 環境或未來 Skill 建議直接使用：
 
 ```text
 engine.bazi.calendar
 engine.ziwei.month
 engine.ziwei.day
+engine.ziwei.hour
 engine.ziwei.capabilities
 ```
 
@@ -111,12 +134,15 @@ engine.ziwei.capabilities
 ```text
 紫微流月定位 = implemented / stable / default
 紫微流日定位 = implemented / experimental / on_demand
-紫微流時定位 = planned / on_demand
+紫微流時定位 = implemented / experimental / on_demand
+紫微細部四化／流曜／細層飛化 = planned / on_demand
+Calendar / Input Resolver = planned
+Cross-System Validation = planned
 ```
 
 `on_demand` 的意思是能力可以執行，但一般年度／月份問事不預設跑。
 
-Experimental 流日可以用於指定日期、日期比較與細部驗證，但分析時必須降權，不能單獨支撐高度確信。
+Experimental 流日可用於指定日期、日期比較與細部驗證；Experimental 流時可用於指定時辰、時段比較與 hour-level 細化。兩者分析時都必須降權，不能單獨支撐高度確信。
 
 ### 建議加入的驗證資料
 
@@ -126,6 +152,7 @@ Experimental 流日可以用於指定日期、日期比較與細部驗證，但�
 tests/命理推導測試案例.md
 tests/紫微流月推導測試案例.md
 tests/紫微流日推導測試案例.md
+tests/紫微流時推導測試案例.md
 ```
 
 Python 單元測試主要供開發與回歸使用，不是一般問事的必要檔案。
@@ -171,7 +198,7 @@ Python 單元測試主要供開發與回歸使用，不是一般問事的必要�
 
 原始資料請保留來源名稱與產出日期，不要先自行刪改欄位後再交給 Project。
 
-第三方排盤直接提供的內容屬於「原始盤面事實」；Metaphysics Lab 自己計算的流月、流日等屬於「Project 推導盤面」，兩者不得混稱。
+第三方排盤直接提供的內容屬於「原始盤面事實」；Metaphysics Lab 自己計算的流月、流日、流時等屬於「Project 推導盤面」，兩者不得混稱。
 
 ---
 
@@ -213,15 +240,17 @@ Python 單元測試主要供開發與回歸使用，不是一般問事的必要�
 
 ---
 
-## 八、從 v1.1 升到 v1.2 流日 Capability
+## 八、從 v1.1 升到 v1.2 細時間 Capability
 
-如果原本 Project 已有 v1.1 流月能力，要加入紫微流日，至少同步：
+如果原本 Project 已有 v1.1 流月能力，要加入紫微流日與流時，至少同步：
 
 ```text
 core/紫微流月推導規則.md
 core/紫微流日推導規則.md
+core/紫微流時推導規則.md
 engine/project_ziwei_month.py
 engine/project_ziwei_day.py
+engine/project_ziwei_hour.py
 ```
 
 若需要在 Python 環境實際執行，再同步：
@@ -232,15 +261,17 @@ engine/ziwei/common.py
 engine/ziwei/capabilities.py
 engine/ziwei/month.py
 engine/ziwei/day.py
+engine/ziwei/hour.py
 ```
 
-並更新 Project Instructions 使用最新版 `core/核心提示詞.md`（若該檔在正式 release 有變更）。
+並更新 Project Instructions 使用最新版 `core/核心提示詞.md`。
 
 完成後 Project 應知道：
 
 - 紫微流月：Stable / Default。
 - 紫微流日：Experimental / On-demand，可執行但不預設跑。
-- 紫微流時、細部四化、流曜、飛化：尚未實作。
+- 紫微流時：Experimental / On-demand，可執行但不預設跑。
+- 流時四化、流曜、飛化、Calendar Resolver：尚未實作。
 
 ---
 
