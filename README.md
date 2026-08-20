@@ -47,11 +47,14 @@ v1.2 開發線另已加入：
 - Project 紫微流日定位：`implemented / experimental / on_demand`
 - 流日命宮與流日十二宮重排
 - 紫微流日自動測試、人工回歸與外部來源交叉校驗紀錄
+- Project 紫微流時定位：`implemented / experimental / on_demand`
+- 流時命宮與流時十二宮重排
+- 紫微流時自動測試、人工回歸與外部來源交叉校驗紀錄
 
 目前尚未具備：
 
-- 紫微流時 Project 推導
 - 紫微細部四化／流曜／細層飛化
+- Calendar / Input Resolver
 - Cross-System Validation 正式引擎
 - 完整 Project 干支互動引擎
 - 奇門自動排盤引擎
@@ -75,7 +78,7 @@ routing        = default / on_demand
 ```text
 紫微流月定位 = implemented / stable / default
 紫微流日定位 = implemented / experimental / on_demand
-紫微流時定位 = planned / on_demand
+紫微流時定位 = implemented / experimental / on_demand
 ```
 
 `On-demand` 的意思是：**Python 已經能執行，但一般問題不預設跑；只有需要提高解析度時才調用。**
@@ -101,6 +104,7 @@ engine/ziwei/  紫微正式模組
 engine/project_bazi_calendar.py
 engine/project_ziwei_month.py
 engine/project_ziwei_day.py
+engine/project_ziwei_hour.py
 ```
 
 這些 `project_*.py` 保留相容呼叫名稱，但已是薄 wrapper，**不是可獨立執行的單檔引擎**。若要實際執行 Python，必須同時具備對應 package；只複製 wrapper 而缺少 `engine/bazi/` 或 `engine/ziwei/` 會因 import 依賴缺失而失敗。
@@ -111,6 +115,7 @@ engine/project_ziwei_day.py
 engine.bazi.calendar
 engine.ziwei.month
 engine.ziwei.day
+engine.ziwei.hour
 engine.ziwei.capabilities
 ```
 
@@ -164,6 +169,20 @@ engine/ziwei/day.py
 ```
 
 `project_ziwei_day.py` 同樣依賴 `engine/ziwei/` package，不是獨立單檔。
+
+若要使用 v1.2 紫微流時 on-demand capability，再同步：
+
+```text
+core/紫微流時推導規則.md
+engine/project_ziwei_hour.py
+engine/ziwei/hour.py
+engine/ziwei/day.py
+engine/ziwei/month.py
+engine/ziwei/common.py
+engine/ziwei/capabilities.py
+```
+
+`project_ziwei_hour.py` 同樣依賴同版 `engine/ziwei/` package，不是獨立單檔。一般問題不預設跑流時；只有指定時辰、時段比較或需要 hour-level precision 時才按需調用。
 
 詳細步驟請看 [安裝到 ChatGPT Project](docs/安裝到ChatGPT-Project.md)。
 
@@ -285,7 +304,35 @@ routing = on_demand
 
 時按需調用。
 
-目前流日只做命宮與十二宮定位；流日四化、流曜、流時與細層飛化仍是後續 capability。
+目前流日只做命宮與十二宮定位；流日四化、流曜與細層飛化仍是後續 capability。
+
+## 紫微流時
+
+正式模組：
+
+`engine/ziwei/hour.py`
+
+相容入口：
+
+`engine/project_ziwei_hour.py`
+
+規則：
+
+`core/紫微流時推導規則.md`
+
+目前狀態：
+
+```text
+implementation = implemented
+maturity = experimental
+routing = on_demand
+```
+
+固定定位法：先取得流日命宮，以流日命宮起子時，之後每個時辰順行一宮。
+
+流時 core 只接受已解析的農曆日期與 `hour_branch`，不自行處理國曆轉農曆、timezone、DST 或 23:00 日界。一般問題不預設遍歷十二時辰；只在指定時辰、時段比較或確實需要提高到時辰解析度時按需調用。
+
+目前流時只做命宮與十二宮定位；流時天干、流時四化、流曜、細層飛化與 Calendar / Input Resolver 仍是後續 capability / infrastructure。
 
 ---
 
