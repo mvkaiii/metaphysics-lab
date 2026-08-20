@@ -102,7 +102,8 @@ def project_derived_ziwei_day(
         "features": {
             "flow_day_implemented": True,
             "flow_day_default_routing": False,
-            "flow_hour_implemented": False,
+            "flow_hour_implemented": True,
+            "flow_hour_default_routing": False,
             "daily_four_transformations_implemented": False,
             "daily_flowing_stars_implemented": False,
             "fine_flying_implemented": False,
