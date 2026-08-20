@@ -1,5 +1,47 @@
 # 變更紀錄
 
+## 未發布｜v1.2 引擎重構準備
+
+### 引擎模組化
+
+- 八字正式實作拆入 `engine/bazi/`。
+- 紫微流月正式實作拆入 `engine/ziwei/`。
+- 紫微共用地支、十二宮與輸入驗證集中於 `engine/ziwei/common.py`。
+- 新增 `tests/test_engine_module_layout.py`，驗證新模組路徑與既有相容入口結果一致。
+- `engine/project_bazi_calendar.py` 與 `engine/project_ziwei_month.py` 保留為 compatibility wrapper。
+
+### 相容性
+
+- 一般 ChatGPT Project 仍可繼續使用兩支 `project_*.py`，不需要因內部重構立即改檔名。
+- 完整 Python 環境與未來 Skill 可改用 `engine.bazi`、`engine.ziwei` package。
+- 本次只重構模組，不改變八字流年／流月／流日／流時算法，也不改變紫微流月斗君與閏月規則。
+
+### v1.2 capability 方向
+
+- 紫微細部能力改採「是否已實作、成熟度、預設調度」三軸管理，不再只用 enabled / disabled 二元表示。
+- 後續流日、流時、細部四化、流曜與細層飛化都以可重現 Python 實作、測試與外部校驗為前提。
+- 通過最低驗證門檻後，可成為 `Experimental / On-demand` 能力；驗證充分後再升為 `Stable`。
+- On-demand 代表能力已存在且可執行，但平常不預設跑；只有細看日期／時段、比較候選時間、處理跨系統衝突或使用者明確要求時才調用。
+- Experimental 能力可以執行與累積驗證，但分析權重較低，不得單獨支撐高確信結論。
+
+### 證據權重
+
+- v1.2 採質性證據階層，不先設定八字／紫微或 Stable／Experimental 的任意固定百分比。
+- 正式判斷同時考慮資料品質、capability 成熟度、問題時間層級、跨系統一致度與第二階段個人事件校準。
+- Stable 且對應問題時間粒度者可作主要證據；較細 Stable 層主要用於細化；Experimental 必須降權；Planned／未實作／未達最低驗證門檻者不得進入正式權重判斷。
+- 更細時間層不能在沒有充分理由時無條件推翻較高層主軸；若問題本身提升到特定日期或時段，對應流日／流時才可成為主要時間證據。
+- 第二階段事件校準可以調整個人化可信度，但不得改寫第一階段盲判、原始盤面或正式算法。
+- 未來若累積足夠追蹤與 Issue 可重現案例，數值權重必須由版本化 calibration model 與實證資料估計，不得憑直覺指定。
+
+### 本 PR 尚未實作
+
+- 紫微流日算法。
+- 紫微流時算法。
+- 紫微細部四化、流曜與細層飛化算法。
+- Cross-System Validation 正式引擎。
+
+以上是後續 capability PR 的目標，不代表 Metaphysics Lab 的終局設計要排除這些能力。
+
 ## v1.1.0｜2026-08-20
 
 ### 新增
