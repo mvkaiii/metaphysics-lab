@@ -21,3 +21,13 @@ def validate_day(day: int) -> None:
 def validate_branch(branch: str) -> None:
     if branch not in ZHI:
         raise ValueError("地支必須為：" + "、".join(ZHI))
+
+
+def palaces_from_ming_branch(ming_branch: str) -> dict[str, str]:
+    """以指定命宮地支重排十二宮。"""
+    validate_branch(ming_branch)
+    ming_idx = ZHI.index(ming_branch)
+    return {
+        palace: ZHI[(ming_idx - offset) % 12]
+        for offset, palace in enumerate(PALACE_NAMES)
+    }

@@ -1,6 +1,6 @@
 # 安裝到 ChatGPT Project
 
-本文件說明如何把 Metaphysics Lab 的共用核心安裝到一個新的 ChatGPT Project，並與私人命盤資料分開管理。
+本文件說明如何把 Metaphysics Lab 的共用核心安裝到新的 ChatGPT Project，並與私人命盤資料分開管理。
 
 核心原則：
 
@@ -12,7 +12,7 @@ GitHub 更新不應直接覆蓋命主私人資料。
 
 ## 一、建立新的 ChatGPT Project
 
-先建立一個新的 ChatGPT Project。建議一位主要命主使用一個獨立 Project，或至少在 Project 內用明確檔名區分不同命主。
+先建立新的 ChatGPT Project。建議一位主要命主使用一個獨立 Project，或至少在 Project 內用明確檔名區分不同命主。
 
 不要把多人命盤混在同一組未標示的檔案中。
 
@@ -42,9 +42,9 @@ GitHub 更新不應直接覆蓋命主私人資料。
 
 ## 三、上傳正式規則與引擎
 
-### 一般 ChatGPT Project：保留相容入口，但注意 package 依賴
+### 基礎安裝：保留相容入口，但注意 package 依賴
 
-Project 基礎建議加入：
+一般 Project 基礎建議加入：
 
 ```text
 core/命理分析作業規範.md
@@ -59,10 +59,10 @@ engine/project_ziwei_month.py
 - `命理分析作業規範.md`：最高層分析流程與資料治理規則。
 - `命理推導計算規則.md`：八字流年／流月／流日／流時的固定算法與邊界。
 - `紫微流月推導規則.md`：紫微流月斗君、流月命宮、十二宮與月份邊界。
-- `project_bazi_calendar.py`：八字引擎相容入口。
-- `project_ziwei_month.py`：紫微流月引擎相容入口。
+- `project_bazi_calendar.py`：八字相容入口。
+- `project_ziwei_month.py`：紫微流月相容入口。
 
-v1.2 重構後，正式實作已拆到：
+v1.2 模組化後，wrapper 已不是可獨立執行的單檔引擎。若只是讓 AI 閱讀正式入口，可以把 wrapper 當作入口索引；若環境要**實際執行**八字／流月 wrapper，還必須同步：
 
 ```text
 engine/bazi/__init__.py
@@ -72,11 +72,51 @@ engine/ziwei/common.py
 engine/ziwei/month.py
 ```
 
-兩支 `project_*.py` 會保留作 compatibility wrapper，所以既有呼叫名稱不需要改；但 **wrapper 已不是可獨立執行的單檔引擎**。
+只放 `project_bazi_calendar.py` 或 `project_ziwei_month.py` 而缺少 package，實際執行會因 import 依賴缺失而失敗。
 
-如果只是把 `.py` 當作正式算法來源讓 AI 閱讀，保留 wrapper 作入口索引即可；如果當次環境要**實際執行** wrapper，必須同時具備上列 package 依賴。只放 `project_bazi_calendar.py` 或 `project_ziwei_month.py` 而缺少 `engine/bazi/`、`engine/ziwei/`，執行時會出現 `ModuleNotFoundError`。
+### 要使用 v1.2 紫微流日 On-demand Capability
 
-完整 Python 環境、未來 Skill 或開發測試環境，建議直接使用 `engine.bazi` 與 `engine.ziwei` package。
+再加入：
+
+```text
+core/紫微流日推導規則.md
+engine/project_ziwei_day.py
+```
+
+若實際環境要**執行**這支薄 wrapper，而不只是讓 AI 閱讀正式入口，還必須同時具備：
+
+```text
+engine/ziwei/__init__.py
+engine/ziwei/common.py
+engine/ziwei/capabilities.py
+engine/ziwei/month.py
+engine/ziwei/day.py
+```
+
+完整 Python 環境或未來 Skill 建議直接使用：
+
+```text
+engine.bazi.calendar
+engine.ziwei.month
+engine.ziwei.day
+engine.ziwei.capabilities
+```
+
+不要把 `project_*.py` 薄 wrapper 誤認為完全獨立、無依賴的單檔引擎；wrapper 與 package 應保持同版。
+
+### Capability 語意
+
+目前 v1.2 開發線：
+
+```text
+紫微流月定位 = implemented / stable / default
+紫微流日定位 = implemented / experimental / on_demand
+紫微流時定位 = planned / on_demand
+```
+
+`on_demand` 的意思是能力可以執行，但一般年度／月份問事不預設跑。
+
+Experimental 流日可以用於指定日期、日期比較與細部驗證，但分析時必須降權，不能單獨支撐高度確信。
 
 ### 建議加入的驗證資料
 
@@ -85,11 +125,10 @@ engine/ziwei/month.py
 ```text
 tests/命理推導測試案例.md
 tests/紫微流月推導測試案例.md
+tests/紫微流日推導測試案例.md
 ```
 
-這兩份文件讓 AI 知道正式算法曾用哪些案例驗證，也方便之後排查結果差異。
-
-`tests/test_project_bazi_calendar.py`、`tests/test_project_ziwei_month.py` 與 `tests/test_engine_module_layout.py` 是開發與回歸測試用途，不是一般問事的必要檔案。
+Python 單元測試主要供開發與回歸使用，不是一般問事的必要檔案。
 
 ---
 
@@ -149,6 +188,7 @@ tests/紫微流月推導測試案例.md
 - 紫微十二宮、大限、流年等資料是否可讀
 - 是否有不同來源的時間口徑差異
 - 哪些欄位是原始來源，哪些是 Project 推導
+- v1.2 capability registry 是否能區分 Stable / Experimental / Planned 與 Default / On-demand
 
 確認完成後，再建立 `命盤核心摘要.md`。
 
@@ -164,28 +204,43 @@ tests/紫微流月推導測試案例.md
 
 因此回答中若宣稱「程式已計算」「測試已通過」，必須真的有執行證據。
 
-另外要區分「入口名稱相容」與「單檔可執行」：v1.2 的 `project_*.py` 保留舊入口名稱，但執行時會載入 package 內的正式實作，所以 wrapper 與 package 應保持同一版本。
+同樣地：
+
+- `implemented` 代表程式能力存在。
+- `on_demand` 代表不預設執行。
+- 兩者不能混為一談。
+- `project_*.py` 保留相容入口名稱，不代表單檔可執行；執行時會載入 package 內正式實作。
 
 ---
 
-## 八、目前 v1.1 必須同步的紫微檔案
+## 八、從 v1.1 升到 v1.2 流日 Capability
 
-若 Project 是從 v1.0 建立，現在至少要新增／更新：
+如果原本 Project 已有 v1.1 流月能力，要加入紫微流日，至少同步：
 
 ```text
-core/命理分析作業規範.md
-core/命理推導計算規則.md
 core/紫微流月推導規則.md
+core/紫微流日推導規則.md
 engine/project_ziwei_month.py
+engine/project_ziwei_day.py
 ```
 
-並更新 Project Instructions 使用最新版 `core/核心提示詞.md`。
+若需要在 Python 環境實際執行，再同步：
 
-若 Project 只用這些檔案作知識來源，可以繼續保留相容入口名稱；若要在 Python 環境中執行 v1.2 wrapper，還要同步對應的 `engine/ziwei/` package 檔案。
+```text
+engine/ziwei/__init__.py
+engine/ziwei/common.py
+engine/ziwei/capabilities.py
+engine/ziwei/month.py
+engine/ziwei/day.py
+```
 
-否則 Project 可能仍回答「紫微流月尚未啟用」，或在執行 wrapper 時因 package 缺失而失敗。
+並更新 Project Instructions 使用最新版 `core/核心提示詞.md`（若該檔在正式 release 有變更）。
 
-v1.2 的模組化重構只改內部 Python 結構，**不會自動啟用紫微流日或流時**。
+完成後 Project 應知道：
+
+- 紫微流月：Stable / Default。
+- 紫微流日：Experimental / On-demand，可執行但不預設跑。
+- 紫微流時、細部四化、流曜、飛化：尚未實作。
 
 ---
 
