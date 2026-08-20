@@ -1,6 +1,6 @@
 # 變更紀錄
 
-## 未發布｜v1.2 引擎重構與流日 capability
+## 未發布｜v1.2 引擎重構與細時間 capability
 
 ### 引擎模組化
 
@@ -8,11 +8,11 @@
 - 紫微流月正式實作拆入 `engine/ziwei/`。
 - 紫微共用地支、十二宮與輸入驗證集中於 `engine/ziwei/common.py`。
 - 新增 `tests/test_engine_module_layout.py`，驗證新模組路徑與既有相容入口結果一致。
-- `engine/project_bazi_calendar.py` 與 `engine/project_ziwei_month.py` 保留為 compatibility wrapper。
+- `engine/project_bazi_calendar.py`、`engine/project_ziwei_month.py`、`engine/project_ziwei_day.py` 與 `engine/project_ziwei_hour.py` 保留為 compatibility wrapper。
 
 ### 相容性
 
-- 一般 ChatGPT Project 仍可繼續使用兩支 `project_*.py`，不需要因內部重構立即改檔名。
+- 一般 ChatGPT Project 可繼續使用 `project_*.py` 相容入口，不需要因內部重構立即改變呼叫方式。
 - 完整 Python 環境與未來 Skill 可改用 `engine.bazi`、`engine.ziwei` package。
 - 模組化重構不改變既有八字流年／流月／流日／流時算法，也不改變紫微流月斗君與閏月規則。
 
@@ -30,9 +30,21 @@
 - 流日十二宮與流月共用 `palaces_from_ming_branch()`，避免宮位方向重複實作。
 - 新增 `core/紫微流日推導規則.md`，記錄算法、輸入邊界、閏月 convention、外部來源與升級門檻。
 - 新增 `tests/test_project_ziwei_day.py`、`tests/test_ziwei_capabilities.py`、`tests/test_ziwei_package_exports.py` 與人工回歸案例。
-- 流日一般公式已對照 iztro 公開安星訣／現行程式，以及其他獨立公開排法資料。
+- 流日一般公式已對照 iztro 公開安星訣／固定程式，以及其他獨立公開排法資料。
 - 閏月後半採 Project 既有拆半規則，先解析有效流月，再以實際農曆日數推流日；此細節先維持 Experimental。
 - 流月結構化輸出保留 `flow_day_enabled = false` 表示「本次流月預設路徑不跑流日」，並新增 `flow_day_available_on_demand = true` 避免誤解為能力不存在。
+
+### PR #3：紫微流時 capability
+
+- 新增 `engine/ziwei/hour.py`，固定「流日命宮起子時、每時辰順行一宮」的流時命宮定位。
+- 新增 `engine/project_ziwei_hour.py` 相容入口。
+- `ziwei.flow_hour_palaces` 第一版狀態：`implemented / experimental / on_demand`，rule version `1.0-exp`。
+- 流時十二宮直接共用 `palaces_from_ming_branch()`，不複製另一套宮位方向算法。
+- 新增 `core/紫微流時推導規則.md` 與 `tests/紫微流時推導測試案例.md`。
+- 外部驗證使用 iztro 固定 commit `814b77e6371e1050cac31bbf674db3c3138fcfde`，並以獨立公開文字排法交叉支持核心起法。
+- 採 1.5 架構：flow-hour core 只接受已確認農曆日期與 `hour_branch`；民用 datetime、timezone、DST、國曆轉農曆與 23:00 日界 policy 留給未來 Calendar / Input Resolver。
+- flow-day structured output 現在明確標示 `flow_hour_implemented = true`、`flow_hour_default_routing = false`，避免把 on-demand 誤讀成能力不存在。
+- 流時天干、流時四化、流曜、細層飛化與 Cross-System Validation 不在本 PR。
 
 ### 證據權重
 
@@ -45,11 +57,11 @@
 
 ### 後續尚未實作
 
-- 紫微流時算法。
+- Calendar / Input Resolver。
 - 紫微細部四化、流曜與細層飛化算法。
 - Cross-System Validation 正式引擎。
 
-以上是後續 capability PR 的目標，不代表 Metaphysics Lab 的終局設計要排除這些能力。
+以上是後續 capability / infrastructure PR 的目標，不代表 Metaphysics Lab 的終局設計要排除這些能力。
 
 ## v1.1.0｜2026-08-20
 

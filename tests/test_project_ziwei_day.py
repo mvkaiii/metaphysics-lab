@@ -32,7 +32,8 @@ class ZiweiDayTests(unittest.TestCase):
         self.assertEqual(result["capability"]["routing"], "on_demand")
         self.assertEqual(result["flow_month_ming_branch"], "卯")
         self.assertEqual(result["flow_day_ming_branch"], "辰")
-        self.assertFalse(result["features"]["flow_hour_implemented"])
+        self.assertTrue(result["features"]["flow_hour_implemented"])
+        self.assertFalse(result["features"]["flow_hour_default_routing"])
         self.assertFalse(result["features"]["daily_four_transformations_implemented"])
         self.assertFalse(result["features"]["daily_flowing_stars_implemented"])
 
