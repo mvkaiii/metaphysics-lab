@@ -1,5 +1,28 @@
 # 變更紀錄
 
+## 未發布｜v1.2 引擎重構準備
+
+### 引擎模組化
+
+- 八字正式實作拆入 `engine/bazi/`。
+- 紫微流月正式實作拆入 `engine/ziwei/`。
+- 紫微共用地支、十二宮與輸入驗證集中於 `engine/ziwei/common.py`。
+- 新增 `tests/test_engine_module_layout.py`，驗證新模組路徑與既有相容入口結果一致。
+- `engine/project_bazi_calendar.py` 與 `engine/project_ziwei_month.py` 保留為 compatibility wrapper。
+
+### 相容性
+
+- 一般 ChatGPT Project 仍可繼續使用兩支 `project_*.py`，不需要因內部重構立即改檔名。
+- 完整 Python 環境與未來 Skill 可改用 `engine.bazi`、`engine.ziwei` package。
+- 本次只重構模組，不改變八字流年／流月／流日／流時算法，也不改變紫微流月斗君與閏月規則。
+
+### 仍未啟用
+
+- 紫微流日。
+- 紫微流時。
+- Cross-System Validation 正式引擎。
+- 紫微流月四化、流曜與細層飛化。
+
 ## v1.1.0｜2026-08-20
 
 ### 新增
