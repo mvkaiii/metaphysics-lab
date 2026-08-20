@@ -1,29 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""MingStack - Project Bazi Calendar Engine v1.0.0
+"""Metaphysics Lab - Project Bazi Calendar Engine v1.0.0。
 
-自包含的八字時間推導參考實作。
-
-範圍：
-- 以立春作為流年切換
-- 以十二節作為流月切換並套用五虎遁
-- 以 Julian Day Number 對應流日
-- 23:00 換日
-- 以五鼠遁推導流時
-- 天干十神映射
-
-重要：
-- 本程式輸出屬於 Project 推導盤面，不是 Astralium 輸出。
-- 節氣時間使用簡化太陽視黃經近似公式，適合一般流月判定；若目標時間距離節氣交界 15 分鐘內，應再用權威星曆覆核。
-- 不需要第三方 Python 套件。
+八字流年、流月、流日、流時與天干十神的正式 Project 推導模組。
 """
-
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
 import argparse
 import json
 import math
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 ENGINE_NAME = "Project Bazi Calendar Engine"
@@ -34,28 +20,16 @@ SOLAR_TERM_BOUNDARY_CAUTION_MINUTES = 15
 
 GAN = tuple("甲乙丙丁戊己庚辛壬癸")
 ZHI = tuple("子丑寅卯辰巳午未申酉戌亥")
-
 JIE = (
-    ("小寒", 285.0, 1, 5),
-    ("立春", 315.0, 2, 4),
-    ("驚蟄", 345.0, 3, 5),
-    ("清明", 15.0, 4, 5),
-    ("立夏", 45.0, 5, 5),
-    ("芒種", 75.0, 6, 6),
-    ("小暑", 105.0, 7, 7),
-    ("立秋", 135.0, 8, 7),
-    ("白露", 165.0, 9, 7),
-    ("寒露", 195.0, 10, 8),
-    ("立冬", 225.0, 11, 7),
-    ("大雪", 255.0, 12, 7),
+    ("小寒", 285.0, 1, 5), ("立春", 315.0, 2, 4), ("驚蟄", 345.0, 3, 5),
+    ("清明", 15.0, 4, 5), ("立夏", 45.0, 5, 5), ("芒種", 75.0, 6, 6),
+    ("小暑", 105.0, 7, 7), ("立秋", 135.0, 8, 7), ("白露", 165.0, 9, 7),
+    ("寒露", 195.0, 10, 8), ("立冬", 225.0, 11, 7), ("大雪", 255.0, 12, 7),
 )
 JIE_MAP = {name: (lon, month, day) for name, lon, month, day in JIE}
-
 STEM_INFO = {
-    "甲": ("木", True), "乙": ("木", False),
-    "丙": ("火", True), "丁": ("火", False),
-    "戊": ("土", True), "己": ("土", False),
-    "庚": ("金", True), "辛": ("金", False),
+    "甲": ("木", True), "乙": ("木", False), "丙": ("火", True), "丁": ("火", False),
+    "戊": ("土", True), "己": ("土", False), "庚": ("金", True), "辛": ("金", False),
     "壬": ("水", True), "癸": ("水", False),
 }
 GENERATES = {"木": "火", "火": "土", "土": "金", "金": "水", "水": "木"}
@@ -88,11 +62,7 @@ def _jd_from_datetime(dt: datetime) -> float:
         m += 12
     a = y // 100
     b = 2 - a + a // 4
-    return (
-        math.floor(365.25 * (y + 4716))
-        + math.floor(30.6001 * (m + 1))
-        + d + b - 1524.5
-    )
+    return math.floor(365.25 * (y + 4716)) + math.floor(30.6001 * (m + 1)) + d + b - 1524.5
 
 
 def _datetime_from_jd(jd: float) -> datetime:
@@ -112,8 +82,7 @@ def _datetime_from_jd(jd: float) -> datetime:
     year = c - 4716 if month > 2 else c - 4715
     day = int(day_float)
     seconds = round((day_float - day) * 86400)
-    base = datetime(year, month, day, tzinfo=timezone.utc)
-    return base + timedelta(seconds=seconds)
+    return datetime(year, month, day, tzinfo=timezone.utc) + timedelta(seconds=seconds)
 
 
 def _sun_apparent_longitude(jd: float) -> float:
@@ -143,7 +112,6 @@ def solar_term_time(year: int, term: str, tz: str | ZoneInfo = "Asia/Taipei") ->
     center_local = datetime(year, month, day_guess, 12, 0, tzinfo=zone)
     lo = _jd_from_datetime(center_local - timedelta(days=3))
     hi = _jd_from_datetime(center_local + timedelta(days=3))
-
     step = 1.0 / 24.0
     x0 = lo
     f0 = _angle_diff(_sun_apparent_longitude(x0), target)
@@ -158,12 +126,10 @@ def solar_term_time(year: int, term: str, tz: str | ZoneInfo = "Asia/Taipei") ->
         x += step
     if bracket is None:
         raise BaziCalendarError(f"找不到 {year} {term} 的太陽黃經交點")
-
     a, b = bracket
     for _ in range(60):
         mid = (a + b) / 2.0
-        fm = _angle_diff(_sun_apparent_longitude(mid), target)
-        if fm >= 0:
+        if _angle_diff(_sun_apparent_longitude(mid), target) >= 0:
             b = mid
         else:
             a = mid
@@ -183,16 +149,13 @@ def flow_year_pillar(dt: datetime) -> str:
 
 def _month_index(dt: datetime) -> int:
     _require_aware(dt)
-    zone = dt.tzinfo
-    boundaries = [(name, solar_term_time(dt.year, name, zone)) for name, *_ in JIE]  # type: ignore[arg-type]
-
+    boundaries = [(name, solar_term_time(dt.year, name, dt.tzinfo)) for name, *_ in JIE]  # type: ignore[arg-type]
     latest_pos = None
     for pos, (_, boundary) in enumerate(boundaries):
         if dt >= boundary:
             latest_pos = pos
         else:
             break
-
     if latest_pos is None:
         return 10
     if latest_pos == 0:
@@ -202,30 +165,24 @@ def _month_index(dt: datetime) -> int:
 
 def flow_month_pillar(dt: datetime) -> str:
     _require_aware(dt)
-    year_pillar = flow_year_pillar(dt)
-    year_gan_idx = GAN.index(year_pillar[0])
+    year_gan_idx = GAN.index(flow_year_pillar(dt)[0])
     month_idx = _month_index(dt)
     start_gan_idx = ((year_gan_idx % 5) * 2 + 2) % 10
-    gan_idx = (start_gan_idx + month_idx) % 10
-    zhi_idx = (2 + month_idx) % 12
-    return GAN[gan_idx] + ZHI[zhi_idx]
+    return GAN[(start_gan_idx + month_idx) % 10] + ZHI[(2 + month_idx) % 12]
 
 
 def day_pillar(dt: datetime) -> str:
     _require_aware(dt)
     effective = dt + timedelta(days=1) if dt.hour >= 23 else dt
-    jdn = _gregorian_jdn(effective.year, effective.month, effective.day)
-    offset = jdn - 11
+    offset = _gregorian_jdn(effective.year, effective.month, effective.day) - 11
     return GAN[offset % 10] + ZHI[offset % 12]
 
 
 def time_pillar(dt: datetime) -> str:
     _require_aware(dt)
-    day = day_pillar(dt)
-    day_gan_idx = GAN.index(day[0])
+    day_gan_idx = GAN.index(day_pillar(dt)[0])
     zhi_idx = ((dt.hour + 1) // 2) % 12
-    gan_idx = (day_gan_idx % 5 * 2 + zhi_idx) % 10
-    return GAN[gan_idx] + ZHI[zhi_idx]
+    return GAN[(day_gan_idx % 5 * 2 + zhi_idx) % 10] + ZHI[zhi_idx]
 
 
 def bazi_pillars(dt: datetime) -> tuple[str, str, str, str]:
@@ -238,7 +195,6 @@ def ten_god(day_master: str, target_stem: str) -> str:
     dm_elem, dm_yang = STEM_INFO[day_master]
     tg_elem, tg_yang = STEM_INFO[target_stem]
     same_polarity = dm_yang == tg_yang
-
     if tg_elem == dm_elem:
         return "比肩" if same_polarity else "劫財"
     if GENERATES[dm_elem] == tg_elem:
@@ -268,10 +224,7 @@ def _boundary_warning(dt: datetime) -> dict | None:
         "term": name,
         "computed_boundary": boundary.isoformat(),
         "distance_minutes": round(delta_minutes, 3),
-        "reason": (
-            f"目標時間距 Project 計算的{name}交界少於 "
-            f"{SOLAR_TERM_BOUNDARY_CAUTION_MINUTES} 分鐘；請用權威節氣資料交叉確認。"
-        ),
+        "reason": f"目標時間距 Project 計算的{name}交界少於 {SOLAR_TERM_BOUNDARY_CAUTION_MINUTES} 分鐘；請用權威節氣資料交叉確認。",
     }
 
 
@@ -294,18 +247,14 @@ def project_derived(dt: datetime, day_master: str | None = None) -> dict:
     }
     if day_master:
         result["ten_gods"] = {
-            "year": ten_god(day_master, year[0]),
-            "month": ten_god(day_master, month[0]),
-            "day": ten_god(day_master, day[0]),
-            "time": ten_god(day_master, time[0]),
+            "year": ten_god(day_master, year[0]), "month": ten_god(day_master, month[0]),
+            "day": ten_god(day_master, day[0]), "time": ten_god(day_master, time[0]),
         }
     return result
 
 
 def _parse_datetime(value: str, tz_name: str) -> datetime:
-    zone = ZoneInfo(tz_name)
-    naive = datetime.strptime(value, "%Y-%m-%d %H:%M")
-    return naive.replace(tzinfo=zone)
+    return datetime.strptime(value, "%Y-%m-%d %H:%M").replace(tzinfo=ZoneInfo(tz_name))
 
 
 def main() -> None:
