@@ -50,6 +50,30 @@ Metaphysics Lab v1.1 目前正式納入：
 
 ---
 
+## v1.2 引擎重構準備
+
+目前開發分支已把正式 Python 實作拆成兩套模組：
+
+```text
+engine/bazi/   八字正式模組
+engine/ziwei/  紫微正式模組
+```
+
+八字與紫微維持不同曆法與推導邏輯，不混寫在同一支 Python。
+
+既有入口仍保留：
+
+```text
+engine/project_bazi_calendar.py
+engine/project_ziwei_month.py
+```
+
+這兩支檔案現在是 compatibility wrapper（相容入口）。既有 ChatGPT Project 不需要因內部重構立即改檔名；一般使用者仍可同步這兩支檔案。新模組路徑主要提供後續 Skill、完整 Python 環境與開發測試使用。
+
+本次重構**不代表**紫微流日、流時或 Cross-System Validation 已啟用。
+
+---
+
 ## 最短建置流程
 
 ### 1. 建立命盤資料
@@ -106,11 +130,13 @@ engine/project_ziwei_month.py
 ## 目錄
 
 ```text
-core/       核心規範、推導規則、系統提示詞
-engine/     可執行的八字與紫微流月推導引擎
-tests/      自動測試與人工回歸測試紀錄
-templates/  新命主建立私人 Case 時使用的空白模板
-docs/       安裝、資料準備、更新、架構與資料治理說明
+core/           核心規範、推導規則、系統提示詞
+engine/bazi/    八字正式 Python 模組
+engine/ziwei/   紫微正式 Python 模組
+engine/*.py     既有相容入口
+tests/          自動測試與人工回歸測試紀錄
+templates/      新命主建立私人 Case 時使用的空白模板
+docs/           安裝、資料準備、更新、架構與資料治理說明
 ```
 
 ## 重要邊界
@@ -123,7 +149,11 @@ docs/       安裝、資料準備、更新、架構與資料治理說明
 
 ## 八字時間推導
 
-正式程式：
+正式模組：
+
+`engine/bazi/calendar.py`
+
+相容入口：
 
 `engine/project_bazi_calendar.py`
 
@@ -135,7 +165,11 @@ docs/       安裝、資料準備、更新、架構與資料治理說明
 
 ## 紫微流月
 
-正式程式：
+正式模組：
+
+`engine/ziwei/month.py`
+
+相容入口：
 
 `engine/project_ziwei_month.py`
 
