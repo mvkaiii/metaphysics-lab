@@ -68,7 +68,7 @@ engine/project_bazi_calendar.py
 engine/project_ziwei_month.py
 ```
 
-這兩支檔案現在是 compatibility wrapper（相容入口）。既有 ChatGPT Project 不需要因內部重構立即改檔名；一般使用者仍可同步這兩支檔案。新模組路徑主要提供後續 Skill、完整 Python 環境與開發測試使用。
+這兩支檔案現在是 compatibility wrapper（相容入口），所以既有呼叫名稱可以保留，不需要立刻改成新的 package path。**但 wrapper 已不再是可獨立執行的單檔引擎**：若要實際執行 Python，必須同時具備它所依賴的 `engine/bazi/` 與 `engine/ziwei/` 模組。只把兩支 wrapper 單獨複製到另一個 Python 環境會因缺少 package 而無法執行。
 
 v1.2 的目標不是把紫微細部功能永久關閉，而是建立「**能力先完成實作與驗證，平常不預設執行，需要提高解析度時才按需調用**」的 capability 模型。
 
@@ -102,7 +102,7 @@ v1.2 的目標不是把紫微細部功能永久關閉，而是建立「**能力�
 
 將 `core/核心提示詞.md` 內容同步到 Project Instructions。
 
-Project 檔案至少加入：
+Project 基礎檔案至少加入：
 
 ```text
 core/命理分析作業規範.md
@@ -110,6 +110,16 @@ core/命理推導計算規則.md
 core/紫微流月推導規則.md
 engine/project_bazi_calendar.py
 engine/project_ziwei_month.py
+```
+
+如果只是讓 AI 閱讀正式入口，上述 wrapper 可作為索引；如果環境要**實際執行**這兩支 wrapper，還要同步：
+
+```text
+engine/bazi/__init__.py
+engine/bazi/calendar.py
+engine/ziwei/__init__.py
+engine/ziwei/common.py
+engine/ziwei/month.py
 ```
 
 詳細步驟請看 [安裝到 ChatGPT Project](docs/安裝到ChatGPT-Project.md)。
@@ -205,7 +215,7 @@ Metaphysics Lab 已啟用紫微流月定位，但目前正式實作只做到月�
 
 把 `.py` 放進 Project，代表 Project 保存正式算法來源；**不代表每次對話都會自動執行 Python**。
 
-如果 GitHub 的引擎更新，Project 中的 Python 副本也需要同步更新。詳細規則請看 [更新與版本同步](docs/更新與版本同步.md)。
+如果 GitHub 的引擎更新，Project 中的 Python 副本也需要同步更新。若使用 compatibility wrapper 執行程式，wrapper 與其 package 依賴必須保持同版。詳細規則請看 [更新與版本同步](docs/更新與版本同步.md)。
 
 ---
 
