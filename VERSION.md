@@ -1,9 +1,9 @@
-# MingStack 版本
+# Metaphysics Lab 版本
 
-- MingStack Core：v1.1.0
+- Metaphysics Lab Core：v1.1.0
 - 命理推導計算規則：v1.2
 - Project Bazi Calendar Engine：v1.0.0
-- MingStack 紫微流月定位引擎：v1.0.0
+- Metaphysics Lab 紫微流月定位引擎：v1.0.0
 - 紫微流月推導規則：v1.0
 - 問事追蹤制度：v1.0
 - 發布日期：2026-08-20
