@@ -42,9 +42,9 @@ GitHub 更新不應直接覆蓋命主私人資料。
 
 ## 三、上傳正式規則與引擎
 
-### 一般 ChatGPT Project：建議使用相容入口
+### 一般 ChatGPT Project：保留相容入口，但注意 package 依賴
 
-目前一般 Project 最小安裝仍建議加入：
+Project 基礎建議加入：
 
 ```text
 core/命理分析作業規範.md
@@ -65,14 +65,18 @@ engine/project_ziwei_month.py
 v1.2 重構後，正式實作已拆到：
 
 ```text
+engine/bazi/__init__.py
 engine/bazi/calendar.py
+engine/ziwei/__init__.py
 engine/ziwei/common.py
 engine/ziwei/month.py
 ```
 
-但一般 ChatGPT Project **不需要因這次內部重構立刻把整個 package 都上傳**。兩支 `project_*.py` 會保留作 compatibility wrapper，讓既有安裝方式繼續可用。
+兩支 `project_*.py` 會保留作 compatibility wrapper，所以既有呼叫名稱不需要改；但 **wrapper 已不是可獨立執行的單檔引擎**。
 
-完整 Python 環境、未來 Skill 或開發測試環境，才建議直接使用 `engine.bazi` 與 `engine.ziwei` package。
+如果只是把 `.py` 當作正式算法來源讓 AI 閱讀，保留 wrapper 作入口索引即可；如果當次環境要**實際執行** wrapper，必須同時具備上列 package 依賴。只放 `project_bazi_calendar.py` 或 `project_ziwei_month.py` 而缺少 `engine/bazi/`、`engine/ziwei/`，執行時會出現 `ModuleNotFoundError`。
+
+完整 Python 環境、未來 Skill 或開發測試環境，建議直接使用 `engine.bazi` 與 `engine.ziwei` package。
 
 ### 建議加入的驗證資料
 
@@ -160,6 +164,8 @@ tests/紫微流月推導測試案例.md
 
 因此回答中若宣稱「程式已計算」「測試已通過」，必須真的有執行證據。
 
+另外要區分「入口名稱相容」與「單檔可執行」：v1.2 的 `project_*.py` 保留舊入口名稱，但執行時會載入 package 內的正式實作，所以 wrapper 與 package 應保持同一版本。
+
 ---
 
 ## 八、目前 v1.1 必須同步的紫微檔案
@@ -175,7 +181,9 @@ engine/project_ziwei_month.py
 
 並更新 Project Instructions 使用最新版 `core/核心提示詞.md`。
 
-否則 Project 可能仍回答「紫微流月尚未啟用」。
+若 Project 只用這些檔案作知識來源，可以繼續保留相容入口名稱；若要在 Python 環境中執行 v1.2 wrapper，還要同步對應的 `engine/ziwei/` package 檔案。
+
+否則 Project 可能仍回答「紫微流月尚未啟用」，或在執行 wrapper 時因 package 缺失而失敗。
 
 v1.2 的模組化重構只改內部 Python 結構，**不會自動啟用紫微流日或流時**。
 
