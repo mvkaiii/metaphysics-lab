@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""MingStack 紫微流月定位引擎 v1.0.0。
+"""Metaphysics Lab 紫微流月定位引擎 v1.0.0。
 
 範圍只包含：
 - 流年斗君
@@ -16,7 +16,7 @@
 - 流月流曜
 - 國曆轉農曆
 
-所有輸出均屬 MingStack 的 Project 推導盤面，不是 Astralium 或其他第三方
+所有輸出均屬 Metaphysics Lab 的 Project 推導盤面，不是 Astralium 或其他第三方
 排盤系統的直接輸出。
 """
 
@@ -25,7 +25,7 @@ from __future__ import annotations
 import argparse
 import json
 
-ENGINE_NAME = "MingStack 紫微流月定位引擎"
+ENGINE_NAME = "Metaphysics Lab 紫微流月定位引擎"
 ENGINE_VERSION = "1.0.0"
 RULE_NAME = "斗君流月"
 
@@ -48,7 +48,7 @@ PALACE_NAMES = (
 MONTH_BOUNDARY = "農曆初一；閏月採初一至十五歸原月、十六起歸下一月"
 BOUNDARY_NOTE = (
     "紫微流月採農曆月，八字流月採節氣月；兩者在同一國曆日期可能落在不同月份，"
-    "這是 MingStack 的設計差異，不是 bug。閏月另依本引擎固定的拆半規則處理。"
+    "這是 Metaphysics Lab 的設計差異，不是 bug。閏月另依本引擎固定的拆半規則處理。"
 )
 
 
@@ -68,7 +68,7 @@ def _validate_branch(branch: str) -> None:
 
 
 def effective_lunar_month(lunar_month: int, lunar_day: int, is_leap_month: bool) -> int:
-    """依 MingStack v1 邊界規則取得流月定位所使用的有效月份。"""
+    """依 Metaphysics Lab v1 邊界規則取得流月定位所使用的有效月份。"""
     _validate_month(lunar_month)
     _validate_day(lunar_day)
     if not is_leap_month:
@@ -175,7 +175,7 @@ def project_derived_ziwei_month(
             "monthly_four_transformations_enabled": False,
             "monthly_flowing_stars_enabled": False,
         },
-        "source_note": "此結果為 MingStack 依固定斗君算法推導，不是 Astralium 原始資料直接輸出。",
+        "source_note": "此結果為 Metaphysics Lab 依固定斗君算法推導，不是 Astralium 原始資料直接輸出。",
     }
 
 
