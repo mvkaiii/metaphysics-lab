@@ -1,0 +1,103 @@
+name: PR3 Inline Verification
+
+on:
+  push:
+    branches:
+      - feature/ziwei-flow-hour-capability
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/ziwei-flow-hour-capability
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Synchronize PR3 documentation
+        run: python scripts/pr3_sync_docs.py
+
+      - name: Run full unittest discovery
+        run: python -m unittest discover -v
+
+      - name: Smoke flow-hour module
+        run: |
+          set -euo pipefail
+          python -m engine.ziwei.hour --birth-lunar-month 5 --birth-hour-branch 戌 --flow-year-branch 酉 --lunar-month 1 --lunar-day 2 --hour-branch 丑 --pretty > /tmp/hour-module.json 2> /tmp/hour-module.err
+          test ! -s /tmp/hour-module.err
+          grep -q '"classification": "Project 推導盤面"' /tmp/hour-module.json
+          grep -q '"scope": "紫微流時"' /tmp/hour-module.json
+          grep -q '"flow_day_ming_branch": "辰"' /tmp/hour-module.json
+          grep -q '"flow_hour_ming_branch": "巳"' /tmp/hour-module.json
+          grep -q '"maturity": "experimental"' /tmp/hour-module.json
+          grep -q '"routing": "on_demand"' /tmp/hour-module.json
+
+      - name: Smoke flow-hour compatibility wrapper
+        run: |
+          set -euo pipefail
+          python engine/project_ziwei_hour.py --birth-lunar-month 5 --birth-hour-branch 戌 --flow-year-branch 酉 --lunar-month 1 --lunar-day 2 --hour-branch 丑 --pretty > /tmp/hour-wrapper.json 2> /tmp/hour-wrapper.err
+          test ! -s /tmp/hour-wrapper.err
+          python - <<'PY'
+          import json
+          a=json.load(open('/tmp/hour-module.json'))
+          b=json.load(open('/tmp/hour-wrapper.json'))
+          for key in ('classification','scope','flow_month_ming_branch','flow_day_ming_branch','flow_hour_ming_branch','flow_hour_palaces'):
+              assert a[key] == b[key], (key, a[key], b[key])
+          PY
+
+      - name: Smoke existing engines
+        run: |
+          set -euo pipefail
+          python engine/project_bazi_calendar.py '2026-08-20 17:12' --tz Asia/Taipei --day-master 丙 --pretty > /tmp/bazi.json 2> /tmp/bazi.err
+          python engine/project_ziwei_month.py --birth-lunar-month 5 --birth-hour-branch 戌 --flow-year-branch 酉 --lunar-month 2 --lunar-day 1 --pretty > /tmp/month.json 2> /tmp/month.err
+          python engine/project_ziwei_day.py --birth-lunar-month 5 --birth-hour-branch 戌 --flow-year-branch 酉 --lunar-month 1 --lunar-day 2 --pretty > /tmp/day.json 2> /tmp/day.err
+          test ! -s /tmp/bazi.err
+          test ! -s /tmp/month.err
+          test ! -s /tmp/day.err
+          python - <<'PY'
+          import json
+          b=json.load(open('/tmp/bazi.json'))
+          assert (b['year'], b['month'], b['day'], b['time']) == ('丙午','丙申','丙寅','丁酉'), b
+          m=json.load(open('/tmp/month.json'))
+          assert m['flow_month_ming_branch'] == '辰', m
+          d=json.load(open('/tmp/day.json'))
+          assert d['flow_day_ming_branch'] == '辰', d
+          assert d['features']['flow_hour_implemented'] is True, d
+          assert d['features']['flow_hour_default_routing'] is False, d
+          PY
+
+      - name: Check capability scope consistency
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          files=[Path('core/命理分析作業規範.md'),Path('core/核心提示詞.md'),Path('core/命理推導計算規則.md')]
+          for p in files:
+              s=p.read_text()
+              assert 'implemented / experimental / on_demand' in s, p
+              assert '紫微流時推導規則.md' in s, p
+              assert '- 紫微流時\n- 流月／流日／流時細部四化' not in s, p
+              assert '- 紫微流時命盤\n- 流月／流日／流時細部四化' not in s, p
+          PY
+
+      - name: Commit synchronized docs if needed
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo 'No documentation sync changes needed.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add core VERSION.md CHANGELOG.md README.md docs
+          git commit -m 'docs: sync Ziwei flow-hour capability [pr3-doc-sync]'
+          git push origin HEAD:feature/ziwei-flow-hour-capability
