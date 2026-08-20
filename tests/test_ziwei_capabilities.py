@@ -20,8 +20,14 @@ class ZiweiCapabilitiesTests(unittest.TestCase):
         self.assertTrue(can_execute(cap["id"]))
         self.assertFalse(should_run_by_default(cap["id"]))
 
-    def test_planned_capability_cannot_execute(self):
-        self.assertFalse(can_execute("ziwei.flow_hour_palaces"))
+    def test_flow_hour_is_experimental_on_demand(self):
+        cap = get_capability("ziwei.flow_hour_palaces")
+        self.assertEqual(cap["implementation"], "implemented")
+        self.assertEqual(cap["maturity"], "experimental")
+        self.assertEqual(cap["routing"], "on_demand")
+        self.assertEqual(cap["rule_version"], "1.0-exp")
+        self.assertTrue(can_execute(cap["id"]))
+        self.assertFalse(should_run_by_default(cap["id"]))
 
     def test_unknown_capability_is_rejected(self):
         with self.assertRaises(KeyError):
