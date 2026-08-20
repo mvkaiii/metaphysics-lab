@@ -42,9 +42,9 @@ GitHub 更新不應直接覆蓋命主私人資料。
 
 ## 三、上傳正式規則與引擎
 
-### 必須加入 Project 的共用核心
+### 一般 ChatGPT Project：建議使用相容入口
 
-建議至少加入：
+目前一般 Project 最小安裝仍建議加入：
 
 ```text
 core/命理分析作業規範.md
@@ -59,8 +59,20 @@ engine/project_ziwei_month.py
 - `命理分析作業規範.md`：最高層分析流程與資料治理規則。
 - `命理推導計算規則.md`：八字流年／流月／流日／流時的固定算法與邊界。
 - `紫微流月推導規則.md`：紫微流月斗君、流月命宮、十二宮與月份邊界。
-- `project_bazi_calendar.py`：八字時間推導引擎。
-- `project_ziwei_month.py`：紫微流月定位引擎。
+- `project_bazi_calendar.py`：八字引擎相容入口。
+- `project_ziwei_month.py`：紫微流月引擎相容入口。
+
+v1.2 重構後，正式實作已拆到：
+
+```text
+engine/bazi/calendar.py
+engine/ziwei/common.py
+engine/ziwei/month.py
+```
+
+但一般 ChatGPT Project **不需要因這次內部重構立刻把整個 package 都上傳**。兩支 `project_*.py` 會保留作 compatibility wrapper，讓既有安裝方式繼續可用。
+
+完整 Python 環境、未來 Skill 或開發測試環境，才建議直接使用 `engine.bazi` 與 `engine.ziwei` package。
 
 ### 建議加入的驗證資料
 
@@ -73,7 +85,7 @@ tests/紫微流月推導測試案例.md
 
 這兩份文件讓 AI 知道正式算法曾用哪些案例驗證，也方便之後排查結果差異。
 
-`tests/test_project_bazi_calendar.py` 與 `tests/test_project_ziwei_month.py` 是開發與回歸測試用途，不是一般問事的必要檔案。
+`tests/test_project_bazi_calendar.py`、`tests/test_project_ziwei_month.py` 與 `tests/test_engine_module_layout.py` 是開發與回歸測試用途，不是一般問事的必要檔案。
 
 ---
 
@@ -164,6 +176,8 @@ engine/project_ziwei_month.py
 並更新 Project Instructions 使用最新版 `core/核心提示詞.md`。
 
 否則 Project 可能仍回答「紫微流月尚未啟用」。
+
+v1.2 的模組化重構只改內部 Python 結構，**不會自動啟用紫微流日或流時**。
 
 ---
 
