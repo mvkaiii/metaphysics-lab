@@ -17,15 +17,15 @@ TZ = ZoneInfo('Asia/Taipei')
 
 
 class ProjectBaziCalendarTests(unittest.TestCase):
-    def test_known_natal_chart_1984_03_13_1920(self):
-        dt = datetime(1984, 3, 13, 19, 20, tzinfo=TZ)
-        self.assertEqual(bazi_pillars(dt), ('甲子', '丁卯', '丙午', '戊戌'))
+    def test_known_public_calendar_case_2026_08_20_1712(self):
+        dt = datetime(2026, 8, 20, 17, 12, tzinfo=TZ)
+        self.assertEqual(bazi_pillars(dt), ('丙午', '丙申', '丙寅', '丁酉'))
 
     def test_23_rollover_changes_day(self):
-        before = datetime(1984, 3, 13, 22, 59, tzinfo=TZ)
-        after = datetime(1984, 3, 13, 23, 0, tzinfo=TZ)
-        self.assertEqual(day_pillar(before), '丙午')
-        self.assertEqual(day_pillar(after), '丁未')
+        before = datetime(2026, 8, 20, 22, 59, tzinfo=TZ)
+        after = datetime(2026, 8, 20, 23, 0, tzinfo=TZ)
+        self.assertEqual(day_pillar(before), '丙寅')
+        self.assertEqual(day_pillar(after), '丁卯')
         self.assertEqual(time_pillar(after), '庚子')
 
     def test_2026_flow_year(self):
