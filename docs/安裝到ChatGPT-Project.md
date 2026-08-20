@@ -42,9 +42,9 @@ GitHub 更新不應直接覆蓋命主私人資料。
 
 ## 三、上傳正式規則與引擎
 
-### 基礎安裝
+### 基礎安裝：保留相容入口，但注意 package 依賴
 
-一般 Project 最小基礎建議加入：
+一般 Project 基礎建議加入：
 
 ```text
 core/命理分析作業規範.md
@@ -62,6 +62,18 @@ engine/project_ziwei_month.py
 - `project_bazi_calendar.py`：八字相容入口。
 - `project_ziwei_month.py`：紫微流月相容入口。
 
+v1.2 模組化後，wrapper 已不是可獨立執行的單檔引擎。若只是讓 AI 閱讀正式入口，可以把 wrapper 當作入口索引；若環境要**實際執行**八字／流月 wrapper，還必須同步：
+
+```text
+engine/bazi/__init__.py
+engine/bazi/calendar.py
+engine/ziwei/__init__.py
+engine/ziwei/common.py
+engine/ziwei/month.py
+```
+
+只放 `project_bazi_calendar.py` 或 `project_ziwei_month.py` 而缺少 package，實際執行會因 import 依賴缺失而失敗。
+
 ### 要使用 v1.2 紫微流日 On-demand Capability
 
 再加入：
@@ -71,9 +83,10 @@ core/紫微流日推導規則.md
 engine/project_ziwei_day.py
 ```
 
-若實際環境要**執行**這支薄 wrapper，而不只是讓 AI 閱讀正式入口，還必須同時具備其 package 依賴：
+若實際環境要**執行**這支薄 wrapper，而不只是讓 AI 閱讀正式入口，還必須同時具備：
 
 ```text
+engine/ziwei/__init__.py
 engine/ziwei/common.py
 engine/ziwei/capabilities.py
 engine/ziwei/month.py
@@ -89,11 +102,11 @@ engine.ziwei.day
 engine.ziwei.capabilities
 ```
 
-不要把 `project_*.py` 薄 wrapper 誤認為完全獨立、無依賴的單檔引擎。
+不要把 `project_*.py` 薄 wrapper 誤認為完全獨立、無依賴的單檔引擎；wrapper 與 package 應保持同版。
 
 ### Capability 語意
 
-目前 v1.2 開發分支：
+目前 v1.2 開發線：
 
 ```text
 紫微流月定位 = implemented / stable / default
@@ -196,6 +209,7 @@ Python 單元測試主要供開發與回歸使用，不是一般問事的必要�
 - `implemented` 代表程式能力存在。
 - `on_demand` 代表不預設執行。
 - 兩者不能混為一談。
+- `project_*.py` 保留相容入口名稱，不代表單檔可執行；執行時會載入 package 內正式實作。
 
 ---
 
@@ -213,6 +227,7 @@ engine/project_ziwei_day.py
 若需要在 Python 環境實際執行，再同步：
 
 ```text
+engine/ziwei/__init__.py
 engine/ziwei/common.py
 engine/ziwei/capabilities.py
 engine/ziwei/month.py
