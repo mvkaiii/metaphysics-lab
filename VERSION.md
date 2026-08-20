@@ -19,7 +19,9 @@
 - Metaphysics Lab 紫微流日定位引擎：v1.0.0-exp
 - 紫微流日推導規則：v1.0-exp
 - 紫微流日：`implemented / experimental / on_demand`
-- 紫微流時：`planned / on_demand`
+- Metaphysics Lab 紫微流時定位引擎：v1.0.0-exp
+- 紫微流時推導規則：v1.0-exp
+- 紫微流時：`implemented / experimental / on_demand`
 - 紫微細部四化／流曜／細層飛化：`planned / on_demand`
 - Calendar / Input Resolver：planned
 - Cross-System Validation：planned
@@ -34,7 +36,7 @@
 - 紫微流月：Stable，只含斗君、流月命宮、流月十二宮
 - 紫微流月月份邊界：農曆初一；閏月拆半
 - 紫微流日：v1.1 正式版未包含；v1.2 開發線已實作為 Experimental / On-demand
-- 紫微流時：尚未實作
+- 紫微流時：v1.1 正式版未包含；v1.2 開發線已實作為 Experimental / On-demand，只含流時命宮與十二宮定位
 - 紫微細部四化／流曜／細層飛化：尚未實作
 - Calendar / Input Resolver：尚未實作
 
