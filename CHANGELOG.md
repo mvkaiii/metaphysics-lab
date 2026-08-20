@@ -1,6 +1,6 @@
 # 變更紀錄
 
-## 未發布｜v1.2 引擎重構準備
+## 未發布｜v1.2 引擎重構與流日 capability
 
 ### 引擎模組化
 
@@ -14,15 +14,25 @@
 
 - 一般 ChatGPT Project 仍可繼續使用兩支 `project_*.py`，不需要因內部重構立即改檔名。
 - 完整 Python 環境與未來 Skill 可改用 `engine.bazi`、`engine.ziwei` package。
-- 本次只重構模組，不改變八字流年／流月／流日／流時算法，也不改變紫微流月斗君與閏月規則。
+- 模組化重構不改變既有八字流年／流月／流日／流時算法，也不改變紫微流月斗君與閏月規則。
 
-### v1.2 capability 方向
+### v1.2 capability 模型
 
 - 紫微細部能力改採「是否已實作、成熟度、預設調度」三軸管理，不再只用 enabled / disabled 二元表示。
-- 後續流日、流時、細部四化、流曜與細層飛化都以可重現 Python 實作、測試與外部校驗為前提。
-- 通過最低驗證門檻後，可成為 `Experimental / On-demand` 能力；驗證充分後再升為 `Stable`。
 - On-demand 代表能力已存在且可執行，但平常不預設跑；只有細看日期／時段、比較候選時間、處理跨系統衝突或使用者明確要求時才調用。
 - Experimental 能力可以執行與累積驗證，但分析權重較低，不得單獨支撐高確信結論。
+
+### 紫微流日 capability
+
+- 新增 `engine/ziwei/capabilities.py`，集中記錄 implementation / maturity / routing / rule version / dependency。
+- 新增 `engine/ziwei/day.py`，實作「流月命宮起初一、順行十二宮、一日一宮」的紫微流日定位。
+- 流日第一版狀態：`implemented / experimental / on_demand`。
+- 流日十二宮與流月共用 `palaces_from_ming_branch()`，避免宮位方向重複實作。
+- 新增 `core/紫微流日推導規則.md`，記錄算法、輸入邊界、閏月 convention、外部來源與升級門檻。
+- 新增 `tests/test_project_ziwei_day.py`、`tests/test_ziwei_capabilities.py`、`tests/test_ziwei_package_exports.py` 與人工回歸案例。
+- 流日一般公式已對照 iztro 公開安星訣／現行程式，以及其他獨立公開排法資料。
+- 閏月後半採 Project 既有拆半規則，先解析有效流月，再以實際農曆日數推流日；此細節先維持 Experimental。
+- 流月結構化輸出保留 `flow_day_enabled = false` 表示「本次流月預設路徑不跑流日」，並新增 `flow_day_available_on_demand = true` 避免誤解為能力不存在。
 
 ### 證據權重
 
@@ -33,9 +43,8 @@
 - 第二階段事件校準可以調整個人化可信度，但不得改寫第一階段盲判、原始盤面或正式算法。
 - 未來若累積足夠追蹤與 Issue 可重現案例，數值權重必須由版本化 calibration model 與實證資料估計，不得憑直覺指定。
 
-### 本 PR 尚未實作
+### 後續尚未實作
 
-- 紫微流日算法。
 - 紫微流時算法。
 - 紫微細部四化、流曜與細層飛化算法。
 - Cross-System Validation 正式引擎。
@@ -69,7 +78,7 @@
 - 紫微流月引擎不負責國曆轉農曆，輸入農曆資料必須來自可信曆法來源。
 - GitHub 與 ChatGPT Project 視為兩套環境；核心更新需要同步，私人 Case 不得被覆蓋。
 
-### 仍未啟用
+### 當時仍未啟用
 
 - 紫微流日。
 - 紫微流時。
