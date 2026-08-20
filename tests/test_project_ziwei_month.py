@@ -80,6 +80,18 @@ class ZiweiMonthTests(unittest.TestCase):
         self.assertFalse(result['features']['flow_hour_enabled'])
         self.assertFalse(result['features']['monthly_four_transformations_enabled'])
 
+    def test_flow_day_is_available_but_not_default_in_month_output(self):
+        result = project_derived_ziwei_month(
+            birth_lunar_month=5,
+            birth_hour_branch='戌',
+            flow_year_branch='酉',
+            lunar_month=2,
+            lunar_day=1,
+            is_leap_month=False,
+        )
+        self.assertFalse(result['features']['flow_day_enabled'])
+        self.assertTrue(result['features']['flow_day_available_on_demand'])
+
     def test_invalid_lunar_day_is_rejected(self):
         with self.assertRaises(ValueError):
             effective_lunar_month(5, 0, False)
