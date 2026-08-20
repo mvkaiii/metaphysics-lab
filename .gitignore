@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.venv/
+venv/
+.env
+.DS_Store
+*.pdf
+cases/
+private/
+個案/
+私人資料/
