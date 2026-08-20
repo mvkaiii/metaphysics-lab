@@ -27,10 +27,10 @@ _CAPABILITIES = {
     },
     "ziwei.flow_hour_palaces": {
         "id": "ziwei.flow_hour_palaces",
-        "implementation": "planned",
-        "maturity": None,
+        "implementation": "implemented",
+        "maturity": "experimental",
         "routing": "on_demand",
-        "rule_version": None,
+        "rule_version": "1.0-exp",
         "module": "engine.ziwei.hour",
         "dependencies": ("ziwei.flow_day_palaces",),
     },
