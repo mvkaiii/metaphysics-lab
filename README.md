@@ -28,7 +28,7 @@ Metaphysics Lab 是一套以「可重現、可驗證、以決策為導向」為�
 
 ## 目前能力
 
-Metaphysics Lab v1.1 目前正式納入：
+Metaphysics Lab v1.1 正式版目前納入：
 
 - 子平八字本命與運限分析規範
 - 紫微斗數本命、大限、小限、流年資料使用規範
@@ -41,18 +41,52 @@ Metaphysics Lab v1.1 目前正式納入：
 - 節氣交界警告
 - 問事追蹤與結果驗證制度
 
-目前正式版本尚未具備：
+v1.2 開發分支另已加入：
 
-- 紫微流日／流時 Project 推導
-- 紫微流月四化／流曜／細層飛化
+- 紫微 capability registry：把「是否已實作」「成熟度」「預設調度」分開管理
+- Project 紫微流日定位：`implemented / experimental / on_demand`
+- 流日命宮與流日十二宮重排
+- 紫微流日自動測試、人工回歸與外部來源交叉校驗紀錄
+
+目前尚未具備：
+
+- 紫微流時 Project 推導
+- 紫微細部四化／流曜／細層飛化
+- Cross-System Validation 正式引擎
 - 完整 Project 干支互動引擎
 - 奇門自動排盤引擎
 
 ---
 
-## v1.2 引擎重構準備
+## v1.2 Capability 模型
 
-目前開發分支已把正式 Python 實作拆成兩套模組：
+v1.2 不再把「能力存在」和「這次要不要執行」混成同一個 enabled / disabled 開關。
+
+每個 capability 分別記錄：
+
+```text
+implementation = planned / implemented
+maturity       = experimental / stable
+routing        = default / on_demand
+```
+
+例如：
+
+```text
+紫微流月定位 = implemented / stable / default
+紫微流日定位 = implemented / experimental / on_demand
+紫微流時定位 = planned / on_demand
+```
+
+`On-demand` 的意思是：**Python 已經能執行，但一般問題不預設跑；只有需要提高解析度時才調用。**
+
+`Experimental` 也能實際執行與累積驗證，只是分析權重較低，不能單獨支撐高度確信。
+
+---
+
+## v1.2 引擎模組化
+
+目前開發分支已把正式 Python 實作拆成：
 
 ```text
 engine/bazi/   八字正式模組
@@ -61,28 +95,24 @@ engine/ziwei/  紫微正式模組
 
 八字與紫微維持不同曆法與推導邏輯，不混寫在同一支 Python。
 
-既有入口仍保留：
+既有／相容入口：
 
 ```text
 engine/project_bazi_calendar.py
 engine/project_ziwei_month.py
+engine/project_ziwei_day.py
 ```
 
-這兩支檔案現在是 compatibility wrapper（相容入口）。既有 ChatGPT Project 不需要因內部重構立即改檔名；一般使用者仍可同步這兩支檔案。新模組路徑主要提供後續 Skill、完整 Python 環境與開發測試使用。
+完整 Python 環境與未來 Skill 可直接使用：
 
-v1.2 的目標不是把紫微細部功能永久關閉，而是建立「**能力先完成實作與驗證，平常不預設執行，需要提高解析度時才按需調用**」的 capability 模型。
+```text
+engine.bazi.calendar
+engine.ziwei.month
+engine.ziwei.day
+engine.ziwei.capabilities
+```
 
-後續規劃的紫微 on-demand capabilities 包含：
-
-- 流日
-- 流時
-- 細部四化
-- 流曜
-- 細層飛化
-
-各 capability 會分開記錄是否已實作、成熟度（Experimental / Stable）與調度方式（Default / On-demand）。Experimental 能力可以執行，但分析時必須降權，不得單獨支撐高確信結論。
-
-本 PR 本身只完成模組化重構，**尚未實作上述新紫微細部算法**。
+能力存在不代表每次問事都要把所有細層全部執行；router / Skill 仍依問題時間粒度決定實際調用。
 
 ---
 
@@ -102,7 +132,7 @@ v1.2 的目標不是把紫微細部功能永久關閉，而是建立「**能力�
 
 將 `core/核心提示詞.md` 內容同步到 Project Instructions。
 
-Project 檔案至少加入：
+Project 基礎檔案至少加入：
 
 ```text
 core/命理分析作業規範.md
@@ -110,6 +140,13 @@ core/命理推導計算規則.md
 core/紫微流月推導規則.md
 engine/project_bazi_calendar.py
 engine/project_ziwei_month.py
+```
+
+若要使用 v1.2 紫微流日 on-demand capability，再同步：
+
+```text
+core/紫微流日推導規則.md
+engine/project_ziwei_day.py
 ```
 
 詳細步驟請看 [安裝到 ChatGPT Project](docs/安裝到ChatGPT-Project.md)。
@@ -189,7 +226,7 @@ docs/           安裝、資料準備、更新、架構與資料治理說明
 
 `core/紫微流月推導規則.md`
 
-Metaphysics Lab 已啟用紫微流月定位，但目前正式實作只做到月份層級：斗君、流月命宮與流月十二宮。
+Metaphysics Lab 已有 Stable 紫微流月定位：斗君、流月命宮與流月十二宮。
 
 - 紫微流月採農曆月，農曆初一換月。
 - 閏月採初一至十五歸原月、十六起歸下一月。
@@ -197,7 +234,42 @@ Metaphysics Lab 已啟用紫微流月定位，但目前正式實作只做到月�
 
 因此同一個國曆日期的八字流月與紫微流月可能不同，這是兩套系統的月份邊界差異，**不是 bug**。
 
-紫微流日、流時、細部四化、流曜與細層飛化將依 v1.2 capability 規格逐項完成實作、測試與外部校驗；完成後預設採按需調用，而不是每次問事全部執行。
+流月結構化輸出中的 `flow_day_enabled = false` 只代表「本次流月預設路徑不自動跑流日」；v1.2 同時標示 `flow_day_available_on_demand = true`。
+
+## 紫微流日
+
+正式模組：
+
+`engine/ziwei/day.py`
+
+相容入口：
+
+`engine/project_ziwei_day.py`
+
+規則：
+
+`core/紫微流日推導規則.md`
+
+目前狀態：
+
+```text
+implementation = implemented
+maturity = experimental
+routing = on_demand
+```
+
+固定定位法：先取得目標日期的流月命宮，再以流月命宮起農曆初一，每日順行一宮。
+
+一般年度／月份問事不預設執行流日。適合在：
+
+- 指定某一天細看
+- 比較兩個以上候選日期
+- 月份主軸確認後需要提高日期解析度
+- 之後 Cross-System Validation 需要補流日層證據
+
+時按需調用。
+
+目前流日只做命宮與十二宮定位；流日四化、流曜、流時與細層飛化仍是後續 capability。
 
 ---
 
