@@ -10,12 +10,22 @@
 - 新增紫微流月自動測試與人工測試紀錄。
 - 新增 `core/紫微流月推導規則.md`。
 
+### 文件與安裝流程
+
+- 新增 `docs/安裝到ChatGPT-Project.md`，說明 Project Instructions、核心規則、Python 引擎與私人 Case 的安裝方式。
+- 新增 `docs/命盤資料準備指南.md`，區分出生基本資料、八字、紫微、校驗、驗證事件與追蹤資料。
+- 新增 `docs/Astralium資料取得指南.md`，說明如何使用 Astralium 或其他排盤來源取得原始結構化資料。
+- 新增 `docs/更新與版本同步.md`，明確區分 GitHub 核心更新與私人 Project 資料。
+- 重寫 `README.md` 與 `docs/快速開始.md`，加入第一次使用者的完整入口。
+- 明確要求 v1.0 升級到 v1.1 的 Project 同步 `project_ziwei_month.py`、紫微流月規則與最新版 Project Instructions。
+
 ### 固定邊界
 
 - 紫微流月採農曆月，農曆初一換月。
 - 閏月採初一至十五歸原月、十六起歸下一月。
 - 八字流月仍採節氣月；兩者不同步不是 bug。
 - 紫微流月引擎不負責國曆轉農曆，輸入農曆資料必須來自可信曆法來源。
+- GitHub 與 ChatGPT Project 視為兩套環境；核心更新需要同步，私人 Case 不得被覆蓋。
 
 ### 仍未啟用
 
