@@ -108,6 +108,7 @@ def project_derived_ziwei_month(
         "features": {
             "flow_month_enabled": True,
             "flow_day_enabled": False,
+            "flow_day_available_on_demand": True,
             "flow_hour_enabled": False,
             "monthly_four_transformations_enabled": False,
             "monthly_flowing_stars_enabled": False,
