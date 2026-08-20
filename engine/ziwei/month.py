@@ -6,7 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 
-from .common import PALACE_NAMES, ZHI, validate_branch, validate_day, validate_month
+from .common import ZHI, palaces_from_ming_branch, validate_branch, validate_day, validate_month
 
 ENGINE_NAME = "Metaphysics Lab 紫微流月定位引擎"
 ENGINE_VERSION = "1.0.0"
@@ -60,12 +60,7 @@ def flow_month_ming_branch(
 
 
 def flow_month_palaces(ming_branch: str) -> dict[str, str]:
-    validate_branch(ming_branch)
-    ming_idx = ZHI.index(ming_branch)
-    return {
-        palace: ZHI[(ming_idx - offset) % 12]
-        for offset, palace in enumerate(PALACE_NAMES)
-    }
+    return palaces_from_ming_branch(ming_branch)
 
 
 def project_derived_ziwei_month(
