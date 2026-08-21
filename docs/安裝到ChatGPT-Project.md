@@ -1,6 +1,6 @@
 # 安裝到 ChatGPT Project
 
-本文件說明如何把 Metaphysics Lab 的共用核心安裝到新的 ChatGPT Project，並與私人命盤資料分開管理。
+本文件說明如何把 Metaphysics Lab v1.2.0 的共用核心安裝到新的 ChatGPT Project，並與私人命盤資料分開管理。
 
 核心原則：
 
@@ -10,114 +10,129 @@ GitHub 更新不應直接覆蓋命主私人資料。
 
 ---
 
-## 一、建立新的 ChatGPT Project
-
-先建立新的 ChatGPT Project。建議一位主要命主使用一個獨立 Project，或至少在 Project 內用明確檔名區分不同命主。
-
-不要把多人命盤混在同一組未標示的檔案中。
-
----
-
-## 二、設定 Project Instructions
+## 一、設定 Project Instructions
 
 開啟：
 
-`core/核心提示詞.md`
+```text
+core/核心提示詞.md
+```
 
-把內容複製到 ChatGPT Project 的 Instructions／專案指示中。
+把內容同步到 ChatGPT Project 的 Instructions／專案指示。
 
 這份提示詞負責：
 
-- 角色定位
 - 資料讀取順序
 - 問事先盲判、後事件校準
 - 八字／紫微／奇門分工
-- 資料類型區分
+- 七種資料類型區分
 - 高風險領域邊界
 - 輸出格式與信心標示
 
-若核心提示詞更新，Project Instructions 也需要同步更新。
+若核心提示詞更新，Project Instructions 也要同步更新。
 
 ---
 
-## 三、上傳正式規則與引擎
+## 二、基礎規則
 
-### 基礎安裝：保留相容入口，但注意 package 依賴
-
-一般 Project 基礎建議加入：
+一般 Project 至少加入：
 
 ```text
 core/命理分析作業規範.md
 core/命理推導計算規則.md
 core/紫微流月推導規則.md
-engine/project_bazi_calendar.py
-engine/project_ziwei_month.py
 ```
 
 用途：
 
-- `命理分析作業規範.md`：最高層分析流程與資料治理規則。
-- `命理推導計算規則.md`：八字流年／流月／流日／流時與 Project 細時間 capability 的固定算法與邊界。
-- `紫微流月推導規則.md`：紫微流月斗君、流月命宮、十二宮與月份邊界。
-- `project_bazi_calendar.py`：八字相容入口。
-- `project_ziwei_month.py`：紫微流月相容入口。
+- `命理分析作業規範.md`：最高層分析流程與資料治理。
+- `命理推導計算規則.md`：八字流年／流月／流日／流時固定算法與邊界。
+- `紫微流月推導規則.md`：紫微斗君、流月命宮、十二宮與月份邊界。
 
-v1.2 模組化後，wrapper 已不是可獨立執行的單檔引擎。若只是讓 AI 閱讀正式入口，可以把 wrapper 當作入口索引；若環境要**實際執行**八字／流月 wrapper，還必須同步：
+---
+
+## 三、Compatibility wrapper 與正式 package
+
+相容入口：
+
+```text
+engine/project_bazi_calendar.py
+engine/project_ziwei_month.py
+engine/project_ziwei_day.py
+engine/project_ziwei_hour.py
+```
+
+這些檔案保留既有呼叫路徑，但不是完全獨立的單檔引擎。
+
+若只是讓 AI 閱讀正式入口，可以把 wrapper 當作索引；若環境要實際執行，必須同步對應 package modules。
+
+---
+
+## 四、八字執行環境
+
+同步：
 
 ```text
 engine/bazi/__init__.py
 engine/bazi/calendar.py
+engine/project_bazi_calendar.py
+```
+
+八字時間推導可建立流年、流月、流日、流時與天干十神；計算結果屬於 Project 推導盤面。
+
+八字 23:00 early-Zi 規則仍由八字引擎負責，不由 Calendar Resolver 代替。
+
+---
+
+## 五、紫微流月／流日／流時定位
+
+共用：
+
+```text
 engine/ziwei/__init__.py
 engine/ziwei/common.py
+engine/ziwei/capabilities.py
+```
+
+流月：
+
+```text
+core/紫微流月推導規則.md
+engine/project_ziwei_month.py
 engine/ziwei/month.py
 ```
 
-只放 `project_bazi_calendar.py` 或 `project_ziwei_month.py` 而缺少 package，實際執行會因 import 依賴缺失而失敗。
-
-### 要使用 v1.2 紫微流日 On-demand Capability
-
-再加入：
+流日：
 
 ```text
 core/紫微流日推導規則.md
 engine/project_ziwei_day.py
-```
-
-若實際環境要**執行**這支薄 wrapper，而不只是讓 AI 閱讀正式入口，還必須同時具備：
-
-```text
-engine/ziwei/__init__.py
-engine/ziwei/common.py
-engine/ziwei/capabilities.py
-engine/ziwei/month.py
 engine/ziwei/day.py
 ```
 
-### 要使用 v1.2 紫微流時 On-demand Capability
-
-再加入：
+流時：
 
 ```text
 core/紫微流時推導規則.md
 engine/project_ziwei_hour.py
-```
-
-若實際環境要執行流時 wrapper，還必須同時具備同版：
-
-```text
-engine/ziwei/__init__.py
-engine/ziwei/common.py
-engine/ziwei/capabilities.py
-engine/ziwei/month.py
-engine/ziwei/day.py
 engine/ziwei/hour.py
 ```
 
-流時 core 仍只接受已解析的農曆日期與 `hour_branch`，不自行處理民用 datetime、timezone、DST 或國曆轉農曆。v1.2 開發線已由 Calendar Resolver v1 負責 structured civil datetime + IANA timezone → `CalendarContext`，再由 Ziwei Calendar Adapter 傳入既有流月／流日／流時 core。Resolver 不套用任何命理日界；23:00 是子時，但 civil date 只在 00:00 換日。
+v1.2.0 狀態：
 
-### 要使用 Calendar Resolver v1
+```text
+紫微流月 = implemented / stable / default
+紫微流日 = implemented / experimental / on_demand
+紫微流時 = implemented / experimental / on_demand
+```
 
-實際 Python 執行環境必須同步並保持同版：
+流日／流時目前只做宮位定位。Experimental 能力可執行，但分析時必須降權。
+
+---
+
+## 六、Calendar Resolver v1
+
+若要從 structured civil datetime + IANA timezone 建立 `CalendarContext`，同步：
 
 ```text
 requirements.txt
@@ -130,66 +145,152 @@ engine/calendar/resolver.py
 engine/ziwei/calendar_adapter.py
 ```
 
-並執行：
+並安裝：
 
 ```bash
 pip install -r requirements.txt
 ```
 
-目前 exact runtime dependencies 為 `lunar-python==1.4.8` 與 `tzdata==2026.3`（IANA `2026c`）。缺少 exact dependencies 時，不得宣稱 Calendar Resolver 可執行。
-
-Resolver v1 只接受 structured civil datetime、IANA timezone 與可選 `utc_offset_hint`；自然語言解析與命理日界 policy 都在 Resolver 外。
-
-完整 Python 環境或未來 Skill 建議直接使用：
+v1.2.0 exact runtime dependencies：
 
 ```text
-engine.bazi.calendar
-engine.ziwei.month
-engine.ziwei.day
-engine.ziwei.hour
-engine.ziwei.capabilities
+lunar-python==1.4.8
+tzdata==2026.3
 ```
 
-不要把 `project_*.py` 薄 wrapper 誤認為完全獨立、無依賴的單檔引擎；wrapper 與 package 應保持同版。
+Resolver 只接受 structured local civil datetime、IANA timezone 與可選 `utc_offset_hint`。
 
-### Capability 語意
+Resolver 不負責：
 
-目前 v1.2 開發線：
+- 自然語言日期解析
+- timezone 猜測
+- 真太陽時
+- 八字換日 policy
+- 紫微 23:00 命理日界 school policy
+
+23:00 已屬子時，但 civil date 只在 00:00 換日。
+
+---
+
+## 七、Ziwei Transformation & Flying Core v1
+
+若要在 Python 環境執行十干四化、本命宮干飛化、生年／大限／流年四化飛化與 Composition，至少同步：
+
+```text
+engine/ziwei/errors.py
+engine/ziwei/models.py
+engine/ziwei/basis.py
+engine/ziwei/transformation_profiles.py
+engine/ziwei/transformations.py
+engine/ziwei/flying.py
+engine/ziwei/composition.py
+```
+
+並保持同版：
+
+```text
+engine/ziwei/__init__.py
+engine/ziwei/common.py
+engine/ziwei/capabilities.py
+```
+
+v1.2.0 狀態：
+
+```text
+Ziwei Transformation Core = implemented / stable / on_demand
+Ziwei Flying Core = implemented / stable / on_demand
+```
+
+已支援：
+
+- 十天干四化
+- 本命十二宮宮干飛化
+- 生年四化
+- 大限四化／飛化
+- 流年四化／飛化
+- layer no-overwrite / fail-closed conflict handling
+
+仍未支援：
+
+- 流月四化／飛化
+- 流日四化／飛化
+- 流時四化／飛化
+- 流曜
+
+這些細運能力仍需要 Fine Cycle Stem Resolver 與獨立 qualification。
+
+---
+
+## 八、建議的完整 Python 環境
+
+若目標不是只讓 AI 閱讀，而是要真正執行 v1.2.0 已有能力，建議至少同步：
+
+```text
+requirements.txt
+
+engine/bazi/__init__.py
+engine/bazi/calendar.py
+engine/project_bazi_calendar.py
+
+engine/calendar/__init__.py
+engine/calendar/precision.py
+engine/calendar/models.py
+engine/calendar/timezone.py
+engine/calendar/lunar.py
+engine/calendar/resolver.py
+
+engine/ziwei/__init__.py
+engine/ziwei/common.py
+engine/ziwei/capabilities.py
+engine/ziwei/month.py
+engine/ziwei/day.py
+engine/ziwei/hour.py
+engine/ziwei/calendar_adapter.py
+engine/ziwei/errors.py
+engine/ziwei/models.py
+engine/ziwei/basis.py
+engine/ziwei/transformation_profiles.py
+engine/ziwei/transformations.py
+engine/ziwei/flying.py
+engine/ziwei/composition.py
+
+engine/project_ziwei_month.py
+engine/project_ziwei_day.py
+engine/project_ziwei_hour.py
+```
+
+wrapper、package 與 requirements 應保持同版。
+
+---
+
+## 九、Capability 語意
+
+```text
+implementation = planned / implemented
+maturity       = experimental / stable
+routing        = default / on_demand
+```
+
+目前正式狀態：
 
 ```text
 紫微流月定位 = implemented / stable / default
 紫微流日定位 = implemented / experimental / on_demand
 紫微流時定位 = implemented / experimental / on_demand
-紫微細部四化／流曜／細層飛化 = planned / on_demand
-Calendar / Input Resolver = implemented (Calendar Resolver v1.0.0)
-Ziwei Calendar Adapter = implemented
+Ziwei Transformation Core = implemented / stable / on_demand
+Ziwei Flying Core = implemented / stable / on_demand
+流月／流日／流時四化與飛化 = planned / on_demand
+流曜 = planned / on_demand
 Cross-System Validation = planned
 ```
 
-`on_demand` 的意思是能力可以執行，但一般年度／月份問事不預設跑。
-
-Experimental 流日可用於指定日期、日期比較與細部驗證；Experimental 流時可用於指定時辰、時段比較與 hour-level 細化。兩者分析時都必須降權，不能單獨支撐高度確信。
-
-### 建議加入的驗證資料
-
-若 Project 檔案空間允許，也建議加入：
-
-```text
-tests/命理推導測試案例.md
-tests/紫微流月推導測試案例.md
-tests/紫微流日推導測試案例.md
-tests/紫微流時推導測試案例.md
-```
-
-Python 單元測試主要供開發與回歸使用，不是一般問事的必要檔案。
+`implemented` 代表程式能力存在；`on_demand` 代表一般問事不預設跑；`planned` 代表尚不能執行。
 
 ---
 
-## 四、建立私人 Case
+## 十、建立私人 Case
 
-從 `templates/` 複製空白模板到自己的私人環境，並把 `_TEMPLATE` 移除。
-
-建議至少準備：
+從 `templates/` 複製空白模板，建立自己的：
 
 ```text
 命盤核心摘要.md
@@ -200,114 +301,67 @@ Python 單元測試主要供開發與回歸使用，不是一般問事的必要�
 重大決策紀錄.md
 ```
 
-第一次建立時，不需要一次把每個檔案填滿。
-
-優先順序是：
+優先順序：
 
 1. 出生資料與正式命盤來源
 2. 命盤資料校驗
 3. 命盤核心摘要
 4. 已確認的重要事件
-5. 之後再累積流年、問事與重大決策追蹤
+5. 再累積流年、問事與重大決策追蹤
 
-詳細欄位請看 `docs/命盤資料準備指南.md`。
-
----
-
-## 五、加入原始命盤資料
-
-建議至少準備一份八字原始資料與一份紫微原始資料。
-
-可使用 Astralium 或其他可靠排盤來源。若使用 Astralium，請看：
-
-`docs/Astralium資料取得指南.md`
-
-原始資料請保留來源名稱與產出日期，不要先自行刪改欄位後再交給 Project。
-
-第三方排盤直接提供的內容屬於「原始盤面事實」；Metaphysics Lab 自己計算的流月、流日、流時等屬於「Project 推導盤面」，兩者不得混稱。
+私人資料不要提交回共用 repo。
 
 ---
 
-## 六、第一次啟動 Project
+## 十一、第一次啟動 Project
 
-資料加入後，可先要求 Project 做「命盤建立／校驗」，不要直接跳到未來預測。
+先做命盤建立／校驗，不要直接跳到未來預測。
 
-建議第一次對話確認：
+建議確認：
 
 - 是否成功讀到 `命理分析作業規範.md`
 - 出生年月日時與出生地是否正確
-- 八字四柱是否一致
-- 日主與八字大運是否已確認
-- 紫微十二宮、大限、流年等資料是否可讀
-- 是否有不同來源的時間口徑差異
+- 八字四柱、日主、大運是否一致
+- 紫微十二宮、大限、流年是否可讀
+- 不同來源是否有時間口徑差異
 - 哪些欄位是原始來源，哪些是 Project 推導
-- v1.2 capability registry 是否能區分 Stable / Experimental / Planned 與 Default / On-demand
+- capability registry 是否能區分 Stable / Experimental / Planned 與 Default / On-demand
 
-確認完成後，再建立 `命盤核心摘要.md`。
+完成後再建立 `命盤核心摘要.md`。
 
 ---
 
-## 七、Python 檔案放進 Project 代表什麼
+## 十二、Python 檔案放進 Project 代表什麼
 
-把 `.py` 檔加入 Project，代表 Project 保存了正式算法來源。
+把 `.py` 放進 Project，代表保存正式算法來源。
 
 **不代表每一個 ChatGPT 對話都會自動執行 Python。**
 
-若當次環境能執行 Python，可依正式程式計算；若無法執行，AI 只能閱讀規則與程式內容，不得假裝已執行程式。
+若當次環境能執行 Python，可依正式程式計算；若無法執行，AI 只能閱讀規則與程式內容，不得假裝已執行。
 
-因此回答中若宣稱「程式已計算」「測試已通過」，必須真的有執行證據。
-
-同樣地：
-
-- `implemented` 代表程式能力存在。
-- `on_demand` 代表不預設執行。
-- 兩者不能混為一談。
-- `project_*.py` 保留相容入口名稱，不代表單檔可執行；執行時會載入 package 內正式實作。
+回答若宣稱「程式已計算」「測試已通過」，必須真的有執行證據。
 
 ---
 
-## 八、從 v1.1 升到 v1.2 細時間 Capability
+## 十三、驗證資料
 
-如果原本 Project 已有 v1.1 流月能力，要加入紫微流日與流時，至少同步：
+若 Project 檔案空間允許，可加入對應測試案例作知識參考；Python 單元測試主要供開發與回歸使用，不是一般問事的必要檔案。
 
-```text
-core/紫微流月推導規則.md
-core/紫微流日推導規則.md
-core/紫微流時推導規則.md
-engine/project_ziwei_month.py
-engine/project_ziwei_day.py
-engine/project_ziwei_hour.py
-```
+v1.2.0 Phase 2A qualification 與 main regression 基線請看：
 
-若需要在 Python 環境實際執行，再同步：
-
-```text
-engine/ziwei/__init__.py
-engine/ziwei/common.py
-engine/ziwei/capabilities.py
-engine/ziwei/month.py
-engine/ziwei/day.py
-engine/ziwei/hour.py
-```
-
-並更新 Project Instructions 使用最新版 `core/核心提示詞.md`。
-
-完成後 Project 應知道：
-
-- 紫微流月：Stable / Default。
-- 紫微流日：Experimental / On-demand，可執行但不預設跑。
-- 紫微流時：Experimental / On-demand，可執行但不預設跑。
-- Calendar Resolver v1：已實作；Ziwei Calendar Adapter 已實作。
-- 流時四化、流曜、飛化：尚未實作。
+- `VERSION.md`
+- `CHANGELOG.md`
+- `qualification/ziwei/phase2a/`
 
 ---
 
-## 九、更新時不要覆蓋私人資料
+## 十四、更新時不要覆蓋私人資料
 
-日後更新 Metaphysics Lab 時，只同步：
+日後更新 Metaphysics Lab 時，只同步共用核心：
 
 - `core/`
 - `engine/`
+- `requirements.txt`
 - 必要的 `tests/`
 - Project Instructions
 
@@ -319,5 +373,7 @@ engine/ziwei/hour.py
 - 流年追蹤紀錄
 - 問事追蹤紀錄
 - 重大決策紀錄
+- 原始八字／紫微資料
+- 個人命盤 PDF／截圖
 
-詳細更新方式請看 `docs/更新與版本同步.md`。
+完整升級流程請看 [更新與版本同步](更新與版本同步.md)。
