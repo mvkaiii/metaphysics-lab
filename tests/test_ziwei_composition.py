@@ -6,6 +6,7 @@ from engine.ziwei.errors import ZiweiPhase2AError
 from engine.ziwei.flying import build_natal_flying_graph, fly_transformations
 from engine.ziwei.models import (
     AvailabilityRecord,
+    ChartIdentity,
     CycleStemSource,
     LayerIdentity,
     NatalContext,
@@ -27,6 +28,14 @@ def _components(scope, reference, stem, natal):
     transformations = get_transformation_set(stem)
     edges = fly_transformations(transformations, natal.star_locations, source)
     identity = LayerIdentity(CHART.chart_id, scope, reference, transformations.profile_id)
+    return source, transformations, edges, identity
+
+
+def _components_for_chart(chart, scope, reference, stem, star_locations):
+    source = CycleStemSource("cycle_stem", chart, scope, reference, stem)
+    transformations = get_transformation_set(stem)
+    edges = fly_transformations(transformations, star_locations, source)
+    identity = LayerIdentity(chart.chart_id, scope, reference, transformations.profile_id)
     return source, transformations, edges, identity
 
 
@@ -79,6 +88,37 @@ class ZiweiCompositionTests(unittest.TestCase):
         wrong_edges = fly_transformations(trans, natal.star_locations, other_source)
         with self.assertRaises(ZiweiPhase2AError) as cm:
             build_cycle_layer(identity, source, trans, wrong_edges, PROVENANCE)
+        self.assertEqual(cm.exception.code, "layer_component_mismatch")
+
+    def test_birth_year_layer_from_different_chart_is_rejected(self):
+        other = ChartIdentity("chart-other", "natal", "synthetic-v1")
+        other_stars = build_star_location_index(SYNTHETIC_STAR_RECORDS, other, PROVENANCE)
+        other_source, other_trans, other_edges, other_id = _components_for_chart(
+            other,
+            "birth_year",
+            "natal",
+            "乙",
+            other_stars,
+        )
+        foreign_birth = build_cycle_layer(
+            other_id,
+            other_source,
+            other_trans,
+            other_edges,
+            PROVENANCE,
+        )
+        natal = _base_natal(foreign_birth)
+        with self.assertRaises(ZiweiPhase2AError) as cm:
+            build_layer_stack(CHART, natal)
+        self.assertEqual(cm.exception.code, "chart_basis_mismatch")
+
+    def test_birth_year_slot_rejects_non_birth_year_layer(self):
+        natal0 = _base_natal()
+        source, trans, edges, identity = _components("yearly", "2026", "丙", natal0)
+        yearly_layer = build_cycle_layer(identity, source, trans, edges, PROVENANCE)
+        natal = _base_natal(yearly_layer)
+        with self.assertRaises(ZiweiPhase2AError) as cm:
+            build_layer_stack(CHART, natal)
         self.assertEqual(cm.exception.code, "layer_component_mismatch")
 
     def test_duplicate_layer_identity_is_rejected(self):
