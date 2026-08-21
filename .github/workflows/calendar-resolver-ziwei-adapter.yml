@@ -16,12 +16,17 @@ jobs:
         with:
           python-version: "3.11"
       - run: python -m pip install -r requirements.txt
-      - name: Run Ziwei adapter RED check
+      - name: Run Gate 4 regression
         id: tests
         shell: bash
         run: |
           set +e
-          python -m unittest tests.test_ziwei_calendar_adapter -v > ziwei-adapter-output.txt 2>&1
+          python -m unittest \
+            tests.test_ziwei_calendar_adapter \
+            tests.test_project_ziwei_month \
+            tests.test_project_ziwei_day \
+            tests.test_project_ziwei_hour \
+            -v > ziwei-adapter-output.txt 2>&1
           status=$?
           cat ziwei-adapter-output.txt
           echo "status=$status" >> "$GITHUB_OUTPUT"
