@@ -1,7 +1,7 @@
 {
   "source_system": "Astralium",
   "source_profile": "astralium-ziwei-v1-common（通行版）",
-  "source_digest": "sha256:f0f6e1d3abb74fb15a72aead6a257845ae9efaf1a1a14fbbbda53e2ff1cd5185",
+  "source_digest": "sha256:4cdd61ee8e9061d98e7a98f4fe7d335d96e76bcf3dab32670707f94dd461bc43",
   "rule_profile": "metaphysics-lab-common-v1",
   "rule_version": "1.0",
   "transformation_profile": {
@@ -41,5 +41,5 @@
     "status": "PASS"
   },
   "status": "PASS",
-  "run_timestamp": "2026-08-21T09:37:00Z"
+  "run_timestamp": "2026-08-21T09:48:00Z"
 }
