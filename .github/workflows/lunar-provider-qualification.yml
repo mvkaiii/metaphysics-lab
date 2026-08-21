@@ -1,0 +1,46 @@
+name: Lunar provider qualification
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    name: qualify-${{ matrix.source }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        source: [pypi, git-commit]
+
+    steps:
+      - name: Checkout probe branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install exact provider candidate
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python -m pip install --upgrade pip
+          if [ "${{ matrix.source }}" = "pypi" ]; then
+            python -m pip install "lunar_python==1.4.8"
+          else
+            python -m pip install "git+https://github.com/6tail/lunar-python.git@000c8a3d74eed098d6256a28fdd51b869324c559"
+          fi
+          python - <<'PY'
+          from importlib.metadata import version
+          print('installed lunar_python:', version('lunar_python'))
+          assert version('lunar_python') == '1.4.8'
+          PY
+
+      - name: Compare against HKO official daily conversion tables
+        run: python validation/provider_qualification/lunar_python_vs_hko.py
