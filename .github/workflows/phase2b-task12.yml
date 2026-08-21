@@ -1,0 +1,371 @@
+name: Ziwei Phase 2B feature final exact-head
+
+on:
+  pull_request:
+    branches:
+      - feature/ziwei-fine-cycle-stem-resolver-v1
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Freeze exact feature head and design ancestry
+        shell: bash
+        env:
+          FEATURE_SHA: ${{ github.event.pull_request.base.sha }}
+          EXPECTED_FEATURE_SHA: 6736bcb5826e1e6f56414e734206b837526d4096
+          DESIGN_SHA: eb52e4b92fbaca1e17b7e98e05e6b681ae730a11
+        run: |
+          set -euxo pipefail
+          test "$FEATURE_SHA" = "$EXPECTED_FEATURE_SHA"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_FEATURE_SHA"
+          git cat-file -e "$DESIGN_SHA^{commit}"
+          git merge-base --is-ancestor "$DESIGN_SHA" "$FEATURE_SHA"
+          printf 'FEATURE_SHA=%s\nDESIGN_SHA=%s\n' "$FEATURE_SHA" "$DESIGN_SHA" | tee exact-head.txt
+          echo EXACT_FEATURE_HEAD_PASS
+          echo DESIGN_ANCESTRY_PASS
+
+      - name: Phase 2A compatibility regression
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m unittest \
+            tests.test_ziwei_phase2a_models \
+            tests.test_ziwei_basis \
+            tests.test_ziwei_transformations \
+            tests.test_ziwei_flying \
+            tests.test_ziwei_composition \
+            tests.test_ziwei_phase2a_capabilities \
+            tests.test_ziwei_phase2a_qualification_tools -v 2>&1 | tee phase2a-regression.txt
+
+      - name: Phase 2B focused regression
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m unittest \
+            tests.test_calendar_sexagenary \
+            tests.test_ziwei_fine_cycle_stems \
+            tests.test_ziwei_fine_cycle_integration \
+            tests.test_ziwei_composition \
+            tests.test_ziwei_phase2b_capabilities \
+            tests.test_ziwei_phase2b_docs \
+            tests.test_ziwei_phase2b_private_qualification \
+            tests.test_ziwei_phase2b_qualification \
+            tests.test_rule_source_reconciliation -v 2>&1 | tee phase2b-regression.txt
+
+      - name: Ziwei regression
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m unittest discover -s tests -p 'test_*ziwei*.py' -v 2>&1 | tee ziwei-regression.txt
+
+      - name: Calendar regression
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m unittest discover -s tests -p 'test_calendar*.py' -v 2>&1 | tee calendar-regression.txt
+
+      - name: Bazi regression
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m unittest discover -s tests -p 'test_*bazi*.py' -v 2>&1 | tee bazi-regression.txt
+
+      - name: Full repository regression
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m unittest discover -v 2>&1 | tee full-repo.txt
+
+      - name: Live pinned lunar-lite qualification
+        shell: bash
+        env:
+          LUNAR_REV: 1d104fffa31609e9f112898cc57545827e8d57ae
+        run: |
+          set -euxo pipefail
+          rm -rf /tmp/lunar-lite /tmp/phase2b-live-lunar
+          git clone https://github.com/SylarLong/lunar-lite.git /tmp/lunar-lite
+          git -C /tmp/lunar-lite checkout --detach "$LUNAR_REV"
+          test "$(git -C /tmp/lunar-lite rev-parse HEAD)" = "$LUNAR_REV"
+          test ! -f /tmp/lunar-lite/package-lock.json
+          test -f /tmp/lunar-lite/yarn.lock
+          cd /tmp/lunar-lite
+          yarn install --frozen-lockfile --non-interactive
+          yarn build
+          node -e "const lib=require('./lib'); if(!lib.getHeavenlyStemAndEarthlyBranchByLunarDate) process.exit(2)"
+          node - <<'JS' > /tmp/lunar-lite-vectors.json
+          const fs = require('fs');
+          const lib = require('/tmp/lunar-lite/lib');
+          const pkg = JSON.parse(fs.readFileSync('/tmp/lunar-lite/package.json', 'utf8'));
+          const revision = '1d104fffa31609e9f112898cc57545827e8d57ae';
+          function lunar(id, date, timeIndex, isLeap) {
+            return {id, date, time_index: timeIndex, is_leap: isLeap,
+              result: lib.getHeavenlyStemAndEarthlyBranchByLunarDate(
+                date, timeIndex, isLeap, {year: 'normal', month: 'normal'}).toString()};
+          }
+          function solar(id, date, timeIndex) {
+            return {id, date, time_index: timeIndex,
+              result: lib.getHeavenlyStemAndEarthlyBranchBySolarDate(
+                date, timeIndex, {year: 'normal', month: 'normal'}).toString()};
+          }
+          const payload = {revision, package_version: pkg.version,
+            lunar: [
+              lunar('lunar-normal-2023-06-13', '2023-6-13', 1, false),
+              lunar('lunar-normal-2023-02-11', '2023-2-11', 1, false),
+              lunar('leap-first-half-2023-02-11', '2023-2-11', 1, true),
+              lunar('leap-second-half-2023-02-16', '2023-2-16', 1, true),
+              lunar('lunar-late-zi-2023-06-13', '2023-6-13', 12, false)
+            ],
+            solar: [
+              solar('regular-1987-12-06-hai', '1987-12-6', 11),
+              solar('late-zi-1987-12-06', '1987-12-6', 12),
+              solar('regular-2023-03-09', '2023-03-09', 5),
+              solar('regular-2023-04-08', '2023-4-8', 5)
+            ]};
+          process.stdout.write(JSON.stringify(payload, null, 2));
+          JS
+          cd "$GITHUB_WORKSPACE"
+          python tools/qualify_ziwei_phase2b_public.py \
+            --vectors-json /tmp/lunar-lite-vectors.json \
+            --ganzhi-source /tmp/lunar-lite/src/ganzhi.ts \
+            --revision "$LUNAR_REV" \
+            --output-dir /tmp/phase2b-live-lunar | tee live-lunar-lite.txt
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('/tmp/phase2b-live-lunar/public-lunar-lite-1d104fff.json').read_text(encoding='utf-8'))
+          assert p['source_revision']=='1d104fffa31609e9f112898cc57545827e8d57ae'
+          assert p['package_version']=='0.2.8'
+          assert p['status']=='PASS'
+          assert p['cases_checked']==18 and p['cases_matched']==18
+          assert p['mismatches']==[]
+          assert 'leap_twelfth_month_second_half' in p['not_externally_covered']
+          print('PUBLIC_LUNAR_LITE_18_18_PASS')
+          PY
+
+      - name: Live pinned iztro integration qualification
+        shell: bash
+        env:
+          IZTRO_REV: 814b77e6371e1050cac31bbf674db3c3138fcfde
+        run: |
+          set -euxo pipefail
+          curl -fsSL "https://raw.githubusercontent.com/SylarLong/iztro/$IZTRO_REV/src/astro/FunctionalAstrolabe.ts" -o /tmp/FunctionalAstrolabe.ts
+          curl -fsSL "https://raw.githubusercontent.com/SylarLong/iztro/$IZTRO_REV/package.json" -o /tmp/iztro-package.json
+          python - <<'PY' | tee live-iztro.txt
+          import json
+          from pathlib import Path
+          from tools.qualify_ziwei_phase2b_public import qualify_iztro_source
+          pkg=json.loads(Path('/tmp/iztro-package.json').read_text(encoding='utf-8'))
+          assert pkg['name']=='iztro' and pkg['version']=='2.6.0'
+          source=Path('/tmp/FunctionalAstrolabe.ts').read_text(encoding='utf-8')
+          report=qualify_iztro_source(source, '814b77e6371e1050cac31bbf674db3c3138fcfde', '2026-08-21T00:00:00Z')
+          assert report['status']=='PASS'
+          assert report['project_sample_transformations_each']==4
+          assert set(report['project_sample_scopes'])=={'monthly','daily','hourly'}
+          assert all((report['monthly_mutagen_uses_monthly_stem'], report['daily_mutagen_uses_daily_stem'], report['hourly_mutagen_uses_hourly_stem']))
+          print('PUBLIC_IZTRO_INTEGRATION_PASS')
+          PY
+
+      - name: Scope, Python 3.9, capability, privacy and docs gates
+        shell: bash
+        env:
+          FEATURE_SHA: ${{ github.event.pull_request.base.sha }}
+          DESIGN_SHA: eb52e4b92fbaca1e17b7e98e05e6b681ae730a11
+        run: |
+          set -o pipefail
+          python - <<'PY' | tee acceptance.txt
+          import ast
+          import json
+          import os
+          import re
+          import subprocess
+          from pathlib import Path
+          from engine.ziwei.capabilities import get_capability, can_execute, should_run_by_default
+
+          feature=os.environ['FEATURE_SHA']
+          design=os.environ['DESIGN_SHA']
+          files=subprocess.check_output(
+              ['git','-c','core.quotePath=false','diff','--name-only',design+'...'+feature], text=True
+          ).splitlines()
+          allowed={
+              'CHANGELOG.md',
+              'README.md',
+              'core/命理分析作業規範.md',
+              'core/命理推導計算規則.md',
+              'core/核心提示詞.md',
+              'core/紫微流日推導規則.md',
+              'core/紫微流時推導規則.md',
+              'core/紫微流月推導規則.md',
+              'docs/安裝到ChatGPT-Project.md',
+              'docs/快速開始.md',
+              'docs/更新與版本同步.md',
+              'docs/架構說明.md',
+              'engine/calendar/sexagenary.py',
+              'engine/ziwei/capabilities.py',
+              'engine/ziwei/composition.py',
+              'engine/ziwei/errors.py',
+              'engine/ziwei/fine_cycle.py',
+              'engine/ziwei/fine_cycle_stems.py',
+              'engine/ziwei/models.py',
+              'qualification/ziwei/phase2b/private-astralium-summary.json',
+              'qualification/ziwei/phase2b/public-iztro-814b77e6.json',
+              'qualification/ziwei/phase2b/public-lunar-lite-1d104fff.json',
+              'tests/test_calendar_sexagenary.py',
+              'tests/test_rule_source_reconciliation.py',
+              'tests/test_ziwei_composition.py',
+              'tests/test_ziwei_fine_cycle_integration.py',
+              'tests/test_ziwei_fine_cycle_stems.py',
+              'tests/test_ziwei_phase2a_capabilities.py',
+              'tests/test_ziwei_phase2b_capabilities.py',
+              'tests/test_ziwei_phase2b_docs.py',
+              'tests/test_ziwei_phase2b_private_qualification.py',
+              'tests/test_ziwei_phase2b_qualification.py',
+              'tests/ziwei_phase2b_fixtures.py',
+              'tools/qualify_ziwei_phase2b_public.py',
+          }
+          assert set(files)==allowed, sorted(set(files)^allowed)
+          assert len(files)==34, len(files)
+          assert not any(f.startswith('.github/') for f in files)
+          assert not any(f.startswith('engine/bazi/') for f in files)
+          assert not any('qimen' in f.lower() or '奇門' in f for f in files)
+          assert 'VERSION.md' not in files
+          print('FORMAL_DIFF_SCOPE_34_PASS')
+          print('NO_BAZI_QIMEN_SCOPE_LEAK_PASS')
+          print('VERSION_FILE_UNCHANGED_PASS')
+
+          for filename in files:
+              if filename.endswith('.py'):
+                  source=Path(filename).read_text(encoding='utf-8')
+                  ast.parse(source, filename=filename, feature_version=(3,9))
+          print('PYTHON39_SYNTAX_PASS')
+
+          phase2a={
+              'ziwei.transformations': ('stable','on_demand','1.0'),
+              'ziwei.flying': ('stable','on_demand','1.0'),
+          }
+          for capability_id,(maturity,routing,version) in phase2a.items():
+              cap=get_capability(capability_id)
+              assert cap['implementation']=='implemented'
+              assert cap['maturity']==maturity and cap['routing']==routing and cap['rule_version']==version
+              assert can_execute(capability_id) and not should_run_by_default(capability_id)
+          assert get_capability('ziwei.flow_month_palaces')['maturity']=='stable'
+          assert get_capability('ziwei.flow_month_palaces')['routing']=='default'
+          assert get_capability('ziwei.flow_day_palaces')['maturity']=='experimental'
+          assert get_capability('ziwei.flow_hour_palaces')['maturity']=='experimental'
+          print('PHASE2A_CAPABILITY_STABILITY_PASS')
+
+          fine_ids=(
+              'ziwei.flow_month_stem','ziwei.flow_day_stem','ziwei.flow_hour_stem',
+              'ziwei.flow_month_transformations','ziwei.flow_day_transformations','ziwei.flow_hour_transformations',
+              'ziwei.flow_month_flying','ziwei.flow_day_flying','ziwei.flow_hour_flying',
+          )
+          for capability_id in fine_ids:
+              cap=get_capability(capability_id)
+              assert cap['implementation']=='implemented'
+              assert cap['maturity']=='experimental'
+              assert cap['routing']=='on_demand'
+              assert cap['rule_version']=='1.0-exp'
+              assert can_execute(capability_id)
+              assert not should_run_by_default(capability_id)
+          stars=get_capability('ziwei.flowing_stars')
+          assert stars['implementation']=='planned' and stars['routing']=='on_demand'
+          assert not can_execute('ziwei.flowing_stars')
+          print('PHASE2B_EXPERIMENTAL_ON_DEMAND_PASS')
+          print('FLOWING_STARS_PLANNED_PASS')
+
+          qdir=Path('qualification/ziwei/phase2b')
+          assert sorted(p.name for p in qdir.glob('*.json'))==[
+              'private-astralium-summary.json','public-iztro-814b77e6.json','public-lunar-lite-1d104fff.json'
+          ]
+          private_path=qdir/'private-astralium-summary.json'
+          private_text=private_path.read_text(encoding='utf-8')
+          private=json.loads(private_text)
+          assert private['source_name']=='Astralium'
+          assert private['status']=='PENDING'
+          assert private['reason_code']=='fine_cycle_source_not_available'
+          assert private['raw_private_payload_committed'] is False
+          for forbidden in ('star_locations','palace_stems','expected_edges','birth_datetime','出生年月','姓名'):
+              assert forbidden not in private_text, forbidden
+          print('ASTRALIUM_FINE_CYCLE_PENDING_PASS')
+          print('PRIVACY_PASS')
+
+          lunar=json.loads((qdir/'public-lunar-lite-1d104fff.json').read_text(encoding='utf-8'))
+          iztro=json.loads((qdir/'public-iztro-814b77e6.json').read_text(encoding='utf-8'))
+          assert lunar['status']=='PASS' and lunar['cases_checked']==18 and lunar['cases_matched']==18 and lunar['mismatches']==[]
+          assert lunar['source_revision']=='1d104fffa31609e9f112898cc57545827e8d57ae'
+          assert 'leap_twelfth_month_second_half' in lunar['not_externally_covered']
+          assert iztro['status']=='PASS' and iztro['source_revision']=='814b77e6371e1050cac31bbf674db3c3138fcfde'
+          assert iztro['project_sample_transformations_each']==4
+          print('COMMITTED_PUBLIC_QUALIFICATION_PASS')
+
+          docs='\n'.join(Path(p).read_text(encoding='utf-8') for p in (
+              'README.md','CHANGELOG.md','core/命理推導計算規則.md','docs/架構說明.md',
+              'docs/快速開始.md','docs/安裝到ChatGPT-Project.md','docs/更新與版本同步.md'
+          ))
+          for token in (
+              'ziwei-fine-cycle-lunar-late-zi-v1','late_zi_forward-v1',
+              'experimental','on_demand','lunar-lite','18/18 PASS','iztro','Astralium','PENDING','planned'
+          ):
+              assert token in docs, token
+          version=Path('VERSION.md').read_text(encoding='utf-8')
+          assert 'v1.2.0' in version
+          assert 'v1.3.0' not in version
+          print('DOCS_SANITY_PASS')
+          print('RELEASE_IDENTITY_V120_PASS')
+
+          def count(path):
+              text=Path(path).read_text(encoding='utf-8')
+              m=re.findall(r'Ran (\d+) tests', text)
+              assert m, path
+              assert 'FAILED' not in text and '\nOK\n' in text, path
+              return int(m[-1])
+          counts={
+              'phase2a': count('phase2a-regression.txt'),
+              'phase2b': count('phase2b-regression.txt'),
+              'ziwei': count('ziwei-regression.txt'),
+              'calendar': count('calendar-regression.txt'),
+              'bazi': count('bazi-regression.txt'),
+              'full': count('full-repo.txt'),
+          }
+          assert counts['full']==195, counts
+          print('PHASE2A_REGRESSION_PASS')
+          print('PHASE2B_REGRESSION_PASS')
+          print('ZIWEI_REGRESSION_PASS')
+          print('CALENDAR_REGRESSION_PASS')
+          print('BAZI_REGRESSION_PASS')
+          print('FULL_REPO_195_PASS')
+          print('FINAL_TEST_COUNTS '+' '.join('%s=%s' % item for item in counts.items()))
+          PY
+
+      - name: Upload exact-head evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase2b-feature-final-evidence
+          path: |
+            exact-head.txt
+            phase2a-regression.txt
+            phase2b-regression.txt
+            ziwei-regression.txt
+            calendar-regression.txt
+            bazi-regression.txt
+            full-repo.txt
+            live-lunar-lite.txt
+            live-iztro.txt
+            acceptance.txt
