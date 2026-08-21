@@ -1,5 +1,31 @@
 # 變更紀錄
 
+## Unreleased｜Phase 2B
+
+### Ziwei Fine Cycle Stem Resolver v1
+
+- 新增 `engine/calendar/sexagenary.py` 中立干支數學 helper，不 import 八字 policy。
+- 新增 `engine/ziwei/fine_cycle_stems.py`，固定 profile `ziwei-fine-cycle-lunar-late-zi-v1` / `1.0-exp`。
+- 紫微流月 stem 採農曆月與閏月 15/16 分界；23:xx 不提前切換流月。
+- 紫微流日固定 `late_zi_forward-v1`：22:59 舊日、23:00 effective date +1、00:00 不 double-rollover。
+- 紫微流時使用 effective Ziwei day stem 起五鼠遁，hour branch 直接採 CalendarContext。
+- 新增 `engine/ziwei/fine_cycle.py`，把 resolved stem 接入既有 Transformation / Flying Core。
+- Composition 支援 monthly / daily / hourly layer，保留 duplicate/conflict fail-closed semantics。
+- 細運 stem／四化／飛化 capability 升為 `implemented / experimental / on_demand / 1.0-exp`；Stable Core 與既有 palace maturity 不變；流曜仍 planned。
+
+### Phase 2B qualification
+
+```text
+pinned lunar-lite 1d104fff...   18/18 PASS
+pinned iztro 814b77e6...        integration PASS
+Astralium fine-cycle             PENDING
+```
+
+- `leap_twelfth_month_second_half` 目前只具 synthetic internal coverage，標記為 not externally qualified。
+- Astralium PENDING 原因：目前沒有完整 fine-cycle stem/transformation/flying private source payload。
+- repo 不提交 Astralium raw private chart；只保存 aggregate PENDING state。
+- 本段為 Unreleased 開發紀錄；`VERSION.md` 與 v1.2.0 release identity 不變。
+
 ## v1.2.0｜2026-08-21
 
 v1.2.0 把先前分散在開發線的模組化、Calendar infrastructure、紫微細時間定位 capability 與 Ziwei Transformation & Flying Core v1 正式收斂成同一個 release baseline。
