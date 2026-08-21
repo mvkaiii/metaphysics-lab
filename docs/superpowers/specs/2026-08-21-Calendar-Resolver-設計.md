@@ -9,7 +9,7 @@
 
 ## 一、目的
 
-Calendar Resolver 的目的，是把「民用時間與曆法正規化」從八字、紫微與未來奇門的命理核心公式中抽離，提供一個固定、可追溯、可驗證的 `CalendarContext`。
+Calendar Resolver 的目的，是把「民用時間與曆法正規化」從八字、紫微與未來奇門的命理核心公式中抽離，提供固定、可追溯、可驗證的 `CalendarContext`。
 
 第一版資料流：
 
@@ -17,6 +17,10 @@ Calendar Resolver 的目的，是把「民用時間與曆法正規化」從八�
 使用者自然語言
         ↓
 ChatGPT / Skill / Agent
+        ↓
+判斷目標 capability 所需最低時間精度
+        ↓
+Input Resolution / Precision Gate
         ↓
 已解析的 civil_datetime + IANA timezone + optional utc_offset_hint
         ↓
@@ -38,6 +42,8 @@ Ziwei Adapter
 > 命理日界與各體系公式由各自 adapter / engine 負責。
 >
 > 「算得出來」與「Project 已驗證」必須分開表示。
+>
+> **Precision must be earned by input.** 輸入只有年級精度，就只能產生年級結論；只有月級精度，就不能包裝成日／時級結論。
 
 ---
 
@@ -159,7 +165,165 @@ Calendar Resolver 的加入不得讓 `day.py` 或 `hour.py` 反向依賴 timezon
 
 ---
 
-## 四、Natural-Language Parsing Boundary
+## 四、Input Resolution / Precision Gate
+
+這個 Gate 位於自然語言／使用者輸入與 Calendar Resolver 之間，由 ChatGPT / Skill / Agent 等上層負責。
+
+Resolver 本身拒絕模糊輸入；上游也有責任在呼叫 Resolver 前確認輸入是否達到目標 capability 所需精度。若不足，必須：
+
+1. 追問必要資訊；或
+2. 明確保留多個候選，不偷偷選其中一個；或
+3. 降低分析精度，不進更細層 engine。
+
+不得自行補值來製造不存在的精度。
+
+### 4.1 核心原則：Precision must be earned by input
+
+正式規則：
+
+> **Precision must be earned by input.**
+>
+> 輸入只有年級精度，就只能產生年級結論；只有月級精度，就不能包裝成日／時級結論。
+
+也就是：
+
+```text
+input precision >= target capability required precision
+```
+
+才允許進入對應 capability。
+
+不得以固定預設值補齊缺失欄位，例如：
+
+```text
+只知道 2026 年 9 月中
+→ 不得偷偷補成 2026-09-15 12:00
+
+只知道晚上 11 點左右
+→ 不得偷偷選 22:50 或 23:10
+
+只知道某天在紐約凌晨 1:30
+→ 若落在 DST overlap，不得偷偷選 fold=0 / fold=1
+```
+
+### 4.2 所需精度由「問題與目標 capability」決定
+
+不是所有問題都需要完整 `civil_datetime`。
+
+例如：
+
+```text
+年度趨勢 / 流年
+→ 年級精度即可
+→ 不需要為了使用 Resolver 而補一個假的月、日、時間
+
+月份趨勢 / 流月
+→ 至少需要可定位到目標月份的資訊
+→ 若月份邊界依時區或曆法轉換而定，需補足對應 timezone / date context
+
+流日
+→ 必須可定位到唯一 civil date
+→ 若系統需要事件所在地 timezone，必須一併確認
+
+流時 / 指定時段
+→ 必須可定位到足以決定 hour branch 的 local civil time
+→ 若該 local time 具有 DST ambiguity，還必須消歧義
+```
+
+年度問題不應因 Resolver 第一版 API 接受完整 datetime，就被迫建立假的完整 datetime。若問題只需要較粗層級，應停在對應上層分析能力，不呼叫不必要的細粒度 Resolver / capability。
+
+### 4.3 Gate 行為
+
+上游先判斷：
+
+```text
+A. 目標分析需要哪一層？
+B. 使用者目前輸入實際提供到哪一層？
+C. 是否能唯一定位該層所需時間？
+```
+
+流程：
+
+```text
+使用者輸入
+        ↓
+判斷 required precision
+        ↓
+輸入是否足夠？
+   ├─ 是
+   │   ↓
+   │  若需 Calendar Resolver
+   │   → 產生 structured civil input
+   │   → 呼叫 Resolver
+   │
+   └─ 否
+       ├─ 可透過追問取得 → 追問最少必要資訊
+       ├─ 本來就存在多個合理候選 → 保留候選並明確呈現
+       └─ 無法再確認 → 降低分析精度，不進更細層 capability
+```
+
+### 4.4 追問原則
+
+追問只為補足「目標 capability 的必要精度」，不為形式完整而追問。
+
+例如：
+
+- 問「2027年工作運」：不追問月日時間。
+- 問「2027年9月哪段時間比較適合」：至少需定位月份；若要再比較日級時間窗，才繼續追問日期。
+- 問「9月18日適不適合面試」：至少確認年份、日期與事件地 timezone。
+- 問「9月18日下午哪個時段好」：需再定位時間範圍，才能進 hour-level capability。
+
+### 4.5 模糊區間不是單一時間點
+
+像：
+
+```text
+9月中
+下午
+晚上11點左右
+月底前後
+```
+
+都不是唯一 instant。
+
+上游不得直接轉成單一 `civil_datetime`。
+
+如果問題本身適合區間分析，可以保留區間並用多個明確候選／較粗層級分析；如果目標 capability 必須單一 instant，則需追問到能唯一定位，否則不執行該 capability。
+
+### 4.6 DST / timezone ambiguity 也屬 Input Resolution Gate
+
+即使字面日期時間完整，也不一定代表已唯一定位。
+
+例如：
+
+```text
+America/New_York
+2026-11-01 01:30
+```
+
+因 DST fall-back 可能對應兩個 UTC instant，因此在未提供合法 `utc_offset_hint` 或其他足以判定的資訊前，仍視為未通過 precision gate。
+
+Resolver 會回 `ambiguous_local_time`；上游應將合法候選呈現給使用者消歧義，而不是自行選擇。
+
+### 4.7 Gate 不修改事實
+
+Input Resolution Gate 可以：
+
+- 解析明確自然語言。
+- 向使用者追問。
+- 建立候選集合。
+- 降低分析精度。
+
+Input Resolution Gate 不可以：
+
+- 猜測使用者未提供的日期／時間／timezone。
+- 用「常見預設值」補欄位。
+- 為了讓下游 API 可呼叫而虛構精確時間。
+- 把模糊區間包裝成精確 instant。
+
+---
+
+## 五、Natural-Language Parsing Boundary
 
 Calendar Resolver 不接受自然語言。
 
@@ -171,7 +335,9 @@ Calendar Resolver 不接受自然語言。
 「台灣時間下午兩點」
 ```
 
-必須由 ChatGPT / Skill / Agent 上層先解析成：
+必須由 ChatGPT / Skill / Agent 上層處理。
+
+若自然語言已足以唯一解析，才轉成：
 
 ```json
 {
@@ -179,6 +345,8 @@ Calendar Resolver 不接受自然語言。
   "timezone": "Asia/Taipei"
 }
 ```
+
+若仍含模糊性，必須先通過「Input Resolution / Precision Gate」，不得直接送入 Resolver。
 
 Resolver 從結構化 civil input 開始。
 
@@ -194,7 +362,7 @@ Resolver 從結構化 civil input 開始。
 
 ---
 
-## 五、CalendarContext Data Contract
+## 六、CalendarContext Data Contract
 
 採用 B 型資料模型：**算法結果與驗證狀態完全分離。**
 
@@ -267,7 +435,7 @@ CalendarContext
    └─ metaphysics_day_boundary_applied
 ```
 
-### 5.1 Schema / resolver version
+### 6.1 Schema / resolver version
 
 第一版必須從一開始保留：
 
@@ -283,7 +451,7 @@ resolver_version
 
 不得只用一個模糊 `version` 同時代表兩者。
 
-### 5.2 Lunar 閏月表示
+### 6.2 Lunar 閏月表示
 
 不得把 `lunar-python` 的負月份格式外洩。
 
@@ -310,7 +478,7 @@ resolver_version
 
 ---
 
-## 六、Lunar Provider Architecture
+## 七、Lunar Provider Architecture
 
 第一版採 provider interface：
 
@@ -324,7 +492,7 @@ lunar-python 1.4.8
 
 Provider interface 必須讓上層 Resolver 不依賴 `lunar-python` 的特殊資料表示法。
 
-建議最小責任：
+最小責任：
 
 ```text
 Gregorian civil date
@@ -336,7 +504,7 @@ Provider failure 必須轉換成 Resolver 的 error contract，不直接把第�
 
 ---
 
-## 七、lunar-python Provenance
+## 八、lunar-python Provenance
 
 第一版 runtime provider 固定：
 
@@ -352,7 +520,7 @@ source_revision = 000c8a3d74eed098d6256a28fdd51b869324c559
 
 ---
 
-## 八、HKO Exhaustive Validation Evidence
+## 九、HKO Exhaustive Validation Evidence
 
 Provider qualification 已完成兩階段驗證；這些 probe 是一次性研究證據，不進 `main`。
 
@@ -393,7 +561,7 @@ hko-gregorian-lunar-1901-2100-v1
 
 ---
 
-## 九、CWA Secondary Validation Role
+## 十、CWA Secondary Validation Role
 
 台灣中央氣象署 CWA 定位為：
 
@@ -413,7 +581,7 @@ HKO 與 CWA 的角色不得混稱。
 
 ---
 
-## 十、Validated Range 與 Status Model
+## 十一、Validated Range 與 Status Model
 
 第一版 validation status 固定四種：
 
@@ -424,7 +592,7 @@ boundary_conflict
 out_of_validated_range
 ```
 
-### 10.1 `validated`
+### 11.1 `validated`
 
 條件：
 
@@ -432,7 +600,7 @@ out_of_validated_range
 - 不屬已知 boundary caution / conflict。
 - Provider 正常產生結果。
 
-### 10.2 `boundary_caution`
+### 11.2 `boundary_caution`
 
 官方資料已標記天文敏感點，但目前 exhaustive comparison 沒有 provider mismatch。
 
@@ -445,7 +613,7 @@ out_of_validated_range
 
 這些日期必須保留 warning metadata，不可因「目前剛好一致」就當作普通 validated date。
 
-### 10.3 `boundary_conflict`
+### 11.3 `boundary_conflict`
 
 實際 exhaustive comparison 已確認 provider 與 HKO oracle 不同。
 
@@ -467,13 +635,13 @@ out_of_validated_range
 - 不得偷偷改用 HKO 結果覆蓋 runtime provider。
 - 不得偷偷忽略差異。
 
-第一版建議 boundary id：
+第一版 boundary id：
 
 ```text
 hko-new-moon-2057-09-28-conflict
 ```
 
-### 10.4 `out_of_validated_range`
+### 11.4 `out_of_validated_range`
 
 例如：
 
@@ -499,7 +667,7 @@ error.code = provider_unsupported_date
 
 ---
 
-## 十一、Timezone Provider Architecture
+## 十二、Timezone Provider Architecture
 
 第一版使用：
 
@@ -536,7 +704,7 @@ Implementation / CI 必須保留同等級的可重現性；不得在測試結果
 
 ---
 
-## 十二、Timezone Input Contract
+## 十三、Timezone Input Contract
 
 第一版只接受 IANA timezone identifier，例如：
 
@@ -567,9 +735,9 @@ GMT+8
 
 ---
 
-## 十三、DST Nonexistent / Ambiguous Rules
+## 十四、DST Nonexistent / Ambiguous Rules
 
-### 13.1 Nonexistent local time
+### 14.1 Nonexistent local time
 
 例如：
 
@@ -595,7 +763,7 @@ error.code = nonexistent_local_time
 
 因為自動修正會改變使用者實際指定的時間語意。
 
-### 13.2 Ambiguous local time
+### 14.2 Ambiguous local time
 
 例如：
 
@@ -624,7 +792,7 @@ Resolver 不得自己選 fold=0 或 fold=1。
 
 ---
 
-## 十四、utc_offset_hint Contract
+## 十五、utc_offset_hint Contract
 
 `utc_offset_hint` 只用於 ambiguous local time 消歧義。
 
@@ -651,7 +819,7 @@ error.code = invalid_utc_offset_hint
 
 ---
 
-## 十五、Historical Timezone Support
+## 十六、Historical Timezone Support
 
 第一版不得把 timezone support 定義成只支援現代日期。
 
@@ -667,7 +835,7 @@ Qualification 已確認 `Asia/Taipei` 包含歷史 offset 變化，例如：
 
 ---
 
-## 十六、23:00 / 00:00 Rule
+## 十七、23:00 / 00:00 Rule
 
 Calendar Resolver 的 hour-branch mapping：
 
@@ -716,7 +884,7 @@ gregorian_date = 當日
 
 ---
 
-## 十七、Metaphysical Day-Boundary Separation
+## 十八、Metaphysical Day-Boundary Separation
 
 `CalendarContext.policies.metaphysics_day_boundary_applied` 第一版固定：
 
@@ -751,7 +919,7 @@ Architecture hard rule：
 
 ---
 
-## 十八、Error Contract
+## 十九、Error Contract
 
 第一版 public error code 固定：
 
@@ -778,7 +946,7 @@ provider_failure
 }
 ```
 
-### 18.1 `invalid_datetime`
+### 19.1 `invalid_datetime`
 
 包含：
 
@@ -786,14 +954,16 @@ provider_failure
 - embedded UTC offset 不符合第一版 contract。
 - 缺少必要 local civil time components。
 
-### 18.2 `invalid_timezone`
+模糊自然語言本身原則上不應進到 Resolver；應先被上游 Input Resolution / Precision Gate 攔截。
+
+### 19.2 `invalid_timezone`
 
 包含：
 
 - 非 IANA identifier。
 - IANA identifier 不存在於 pinned tzdb。
 
-### 18.3 `provider_failure`
+### 19.3 `provider_failure`
 
 只用於不可預期 provider failure。
 
@@ -807,7 +977,7 @@ provider_failure
 
 ---
 
-## 十九、Validation 必須拆兩層
+## 二十、Validation 必須拆兩層
 
 Calendar validation 與 timezone validation 不得共用一個模糊 PASS。
 
@@ -853,7 +1023,7 @@ boundary_conflict
 
 ---
 
-## 二十、Ziwei First-Adapter Scope
+## 二十一、Ziwei First-Adapter Scope
 
 第一版只正式建立 Ziwei adapter。
 
@@ -872,15 +1042,15 @@ trusted hour_branch
 engine.ziwei.month / day / hour
 ```
 
-### 20.1 Adapter 可以做
+### 21.1 Adapter 可以做
 
 - 從 `CalendarContext` 取出 Ziwei core 已需要的欄位。
 - 檢查 CalendarContext 是否成功解析。
 - 檢查 calendar conversion validation metadata。
-- 將 validation / boundary metadata保留在上層 structured output。
+- 將 validation / boundary metadata 保留在上層 structured output。
 - 呼叫現有 Ziwei core。
 
-### 20.2 Adapter 不可以做
+### 21.2 Adapter 不可以做
 
 - 修改 lunar date。
 - 自己再算 Gregorian→Lunar。
@@ -888,13 +1058,11 @@ engine.ziwei.month / day / hour
 - 套用八字 23:00 policy。
 - 決定尚未正式驗證的紫微 23:00 換日規則。
 
-### 20.3 Boundary conflict 對 Ziwei 的行為
+### 21.3 Boundary conflict 對 Ziwei 的行為
 
 `boundary_conflict` 代表 provider 與 validation oracle 已知不一致。
 
 第一版 adapter 不得偷偷替使用者選另一份 lunar date。
-
-建議：
 
 - Resolver 成功回傳 provider result + conflict metadata。
 - Ziwei adapter 預設拒絕把 `boundary_conflict` 當成無警告 trusted input 執行高精度推導。
@@ -902,7 +1070,7 @@ engine.ziwei.month / day / hour
 
 ---
 
-## 二十一、建議模組邊界
+## 二十二、建議模組邊界
 
 Implementation plan 可依 repo 現況調整實際檔名，但責任邊界應維持：
 
@@ -926,11 +1094,13 @@ engine/ziwei/
 - `resolver.py`：orchestration；組合 timezone + lunar + validation metadata。
 - `ziwei/calendar_adapter.py`：只把 CalendarContext 對接既有 Ziwei core。
 
+Input Resolution / Precision Gate 屬於 Resolver 上游，不應偷偷塞進 `resolver.py`。未來若有 Skill / Agent router，應由其負責 required precision 判斷與追問／降級策略。
+
 不得把全部邏輯塞進一支大型 `resolver.py`。
 
 ---
 
-## 二十二、Dependency / Reproducibility Policy
+## 二十三、Dependency / Reproducibility Policy
 
 目前 repo 的八字 engine 可自包含執行，但 Calendar Resolver 第一版允許新增 runtime dependency，因已明確選定：
 
@@ -945,9 +1115,27 @@ CI qualification / unit test 若要宣稱 reproducible profile，必須確保實
 
 ---
 
-## 二十三、Testing Strategy
+## 二十四、Testing Strategy
 
-測試分四層，且每個小流程必須 PASS 才能進下一層。
+測試分五層。**每個小流程必須 PASS 才能進下一層。**
+
+### Gate 0｜Input Resolution / Precision contract tests
+
+這一層測試的是上游 contract / router behavior，不要求把自然語言 NLP 寫進 Calendar Resolver。
+
+至少涵蓋：
+
+- 年級問題只需要年級精度，不建立假的完整 datetime。
+- 月級問題缺少必要月份資訊時不得進日／時 capability。
+- 日級問題只有「9月中」時不得偷偷選 9/15。
+- 時級問題只有「晚上11點左右」時不得偷偷選單一分鐘。
+- 輸入不足時可選擇：追問、保留候選、或降級分析。
+- target capability 所需精度已滿足時才允許呼叫對應下游。
+- ambiguous local time 不得由上游偷偷選 offset。
+
+如果第一版 repo 尚未包含真正的 AI / Skill router，至少要把這些行為固化成可測試的 pure policy/helper 或 adapter precondition；不得只留在 prompt 文件中而完全無機械驗證。
+
+**Gate 0 PASS 才能進 Gate 1。**
 
 ### Gate 1｜Pure unit tests
 
@@ -1024,16 +1212,31 @@ existing Ziwei month/day/hour result
 
 ---
 
-## 二十四、Acceptance Gates
+## 二十五、Acceptance Gates
 
-本 subsystem 強制採「小流程完成 → 實際驗證 → PASS → 下一步」規則。
+本 subsystem 強制採：
+
+```text
+Input precision contract
+        ↓ PASS
+Timezone / basic normalization
+        ↓ PASS
+DST / historical timezone
+        ↓ PASS
+Lunar validation contract
+        ↓ PASS
+Ziwei adapter integration
+        ↓ PASS
+Full repo regression
+```
 
 禁止：
 
-- 一次把 timezone、lunar、resolver、adapter 全部寫完後才第一次測。
+- 一次把 precision policy、timezone、lunar、resolver、adapter 全部寫完後才第一次測。
 - 前一層 FAIL 時先跳去做下一層。
 - 為讓新程式通過而直接修改既有測試預期值。
 - 把 provider qualification 證據當作 implementation tests 已通過。
+- 以假日期／假時間補齊上游資料，只為了讓 Resolver 可以執行。
 
 每個 gate 的必要證據至少包含：
 
@@ -1057,7 +1260,7 @@ exit status
 
 ---
 
-## 二十五、Provider Qualification 與 Product Tests 的區別
+## 二十六、Provider Qualification 與 Product Tests 的區別
 
 已完成的 temporary qualification PR：
 
@@ -1089,7 +1292,7 @@ PR #6 timezone normalization qualification
 
 ---
 
-## 二十六、Migration / Future Bazi Integration
+## 二十七、Migration / Future Bazi Integration
 
 第一版**不得 refactor Bazi**。
 
@@ -1127,7 +1330,7 @@ engine.bazi.calendar
 
 ---
 
-## 二十七、Future Qimen Integration
+## 二十八、Future Qimen Integration
 
 Qimen 只列為未來 consumer，不在第一版實作。
 
@@ -1150,9 +1353,20 @@ Resolver 可以提供共用：
 
 ---
 
-## 二十八、Failure / Risk Analysis
+## 二十九、Failure / Risk Analysis
 
-### 28.1 最大架構風險：日界污染
+### 29.1 最大上游風險：假精確輸入
+
+如果上游把模糊日期／時間自行補成單一 datetime，下游即使全部計算正確，仍會產生「輸入是假精確，輸出看起來很精確」的錯誤。
+
+防護：
+
+- `Precision must be earned by input`。
+- Gate 0。
+- 缺資料時追問／保留候選／降級。
+- 禁止隱藏 default date / time。
+
+### 29.2 最大架構風險：日界污染
 
 如果 Resolver 把 23:00 直接當「下一日」，會立即把 Bazi 特定政策污染到 Ziwei / Qimen。
 
@@ -1164,7 +1378,7 @@ metaphysics_day_boundary_applied = false
 
 加上 23:00 / 00:00 regression tests。
 
-### 28.2 最大曆法風險：validation 與 computation 混為一談
+### 29.3 最大曆法風險：validation 與 computation 混為一談
 
 如果 provider 算得出 2150，就寫成 validated，會製造不存在的驗證證據。
 
@@ -1173,7 +1387,7 @@ metaphysics_day_boundary_applied = false
 - computation result 與 validation metadata 分層。
 - explicit `out_of_validated_range`。
 
-### 28.3 最大 provider 風險：版本漂移
+### 29.4 最大 provider 風險：版本漂移
 
 如果 runtime 自動升級 lunar-python / tzdata，歷史輸出可能改變但 provenance 無法追蹤。
 
@@ -1183,7 +1397,7 @@ metaphysics_day_boundary_applied = false
 - source revision metadata。
 - deterministic tests。
 
-### 28.4 最大 DST 風險：默默猜 fold / shift nonexistent time
+### 29.5 最大 DST 風險：默默猜 fold / shift nonexistent time
 
 防護：
 
@@ -1191,7 +1405,7 @@ metaphysics_day_boundary_applied = false
 - ambiguous → error + candidates。
 - explicit offset hint only。
 
-### 28.5 最大 scope 風險：第一版同時改 Bazi
+### 29.6 最大 scope 風險：第一版同時改 Bazi
 
 防護：
 
@@ -1200,27 +1414,32 @@ metaphysics_day_boundary_applied = false
 
 ---
 
-## 二十九、Implementation Plan 前置條件
+## 三十、Implementation Plan 前置條件
 
 只有在本 spec 被使用者 review 並明確核准後，才可進入 `writing-plans`。
 
 Implementation plan 必須：
 
 1. 先確認 dependency manifest 策略。
-2. 依 Gate 1 → Gate 4 拆成可獨立驗證的小步驟。
-3. 每一步先寫／調整測試，再做實作。
-4. 每個 gate PASS 才能進下一步。
-5. 最後跑完整 repo test suite。
-6. 不碰 Bazi refactor、Qimen、紫微 transformations / 流曜 / 細飛。
+2. 明確定義 Input Resolution / Precision Gate 要落在哪個可測試 boundary；不得只靠 prompt 約定。
+3. 依 Gate 0 → Gate 4 拆成可獨立驗證的小步驟。
+4. 每一步先寫／調整測試，再做實作。
+5. 每個 gate PASS 才能進下一步。
+6. 最後跑完整 repo test suite。
+7. 不碰 Bazi refactor、Qimen、紫微 transformations / 流曜 / 細飛。
 
 在 spec review 前不得開始 coding。
 
 ---
 
-## 三十、第一版成功定義
+## 三十一、第一版成功定義
 
 Calendar Resolver v1 第一版只有在以下條件全部成立時才算完成：
 
+- `Precision must be earned by input` 已成為可測試 contract，而不只是文字規則。
+- 模糊日期／時間不會被偷偷補成單一 datetime。
+- target capability 所需精度不足時會追問、保留候選或降級，而不是硬進細層 engine。
+- 年級問題不會被迫建立假的完整 datetime。
 - structured local civil datetime + IANA timezone 可正常解析。
 - DST nonexistent / ambiguous 行為符合 contract。
 - optional `utc_offset_hint` 可正確消歧義。
@@ -1234,7 +1453,7 @@ Calendar Resolver v1 第一版只有在以下條件全部成立時才算完成�
 - `metaphysics_day_boundary_applied = false`。
 - Ziwei adapter 可接現有 month/day/hour core。
 - 不對 Bazi 進行 refactor。
-- Gate 1～4 全部 PASS。
+- Gate 0～4 全部 PASS。
 - 完整 repo test suite PASS。
 - 文件與實際 contract 一致。
 
