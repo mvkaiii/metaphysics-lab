@@ -25,7 +25,13 @@
 - Metaphysics Lab Calendar Resolver：v1.0.0
 - Calendar / Input Resolver：implemented
 - Ziwei Calendar Adapter：implemented
-- 紫微細部四化／流曜／細層飛化：`planned / on_demand`
+- Ziwei Transformation Core v1：`implemented / stable / on_demand`
+- Ziwei Flying Core v1：`implemented / stable / on_demand`
+- Phase 2A 公開 iztro 十干四化 qualification：`40 / 40 PASS`
+- Phase 2A 私有 Astralium 十干四化 qualification：`40 / 40 PASS`
+- Phase 2A 私有 Astralium flying qualification：`80 / 80 PASS`
+- 紫微流月／流日／流時細運四化／飛化：`planned / on_demand`
+- 紫微流曜：`planned / on_demand`
 - Cross-System Validation：planned
 
 `Experimental / On-demand` 代表能力已有可執行 Python 與驗證紀錄，但一般年度／月份問事不預設執行，分析時也必須降權；不等於 Stable，也不等於能力不存在。
@@ -41,7 +47,10 @@
 - 紫微流時：v1.1 正式版未包含；v1.2 開發線已實作為 Experimental / On-demand，只含流時命宮與十二宮定位
 - Calendar / Input Resolver：v1.2 開發線已實作 v1.0.0；需要 `lunar-python 1.4.8` 與 `tzdata 2026.3`
 - Ziwei Calendar Adapter：v1.2 開發線已實作
-- 紫微細部四化／流曜／細層飛化：尚未實作
+- 紫微十天干四化核心：v1.2 開發線已實作為 Stable / On-demand；rule profile `metaphysics-lab-common-v1`
+- 紫微本命宮干、生年、大限、流年飛化核心：v1.2 開發線已實作為 Stable / On-demand
+- Phase 2A qualification：pinned iztro `40/40`；私有 Astralium 四化 `40/40`、飛化 `80/80`；raw private chart 不存 repo
+- 紫微流月／流日／流時細運四化／飛化與流曜：尚未實作，維持 Planned / On-demand
 
 ## 邊界提醒
 

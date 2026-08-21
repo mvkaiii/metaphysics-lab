@@ -58,6 +58,17 @@
 - 新增 `engine/ziwei/calendar_adapter.py` 作為第一個正式 adapter；`boundary_conflict` 不會被靜默當作正常可信日期。
 - 本次沒有 refactor Bazi；自然語言解析、真太陽時、Qimen、紫微細部四化／流曜／細飛與紫微 23:00 命理日界不在本次範圍。
 
+### Ziwei Transformation & Flying Core v1（Phase 2A）
+
+- 新增 `engine/ziwei/transformation_profiles.py` 與 `engine/ziwei/transformations.py`，以版本化 profile 固定十天干祿／權／科／忌規則；`ziwei.transformations` 升為 `implemented / stable / on_demand`，rule version `1.0`。
+- 新增 `engine/ziwei/basis.py`、`engine/ziwei/models.py`、`engine/ziwei/errors.py`，用 record-first builder 建立 duplicate-safe 的本命星曜位置與十二宮宮干 index，資料衝突 fail closed，不採 last-write-wins。
+- 新增 `engine/ziwei/flying.py`：四化星只依已校驗 natal star location 落宮；本命十二宮宮干形成 48-edge graph。底層 relation 只保存 `same_palace`、`opposite_palace_incoming`、`normal`；`↑/↓` 僅為 Astralium-compatible presentation mapping。
+- 新增 `engine/ziwei/composition.py`：生年四化留在 natal reference frame，大限／流年作獨立 layer；不同 scope 共存但不互相覆寫，同一 `LayerIdentity` 矛盾時 fail closed。
+- Phase 2A 不提供祿權科忌分數、最終 transformation state、共振吉凶或 AI 解讀。
+- 公開 qualification 使用 pinned `SylarLong/iztro` revision `814b77e6371e1050cac31bbf674db3c3138fcfde`，十干四化 `40/40 PASS`。
+- 私有 Astralium qualification：十干四化 `40/40 PASS`；本命 `48/48`、大限 `4/4`、2023–2029 流年 `28/28`，flying 合計 `80/80 PASS`；presentation relation `11/11 PASS`。repo 只保存 aggregate summary 與 digest，不保存私人 raw chart。
+- 紫微流月／流日／流時天干 resolver、對應細運四化／飛化與流曜仍維持 `planned / on_demand`；Phase 2A 不解除既有細運限制。
+
 ### 證據權重
 
 - v1.2 採質性證據階層，不先設定八字／紫微或 Stable／Experimental 的任意固定百分比。
@@ -69,7 +80,8 @@
 
 ### 後續尚未實作
 
-- 紫微細部四化、流曜與細層飛化算法。
+- 紫微流月／流日／流時天干 resolver 與對應細運四化／飛化。
+- 紫微流曜（moving stars）。
 - Cross-System Validation 正式引擎。
 
 以上是後續 capability / infrastructure PR 的目標，不代表 Metaphysics Lab 的終局設計要排除這些能力。
