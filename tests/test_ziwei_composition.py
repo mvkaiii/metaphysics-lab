@@ -68,11 +68,10 @@ class ZiweiCompositionTests(unittest.TestCase):
 
     def test_cycle_layer_rejects_source_transformation_stem_mismatch(self):
         natal = _base_natal()
-        source, unused_trans, unused_edges, identity = _components("yearly", "2026", "丙", natal)
+        source, unused_trans, edges, identity = _components("yearly", "2026", "丙", natal)
         wrong_trans = get_transformation_set("丁")
-        wrong_edges = fly_transformations(wrong_trans, natal.star_locations, source)
         with self.assertRaises(ZiweiPhase2AError) as cm:
-            build_cycle_layer(identity, source, wrong_trans, wrong_edges, PROVENANCE)
+            build_cycle_layer(identity, source, wrong_trans, edges, PROVENANCE)
         self.assertEqual(cm.exception.code, "layer_component_mismatch")
 
     def test_cycle_layer_rejects_flying_edges_from_different_source(self):
