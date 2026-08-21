@@ -8,6 +8,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable, Mapping, Optional
 
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from engine.birth.errors import BirthFoundationError
 from engine.birth.location import NominatimLocationProvider, resolve_birth_place
 from engine.birth.models import BirthPlaceInput
