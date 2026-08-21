@@ -44,6 +44,43 @@ class ZiweiCompositionTests(unittest.TestCase):
             build_cycle_layer(identity, source, trans, edges, PROVENANCE)
         self.assertEqual(cm.exception.code, "unsupported_scope")
 
+    def test_cycle_layer_rejects_identity_source_scope_reference_mismatch(self):
+        natal = _base_natal()
+        source, trans, edges, identity = _components("yearly", "2026", "丙", natal)
+        wrong_identity = LayerIdentity(
+            identity.chart_id,
+            "decadal",
+            "43-52-virtual-age",
+            identity.rule_profile,
+        )
+        with self.assertRaises(ZiweiPhase2AError) as cm:
+            build_cycle_layer(wrong_identity, source, trans, edges, PROVENANCE)
+        self.assertEqual(cm.exception.code, "layer_component_mismatch")
+
+    def test_cycle_layer_rejects_source_transformation_stem_mismatch(self):
+        natal = _base_natal()
+        source, unused_trans, unused_edges, identity = _components("yearly", "2026", "丙", natal)
+        wrong_trans = get_transformation_set("丁")
+        wrong_edges = fly_transformations(wrong_trans, natal.star_locations, source)
+        with self.assertRaises(ZiweiPhase2AError) as cm:
+            build_cycle_layer(identity, source, wrong_trans, wrong_edges, PROVENANCE)
+        self.assertEqual(cm.exception.code, "layer_component_mismatch")
+
+    def test_cycle_layer_rejects_flying_edges_from_different_source(self):
+        natal = _base_natal()
+        source, trans, unused_edges, identity = _components("yearly", "2026", "丙", natal)
+        other_source = CycleStemSource(
+            "cycle_stem",
+            CHART,
+            "yearly",
+            "2027",
+            "丙",
+        )
+        wrong_edges = fly_transformations(trans, natal.star_locations, other_source)
+        with self.assertRaises(ZiweiPhase2AError) as cm:
+            build_cycle_layer(identity, source, trans, wrong_edges, PROVENANCE)
+        self.assertEqual(cm.exception.code, "layer_component_mismatch")
+
     def test_duplicate_layer_identity_is_rejected(self):
         natal = _base_natal()
         source, trans, edges, identity = _components("yearly", "2026", "丙", natal)
