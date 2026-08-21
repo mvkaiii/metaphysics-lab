@@ -117,14 +117,21 @@ jobs:
 
       - name: Scope and privacy gate
         shell: bash
+        env:
+          FEATURE_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
+          git fetch --no-tags origin "$FEATURE_BASE_SHA"
           python - <<'PY' | tee scope-privacy.txt
-          import json
+          import os
           import subprocess
           from pathlib import Path
 
           design = '7f907e913a59f06a472680616f703c32f2c21b56'
-          files = subprocess.check_output(['git', 'diff', '--name-only', design + '...HEAD'], text=True).splitlines()
+          feature = os.environ['FEATURE_BASE_SHA']
+          files = subprocess.check_output(['git', 'diff', '--name-only', design + '...' + feature], text=True).splitlines()
+          print('FEATURE_BASE_SHA=' + feature)
+          for item in files:
+              print(item)
           allowed_exact = {
               'README.md', 'VERSION.md', 'CHANGELOG.md', 'docs/架構說明.md',
               'engine/ziwei/__init__.py', 'engine/ziwei/common.py', 'engine/ziwei/capabilities.py',
@@ -138,7 +145,6 @@ jobs:
               'tools/qualify_ziwei_phase2a_public.py', 'tools/qualify_ziwei_phase2a_private.py',
               'qualification/ziwei/phase2a/public-iztro-814b77e6.json',
               'qualification/ziwei/phase2a/private-astralium-summary.json',
-              '.github/workflows/phase2a-feature-final.yml',
           }
           unexpected = [f for f in files if f not in allowed_exact]
           assert not unexpected, unexpected
