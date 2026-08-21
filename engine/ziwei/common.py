@@ -28,6 +28,12 @@ def validate_palace(palace: str) -> None:
         raise ValueError("宮位必須為：" + "、".join(PALACE_NAMES))
 
 
+def opposite_palace(palace: str) -> str:
+    validate_palace(palace)
+    idx = PALACE_NAMES.index(palace)
+    return PALACE_NAMES[(idx + 6) % 12]
+
+
 def palaces_from_ming_branch(ming_branch: str) -> dict[str, str]:
     """以指定命宮地支重排十二宮。"""
     validate_branch(ming_branch)
