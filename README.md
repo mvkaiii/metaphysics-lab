@@ -36,7 +36,7 @@ Metaphysics Lab 是一套以「可重現、可驗證、可追溯、以決策為�
 
 | Capability | Implementation | Maturity | Routing / Role |
 |---|---|---|---|
-| 八字流年／流月／流日／流時 | implemented | stable | default |
+| 八字時間推導（流年／流月／流日／流時） | implemented | stable | default |
 | 紫微流月定位 | implemented | stable | default |
 | 紫微流日定位 | implemented | experimental | on_demand |
 | 紫微流時定位 | implemented | experimental | on_demand |
@@ -183,7 +183,7 @@ Full repository   132/132 PASS
 - 流月／流日／流時四化與飛化
 - 紫微流曜（moving stars）
 - Cross-System Validation 正式引擎
-- 完整 Project 干支互動引擎
+- 完整干支互動引擎
 - 奇門自動排盤引擎
 
 上述能力必須依序走「規則固定 → Python 實作 → 自動測試 → 外部 qualification → capability promotion」，不得因 Phase 2A 已完成就推定細運能力也已完成。

@@ -78,7 +78,7 @@ engine/bazi/calendar.py
 engine/project_bazi_calendar.py
 ```
 
-八字正式能力包含流年、流月、流日、流時與天干十神等 Project 推導。
+八字時間推導可建立流年、流月、流日、流時與天干十神；計算結果屬於 Project 推導盤面。
 
 八字 23:00 early-Zi 規則仍由八字引擎負責，不由 Calendar Resolver 代替。
 

@@ -109,7 +109,7 @@ Full repository   132/132 PASS
 - 流月／流日／流時四化與飛化
 - 紫微流曜（moving stars）
 - Cross-System Validation 正式引擎
-- 完整 Project 干支互動引擎
+- 完整干支互動引擎
 - 奇門自動排盤引擎
 
 上述能力不得因 Phase 2A 已完成就推定可用。
@@ -120,7 +120,7 @@ Full repository   132/132 PASS
 
 ### 新增
 
-- 啟用 Project 紫微流月定位層。
+- 啟用紫微流月定位層。
 - 新增流年斗君、流月命宮與流月十二宮重排。
 - 新增 `engine/project_ziwei_month.py`。
 - 新增紫微流月自動測試與人工測試紀錄。

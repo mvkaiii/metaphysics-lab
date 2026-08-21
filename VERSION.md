@@ -9,7 +9,7 @@
 主要元件：
 
 - 命理推導計算規則：v1.2
-- Project Bazi Calendar Engine：v1.0.0
+- 八字時間推導引擎：v1.0.0
 - 紫微流月定位引擎：v1.0.0
 - 紫微流日定位引擎：v1.0.0-exp
 - 紫微流時定位引擎：v1.0.0-exp
@@ -24,7 +24,7 @@
 
 | Capability | Implementation | Maturity | Routing / Role |
 |---|---|---|---|
-| 八字流年／流月／流日／流時 | implemented | stable | default |
+| 八字時間推導（流年／流月／流日／流時） | implemented | stable | default |
 | 紫微流月定位 | implemented | stable | default |
 | 紫微流日定位 | implemented | experimental | on_demand |
 | 紫微流時定位 | implemented | experimental | on_demand |
@@ -112,7 +112,7 @@ Private Astralium raw chart 與 normalized qualification input 不存 repo；rep
 
 ### v1.1.0｜2026-08-20
 
-- 正式加入 Project 紫微流月定位。
+- 正式加入紫微流月定位。
 - 建立流年斗君、流月命宮、流月十二宮重排。
 - 建立安裝、資料準備、更新同步與快速開始文件。
 
