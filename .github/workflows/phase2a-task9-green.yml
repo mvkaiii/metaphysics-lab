@@ -1,0 +1,147 @@
+name: Phase 2A Task 9 GREEN
+
+on:
+  pull_request:
+    branches:
+      - feature/ziwei-transformation-flying-core-v1
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Phase 2A internal suite
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m unittest tests.test_ziwei_phase2a_models tests.test_ziwei_basis tests.test_ziwei_transformations tests.test_ziwei_flying tests.test_ziwei_composition tests.test_ziwei_phase2a_capabilities tests.test_ziwei_phase2a_qualification_tools -v 2>&1 | tee phase2a-internal.txt
+      - name: Ziwei regression
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m unittest discover -s tests -p 'test_*ziwei*.py' -v 2>&1 | tee ziwei-regression.txt
+      - name: Calendar regression
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m unittest tests.test_calendar_precision tests.test_calendar_models tests.test_calendar_timezone tests.test_calendar_lunar tests.test_calendar_resolver tests.test_calendar_package_exports -v 2>&1 | tee calendar-regression.txt
+      - name: Bazi regression
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m unittest discover -s tests -p 'test_*bazi*.py' -v 2>&1 | tee bazi-regression.txt
+      - name: Full repository regression
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m unittest discover -v 2>&1 | tee full-repo.txt
+      - name: Evidence, capability, scope and privacy gates
+        shell: bash
+        run: |
+          python - <<'PY' | tee task9-gates.txt
+          import json
+          import subprocess
+          from pathlib import Path
+          from engine.ziwei.capabilities import get_capability, should_run_by_default
+          from engine.ziwei.common import PALACE_NAMES
+          from engine.ziwei.flying import classify_geometric_relation
+          from engine.ziwei.models import ChartIdentity, GeometricRelation, PalaceStemSource
+          from engine.ziwei.transformations import get_transformation_set
+
+          # Stable/on-demand capability contract.
+          for cid in ('ziwei.transformations', 'ziwei.flying'):
+              cap = get_capability(cid)
+              assert cap['implementation'] == 'implemented', cap
+              assert cap['maturity'] == 'stable', cap
+              assert cap['routing'] == 'on_demand', cap
+              assert cap['rule_version'] == '1.0', cap
+              assert not should_run_by_default(cid), cap
+          for cid in (
+              'ziwei.flow_month_transformations', 'ziwei.flow_day_transformations', 'ziwei.flow_hour_transformations',
+              'ziwei.flow_month_flying', 'ziwei.flow_day_flying', 'ziwei.flow_hour_flying', 'ziwei.flowing_stars',
+          ):
+              assert get_capability(cid)['implementation'] == 'planned', (cid, get_capability(cid))
+          print('CAPABILITY_STABLE_ON_DEMAND_PASS')
+
+          checked = sum(len(get_transformation_set(stem).transformations) for stem in '甲乙丙丁戊己庚辛壬癸')
+          assert checked == 40
+          print('TRANSFORMATION_TABLE_PASS 40/40')
+
+          chart = ChartIdentity('gate', 'natal', 'synthetic')
+          counts = {item: 0 for item in GeometricRelation}
+          for source_palace in PALACE_NAMES:
+              source = PalaceStemSource('palace_stem', chart, source_palace, '甲')
+              for target in PALACE_NAMES:
+                  counts[classify_geometric_relation(source, target)] += 1
+          assert counts[GeometricRelation.SAME_PALACE] == 12
+          assert counts[GeometricRelation.OPPOSITE_PALACE_INCOMING] == 12
+          assert counts[GeometricRelation.NORMAL] == 120
+          print('GEOMETRY_144_PASS')
+
+          public = json.loads(Path('qualification/ziwei/phase2a/public-iztro-814b77e6.json').read_text(encoding='utf-8'))
+          assert public['cases_checked'] == 40 and public['cases_matched'] == 40 and public['mismatches'] == [] and public['status'] == 'PASS'
+          print('EXTERNAL_PROFILE_PASS 40/40')
+
+          private = json.loads(Path('qualification/ziwei/phase2a/private-astralium-summary.json').read_text(encoding='utf-8'))
+          assert private['transformation_profile']['checked'] == 40 and private['transformation_profile']['matched'] == 40
+          assert private['natal']['checked'] == 48 and private['natal']['matched'] == 48
+          assert private['decadal']['checked'] == 4 and private['decadal']['matched'] == 4
+          assert private['yearly']['checked'] == 28 and private['yearly']['matched'] == 28
+          assert private['flying_total']['checked'] == 80 and private['flying_total']['matched'] == 80
+          assert private['presentation']['status'] == 'PASS'
+          assert private['status'] == 'PASS'
+          print('ASTRALIUM_TRANSFORMATION_40_PASS')
+          print('ASTRALIUM_NATAL_48_PASS')
+          print('ASTRALIUM_DECADAL_4_PASS')
+          print('ASTRALIUM_YEARLY_28_PASS')
+          print('ASTRALIUM_FLYING_80_PASS')
+          print('ASTRALIUM_PRESENTATION_QUALIFICATION_RECORDED')
+
+          serialized = json.dumps(private, ensure_ascii=False)
+          for forbidden in ('star_locations', 'palace_stems', 'expected_edges', 'birth_datetime', '"name"'):
+              assert forbidden not in serialized, forbidden
+          print('PRIVACY_PASS')
+
+          files = subprocess.check_output([
+              'git','-c','core.quotePath=false','diff','--name-only',
+              'origin/design/ziwei-transformation-flying-core...origin/feature/ziwei-transformation-flying-core-v1'
+          ], text=True).splitlines()
+          allowed_exact = {
+              'CHANGELOG.md','README.md','VERSION.md','docs/架構說明.md',
+              'engine/ziwei/__init__.py','engine/ziwei/basis.py','engine/ziwei/capabilities.py','engine/ziwei/common.py',
+              'engine/ziwei/composition.py','engine/ziwei/errors.py','engine/ziwei/flying.py','engine/ziwei/models.py',
+              'engine/ziwei/transformation_profiles.py','engine/ziwei/transformations.py',
+              'qualification/ziwei/phase2a/private-astralium-summary.json',
+              'qualification/ziwei/phase2a/public-iztro-814b77e6.json',
+              'tests/test_ziwei_basis.py','tests/test_ziwei_composition.py','tests/test_ziwei_flying.py',
+              'tests/test_ziwei_phase2a_capabilities.py','tests/test_ziwei_phase2a_models.py',
+              'tests/test_ziwei_phase2a_qualification_tools.py','tests/test_ziwei_transformations.py','tests/ziwei_phase2a_fixtures.py',
+              'tools/qualify_ziwei_phase2a_private.py','tools/qualify_ziwei_phase2a_public.py',
+          }
+          unexpected = sorted(set(files) - allowed_exact)
+          missing = sorted(allowed_exact - set(files))
+          assert not unexpected, unexpected
+          assert not missing, missing
+          assert len(files) == 26, files
+          print('SCOPE_PASS 26/26')
+          print('DOCS_SANITY_PASS')
+          PY
+      - name: Upload Task 9 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase2a-task9-green-evidence
+          path: |
+            phase2a-internal.txt
+            ziwei-regression.txt
+            calendar-regression.txt
+            bazi-regression.txt
+            full-repo.txt
+            task9-gates.txt
