@@ -30,5 +30,15 @@ class ZiweiPhase2ACapabilityTests(unittest.TestCase):
         self.assertEqual(get_capability("ziwei.flowing_stars")["implementation"], "planned")
 
 
+class ZiweiPhase2AStablePromotionTests(unittest.TestCase):
+    def test_core_is_stable_but_still_on_demand(self):
+        for capability_id in ("ziwei.transformations", "ziwei.flying"):
+            cap = get_capability(capability_id)
+            self.assertEqual(cap["implementation"], "implemented")
+            self.assertEqual(cap["maturity"], "stable")
+            self.assertEqual(cap["routing"], "on_demand")
+            self.assertFalse(should_run_by_default(capability_id))
+
+
 if __name__ == "__main__":
     unittest.main()
