@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "classification": "public_location_qualification",
+  "provider_name": "nominatim",
+  "provider_version": "2.5.0",
+  "generated_at": "pending_live_qualification",
+  "queries": [
+    "台北市, 台灣",
+    "高雄市, 台灣",
+    "Tokyo, Japan",
+    "New York, NY, USA",
+    "London, UK"
+  ],
+  "results": [],
+  "pass_count": 0,
+  "fail_count": 0,
+  "status": "PENDING_LIVE_QUALIFICATION"
+}
