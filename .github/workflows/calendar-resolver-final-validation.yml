@@ -6,28 +6,119 @@ on:
       - feature/calendar-resolver-v1
 
 jobs:
-  snapshot:
+  final-gates:
     runs-on: ubuntu-latest
     env:
       PYTHONTZPATH: ""
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - run: python -m pip install -r requirements.txt
-      - name: Run export contract
-        run: python -m unittest tests.test_calendar_package_exports -v
+      - name: Run final gates and capture evidence
+        id: gates
+        shell: bash
+        run: |
+          set +e
+
+          python -m unittest \
+            tests.test_calendar_precision \
+            tests.test_calendar_models \
+            tests.test_calendar_timezone \
+            tests.test_calendar_lunar \
+            tests.test_calendar_resolver \
+            tests.test_calendar_package_exports \
+            tests.test_ziwei_calendar_adapter \
+            -v > calendar-subsystem.txt 2>&1
+          calendar_status=$?
+          cat calendar-subsystem.txt
+
+          python -m unittest discover -v > full-repo.txt 2>&1
+          full_status=$?
+          cat full-repo.txt
+
+          python -c "from importlib.metadata import version; import tzdata; assert version('lunar_python') == '1.4.8'; assert version('tzdata') == '2026.3'; assert tzdata.IANA_VERSION == '2026c'; print('PROVENANCE_PASS')" > provenance.txt 2>&1
+          provenance_status=$?
+          cat provenance.txt
+
+          python - <<'PY' > docs-sanity.txt 2>&1
+          from pathlib import Path
+
+          files = [
+              Path('README.md'),
+              Path('docs/架構說明.md'),
+              Path('docs/安裝到ChatGPT-Project.md'),
+              Path('docs/更新與版本同步.md'),
+              Path('core/命理分析作業規範.md'),
+              Path('VERSION.md'),
+              Path('CHANGELOG.md'),
+          ]
+          text = '\n'.join(p.read_text() for p in files)
+          stale = (
+              'Calendar / Input Resolver = planned',
+              'Calendar / Input Resolver：尚未實作',
+              'Calendar Resolver：尚未實作',
+              '未來 Calendar / Input Resolver',
+          )
+          for phrase in stale:
+              assert phrase not in text, phrase
+          assert '1901-01-01..2100-12-31' in text
+          assert '2057-09-28..2057-10-27' in text
+          assert '2089-09-04' in text and '2097-08-07' in text
+          assert 'metaphysics_day_boundary_applied = false' in text
+          assert 'lunar-python==1.4.8' in text
+          assert 'tzdata==2026.3' in text
+          core = Path('core/命理分析作業規範.md').read_text()
+          assert '第一階段盲判 → 第二階段事件校準' in core
+          assert '改寫第一版盲判' in core
+          print('DOCS_SANITY_PASS')
+          PY
+          docs_status=$?
+          cat docs-sanity.txt
+
+          git fetch origin feature/calendar-resolver-v1
+          git diff --name-only origin/feature/calendar-resolver-v1...HEAD | sort > task8-scope.txt
+          cat task8-scope.txt
+          python - <<'PY' >> task8-scope.txt 2>&1
+          import subprocess
+          allowed = {
+              '.github/workflows/calendar-resolver-final-validation.yml',
+              'CHANGELOG.md',
+              'README.md',
+              'VERSION.md',
+              'core/命理分析作業規範.md',
+              'docs/安裝到ChatGPT-Project.md',
+              'docs/更新與版本同步.md',
+              'docs/架構說明.md',
+              'tests/test_calendar_package_exports.py',
+          }
+          changed = set(subprocess.check_output([
+              'git', 'diff', '--name-only', 'origin/feature/calendar-resolver-v1...HEAD'
+          ], text=True).splitlines())
+          unexpected = sorted(changed - allowed)
+          assert not unexpected, unexpected
+          print('TASK8_SCOPE_PASS')
+          PY
+          scope_status=$?
+          cat task8-scope.txt
+
+          printf 'calendar_status=%s\nfull_status=%s\nprovenance_status=%s\ndocs_status=%s\nscope_status=%s\n' \
+            "$calendar_status" "$full_status" "$provenance_status" "$docs_status" "$scope_status" > gate-status.txt
+
+          if [ "$calendar_status" -ne 0 ] || [ "$full_status" -ne 0 ] || [ "$provenance_status" -ne 0 ] || [ "$docs_status" -ne 0 ] || [ "$scope_status" -ne 0 ]; then
+            exit 1
+          fi
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: calendar-resolver-final-snapshot
+          name: calendar-resolver-final-evidence
           path: |
-            README.md
-            docs/架構說明.md
-            docs/安裝到ChatGPT-Project.md
-            docs/更新與版本同步.md
-            core/命理分析作業規範.md
-            VERSION.md
-            CHANGELOG.md
-            engine/calendar/__init__.py
-            tests/test_calendar_package_exports.py
+            calendar-subsystem.txt
+            full-repo.txt
+            provenance.txt
+            docs-sanity.txt
+            task8-scope.txt
+            gate-status.txt
