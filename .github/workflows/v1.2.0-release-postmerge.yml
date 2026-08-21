@@ -1,0 +1,90 @@
+name: v1.2.0 release post-merge validation
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Freeze exact release head
+        env:
+          MAIN_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          echo "MAIN_SHA=$MAIN_SHA"
+          test "$MAIN_SHA" = "e6ac041a16117402207e086b875904b41b674e59"
+      - name: Full repository regression
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m unittest discover -v 2>&1 | tee full-repo.txt
+      - name: Release scope, consistency, links and naming
+        shell: bash
+        run: |
+          python - <<'PY'
+          import re
+          import subprocess
+          from pathlib import Path
+
+          previous_main = '2a91ff3f83940bc46d608a949d6f474022239346'
+          release = 'e6ac041a16117402207e086b875904b41b674e59'
+          files = subprocess.check_output(
+              ['git', '-c', 'core.quotePath=false', 'diff', '--name-only', previous_main + '..' + release],
+              text=True,
+          ).splitlines()
+          expected = {
+              'README.md', 'VERSION.md', 'CHANGELOG.md',
+              'docs/架構說明.md', 'docs/快速開始.md',
+              'docs/安裝到ChatGPT-Project.md', 'docs/更新與版本同步.md',
+          }
+          assert set(files) == expected, sorted(set(files) ^ expected)
+          assert not any(p.startswith(('engine/', 'core/', 'tests/', '.github/')) for p in files)
+          print('RELEASE_SCOPE_PASS')
+
+          texts = {p: Path(p).read_text(encoding='utf-8') for p in expected}
+          combined = '\n'.join(texts.values())
+          assert '目前正式版本：**v1.2.0｜2026-08-21**' in texts['README.md']
+          assert 'Metaphysics Lab Core：**v1.2.0**' in texts['VERSION.md']
+          assert '## v1.2.0｜2026-08-21' in texts['CHANGELOG.md']
+          assert 'v1.2 開發線' not in combined
+          assert '未發布｜v1.2' not in combined
+          assert '八字時間推導（流年／流月／流日／流時）' in combined
+          assert '紫微流月定位' in combined
+          assert 'Project 推導盤面' in combined
+          for forbidden in (
+              'Project 紫微流月',
+              'Project 八字流年',
+              'Project Bazi Calendar Engine',
+              'Project 流月／流日／流時',
+              '完整 Project 干支互動引擎',
+          ):
+              assert forbidden not in combined, forbidden
+          print('RELEASE_VERSION_PASS')
+          print('CAPABILITY_NAMING_PASS')
+
+          for rel, text in texts.items():
+              path = Path(rel)
+              for target in re.findall(r'\[[^\]]+\]\(([^)]+)\)', text):
+                  if target.startswith(('http://', 'https://', '#', 'mailto:')):
+                      continue
+                  target = target.split('#', 1)[0]
+                  if not target:
+                      continue
+                  assert (path.parent / target).resolve().exists(), f'broken local link: {rel} -> {target}'
+          print('LOCAL_LINKS_PASS')
+
+          full = Path('full-repo.txt').read_text(encoding='utf-8')
+          counts = re.findall(r'Ran (\d+) tests', full)
+          assert counts and 'FAILED' not in full and '\nOK\n' in full
+          print('FULL_REPO_PASS count=' + counts[-1])
+          PY
