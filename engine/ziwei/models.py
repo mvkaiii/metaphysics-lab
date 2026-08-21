@@ -157,3 +157,31 @@ class SmallLimitContext:
     stem_branch: str
     provenance: LayerProvenance
     transformation_layer: None = None
+
+
+@dataclass(frozen=True)
+class NatalContext:
+    star_locations: StarLocationIndex
+    palace_stems: PalaceStemIndex
+    natal_flying_graph: NatalFlyingGraph
+    birth_year_layer: Optional[CycleTransformationLayer]
+
+
+@dataclass(frozen=True)
+class ZiweiLayerStack:
+    chart_identity: ChartIdentity
+    natal: NatalContext
+    cycles: Tuple[CycleTransformationLayer, ...]
+    small_limit: Optional[SmallLimitContext]
+    availability: Mapping[str, AvailabilityRecord]
+    provenance: LayerProvenance
+
+
+@dataclass(frozen=True)
+class TransformationOccurrence:
+    scope: str
+    reference: str
+    transformation_type: TransformationType
+    star: str
+    target_palace: str
+    provenance: LayerProvenance
