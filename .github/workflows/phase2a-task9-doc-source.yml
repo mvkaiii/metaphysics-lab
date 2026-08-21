@@ -1,0 +1,21 @@
+name: Phase 2A Task 9 doc source snapshot
+
+on:
+  pull_request:
+    branches:
+      - feature/ziwei-transformation-flying-core-v1
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Upload docs snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase2a-task9-doc-source
+          path: |
+            README.md
+            VERSION.md
+            CHANGELOG.md
+            docs/架構說明.md
