@@ -48,6 +48,13 @@ class ZiweiFlyingTests(unittest.TestCase):
         self.assertTrue(all(edge.target_basis == "natal_star_location" for edge in edges))
         self.assertTrue(all(edge.geometric_relation is None for edge in edges))
 
+    def test_source_and_transformation_stems_must_match(self):
+        stars = build_star_location_index(SYNTHETIC_STAR_RECORDS, CHART, PROVENANCE)
+        source = CycleStemSource("cycle_stem", CHART, "yearly", "2026", "丙")
+        with self.assertRaises(ZiweiPhase2AError) as cm:
+            fly_transformations(get_transformation_set("丁"), stars, source)
+        self.assertEqual(cm.exception.code, "flying_source_mismatch")
+
     def test_missing_star_location_fails_closed(self):
         stars = build_star_location_index(SYNTHETIC_STAR_RECORDS[:1], CHART, PROVENANCE)
         source = CycleStemSource("cycle_stem", CHART, "yearly", "2026", "丙")
