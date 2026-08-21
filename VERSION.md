@@ -12,7 +12,7 @@
 
 ## v1.2 開發線狀態
 
-目前 v1.2 開發線在 v1.1 正式版之上增加模組化架構與 capability 狀態模型。
+目前 v1.2 開發線在 v1.1 正式版之上增加模組化架構、capability 狀態模型與 Calendar Resolver infrastructure。
 
 - 八字正式模組：`engine/bazi/calendar.py`
 - 紫微流月：`implemented / stable / default`
@@ -22,8 +22,10 @@
 - Metaphysics Lab 紫微流時定位引擎：v1.0.0-exp
 - 紫微流時推導規則：v1.0-exp
 - 紫微流時：`implemented / experimental / on_demand`
+- Metaphysics Lab Calendar Resolver：v1.0.0
+- Calendar / Input Resolver：implemented
+- Ziwei Calendar Adapter：implemented
 - 紫微細部四化／流曜／細層飛化：`planned / on_demand`
-- Calendar / Input Resolver：planned
 - Cross-System Validation：planned
 
 `Experimental / On-demand` 代表能力已有可執行 Python 與驗證紀錄，但一般年度／月份問事不預設執行，分析時也必須降權；不等於 Stable，也不等於能力不存在。
@@ -37,13 +39,16 @@
 - 紫微流月月份邊界：農曆初一；閏月拆半
 - 紫微流日：v1.1 正式版未包含；v1.2 開發線已實作為 Experimental / On-demand
 - 紫微流時：v1.1 正式版未包含；v1.2 開發線已實作為 Experimental / On-demand，只含流時命宮與十二宮定位
+- Calendar / Input Resolver：v1.2 開發線已實作 v1.0.0；需要 `lunar-python 1.4.8` 與 `tzdata 2026.3`
+- Ziwei Calendar Adapter：v1.2 開發線已實作
 - 紫微細部四化／流曜／細層飛化：尚未實作
-- Calendar / Input Resolver：尚未實作
 
 ## 邊界提醒
 
 八字流月採節氣月；紫微流月採農曆月。兩者在同一國曆日期可能不同月，屬正常設計，不是 bug。
 
-紫微流日直接接受已由可信曆法來源確認的農曆月、日與閏月狀態；本引擎不自行做國曆轉農曆，也不自行宣稱未固定的紫微換日口徑。
+Calendar Resolver v1 的 Gregorian→Lunar HKO exhaustive validated range 為 `1901-01-01..2100-12-31`；`2057-09-28..2057-10-27` 為 `boundary_conflict`，`2089-09-04` 與 `2097-08-07` 為 `boundary_caution`。2100 之後若 provider 可算，只能標記 `out_of_validated_range`，不得宣稱已通過 HKO validated range。
 
-紫微流時再接受已解析的 `hour_branch`。流時 core 不處理民用 datetime、timezone、DST、國曆轉農曆或 23:00 日界；這些責任留給未來版本化的 Calendar / Input Resolver。
+Calendar Resolver v1 使用 pinned `tzdata 2026.3 / IANA 2026c`。23:00 已屬子時，但 civil date 只在 00:00 換日，`metaphysics_day_boundary_applied = false`。八字既有 23:00 early-Zi 規則仍由八字引擎負責；紫微不自動沿用。
+
+紫微流日／流時 core 仍接受已解析農曆資料；Ziwei Calendar Adapter 可把成功且可用的 `CalendarContext` 傳入既有 core。自然語言解析、真太陽時與紫微 23:00 命理日界仍在 Resolver 外。

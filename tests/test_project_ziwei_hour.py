@@ -47,7 +47,7 @@ class ZiweiHourTests(unittest.TestCase):
         self.assertFalse(result["features"]["hourly_four_transformations_implemented"])
         self.assertFalse(result["features"]["hourly_flowing_stars_implemented"])
         self.assertFalse(result["features"]["fine_flying_implemented"])
-        self.assertFalse(result["features"]["calendar_resolver_implemented"])
+        self.assertTrue(result["features"]["calendar_resolver_implemented"])
 
 
 if __name__ == "__main__":
