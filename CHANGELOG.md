@@ -42,9 +42,21 @@
 - 流時十二宮直接共用 `palaces_from_ming_branch()`，不複製另一套宮位方向算法。
 - 新增 `core/紫微流時推導規則.md` 與 `tests/紫微流時推導測試案例.md`。
 - 外部驗證使用 iztro 固定 commit `814b77e6371e1050cac31bbf674db3c3138fcfde`，並以獨立公開文字排法交叉支持核心起法。
-- 採 1.5 架構：flow-hour core 只接受已確認農曆日期與 `hour_branch`；民用 datetime、timezone、DST、國曆轉農曆與 23:00 日界 policy 留給未來 Calendar / Input Resolver。
+- 採 1.5 架構：flow-hour core 只接受已確認農曆日期與 `hour_branch`；這些民用時間責任當時保留給後續 infrastructure，現已由 Calendar Resolver v1 + Ziwei Calendar Adapter 承接 neutral context 層；紫微命理日界仍未在 flow-hour core 內定義。
 - flow-day structured output 現在明確標示 `flow_hour_implemented = true`、`flow_hour_default_routing = false`，避免把 on-demand 誤讀成能力不存在。
 - 流時天干、流時四化、流曜、細層飛化與 Cross-System Validation 不在本 PR。
+
+### Calendar Resolver v1
+
+- 新增 system-neutral `engine/calendar/` subsystem：precision policy、contract models、pinned timezone normalization、lunar provider 與 Resolver orchestration。
+- 新增上游 Input Resolution / Precision Gate：先判斷 target capability 最低時間精度；不足或不唯一時只能追問、保留候選或降級，不得補假日期／假時間。
+- Runtime lunar provider 固定 `lunar-python==1.4.8`；qualification source revision `000c8a3d74eed098d6256a28fdd51b869324c559`。
+- HKO Gregorian→Lunar exhaustive validated range 固定 `1901-01-01..2100-12-31`。
+- `2057-09-28..2057-10-27` 固定標記 `boundary_conflict`；`2089-09-04`、`2097-08-07` 固定標記 `boundary_caution`。
+- Timezone provider 固定 `tzdata==2026.3` / IANA `2026c`；DST nonexistent / ambiguous local time 與 `utc_offset_hint` contract 已鎖定。
+- Resolver civil date 只在 00:00 換日；23:00 已屬子時，但 `metaphysics_day_boundary_applied = false`。不把八字 23:00 early-Zi policy 套到紫微。
+- 新增 `engine/ziwei/calendar_adapter.py` 作為第一個正式 adapter；`boundary_conflict` 不會被靜默當作正常可信日期。
+- 本次沒有 refactor Bazi；自然語言解析、真太陽時、Qimen、紫微細部四化／流曜／細飛與紫微 23:00 命理日界不在本次範圍。
 
 ### 證據權重
 
@@ -57,7 +69,6 @@
 
 ### 後續尚未實作
 
-- Calendar / Input Resolver。
 - 紫微細部四化、流曜與細層飛化算法。
 - Cross-System Validation 正式引擎。
 
