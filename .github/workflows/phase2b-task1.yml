@@ -1,0 +1,180 @@
+name: Phase 2B Task 1
+
+on:
+  pull_request:
+    branches:
+      - design/ziwei-fine-cycle-stem-resolver
+
+permissions:
+  contents: write
+
+jobs:
+  task1:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/ziwei-fine-cycle-stem-resolver-v1
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Write RED tests
+        run: |
+          cat > tests/test_calendar_sexagenary.py <<'PY'
+          import unittest
+          from datetime import date
+
+          from engine.calendar.sexagenary import (
+              five_mouse_hour,
+              five_tiger_month,
+              gregorian_jdn,
+              lunar_year_stem,
+              sexagenary_day,
+          )
+
+
+          class CalendarSexagenaryTests(unittest.TestCase):
+              def test_known_public_days(self):
+                  self.assertEqual(sexagenary_day(date(2023, 3, 9)), ("丙", "寅"))
+                  self.assertEqual(sexagenary_day(date(2023, 4, 8)), ("丙", "申"))
+                  self.assertEqual(sexagenary_day(date(1987, 12, 6)), ("己", "丑"))
+
+              def test_jdn_consecutive_dates_increment_once(self):
+                  self.assertEqual(
+                      gregorian_jdn(date(2023, 3, 10)) - gregorian_jdn(date(2023, 3, 9)),
+                      1,
+                  )
+
+              def test_lunar_year_stem_cycles(self):
+                  self.assertEqual(lunar_year_stem(2023), "癸")
+                  self.assertEqual(lunar_year_stem(2083), "癸")
+
+              def test_five_tiger_month_vectors(self):
+                  self.assertEqual(five_tiger_month("癸", 1), ("甲", "寅"))
+                  self.assertEqual(five_tiger_month("癸", 6), ("己", "未"))
+                  self.assertEqual(five_tiger_month("癸", 13), ("丙", "寅"))
+
+              def test_five_mouse_vectors(self):
+                  self.assertEqual(five_mouse_hour("己", "丑"), ("乙", "丑"))
+                  self.assertEqual(five_mouse_hour("庚", "子"), ("丙", "子"))
+
+              def test_invalid_inputs_fail_closed(self):
+                  with self.assertRaises(ValueError):
+                      five_tiger_month("X", 1)
+                  with self.assertRaises(ValueError):
+                      five_tiger_month("甲", 0)
+                  with self.assertRaises(ValueError):
+                      five_tiger_month("甲", 14)
+                  with self.assertRaises(ValueError):
+                      five_mouse_hour("X", "子")
+                  with self.assertRaises(ValueError):
+                      five_mouse_hour("甲", "X")
+                  with self.assertRaises(ValueError):
+                      lunar_year_stem("2023")
+
+
+          if __name__ == "__main__":
+              unittest.main()
+          PY
+      - name: Verify RED
+        run: |
+          set +e
+          python -m unittest tests.test_calendar_sexagenary -v > task1-red.txt 2>&1
+          rc=$?
+          cat task1-red.txt
+          if [ "$rc" -eq 0 ]; then
+            echo "Task 1 unexpectedly GREEN before implementation"
+            exit 1
+          fi
+          grep -q "No module named 'engine.calendar.sexagenary'" task1-red.txt
+          echo TASK1_EXPECTED_RED
+      - name: Implement neutral sexagenary helper
+        run: |
+          cat > engine/calendar/sexagenary.py <<'PY'
+          from __future__ import annotations
+
+          from datetime import date
+
+          GAN = tuple("甲乙丙丁戊己庚辛壬癸")
+          ZHI = tuple("子丑寅卯辰巳午未申酉戌亥")
+          MONTH_ZHI = tuple("寅卯辰巳午未申酉戌亥子丑")
+
+          FIRST_MONTH_STEM = {
+              "甲": "丙", "己": "丙",
+              "乙": "戊", "庚": "戊",
+              "丙": "庚", "辛": "庚",
+              "丁": "壬", "壬": "壬",
+              "戊": "甲", "癸": "甲",
+          }
+
+          FIRST_HOUR_STEM = {
+              "甲": "甲", "己": "甲",
+              "乙": "丙", "庚": "丙",
+              "丙": "戊", "辛": "戊",
+              "丁": "庚", "壬": "庚",
+              "戊": "壬", "癸": "壬",
+          }
+
+
+          def gregorian_jdn(value: date) -> int:
+              if not isinstance(value, date):
+                  raise ValueError("value must be datetime.date")
+              year, month, day = value.year, value.month, value.day
+              a = (14 - month) // 12
+              y = year + 4800 - a
+              m = month + 12 * a - 3
+              return day + (153 * m + 2) // 5 + 365 * y + y // 4 - y // 100 + y // 400 - 32045
+
+
+          def sexagenary_day(value: date) -> tuple[str, str]:
+              offset = gregorian_jdn(value) - 11
+              return GAN[offset % 10], ZHI[offset % 12]
+
+
+          def lunar_year_stem(lunar_year: int) -> str:
+              if not isinstance(lunar_year, int) or isinstance(lunar_year, bool):
+                  raise ValueError("lunar_year must be int")
+              return GAN[(lunar_year - 4) % 10]
+
+
+          def five_tiger_month(year_stem: str, effective_month_ordinal: int) -> tuple[str, str]:
+              if year_stem not in FIRST_MONTH_STEM:
+                  raise ValueError("invalid heavenly stem")
+              if not isinstance(effective_month_ordinal, int) or isinstance(effective_month_ordinal, bool):
+                  raise ValueError("effective_month_ordinal must be int")
+              if not 1 <= effective_month_ordinal <= 13:
+                  raise ValueError("effective_month_ordinal must be 1..13")
+              start = GAN.index(FIRST_MONTH_STEM[year_stem])
+              offset = effective_month_ordinal - 1
+              return GAN[(start + offset) % 10], MONTH_ZHI[offset % 12]
+
+
+          def five_mouse_hour(day_stem: str, hour_branch: str) -> tuple[str, str]:
+              if day_stem not in FIRST_HOUR_STEM:
+                  raise ValueError("invalid heavenly stem")
+              if hour_branch not in ZHI:
+                  raise ValueError("invalid earthly branch")
+              branch_index = ZHI.index(hour_branch)
+              start = GAN.index(FIRST_HOUR_STEM[day_stem])
+              return GAN[(start + branch_index) % 10], hour_branch
+          PY
+      - name: Verify GREEN and regressions
+        run: |
+          python -m unittest tests.test_calendar_sexagenary -v
+          python -m unittest tests.test_project_bazi_calendar -v
+          if grep -q "engine.bazi" engine/calendar/sexagenary.py; then
+            echo "Neutral helper illegally imports Bazi policy"
+            exit 1
+          fi
+          python -m unittest discover -v
+          echo SEXAGENARY_NEUTRAL_HELPER_PASS
+      - name: Commit Task 1 to feature branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add engine/calendar/sexagenary.py tests/test_calendar_sexagenary.py
+          git commit -m "feat: add neutral sexagenary calendar helpers"
+          git push origin HEAD:feature/ziwei-fine-cycle-stem-resolver-v1
