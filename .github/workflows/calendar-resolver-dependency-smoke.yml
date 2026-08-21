@@ -1,0 +1,41 @@
+name: Calendar Resolver dependency smoke
+
+on:
+  pull_request:
+    branches:
+      - feature/calendar-resolver-v1
+
+jobs:
+  dependency-smoke:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONTZPATH: ""
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -r requirements.txt
+      - name: Verify exact providers
+        run: |
+          python - <<'PY'
+          from importlib.metadata import version
+          from zoneinfo import TZPATH, ZoneInfo
+          import tzdata
+          from lunar_python import Solar
+
+          assert version("lunar_python") == "1.4.8", version("lunar_python")
+          assert version("tzdata") == "2026.3", version("tzdata")
+          assert tzdata.__version__ == "2026.3", tzdata.__version__
+          assert tzdata.IANA_VERSION == "2026c", tzdata.IANA_VERSION
+          assert TZPATH == (), TZPATH
+          assert str(ZoneInfo("Asia/Taipei")) == "Asia/Taipei"
+          lunar = Solar.fromYmd(2026, 9, 18).getLunar()
+          assert 1 <= abs(lunar.getMonth()) <= 12
+          assert 1 <= lunar.getDay() <= 30
+          print("lunar_python", version("lunar_python"))
+          print("tzdata", version("tzdata"), tzdata.IANA_VERSION)
+          print("TZPATH", TZPATH)
+          print("DEPENDENCY_SMOKE_PASS")
+          PY
