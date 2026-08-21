@@ -22,7 +22,7 @@ jobs:
           DOCS_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           echo "DOCS_SHA=$DOCS_SHA"
-          test "$DOCS_SHA" = "10c2b54bc112dd8c9dadee597a7a7de144529cc8"
+          test "$DOCS_SHA" = "d26ca594395b912df933c126e0ac86ec38657f84"
       - name: Full repository regression
         shell: bash
         run: |
@@ -37,7 +37,7 @@ jobs:
           from pathlib import Path
 
           base = '2a91ff3f83940bc46d608a949d6f474022239346'
-          docs_sha = '10c2b54bc112dd8c9dadee597a7a7de144529cc8'
+          docs_sha = 'd26ca594395b912df933c126e0ac86ec38657f84'
           files = subprocess.check_output(
               ['git', '-c', 'core.quotePath=false', 'diff', '--name-only', base + '...' + docs_sha],
               text=True,
