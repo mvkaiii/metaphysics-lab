@@ -34,6 +34,32 @@ def _offset_text(value: timedelta) -> str:
     return f"{sign}{hours:02d}:{minutes:02d}"
 
 
+def _parse_offset_hint(value: str) -> timedelta:
+    if len(value) != 6 or value[0] not in "+-" or value[3] != ":":
+        raise CalendarResolverException(
+            "invalid_utc_offset_hint",
+            f"invalid utc_offset_hint: {value!r}",
+            {"utc_offset_hint": value},
+        )
+    try:
+        hours = int(value[1:3])
+        minutes = int(value[4:6])
+    except ValueError as exc:
+        raise CalendarResolverException(
+            "invalid_utc_offset_hint",
+            f"invalid utc_offset_hint: {value!r}",
+            {"utc_offset_hint": value},
+        ) from exc
+    if hours > 23 or minutes > 59:
+        raise CalendarResolverException(
+            "invalid_utc_offset_hint",
+            f"invalid utc_offset_hint: {value!r}",
+            {"utc_offset_hint": value},
+        )
+    offset = timedelta(hours=hours, minutes=minutes)
+    return -offset if value[0] == "-" else offset
+
+
 def _parse_civil(value: str) -> datetime:
     try:
         parsed = datetime.fromisoformat(value)
@@ -149,18 +175,44 @@ def normalize_local_time(
             {"civil_datetime": civil_datetime, "timezone": timezone_name},
         )
     if utc_offset_hint is not None:
-        raise CalendarResolverException(
-            "invalid_utc_offset_hint",
-            "utc_offset_hint handling is not enabled until ambiguity validation",
-            {"utc_offset_hint": utc_offset_hint},
-        )
-    if len(candidates) != 1:
+        wanted = _parse_offset_hint(utc_offset_hint)
+        matching = [candidate for candidate in candidates if candidate.offset == wanted]
+        if len(matching) != 1:
+            raise CalendarResolverException(
+                "invalid_utc_offset_hint",
+                "utc_offset_hint is not a legal offset for this local civil time",
+                {
+                    "civil_datetime": civil_datetime,
+                    "timezone": timezone_name,
+                    "utc_offset_hint": utc_offset_hint,
+                    "candidates": [
+                        {
+                            "utc_offset": _offset_text(item.offset),
+                            "utc_datetime": item.utc.isoformat(),
+                        }
+                        for item in candidates
+                    ],
+                },
+            )
+        candidate = matching[0]
+    elif len(candidates) != 1:
         raise CalendarResolverException(
             "ambiguous_local_time",
             "local civil time maps to more than one UTC instant",
-            {"civil_datetime": civil_datetime, "timezone": timezone_name},
+            {
+                "civil_datetime": civil_datetime,
+                "timezone": timezone_name,
+                "candidates": [
+                    {
+                        "utc_offset": _offset_text(item.offset),
+                        "utc_datetime": item.utc.isoformat(),
+                    }
+                    for item in candidates
+                ],
+            },
         )
-    candidate = candidates[0]
+    else:
+        candidate = candidates[0]
     return NormalizedTime(
         local_datetime=candidate.local,
         utc_datetime=candidate.utc,
