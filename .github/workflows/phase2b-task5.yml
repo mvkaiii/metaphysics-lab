@@ -1,0 +1,134 @@
+name: Phase 2B Task 5
+
+on:
+  pull_request:
+    branches:
+      - design/ziwei-fine-cycle-stem-resolver
+
+permissions:
+  contents: write
+
+jobs:
+  task5:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/ziwei-fine-cycle-stem-resolver-v1
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Write RED hourly tests
+        run: |
+          cat >> tests/test_ziwei_fine_cycle_stems.py <<'PY'
+
+          from engine.calendar.sexagenary import GAN, ZHI, five_mouse_hour
+          from engine.ziwei.fine_cycle_stems import resolve_hour_stem
+
+
+          class FineCycleHourTests(unittest.TestCase):
+              def test_public_regular_hour_vector(self):
+                  result = resolve_hour_stem(calendar_context(
+                      gregorian_date=date(1987, 12, 6),
+                      local_hour=21,
+                      local_minute=30,
+                      hour_branch="亥",
+                  ))
+                  self.assertEqual((result.heavenly_stem, result.earthly_branch), ("乙", "亥"))
+                  self.assertEqual(result.effective_date, date(1987, 12, 6))
+                  self.assertEqual(result.hour_branch, "亥")
+
+              def test_late_zi_uses_next_day_stem_for_hour(self):
+                  context = calendar_context(
+                      gregorian_date=date(1987, 12, 6),
+                      local_hour=23,
+                      local_minute=30,
+                      hour_branch="子",
+                  )
+                  day = resolve_day_stem(context)
+                  hour = resolve_hour_stem(context)
+                  self.assertEqual(day.heavenly_stem, "庚")
+                  self.assertEqual((hour.heavenly_stem, hour.earthly_branch), ("丙", "子"))
+                  self.assertEqual(hour.effective_date, day.effective_date)
+                  self.assertEqual(hour.reference, "ziwei-hour:1987-12-07:子@late_zi_forward-v1")
+
+              def test_all_ten_day_stems_by_twelve_hour_branches(self):
+                  first_hour_stem = {
+                      "甲": "甲", "己": "甲",
+                      "乙": "丙", "庚": "丙",
+                      "丙": "戊", "辛": "戊",
+                      "丁": "庚", "壬": "庚",
+                      "戊": "壬", "癸": "壬",
+                  }
+                  for day_stem in GAN:
+                      start = GAN.index(first_hour_stem[day_stem])
+                      for branch_index, branch in enumerate(ZHI):
+                          expected = (GAN[(start + branch_index) % 10], branch)
+                          self.assertEqual(five_mouse_hour(day_stem, branch), expected)
+
+              def test_resolver_uses_calendar_hour_branch_without_recomputing_from_clock(self):
+                  result = resolve_hour_stem(calendar_context(
+                      gregorian_date=date(1987, 12, 6),
+                      local_hour=21,
+                      local_minute=30,
+                      hour_branch="子",
+                  ))
+                  self.assertEqual(result.earthly_branch, "子")
+                  self.assertEqual(result.hour_branch, "子")
+
+              def test_hour_inherits_context_fail_closed_guards(self):
+                  with self.assertRaises(ZiweiFineCycleError) as cm1:
+                      resolve_hour_stem(calendar_context(calendar_status="boundary_conflict"))
+                  self.assertEqual(cm1.exception.code, "calendar_context_unusable")
+                  with self.assertRaises(ZiweiFineCycleError) as cm2:
+                      resolve_hour_stem(calendar_context(metaphysics_day_boundary_applied=True))
+                  self.assertEqual(cm2.exception.code, "calendar_boundary_already_applied")
+          PY
+      - name: Verify RED
+        run: |
+          set +e
+          python -m unittest tests.test_ziwei_fine_cycle_stems.FineCycleHourTests -v > task5-red.txt 2>&1
+          rc=$?
+          cat task5-red.txt
+          if [ "$rc" -eq 0 ]; then
+            echo "Task 5 unexpectedly GREEN before implementation"
+            exit 1
+          fi
+          grep -q "cannot import name 'resolve_hour_stem'" task5-red.txt
+          echo TASK5_EXPECTED_RED
+      - name: Implement hourly resolver
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('engine/ziwei/fine_cycle_stems.py')
+          text = path.read_text(encoding='utf-8')
+          text = text.replace(
+              'from engine.calendar.sexagenary import five_tiger_month, lunar_year_stem, sexagenary_day\n',
+              'from engine.calendar.sexagenary import five_mouse_hour, five_tiger_month, lunar_year_stem, sexagenary_day\n',
+          )
+          addition = '''\n\ndef resolve_hour_stem(\n    context: CalendarContext,\n    profile_id: str = FINE_CYCLE_PROFILE_ID,\n) -> ResolvedCycleStem:\n    _ensure_usable_context(context)\n    profile = get_fine_cycle_profile(profile_id)\n    civil_date = context.normalized_time.gregorian_date\n    effective_date = _effective_ziwei_date(context, profile)\n    day_stem, _ = sexagenary_day(effective_date)\n    stem, branch = five_mouse_hour(\n        day_stem,\n        context.normalized_time.hour_branch,\n    )\n    reference = "ziwei-hour:%s:%s@%s" % (\n        effective_date.isoformat(),\n        branch,\n        profile.ziwei_day_boundary,\n    )\n    return ResolvedCycleStem(\n        "hourly",\n        reference,\n        stem,\n        branch,\n        profile.profile_id,\n        profile.rule_version,\n        civil_date,\n        effective_date,\n        branch,\n        context.validation.overall_status,\n        _provenance(profile),\n    )\n'''
+          if 'def resolve_hour_stem(' not in text:
+              text += addition
+          path.write_text(text, encoding='utf-8')
+          PY
+      - name: Verify GREEN and regressions
+        run: |
+          python -m unittest tests.test_ziwei_fine_cycle_stems.FineCycleHourTests -v
+          python -m unittest tests.test_project_ziwei_hour tests.test_ziwei_calendar_adapter -v
+          if grep -q "engine.bazi" engine/ziwei/fine_cycle_stems.py; then
+            echo "Fine-cycle resolver illegally imports Bazi policy"
+            exit 1
+          fi
+          python -m unittest discover -v
+          echo HOUR_STEM_INVARIANTS_PASS
+          echo LATE_ZI_COHERENCE_PASS
+      - name: Commit Task 5 to feature branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add engine/ziwei/fine_cycle_stems.py tests/test_ziwei_fine_cycle_stems.py
+          git commit -m "feat: resolve Ziwei hourly stems coherently"
+          git push origin HEAD:feature/ziwei-fine-cycle-stem-resolver-v1
