@@ -1,0 +1,72 @@
+name: Timezone normalization qualification
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    name: timezone-normalization-qualification
+    runs-on: ubuntu-latest
+    env:
+      PYTHONTZPATH: ""
+
+    steps:
+      - name: Checkout probe branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Create pinned tzdata environments
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python -m venv /tmp/tz-pypi
+          python -m venv /tmp/tz-git
+          /tmp/tz-pypi/bin/python -m pip install --upgrade pip
+          /tmp/tz-git/bin/python -m pip install --upgrade pip
+          /tmp/tz-pypi/bin/python -m pip install "tzdata==2026.3"
+          /tmp/tz-git/bin/python -m pip install "git+https://github.com/python/tzdata.git@a44279419071b7aa41ebe7eca301ebb2e759571a"
+          /tmp/tz-pypi/bin/python - <<'PY'
+          import tzdata
+          from importlib.metadata import version
+          print('PyPI tzdata package:', version('tzdata'))
+          print('PyPI IANA version:', tzdata.IANA_VERSION)
+          assert version('tzdata') == '2026.3'
+          assert tzdata.IANA_VERSION == '2026c'
+          PY
+          /tmp/tz-git/bin/python - <<'PY'
+          import tzdata
+          from importlib.metadata import version
+          print('Git tzdata package:', version('tzdata'))
+          print('Git IANA version:', tzdata.IANA_VERSION)
+          assert version('tzdata') == '2026.3'
+          assert tzdata.IANA_VERSION == '2026c'
+          PY
+
+      - name: Run qualification against both provider paths
+        shell: bash
+        run: |
+          set -uo pipefail
+          set +e
+          /tmp/tz-pypi/bin/python validation/provider_qualification/timezone_normalization_qualification.py | tee /tmp/tz-pypi.log
+          pypi_status=${PIPESTATUS[0]}
+          /tmp/tz-git/bin/python validation/provider_qualification/timezone_normalization_qualification.py | tee /tmp/tz-git.log
+          git_status=${PIPESTATUS[0]}
+          set -e
+
+          echo "pypi_status=${pypi_status}"
+          echo "git_status=${git_status}"
+
+          if [ "${pypi_status}" -ne 0 ] || [ "${git_status}" -ne 0 ]; then
+            exit 1
+          fi
+
+          diff -u /tmp/tz-pypi.log /tmp/tz-git.log
