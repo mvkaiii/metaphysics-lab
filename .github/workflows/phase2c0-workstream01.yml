@@ -36,4 +36,9 @@ jobs:
           print('PYTHON39_BIRTH_PASS')
           PY
       - name: Live public location-provider qualification
-        run: python tools/qualify_birth_location_provider.py --output /tmp/location-provider-summary.json
+        run: |
+          set +e
+          python tools/qualify_birth_location_provider.py --output /tmp/location-provider-summary.json
+          code=$?
+          cat /tmp/location-provider-summary.json
+          exit $code
