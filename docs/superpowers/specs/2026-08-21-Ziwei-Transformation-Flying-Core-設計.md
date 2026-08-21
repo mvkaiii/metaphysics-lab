@@ -322,12 +322,26 @@ ChartIdentity
 
 ### 5.5 StarLocationIndex
 
+原始輸入不得直接以 dict 作為唯一驗證入口，因為 duplicate key 可能在 Python dict 建立時先被 last-write-wins 吃掉。v1 必須先接受可保留重複資訊的 records，再經 builder 驗證後物化為 immutable index。
+
 ```text
+StarLocationRecord
+├─ star
+└─ palace
+
 StarLocationIndex
 ├─ chart_identity
-├─ locations: star -> palace
+├─ locations: immutable star -> palace
 ├─ validation_status
 └─ provenance
+```
+
+建構流程：
+
+```text
+StarLocationRecord[]
+→ validate duplicate / conflict / palace
+→ StarLocationIndex
 ```
 
 第一版 target basis 僅允許：
@@ -338,24 +352,42 @@ target_basis = natal_star_location
 
 禁止流月重安星、運限星曜重排或其他 target basis。
 
-同一個 index 中同一顆星不得指向兩個不同宮位；若發現：
+同一個 input record set 中同一顆星必須 exactly one record；若同一星重複出現，即使 palace 相同也視為 duplicate input，若 palace 不同則同時屬資料矛盾。兩種情況都不得讓 dict last-write-wins 靜默通過。
+
+例如：
 
 ```text
 天機 -> 夫妻宮
 天機 -> 官祿宮
 ```
 
-必須報資料衝突，不得猜測。
+必須在 index materialization 前報 `duplicate_star_location`，不得猜測。
 
-一個宮可包含多顆星，這不構成衝突。
+一個宮可包含多顆不同星，這不構成衝突。
 
 ### 5.6 PalaceStemIndex
 
+Palace stem input 同樣先使用 records，避免重複宮位在 dict materialization 前被覆寫。
+
 ```text
+PalaceStemRecord
+├─ palace
+└─ heavenly_stem
+
 PalaceStemIndex
 ├─ chart_identity
-└─ palace -> heavenly_stem
+└─ stems: immutable palace -> heavenly_stem
 ```
+
+建構完整本命 `PalaceStemIndex` 時必須：
+
+- exactly 12 palace records。
+- 十二宮 canonical palace 各一次。
+- 每個 heavenly stem 合法。
+- 不得缺宮。
+- 不得重複宮位；即使重複值相同也不接受。
+
+重複宮位使用 `duplicate_palace_stem`；其他不完整或非法 index 使用 `invalid_palace_stem_index`。
 
 本命十二宮飛化必須明確使用 PalaceStemIndex；不得從流年命宮干支、流年天干或其他 cycle metadata 反推本命宮干。
 
@@ -922,6 +954,7 @@ invalid_transformation_profile
 invalid_palace
 missing_star_location
 duplicate_star_location
+duplicate_palace_stem
 chart_basis_mismatch
 invalid_palace_stem_index
 unsupported_source
@@ -1087,6 +1120,7 @@ unknown_profile
 invalid_palace
 missing_star_location
 duplicate_star_location
+duplicate_palace_stem
 chart_basis_mismatch
 invalid_palace_stem_index
 incomplete_transformation_profile
@@ -1318,7 +1352,7 @@ privacy PASS
 main post-merge PASS
 ```
 
-Astralium flying qualification合計：
+Astralium flying qualification 合計：
 
 ```text
 48 + 4 + 28 = 80 exact edges
