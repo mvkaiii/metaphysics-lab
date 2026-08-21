@@ -1,0 +1,60 @@
+name: Phase 2A Task 5 GREEN
+
+on:
+  pull_request:
+    branches:
+      - feature/ziwei-transformation-flying-core-v1
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run Task 5 composition tests
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m unittest tests.test_ziwei_composition -v 2>&1 | tee task5-composition.txt
+      - name: Run Phase 2A internal suite
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m unittest \
+            tests.test_ziwei_phase2a_models \
+            tests.test_ziwei_basis \
+            tests.test_ziwei_transformations \
+            tests.test_ziwei_flying \
+            tests.test_ziwei_composition -v 2>&1 | tee task5-internal.txt
+      - name: Assert fine-cycle availability stays closed
+        shell: bash
+        run: |
+          python - <<'PY' | tee task5-availability.txt
+          from engine.ziwei.basis import build_palace_stem_index, build_star_location_index
+          from engine.ziwei.composition import build_layer_stack
+          from engine.ziwei.flying import build_natal_flying_graph
+          from engine.ziwei.models import NatalContext
+          from tests.ziwei_phase2a_fixtures import CHART, PROVENANCE, SYNTHETIC_PALACE_STEM_RECORDS, SYNTHETIC_STAR_RECORDS
+          stars = build_star_location_index(SYNTHETIC_STAR_RECORDS, CHART, PROVENANCE)
+          stems = build_palace_stem_index(SYNTHETIC_PALACE_STEM_RECORDS, CHART, PROVENANCE)
+          natal = NatalContext(stars, stems, build_natal_flying_graph(stems, stars), None)
+          stack = build_layer_stack(CHART, natal)
+          for key in ('monthly_transformations', 'daily_transformations', 'hourly_transformations'):
+              rec = stack.availability[key]
+              assert rec.status == 'unavailable', (key, rec)
+              assert rec.reason == 'fine_cycle_stem_resolver_not_enabled', (key, rec)
+          print('AVAILABILITY_PASS')
+          PY
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase2a-task5-green-evidence
+          path: |
+            task5-composition.txt
+            task5-internal.txt
+            task5-availability.txt
