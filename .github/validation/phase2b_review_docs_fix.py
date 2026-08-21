@@ -1,0 +1,287 @@
+from pathlib import Path
+
+
+def required_replace(path: str, old: str, new: str, *, count: int | None = None) -> None:
+    p = Path(path)
+    text = p.read_text(encoding="utf-8")
+    actual = text.count(old)
+    if actual == 0:
+        raise SystemExit(f"missing required block in {path}: {old[:100]!r}")
+    if count is not None and actual != count:
+        raise SystemExit(f"unexpected match count in {path}: expected {count}, got {actual}")
+    p.write_text(text.replace(old, new), encoding="utf-8")
+
+
+# Reconcile the rule-source contract with the actual Phase 2B runtime state.
+Path("tests/test_rule_source_reconciliation.py").write_text(
+    '''import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+CORE_FILES = (
+    "core/命理分析作業規範.md",
+    "core/命理推導計算規則.md",
+    "core/核心提示詞.md",
+    "core/紫微流月推導規則.md",
+    "core/紫微流日推導規則.md",
+    "core/紫微流時推導規則.md",
+)
+USER_DOCS = (
+    "README.md",
+    "docs/架構說明.md",
+    "docs/快速開始.md",
+    "docs/安裝到ChatGPT-Project.md",
+    "docs/更新與版本同步.md",
+)
+
+
+class RuleSourceReconciliationTests(unittest.TestCase):
+    def _combined(self, files):
+        return "\\n".join((ROOT / p).read_text(encoding="utf-8") for p in files)
+
+    def test_current_runtime_capabilities_are_not_documented_as_missing(self):
+        combined = self._combined(CORE_FILES)
+        self.assertNotIn("Project 紫微流月定位層", combined)
+        self.assertNotIn("Project 紫微流日定位層", combined)
+        self.assertNotIn("Project 紫微流時定位層", combined)
+        self.assertNotIn("Project Bazi Calendar Engine", combined)
+        self.assertNotIn("- Calendar / Input Resolver", combined)
+        self.assertNotIn("紫微流時：`planned / on_demand`", combined)
+        self.assertIn("Calendar Resolver v1", combined)
+        self.assertIn("Ziwei Transformation Core", combined)
+        self.assertIn("Ziwei Flying Core", combined)
+
+    def test_phase2b_documented_state_matches_runtime(self):
+        combined = self._combined(CORE_FILES + USER_DOCS)
+        for required in (
+            "ziwei-fine-cycle-lunar-late-zi-v1",
+            "late_zi_forward-v1",
+            "implemented / experimental / on_demand",
+            "lunar-lite",
+            "18/18 PASS",
+            "iztro",
+            "Astralium",
+            "PENDING",
+        ):
+            self.assertIn(required, combined)
+        self.assertIn("流曜", combined)
+        self.assertIn("planned", combined.lower())
+
+    def test_user_docs_do_not_present_phase2b_as_missing_or_stable_default(self):
+        docs = self._combined(USER_DOCS)
+        stale = (
+            "Fine Cycle Stem Resolver 尚未固定",
+            "紫微 Fine Cycle Stem Resolver 已完成\\n",
+            "流月／流日／流時四化與飛化 = planned / on_demand",
+            "流月／流日／流時四化與飛化     planned / on_demand",
+        )
+        for phrase in stale:
+            self.assertNotIn(phrase, docs)
+        self.assertNotIn("Fine Cycle Stem Resolver = implemented / stable", docs)
+        self.assertNotIn("Fine Cycle Stem Resolver = implemented / stable / default", docs)
+        self.assertIn("Calendar Resolver", docs)
+        self.assertIn("fine-cycle profile", docs)
+
+
+if __name__ == "__main__":
+    unittest.main()
+''',
+    encoding="utf-8",
+)
+
+# Expand Task 12 qualification-doc coverage without replacing a fragile whole function block.
+phase2b_test = Path("tests/test_ziwei_phase2b_docs.py")
+text = phase2b_test.read_text(encoding="utf-8")
+needle = '''    def test_qualification_state_is_documented_without_overclaim(self):
+        for text in (self.readme, self.arch, self.rules, self.changelog):
+'''
+replacement = '''    def test_qualification_state_is_documented_without_overclaim(self):
+        extra = (
+            Path("docs/快速開始.md").read_text(encoding="utf-8"),
+            Path("docs/安裝到ChatGPT-Project.md").read_text(encoding="utf-8"),
+            Path("docs/更新與版本同步.md").read_text(encoding="utf-8"),
+        )
+        for text in (self.readme, self.arch, self.rules, self.changelog, *extra):
+'''
+if text.count(needle) != 1:
+    raise SystemExit(f"unexpected Phase 2B qualification test anchor count: {text.count(needle)}")
+phase2b_test.write_text(text.replace(needle, replacement, 1), encoding="utf-8")
+
+# Quickstart: distinguish legacy palace positioning from the independent fine-cycle stack.
+required_replace(
+    "docs/快速開始.md",
+    "兩者都只處理宮位定位，不代表流日／流時四化、飛化或流曜已實作。",
+    "這兩個 palace 模組本身只處理宮位定位；Unreleased Phase 2B 的細運天干、四化與飛化由獨立 fine-cycle modules 處理。流曜仍未實作。",
+    count=1,
+)
+required_replace(
+    "docs/快速開始.md",
+    """目前不能處理：
+
+- 流月四化／飛化
+- 流日四化／飛化
+- 流時四化／飛化
+- 流曜
+
+原因不是四化 core 不會算，而是 Fine Cycle Stem Resolver 尚未固定並 qualification。""",
+    """v1.2.0 release baseline 當時尚未包含流月／流日／流時細運四化與飛化；目前 Unreleased Phase 2B 已以獨立 fine-cycle resolver／orchestration 補上，仍維持 Experimental / On-demand。流曜仍未實作。""",
+    count=1,
+)
+quick = Path("docs/快速開始.md")
+text = quick.read_text(encoding="utf-8")
+anchor = "\n## 7. 建立私人 Case\n"
+section = '''
+## 6.5. Unreleased Phase 2B：Fine Cycle Stem Resolver
+
+若使用目前 Phase 2B feature 工作樹，另外同步：
+
+```text
+engine/calendar/sexagenary.py
+engine/ziwei/fine_cycle_stems.py
+engine/ziwei/fine_cycle.py
+```
+
+固定 profile：`ziwei-fine-cycle-lunar-late-zi-v1`；day boundary：`late_zi_forward-v1`。Calendar Resolver 仍是 neutral civil/calendar infrastructure；23:00 的紫微命理換日是 **fine-cycle profile** 的責任，不由 Resolver 或八字 policy 代做。
+
+能力狀態：`implemented / experimental / on_demand / 1.0-exp`。流月採農曆月；23:xx 不提前切月；閏月十六起 effective month ordinal +1。流日 23:00 effective date +1；流時使用同一 effective day stem 與 `CalendarContext.hour_branch`。
+
+Qualification：pinned `lunar-lite` `1d104fff...` **18/18 PASS**；pinned `iztro` `814b77e6...` **integration PASS**；Astralium fine-cycle **PENDING**。`leap_twelfth_month_second_half` 目前是 synthetic internal coverage，not externally qualified。
+'''
+if text.count(anchor) != 1:
+    raise SystemExit(f"quickstart anchor count: {text.count(anchor)}")
+text = text.replace(anchor, section + anchor, 1)
+text = text.replace(
+    "- 紫微 23:00 命理日界 school policy",
+    "- 紫微各命理體系自己的日界 policy（Phase 2B 的紫微細運由 fine-cycle profile 負責）",
+    1,
+)
+quick.write_text(text, encoding="utf-8")
+
+# Installation guide.
+required_replace(
+    "docs/安裝到ChatGPT-Project.md",
+    "流日／流時目前只做宮位定位。Experimental 能力可執行，但分析時必須降權。",
+    "流日／流時 palace modules 本身只做宮位定位；Unreleased Phase 2B 的 fine-cycle stem／四化／飛化由獨立 modules 提供。Experimental 能力可執行，但分析時必須降權。",
+    count=1,
+)
+required_replace(
+    "docs/安裝到ChatGPT-Project.md",
+    """仍未支援：
+
+- 流月四化／飛化
+- 流日四化／飛化
+- 流時四化／飛化
+- 流曜
+
+這些細運能力仍需要 Fine Cycle Stem Resolver 與獨立 qualification。""",
+    """v1.2.0 release baseline 當時尚未支援流月／流日／流時細運四化與飛化。Unreleased Phase 2B 已完成 Fine Cycle Stem Resolver 與獨立 public qualification；能力仍是 Experimental / On-demand。流曜仍 planned。""",
+    count=1,
+)
+install = Path("docs/安裝到ChatGPT-Project.md")
+text = install.read_text(encoding="utf-8")
+anchor = "\n## 八、建議的完整 Python 環境\n"
+section = '''
+## 七點五、Unreleased Phase 2B fine-cycle modules
+
+若要執行目前 Phase 2B 工作樹的紫微流月／流日／流時天干、四化與飛化，再同步：
+
+```text
+engine/calendar/sexagenary.py
+engine/ziwei/fine_cycle_stems.py
+engine/ziwei/fine_cycle.py
+```
+
+profile = `ziwei-fine-cycle-lunar-late-zi-v1`；day boundary = `late_zi_forward-v1`；capability = `implemented / experimental / on_demand / 1.0-exp`。Calendar Resolver 不執行 23:00 紫微換日；該 policy 只由 **fine-cycle profile** 套用。
+
+Public qualification：pinned `lunar-lite` `1d104fff...` **18/18 PASS**；pinned `iztro` `814b77e6...` **integration PASS**；Astralium fine-cycle = **PENDING**。流曜仍 planned / on_demand。
+'''
+if text.count(anchor) != 1:
+    raise SystemExit(f"install anchor count: {text.count(anchor)}")
+text = text.replace(anchor, section + anchor, 1)
+text = text.replace(
+    "engine/calendar/resolver.py\n\nengine/ziwei/__init__.py",
+    "engine/calendar/resolver.py\nengine/calendar/sexagenary.py\n\nengine/ziwei/__init__.py",
+    1,
+)
+text = text.replace(
+    "engine/ziwei/composition.py\n\nengine/project_ziwei_month.py",
+    "engine/ziwei/composition.py\nengine/ziwei/fine_cycle_stems.py\nengine/ziwei/fine_cycle.py\n\nengine/project_ziwei_month.py",
+    1,
+)
+old_caps = '''目前正式狀態：
+
+```text
+紫微流月定位 = implemented / stable / default
+紫微流日定位 = implemented / experimental / on_demand
+紫微流時定位 = implemented / experimental / on_demand
+Ziwei Transformation Core = implemented / stable / on_demand
+Ziwei Flying Core = implemented / stable / on_demand
+流月／流日／流時四化與飛化 = planned / on_demand
+流曜 = planned / on_demand
+Cross-System Validation = planned
+```'''
+new_caps = '''v1.2.0 正式 release baseline 與目前 Unreleased Phase 2B 必須分開看。Phase 2B 工作樹新增：
+
+```text
+flow_month/day/hour_stem = implemented / experimental / on_demand / 1.0-exp
+flow_month/day/hour_transformations = implemented / experimental / on_demand / 1.0-exp
+flow_month/day/hour_flying = implemented / experimental / on_demand / 1.0-exp
+Ziwei Transformation Core = implemented / stable / on_demand / 1.0
+Ziwei Flying Core = implemented / stable / on_demand / 1.0
+流曜 = planned / on_demand
+Cross-System Validation = planned
+```'''
+if text.count(old_caps) != 1:
+    raise SystemExit(f"install capability block count: {text.count(old_caps)}")
+install.write_text(text.replace(old_caps, new_caps, 1), encoding="utf-8")
+
+# Update / migration guide: preserve v1.2.0 release baseline and add an explicit Unreleased overlay.
+sync = Path("docs/更新與版本同步.md")
+text = sync.read_text(encoding="utf-8")
+text = text.replace(
+    "engine/calendar/resolver.py\n```",
+    "engine/calendar/resolver.py\nengine/calendar/sexagenary.py\n```",
+    1,
+)
+text = text.replace(
+    "engine/ziwei/composition.py\n```",
+    "engine/ziwei/composition.py\nengine/ziwei/fine_cycle_stems.py\nengine/ziwei/fine_cycle.py\n```",
+    1,
+)
+anchor = "\n## 五、v1.2.0 Capability 狀態\n"
+overlay = '''
+## 四點五、Unreleased Phase 2B 同步 overlay
+
+`VERSION.md` 目前仍記錄正式 release **v1.2.0**；若採用目前 Phase 2B feature 工作樹，需額外同步 `engine/calendar/sexagenary.py`、`engine/ziwei/fine_cycle_stems.py`、`engine/ziwei/fine_cycle.py` 與同版 `engine/ziwei/capabilities.py`。
+
+Phase 2B profile = `ziwei-fine-cycle-lunar-late-zi-v1`，day boundary = `late_zi_forward-v1`。Calendar Resolver 保持 neutral；23:00 紫微換日由 **fine-cycle profile** 負責。
+
+目前工作樹的 flow month/day/hour stem、transformations、flying 都是 `implemented / experimental / on_demand / 1.0-exp`；流曜仍 planned。Public qualification：pinned `lunar-lite` `1d104fff...` **18/18 PASS**；pinned `iztro` `814b77e6...` **integration PASS**；Astralium fine-cycle **PENDING**。
+'''
+if text.count(anchor) != 1:
+    raise SystemExit(f"sync capability anchor count: {text.count(anchor)}")
+text = text.replace(anchor, overlay + anchor, 1)
+text = text.replace(
+    "八字 23:00 early-Zi 仍由八字引擎負責；紫微 23:00 命理日界尚未固定。",
+    "八字 23:00 early-Zi 仍由八字引擎負責。v1.2.0 release baseline 尚未固定紫微 23:00 細運日界；Unreleased Phase 2B 已由 `late_zi_forward-v1` fine-cycle profile 固定，Calendar Resolver 本身仍不套用。",
+    1,
+)
+text = text.replace(
+    "- 紫微 Fine Cycle Stem Resolver 已完成",
+    "- 若使用 v1.2.0 release baseline，紫微 Fine Cycle Stem Resolver 並不包含在該 release；若使用 Unreleased Phase 2B，則已實作為 Experimental / On-demand",
+    1,
+)
+old = '''仍 planned：
+
+- 流月四化／飛化
+- 流日四化／飛化
+- 流時四化／飛化
+- 流曜
+
+如果未來 Phase 2B 修改 fine-cycle stem policy，必須重新確認 VERSION / CHANGELOG / capability registry 與 qualification evidence 是否同版。'''
+new = '''v1.2.0 release baseline 的細運四化／飛化仍是 planned；目前 Unreleased Phase 2B 已將流月／流日／流時 stem、四化與飛化 promotion 為 Experimental / On-demand。流曜仍 planned。
+
+若後續修改 fine-cycle stem policy，必須重新確認 VERSION / CHANGELOG / capability registry 與 qualification evidence 是否同版。'''
+if text.count(old) != 1:
+    raise SystemExit(f"sync planned block count: {text.count(old)}")
+sync.write_text(text.replace(old, new, 1), encoding="utf-8")
