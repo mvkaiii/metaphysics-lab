@@ -126,7 +126,7 @@ v1.2.0 狀態：
 紫微流時 = implemented / experimental / on_demand
 ```
 
-流日／流時目前只做宮位定位。Experimental 能力可執行，但分析時必須降權。
+流日／流時 palace modules 本身只做宮位定位；Unreleased Phase 2B 的 fine-cycle stem／四化／飛化由獨立 modules 提供。Experimental 能力可執行，但分析時必須降權。
 
 ---
 
@@ -210,16 +210,23 @@ Ziwei Flying Core = implemented / stable / on_demand
 - 流年四化／飛化
 - layer no-overwrite / fail-closed conflict handling
 
-仍未支援：
-
-- 流月四化／飛化
-- 流日四化／飛化
-- 流時四化／飛化
-- 流曜
-
-這些細運能力仍需要 Fine Cycle Stem Resolver 與獨立 qualification。
+v1.2.0 release baseline 當時尚未支援流月／流日／流時細運四化與飛化。Unreleased Phase 2B 已完成 Fine Cycle Stem Resolver 與獨立 public qualification；能力仍是 Experimental / On-demand。流曜仍 planned。
 
 ---
+
+## 七點五、Unreleased Phase 2B fine-cycle modules
+
+若要執行目前 Phase 2B 工作樹的紫微流月／流日／流時天干、四化與飛化，再同步：
+
+```text
+engine/calendar/sexagenary.py
+engine/ziwei/fine_cycle_stems.py
+engine/ziwei/fine_cycle.py
+```
+
+profile = `ziwei-fine-cycle-lunar-late-zi-v1`；day boundary = `late_zi_forward-v1`；capability = `implemented / experimental / on_demand / 1.0-exp`。Calendar Resolver 不執行 23:00 紫微換日；該 policy 只由 **fine-cycle profile** 套用。
+
+Public qualification：pinned `lunar-lite` `1d104fff...` **18/18 PASS**；pinned `iztro` `814b77e6...` **integration PASS**；Astralium fine-cycle = **PENDING**。流曜仍 planned / on_demand。
 
 ## 八、建議的完整 Python 環境
 
@@ -238,6 +245,7 @@ engine/calendar/models.py
 engine/calendar/timezone.py
 engine/calendar/lunar.py
 engine/calendar/resolver.py
+engine/calendar/sexagenary.py
 
 engine/ziwei/__init__.py
 engine/ziwei/common.py
@@ -253,6 +261,8 @@ engine/ziwei/transformation_profiles.py
 engine/ziwei/transformations.py
 engine/ziwei/flying.py
 engine/ziwei/composition.py
+engine/ziwei/fine_cycle_stems.py
+engine/ziwei/fine_cycle.py
 
 engine/project_ziwei_month.py
 engine/project_ziwei_day.py
@@ -271,15 +281,14 @@ maturity       = experimental / stable
 routing        = default / on_demand
 ```
 
-目前正式狀態：
+v1.2.0 正式 release baseline 與目前 Unreleased Phase 2B 必須分開看。Phase 2B 工作樹新增：
 
 ```text
-紫微流月定位 = implemented / stable / default
-紫微流日定位 = implemented / experimental / on_demand
-紫微流時定位 = implemented / experimental / on_demand
-Ziwei Transformation Core = implemented / stable / on_demand
-Ziwei Flying Core = implemented / stable / on_demand
-流月／流日／流時四化與飛化 = planned / on_demand
+flow_month/day/hour_stem = implemented / experimental / on_demand / 1.0-exp
+flow_month/day/hour_transformations = implemented / experimental / on_demand / 1.0-exp
+flow_month/day/hour_flying = implemented / experimental / on_demand / 1.0-exp
+Ziwei Transformation Core = implemented / stable / on_demand / 1.0
+Ziwei Flying Core = implemented / stable / on_demand / 1.0
 流曜 = planned / on_demand
 Cross-System Validation = planned
 ```

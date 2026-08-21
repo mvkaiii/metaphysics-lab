@@ -1,0 +1,21 @@
+{
+  "source_name": "SylarLong/iztro",
+  "source_revision": "814b77e6371e1050cac31bbf674db3c3138fcfde",
+  "package_version": "2.6.0",
+  "run_timestamp": "2026-08-21T00:00:00Z",
+  "monthly_mutagen_uses_monthly_stem": true,
+  "daily_mutagen_uses_daily_stem": true,
+  "hourly_mutagen_uses_hourly_stem": true,
+  "project_sample_transformations_each": 4,
+  "project_sample_scopes": [
+    "monthly",
+    "daily",
+    "hourly"
+  ],
+  "project_sample_stems": {
+    "monthly": "己",
+    "daily": "己",
+    "hourly": "乙"
+  },
+  "status": "PASS"
+}

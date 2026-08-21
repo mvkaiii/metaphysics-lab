@@ -44,7 +44,9 @@ Metaphysics Lab 是一套以「可重現、可驗證、可追溯、以決策為�
 | Ziwei Calendar Adapter | implemented | stable infrastructure | adapter |
 | Ziwei Transformation Core v1 | implemented | stable | on_demand |
 | Ziwei Flying Core v1 | implemented | stable | on_demand |
-| 紫微流月／流日／流時四化與飛化 | planned | — | on_demand |
+| Ziwei Fine Cycle Stem Resolver v1（流月／流日／流時天干） | implemented | experimental | on_demand |
+| 紫微流月／流日／流時四化 | implemented | experimental | on_demand |
+| 紫微流月／流日／流時飛化 | implemented | experimental | on_demand |
 | 紫微流曜（moving stars） | planned | — | on_demand |
 | Cross-System Validation | planned | — | — |
 | 奇門自動排盤引擎 | planned | — | — |
@@ -109,7 +111,7 @@ engine/ziwei/day.py     # experimental / on_demand
 engine/ziwei/hour.py    # experimental / on_demand
 ```
 
-目前這三層只處理宮位定位。紫微流月採農曆月，初一換月；閏月採初一至十五歸原月、十六起歸下一月。
+這三個 palace 模組只處理宮位定位；細運天干、四化與飛化由獨立 Fine Cycle Stem Resolver／orchestration 處理。紫微流月採農曆月，初一換月；閏月採初一至十五歸原月、十六起歸下一月。
 
 ### Ziwei Transformation & Flying Core v1
 
@@ -148,6 +150,32 @@ Composition：
 
 ---
 
+## Ziwei Fine Cycle Stem Resolver v1（Phase 2B / Unreleased）
+
+正式模組：
+
+```text
+engine/calendar/sexagenary.py
+engine/ziwei/fine_cycle_stems.py
+engine/ziwei/fine_cycle.py
+```
+
+固定 profile：`ziwei-fine-cycle-lunar-late-zi-v1`；rule version：`1.0-exp`；紫微細運日界：`late_zi_forward-v1`。Calendar Resolver 是 neutral civil/calendar infrastructure，維持民用日期 00:00 換日；23:00 的紫微命理換日只由 fine-cycle profile 在下游套用，不污染 Calendar Resolver，也不借用八字 policy。
+
+流月天干採農曆月邊界；23:xx 不提前切換流月。閏月初一至十五沿用原月，十六起 effective month ordinal +1。`leap_twelfth_month_second_half` 目前只有 synthetic internal coverage，**not externally qualified**。流日於 23:00 將 effective date 前進一天；流時用同一 effective Ziwei day 的日干起五鼠遁，時支直接採 `CalendarContext.hour_branch`。
+
+細運天干、四化與飛化 capability 均為 `implemented / experimental / on_demand / 1.0-exp`，不升 Stable，也不改成 Default。Composition 可同時保留 yearly / monthly / daily / hourly layers，不互相覆寫。
+
+Public qualification：
+
+```text
+pinned lunar-lite 1d104fff...   18/18 PASS
+pinned iztro 814b77e6...        integration PASS
+Astralium fine-cycle             PENDING
+```
+
+Astralium 的 PENDING 原因是目前私有來源沒有完整細運 stem／transformation／flying payload；repo 只保存 aggregate 狀態，不保存 raw private chart。
+
 ## Phase 2A qualification
 
 v1.2.0 的 Ziwei Transformation & Flying Core 已通過：
@@ -178,9 +206,6 @@ Full repository   132/132 PASS
 
 ## 目前仍未實作
 
-- 紫微 Fine Cycle Stem Resolver（流月／流日／流時天干）
-- 紫微 23:00 命理日界 school policy
-- 流月／流日／流時四化與飛化
 - 紫微流曜（moving stars）
 - Cross-System Validation 正式引擎
 - 完整干支互動引擎
@@ -229,6 +254,8 @@ engine.ziwei.capabilities
 engine.ziwei.transformations
 engine.ziwei.flying
 engine.ziwei.composition
+engine.ziwei.fine_cycle_stems
+engine.ziwei.fine_cycle
 ```
 
 ---
