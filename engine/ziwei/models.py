@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 from enum import Enum
 from typing import Mapping, Optional, Tuple, Union
 
@@ -184,4 +185,30 @@ class TransformationOccurrence:
     transformation_type: TransformationType
     star: str
     target_palace: str
+    provenance: LayerProvenance
+
+
+@dataclass(frozen=True)
+class FineCycleStemProfile:
+    profile_id: str
+    rule_version: str
+    month_basis: str
+    leap_month_policy: str
+    lunar_year_basis: str
+    ziwei_day_boundary: str
+    hour_stem_basis: str
+
+
+@dataclass(frozen=True)
+class ResolvedCycleStem:
+    scope: str
+    reference: str
+    heavenly_stem: str
+    earthly_branch: str
+    profile_id: str
+    rule_version: str
+    civil_date: date
+    effective_date: date
+    hour_branch: Optional[str]
+    calendar_validation_status: str
     provenance: LayerProvenance

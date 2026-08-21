@@ -1,0 +1,159 @@
+{
+  "source_name": "SylarLong/lunar-lite",
+  "source_revision": "1d104fffa31609e9f112898cc57545827e8d57ae",
+  "package_version": "0.2.8",
+  "rule_profile": "ziwei-fine-cycle-lunar-late-zi-v1",
+  "rule_version": "1.0-exp",
+  "cases_checked": 18,
+  "cases_matched": 18,
+  "external_coverage": [
+    "lunar_month_normal",
+    "leap_month_first_half",
+    "leap_month_second_half",
+    "regular_day_hour",
+    "late_zi_day_hour"
+  ],
+  "not_externally_covered": [
+    "leap_twelfth_month_second_half"
+  ],
+  "source_contract": {
+    "separate_exact_month_path": true,
+    "normal_month_leap_split": true,
+    "normal_month_five_tiger": true,
+    "normal_month_ordinal": true,
+    "exact_day_stem": true,
+    "exact_day_branch": true,
+    "time_stem": true,
+    "time_branch": true
+  },
+  "checks": [
+    {
+      "case_id": "lunar-normal-2023-06-13",
+      "category": "lunar_month_normal",
+      "expected_external": "己未",
+      "project": "己未",
+      "matched": true
+    },
+    {
+      "case_id": "lunar-normal-2023-06-13",
+      "category": "hour_from_external_exact_day_stem",
+      "expected_external": "乙丑",
+      "project": "乙丑",
+      "matched": true
+    },
+    {
+      "case_id": "lunar-normal-2023-02-11",
+      "category": "lunar_month_normal",
+      "expected_external": "乙卯",
+      "project": "乙卯",
+      "matched": true
+    },
+    {
+      "case_id": "lunar-normal-2023-02-11",
+      "category": "hour_from_external_exact_day_stem",
+      "expected_external": "乙丑",
+      "project": "乙丑",
+      "matched": true
+    },
+    {
+      "case_id": "leap-first-half-2023-02-11",
+      "category": "lunar_month_normal",
+      "expected_external": "乙卯",
+      "project": "乙卯",
+      "matched": true
+    },
+    {
+      "case_id": "leap-first-half-2023-02-11",
+      "category": "hour_from_external_exact_day_stem",
+      "expected_external": "乙丑",
+      "project": "乙丑",
+      "matched": true
+    },
+    {
+      "case_id": "leap-second-half-2023-02-16",
+      "category": "lunar_month_normal",
+      "expected_external": "丙辰",
+      "project": "丙辰",
+      "matched": true
+    },
+    {
+      "case_id": "leap-second-half-2023-02-16",
+      "category": "hour_from_external_exact_day_stem",
+      "expected_external": "乙丑",
+      "project": "乙丑",
+      "matched": true
+    },
+    {
+      "case_id": "lunar-late-zi-2023-06-13",
+      "category": "lunar_month_normal",
+      "expected_external": "己未",
+      "project": "己未",
+      "matched": true
+    },
+    {
+      "case_id": "lunar-late-zi-2023-06-13",
+      "category": "hour_from_external_exact_day_stem",
+      "expected_external": "丙子",
+      "project": "丙子",
+      "matched": true
+    },
+    {
+      "case_id": "regular-1987-12-06-hai",
+      "category": "ziwei_effective_day_ganzhi",
+      "expected_external": "己丑",
+      "project": "己丑",
+      "matched": true
+    },
+    {
+      "case_id": "regular-1987-12-06-hai",
+      "category": "hour_ganzhi",
+      "expected_external": "乙亥",
+      "project": "乙亥",
+      "matched": true
+    },
+    {
+      "case_id": "late-zi-1987-12-06",
+      "category": "ziwei_effective_day_ganzhi",
+      "expected_external": "庚寅",
+      "project": "庚寅",
+      "matched": true
+    },
+    {
+      "case_id": "late-zi-1987-12-06",
+      "category": "hour_ganzhi",
+      "expected_external": "丙子",
+      "project": "丙子",
+      "matched": true
+    },
+    {
+      "case_id": "regular-2023-03-09",
+      "category": "ziwei_effective_day_ganzhi",
+      "expected_external": "丙寅",
+      "project": "丙寅",
+      "matched": true
+    },
+    {
+      "case_id": "regular-2023-03-09",
+      "category": "hour_ganzhi",
+      "expected_external": "癸巳",
+      "project": "癸巳",
+      "matched": true
+    },
+    {
+      "case_id": "regular-2023-04-08",
+      "category": "ziwei_effective_day_ganzhi",
+      "expected_external": "丙申",
+      "project": "丙申",
+      "matched": true
+    },
+    {
+      "case_id": "regular-2023-04-08",
+      "category": "hour_ganzhi",
+      "expected_external": "癸巳",
+      "project": "癸巳",
+      "matched": true
+    }
+  ],
+  "mismatches": [],
+  "status": "PASS"
+}

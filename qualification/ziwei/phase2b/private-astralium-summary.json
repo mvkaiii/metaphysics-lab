@@ -1,0 +1,9 @@
+{
+  "source_name": "Astralium",
+  "phase": "2B",
+  "scope": "fine_cycle_stems_transformations_flying",
+  "status": "PENDING",
+  "reason_code": "fine_cycle_source_not_available",
+  "reason": "Current private Astralium source package does not provide a complete fine-cycle stem/transformation/flying payload for qualification.",
+  "raw_private_payload_committed": false
+}
