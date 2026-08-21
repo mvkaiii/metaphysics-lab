@@ -48,6 +48,7 @@ def build_summary(
                 "latitude": _rounded(record.get("latitude")),
                 "longitude": _rounded(record.get("longitude")),
                 "timezone": record.get("timezone"),
+                "error_code": record.get("error_code"),
             }
         )
     pass_count = sum(item["status"] == "PASS" for item in results)
@@ -78,6 +79,7 @@ def qualify(provider: NominatimLocationProvider) -> tuple[dict, bool, bool]:
                     "latitude": resolved.latitude,
                     "longitude": resolved.longitude,
                     "timezone": resolved.timezone,
+                    "error_code": None,
                 }
             )
         except BirthFoundationError as exc:
@@ -90,6 +92,7 @@ def qualify(provider: NominatimLocationProvider) -> tuple[dict, bool, bool]:
                     "latitude": None,
                     "longitude": None,
                     "timezone": None,
+                    "error_code": exc.code,
                 }
             )
             if infrastructure_failure:
