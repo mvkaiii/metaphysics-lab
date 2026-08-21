@@ -112,8 +112,7 @@ def compare_year(year: int) -> tuple[int, list[str]]:
             expected_day = DAYS[token]
             if current_month is None:
                 # Before the first explicit lunar-month marker of the Gregorian year,
-                # HKO gives only the day number. We therefore compare only the facts
-                # the source actually states: previous lunar year + lunar day.
+                # HKO gives only the day number. Compare only the facts it states.
                 if lunar.getYear() != year - 1 or lunar.getDay() != expected_day:
                     mismatches.append(
                         f"{civil.isoformat()}: HKO=(year {year - 1}, day {expected_day}, month unstated), "
@@ -131,13 +130,14 @@ def compare_year(year: int) -> tuple[int, list[str]]:
             except KeyError:
                 mismatches.append(f"{civil.isoformat()}: unrecognized HKO lunar token {token!r}")
                 continue
-            if abs(current_month) == 1 and current_month > 0:
+
+            # Month markers before the first 正月 belong to the previous lunar year.
+            # Once 正月 appears, the lunar year advances to the Gregorian year.
+            if current_month == 1:
                 current_lunar_year = year
-            if current_lunar_year is None:
-                mismatches.append(
-                    f"{civil.isoformat()}: HKO month marker {token!r} appeared before lunar year could be resolved"
-                )
-                continue
+            elif current_lunar_year is None:
+                current_lunar_year = year - 1
+
             expected = (current_lunar_year, current_month, 1)
             if actual != expected:
                 mismatches.append(
