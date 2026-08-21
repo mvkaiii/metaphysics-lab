@@ -3,8 +3,20 @@ import unittest
 from engine.ziwei.basis import build_palace_stem_index, build_star_location_index
 from engine.ziwei.common import PALACE_NAMES, opposite_palace
 from engine.ziwei.errors import ZiweiPhase2AError
-from engine.ziwei.flying import classify_geometric_relation, fly_transformations
-from engine.ziwei.models import ChartIdentity, CycleStemSource, GeometricRelation, PalaceStemSource
+from engine.ziwei.flying import (
+    build_natal_flying_graph,
+    classify_geometric_relation,
+    fly_transformations,
+    presentation_relation,
+)
+from engine.ziwei.models import (
+    ChartIdentity,
+    CycleStemSource,
+    FlyingEdge,
+    GeometricRelation,
+    PalaceStemSource,
+    TransformationType,
+)
 from engine.ziwei.transformations import get_transformation_set
 from tests.ziwei_phase2a_fixtures import CHART, PROVENANCE, SYNTHETIC_PALACE_STEM_RECORDS, SYNTHETIC_STAR_RECORDS
 
@@ -50,6 +62,27 @@ class ZiweiFlyingTests(unittest.TestCase):
         with self.assertRaises(ZiweiPhase2AError) as cm:
             fly_transformations(get_transformation_set("丙"), stars, source)
         self.assertEqual(cm.exception.code, "chart_basis_mismatch")
+
+
+class ZiweiNatalGraphTests(unittest.TestCase):
+    def test_twelve_palaces_create_exactly_forty_eight_edges(self):
+        stars = build_star_location_index(SYNTHETIC_STAR_RECORDS, CHART, PROVENANCE)
+        stems = build_palace_stem_index(SYNTHETIC_PALACE_STEM_RECORDS, CHART, PROVENANCE)
+        graph = build_natal_flying_graph(stems, stars)
+        self.assertEqual(len(graph.edges), 48)
+        self.assertEqual(sum(len(v) for v in graph.outgoing_index.values()), 48)
+        self.assertEqual(sum(len(v) for v in graph.incoming_index.values()), 48)
+
+    def test_presentation_mapping_uses_geometry_only(self):
+        source = PalaceStemSource("palace_stem", CHART, "命宮", "甲")
+        same = FlyingEdge("same", source, "甲", TransformationType.LU, "廉貞", "命宮", "natal_star_location", "metaphysics-lab-common-v1", GeometricRelation.SAME_PALACE, PROVENANCE)
+        opposite = FlyingEdge("opposite", source, "甲", TransformationType.LU, "廉貞", "遷移宮", "natal_star_location", "metaphysics-lab-common-v1", GeometricRelation.OPPOSITE_PALACE_INCOMING, PROVENANCE)
+        normal = FlyingEdge("normal", source, "甲", TransformationType.LU, "廉貞", "財帛宮", "natal_star_location", "metaphysics-lab-common-v1", GeometricRelation.NORMAL, PROVENANCE)
+        cycle = FlyingEdge("cycle", CycleStemSource("cycle_stem", CHART, "yearly", "2026", "甲"), "甲", TransformationType.LU, "廉貞", "命宮", "natal_star_location", "metaphysics-lab-common-v1", None, PROVENANCE)
+        self.assertEqual(presentation_relation(same), "↓")
+        self.assertEqual(presentation_relation(opposite), "↑")
+        self.assertIsNone(presentation_relation(normal))
+        self.assertIsNone(presentation_relation(cycle))
 
 
 if __name__ == "__main__":
