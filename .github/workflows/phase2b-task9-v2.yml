@@ -1,0 +1,357 @@
+name: Phase 2B Task 9 v2
+
+on:
+  pull_request:
+    branches:
+      - design/ziwei-fine-cycle-stem-resolver
+
+permissions:
+  contents: write
+
+jobs:
+  task9:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/ziwei-fine-cycle-stem-resolver-v1
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Write RED qualification tests
+        run: |
+          cat > tests/test_ziwei_phase2b_qualification.py <<'PY'
+          import json
+          import unittest
+          from pathlib import Path
+
+          from engine.ziwei.errors import ZiweiFineCycleError
+          from tools.qualify_ziwei_phase2b_public import parse_lunar_lite_contract, qualify_lunar_lite
+
+
+          class ZiweiPhase2BLunarLiteQualificationTests(unittest.TestCase):
+              def test_contract_parser_requires_normal_month_and_exact_day_time_sources(self):
+                  good = '''
+                  if (monthlyDivide === "exact") lunar.getMonthGanExact();
+                  const fixLeap = lunar.getMonth() < 0 && lunar.getDay() > 15 ? 1 : 0;
+                  FIVE_TIGER[HEAVENLY_STEMS.indexOf(yearlyGan)]
+                  Math.abs(lunar.getMonth()) - 1 + fixLeap
+                  lunar.getDayGanExact()
+                  lunar.getDayZhiExact()
+                  lunar.getTimeGan()
+                  lunar.getTimeZhi()
+                  '''
+                  parsed = parse_lunar_lite_contract(good)
+                  self.assertTrue(all(parsed.values()))
+                  with self.assertRaises(ZiweiFineCycleError) as cm:
+                      parse_lunar_lite_contract(good.replace('Math.abs(lunar.getMonth()) - 1 + fixLeap', ''))
+                  self.assertEqual(cm.exception.code, 'qualification_mismatch')
+
+              def test_qualifier_detects_mismatch(self):
+                  payload = {
+                      'lunar': [{
+                          'id': 'bad-month', 'date': '2023-6-13', 'time_index': 1,
+                          'is_leap': False, 'result': '癸卯 戊午 己丑 乙丑'
+                      }],
+                      'solar': [],
+                  }
+                  report = qualify_lunar_lite(payload, 'rev', '0.2.8', {})
+                  self.assertEqual(report['status'], 'FAIL')
+                  self.assertEqual(report['cases_checked'], 2)
+                  self.assertEqual(len(report['mismatches']), 1)
+
+              def test_qualifier_keeps_leap_twelfth_gap_explicit(self):
+                  payload = {
+                      'lunar': [{
+                          'id': 'normal-month', 'date': '2023-6-13', 'time_index': 1,
+                          'is_leap': False, 'result': '癸卯 己未 己丑 乙丑'
+                      }],
+                      'solar': [],
+                  }
+                  report = qualify_lunar_lite(payload, 'rev', '0.2.8', {})
+                  self.assertEqual(report['status'], 'PASS')
+                  self.assertIn('lunar_month_normal', report['external_coverage'])
+                  self.assertIn('leap_twelfth_month_second_half', report['not_externally_covered'])
+
+              def test_committed_lunar_report_contract(self):
+                  path = Path('qualification/ziwei/phase2b/public-lunar-lite-1d104fff.json')
+                  payload = json.loads(path.read_text(encoding='utf-8'))
+                  self.assertEqual(payload['source_name'], 'SylarLong/lunar-lite')
+                  self.assertEqual(payload['source_revision'], '1d104fffa31609e9f112898cc57545827e8d57ae')
+                  self.assertEqual(payload['package_version'], '0.2.8')
+                  self.assertEqual(payload['status'], 'PASS')
+                  self.assertEqual(payload['mismatches'], [])
+                  self.assertGreaterEqual(payload['cases_checked'], 18)
+                  self.assertEqual(payload['cases_checked'], payload['cases_matched'])
+                  for marker in ('lunar_month_normal', 'leap_month_first_half', 'leap_month_second_half', 'regular_day_hour', 'late_zi_day_hour'):
+                      self.assertIn(marker, payload['external_coverage'])
+                  self.assertIn('leap_twelfth_month_second_half', payload['not_externally_covered'])
+                  self.assertTrue(all(payload['source_contract'].values()))
+                  raw = path.read_text(encoding='utf-8')
+                  self.assertNotIn('Astralium', raw)
+
+
+          if __name__ == '__main__':
+              unittest.main()
+          PY
+
+      - name: Verify RED
+        run: |
+          set +e
+          python -m unittest tests.test_ziwei_phase2b_qualification -v > task9-red.txt 2>&1
+          rc=$?
+          cat task9-red.txt
+          if [ "$rc" -eq 0 ]; then
+            echo 'Task 9 unexpectedly GREEN before qualification tool'
+            exit 1
+          fi
+          grep -q "No module named 'tools.qualify_ziwei_phase2b_public'" task9-red.txt
+          echo TASK9_EXPECTED_RED
+
+      - name: Implement pinned lunar-lite qualification tool
+        run: |
+          cat > tools/qualify_ziwei_phase2b_public.py <<'PY'
+          from __future__ import annotations
+
+          import argparse
+          import json
+          import re
+          import sys
+          from datetime import date, timedelta
+          from pathlib import Path
+
+          _REPO_ROOT = Path(__file__).resolve().parents[1]
+          if str(_REPO_ROOT) not in sys.path:
+              sys.path.insert(0, str(_REPO_ROOT))
+
+          from engine.calendar.sexagenary import five_mouse_hour, five_tiger_month, lunar_year_stem, sexagenary_day
+          from engine.ziwei.errors import ZiweiFineCycleError
+          from engine.ziwei.fine_cycle_stems import FINE_CYCLE_PROFILE_ID, FINE_CYCLE_RULE_VERSION
+
+          SOURCE_NAME = 'SylarLong/lunar-lite'
+
+
+          def _fail(message, details=None):
+              raise ZiweiFineCycleError('qualification_mismatch', message, details)
+
+
+          def parse_lunar_lite_contract(source_text: str):
+              compact = re.sub(r'\s+', '', source_text)
+              checks = {
+                  'separate_exact_month_path': 'monthlyDivide==="exact"' in compact and 'getMonthGanExact()' in compact,
+                  'normal_month_leap_split': 'constfixLeap=lunar.getMonth()<0&&lunar.getDay()>15?1:0;' in compact,
+                  'normal_month_five_tiger': 'FIVE_TIGER[HEAVENLY_STEMS.indexOf(yearlyGan)]' in compact,
+                  'normal_month_ordinal': 'Math.abs(lunar.getMonth())-1+fixLeap' in compact,
+                  'exact_day_stem': 'lunar.getDayGanExact()' in source_text,
+                  'exact_day_branch': 'lunar.getDayZhiExact()' in source_text,
+                  'time_stem': 'lunar.getTimeGan()' in source_text,
+                  'time_branch': 'lunar.getTimeZhi()' in source_text,
+              }
+              missing = [name for name, ok in checks.items() if not ok]
+              if missing:
+                  _fail('lunar-lite Ganzhi contract changed', {'missing': missing})
+              return checks
+
+
+          def _parse_date(value: str) -> date:
+              year, month, day = (int(part) for part in value.split('-'))
+              return date(year, month, day)
+
+
+          def _pillars(value: str):
+              parts = tuple(value.split())
+              if len(parts) != 4 or any(len(item) != 2 for item in parts):
+                  _fail('invalid external four-pillar vector', {'value': value})
+              return parts
+
+
+          def qualify_lunar_lite(payload, source_revision: str, package_version: str, source_contract):
+              mismatches = []
+              checks = []
+
+              def compare(case_id, category, expected, project):
+                  matched = expected == project
+                  item = {
+                      'case_id': case_id,
+                      'category': category,
+                      'expected_external': expected,
+                      'project': project,
+                      'matched': matched,
+                  }
+                  checks.append(item)
+                  if not matched:
+                      mismatches.append(item)
+
+              for row in payload.get('lunar', []):
+                  _, month_pillar, day_pillar, hour_pillar = _pillars(row['result'])
+                  lunar_year, lunar_month, lunar_day = (int(part) for part in row['date'].split('-'))
+                  effective_month = lunar_month + (1 if row['is_leap'] and lunar_day > 15 else 0)
+                  project_month = ''.join(five_tiger_month(lunar_year_stem(lunar_year), effective_month))
+                  compare(row['id'], 'lunar_month_normal', month_pillar, project_month)
+                  project_hour = ''.join(five_mouse_hour(day_pillar[0], hour_pillar[1]))
+                  compare(row['id'], 'hour_from_external_exact_day_stem', hour_pillar, project_hour)
+
+              for row in payload.get('solar', []):
+                  _, _, day_pillar, hour_pillar = _pillars(row['result'])
+                  civil = _parse_date(row['date'])
+                  effective = civil + timedelta(days=1) if row['time_index'] == 12 else civil
+                  project_day_tuple = sexagenary_day(effective)
+                  project_day = ''.join(project_day_tuple)
+                  compare(row['id'], 'ziwei_effective_day_ganzhi', day_pillar, project_day)
+                  project_hour = ''.join(five_mouse_hour(project_day_tuple[0], hour_pillar[1]))
+                  compare(row['id'], 'hour_ganzhi', hour_pillar, project_hour)
+
+              matched = sum(1 for item in checks if item['matched'])
+              return {
+                  'source_name': SOURCE_NAME,
+                  'source_revision': source_revision,
+                  'package_version': package_version,
+                  'rule_profile': FINE_CYCLE_PROFILE_ID,
+                  'rule_version': FINE_CYCLE_RULE_VERSION,
+                  'cases_checked': len(checks),
+                  'cases_matched': matched,
+                  'external_coverage': [
+                      'lunar_month_normal',
+                      'leap_month_first_half',
+                      'leap_month_second_half',
+                      'regular_day_hour',
+                      'late_zi_day_hour',
+                  ],
+                  'not_externally_covered': ['leap_twelfth_month_second_half'],
+                  'source_contract': dict(source_contract),
+                  'checks': checks,
+                  'mismatches': mismatches,
+                  'status': 'PASS' if checks and matched == len(checks) and not mismatches else 'FAIL',
+              }
+
+
+          def main(argv=None):
+              parser = argparse.ArgumentParser()
+              parser.add_argument('--vectors-json', required=True)
+              parser.add_argument('--ganzhi-source', required=True)
+              parser.add_argument('--revision', required=True)
+              parser.add_argument('--output-dir', required=True)
+              args = parser.parse_args(argv)
+
+              payload = json.loads(Path(args.vectors_json).read_text(encoding='utf-8'))
+              if payload.get('revision') != args.revision:
+                  _fail('external vector revision mismatch')
+              package_version = payload.get('package_version')
+              if package_version != '0.2.8':
+                  _fail('unexpected lunar-lite package version', {'version': package_version})
+              source_contract = parse_lunar_lite_contract(Path(args.ganzhi_source).read_text(encoding='utf-8'))
+              report = qualify_lunar_lite(payload, args.revision, package_version, source_contract)
+              output_dir = Path(args.output_dir)
+              output_dir.mkdir(parents=True, exist_ok=True)
+              output = output_dir / 'public-lunar-lite-1d104fff.json'
+              output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+              if report['status'] == 'PASS':
+                  print('PUBLIC_LUNAR_LITE_QUALIFICATION_PASS %d/%d' % (report['cases_matched'], report['cases_checked']))
+                  return 0
+              print('PUBLIC_LUNAR_LITE_QUALIFICATION_FAIL %d/%d' % (report['cases_matched'], report['cases_checked']))
+              return 1
+
+
+          if __name__ == '__main__':
+              raise SystemExit(main())
+          PY
+
+      - name: Execute exact pinned lunar-lite behavior
+        env:
+          REV: 1d104fffa31609e9f112898cc57545827e8d57ae
+        run: |
+          rm -rf /tmp/lunar-lite
+          git clone --quiet https://github.com/SylarLong/lunar-lite.git /tmp/lunar-lite
+          git -C /tmp/lunar-lite checkout --quiet --detach "$REV"
+          test "$(git -C /tmp/lunar-lite rev-parse HEAD)" = "$REV"
+          cd /tmp/lunar-lite
+          npm ci --silent
+          npm run build --silent
+          node - <<'JS' > /tmp/lunar-lite-vectors.json
+          const fs = require('fs');
+          const lib = require('/tmp/lunar-lite/lib');
+          const pkg = JSON.parse(fs.readFileSync('/tmp/lunar-lite/package.json', 'utf8'));
+          const revision = '1d104fffa31609e9f112898cc57545827e8d57ae';
+          function lunar(id, date, timeIndex, isLeap) {
+            return {
+              id, date, time_index: timeIndex, is_leap: isLeap,
+              result: lib.getHeavenlyStemAndEarthlyBranchByLunarDate(
+                date, timeIndex, isLeap, {year: 'normal', month: 'normal'}
+              ).toString(),
+            };
+          }
+          function solar(id, date, timeIndex) {
+            return {
+              id, date, time_index: timeIndex,
+              result: lib.getHeavenlyStemAndEarthlyBranchBySolarDate(
+                date, timeIndex, {year: 'normal', month: 'normal'}
+              ).toString(),
+            };
+          }
+          const payload = {
+            revision,
+            package_version: pkg.version,
+            lunar: [
+              lunar('lunar-normal-2023-06-13', '2023-6-13', 1, false),
+              lunar('lunar-normal-2023-02-11', '2023-2-11', 1, false),
+              lunar('leap-first-half-2023-02-11', '2023-2-11', 1, true),
+              lunar('leap-second-half-2023-02-16', '2023-2-16', 1, true),
+              lunar('lunar-late-zi-2023-06-13', '2023-6-13', 12, false),
+            ],
+            solar: [
+              solar('regular-1987-12-06-hai', '1987-12-6', 11),
+              solar('late-zi-1987-12-06', '1987-12-6', 12),
+              solar('regular-2023-03-09', '2023-03-09', 5),
+              solar('regular-2023-04-08', '2023-4-8', 5),
+            ],
+          };
+          process.stdout.write(JSON.stringify(payload, null, 2));
+          JS
+          cd "$GITHUB_WORKSPACE"
+          python - <<'PY'
+          import json
+          p=json.load(open('/tmp/lunar-lite-vectors.json', encoding='utf-8'))
+          assert p['revision']=='1d104fffa31609e9f112898cc57545827e8d57ae'
+          assert p['package_version']=='0.2.8'
+          assert len(p['lunar'])==5 and len(p['solar'])==4
+          print('PINNED_LUNAR_LITE_EXECUTION_PASS')
+          PY
+
+      - name: Run exact pinned public qualification
+        run: |
+          python tools/qualify_ziwei_phase2b_public.py \
+            --vectors-json /tmp/lunar-lite-vectors.json \
+            --ganzhi-source /tmp/lunar-lite/src/ganzhi.ts \
+            --revision 1d104fffa31609e9f112898cc57545827e8d57ae \
+            --output-dir qualification/ziwei/phase2b
+
+      - name: Verify GREEN and full regression
+        run: |
+          python -m unittest tests.test_ziwei_phase2b_qualification -v
+          python -m unittest discover -v
+          python - <<'PY'
+          import json
+          p=json.load(open('qualification/ziwei/phase2b/public-lunar-lite-1d104fff.json', encoding='utf-8'))
+          assert p['status']=='PASS'
+          assert p['cases_checked']==18
+          assert p['cases_matched']==18
+          assert p['mismatches']==[]
+          assert 'leap_twelfth_month_second_half' in p['not_externally_covered']
+          print('PUBLIC_LUNAR_LITE_18_PASS')
+          print('TASK9_QUALIFICATION_SCOPE_PASS')
+          PY
+
+      - name: Commit Task 9 to feature branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tools/qualify_ziwei_phase2b_public.py tests/test_ziwei_phase2b_qualification.py qualification/ziwei/phase2b/public-lunar-lite-1d104fff.json
+          git commit -m 'test: qualify Ziwei fine-cycle stems against lunar-lite'
+          git push origin HEAD:feature/ziwei-fine-cycle-stem-resolver-v1
