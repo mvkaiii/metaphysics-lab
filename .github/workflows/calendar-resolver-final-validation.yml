@@ -1,0 +1,33 @@
+name: Calendar Resolver final validation
+
+on:
+  pull_request:
+    branches:
+      - feature/calendar-resolver-v1
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONTZPATH: ""
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -r requirements.txt
+      - name: Run export contract
+        run: python -m unittest tests.test_calendar_package_exports -v
+      - uses: actions/upload-artifact@v4
+        with:
+          name: calendar-resolver-final-snapshot
+          path: |
+            README.md
+            docs/架構說明.md
+            docs/安裝到ChatGPT-Project.md
+            docs/更新與版本同步.md
+            core/命理分析作業規範.md
+            VERSION.md
+            CHANGELOG.md
+            engine/calendar/__init__.py
+            tests/test_calendar_package_exports.py
