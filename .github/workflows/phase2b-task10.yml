@@ -1,0 +1,201 @@
+name: Phase 2B Task 10
+
+on:
+  pull_request:
+    branches:
+      - design/ziwei-fine-cycle-stem-resolver
+
+permissions:
+  contents: write
+
+jobs:
+  task10:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/ziwei-fine-cycle-stem-resolver-v1
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Write RED iztro qualification tests
+        run: |
+          cat >> tests/test_ziwei_phase2b_qualification.py <<'PY'
+
+          from tools.qualify_ziwei_phase2b_public import qualify_iztro_source
+
+
+          class ZiweiPhase2BIztroQualificationTests(unittest.TestCase):
+              def test_iztro_requires_each_fine_scope_mutagen_link(self):
+                  bad = '''monthly: { mutagen: getMutagensByHeavenlyStem(monthly[0]) }'''
+                  with self.assertRaises(ZiweiFineCycleError) as cm:
+                      qualify_iztro_source(bad, '814b77e6', '2026-08-21T00:00:00Z')
+                  self.assertEqual(cm.exception.code, 'qualification_mismatch')
+
+              def test_iztro_source_links_each_scope_to_its_own_stem(self):
+                  good = '''
+                  monthly: { index: 1, mutagen: getMutagensByHeavenlyStem(monthly[0]), stars: x },
+                  daily: { index: 2, mutagen: getMutagensByHeavenlyStem(daily[0]), stars: y },
+                  hourly: { index: 3, mutagen: getMutagensByHeavenlyStem(hourly[0]), stars: z },
+                  '''
+                  report = qualify_iztro_source(good, '814b77e6', '2026-08-21T00:00:00Z')
+                  self.assertEqual(report['status'], 'PASS')
+                  self.assertTrue(report['monthly_mutagen_uses_monthly_stem'])
+                  self.assertTrue(report['daily_mutagen_uses_daily_stem'])
+                  self.assertTrue(report['hourly_mutagen_uses_hourly_stem'])
+                  self.assertEqual(report['project_sample_transformations_each'], 4)
+
+              def test_committed_iztro_report_contract(self):
+                  path = Path('qualification/ziwei/phase2b/public-iztro-814b77e6.json')
+                  payload = json.loads(path.read_text(encoding='utf-8'))
+                  self.assertEqual(payload['source_name'], 'SylarLong/iztro')
+                  self.assertEqual(payload['source_revision'], '814b77e6371e1050cac31bbf674db3c3138fcfde')
+                  self.assertEqual(payload['package_version'], '2.6.0')
+                  self.assertEqual(payload['status'], 'PASS')
+                  self.assertTrue(payload['monthly_mutagen_uses_monthly_stem'])
+                  self.assertTrue(payload['daily_mutagen_uses_daily_stem'])
+                  self.assertTrue(payload['hourly_mutagen_uses_hourly_stem'])
+                  self.assertEqual(payload['project_sample_transformations_each'], 4)
+                  self.assertEqual(set(payload['project_sample_scopes']), {'monthly', 'daily', 'hourly'})
+                  self.assertNotIn('Astralium', path.read_text(encoding='utf-8'))
+          PY
+
+      - name: Verify RED
+        run: |
+          set +e
+          python -m unittest tests.test_ziwei_phase2b_qualification.ZiweiPhase2BIztroQualificationTests -v > task10-red.txt 2>&1
+          rc=$?
+          cat task10-red.txt
+          if [ "$rc" -eq 0 ]; then
+            echo 'Task 10 unexpectedly GREEN before iztro qualification implementation'
+            exit 1
+          fi
+          grep -q "cannot import name 'qualify_iztro_source'" task10-red.txt
+          echo TASK10_EXPECTED_RED
+
+      - name: Extend public qualification tool for iztro
+        run: |
+          cat >> tools/qualify_ziwei_phase2b_public.py <<'PY'
+
+          IZTRO_SOURCE_NAME = 'SylarLong/iztro'
+          IZTRO_PACKAGE_VERSION = '2.6.0'
+
+
+          def normalize_ts(source_text: str) -> str:
+              return re.sub(r'\s+', '', source_text)
+
+
+          def _project_fine_cycle_sample_counts():
+              from engine.calendar.resolver import resolve_calendar
+              from engine.ziwei.fine_cycle_stems import resolve_day_stem, resolve_hour_stem, resolve_month_stem
+              from engine.ziwei.transformations import get_transformation_set
+
+              calendar = resolve_calendar('2023-07-30T21:30:00', 'Asia/Taipei')
+              if not calendar.ok or calendar.context is None:
+                  _fail('Project calendar sample could not be resolved')
+              context = calendar.context
+              resolutions = (
+                  resolve_month_stem(context),
+                  resolve_day_stem(context),
+                  resolve_hour_stem(context),
+              )
+              counts = {}
+              stems = {}
+              for resolution in resolutions:
+                  transformation_set = get_transformation_set(resolution.heavenly_stem)
+                  counts[resolution.scope] = len(transformation_set.transformations)
+                  stems[resolution.scope] = resolution.heavenly_stem
+              return counts, stems
+
+
+          def qualify_iztro_source(functional_source: str, source_revision: str, run_timestamp: str) -> dict:
+              normalized = normalize_ts(functional_source)
+              links = {
+                  'monthly': bool(re.search(r'monthly:\{[^}]*mutagen:getMutagensByHeavenlyStem\(monthly\[0\]\)', normalized)),
+                  'daily': bool(re.search(r'daily:\{[^}]*mutagen:getMutagensByHeavenlyStem\(daily\[0\]\)', normalized)),
+                  'hourly': bool(re.search(r'hourly:\{[^}]*mutagen:getMutagensByHeavenlyStem\(hourly\[0\]\)', normalized)),
+              }
+              missing = [scope for scope, ok in links.items() if not ok]
+              if missing:
+                  _fail('iztro fine-cycle mutagen source linkage changed', {'missing_scopes': missing})
+              counts, stems = _project_fine_cycle_sample_counts()
+              if set(counts) != {'monthly', 'daily', 'hourly'} or any(value != 4 for value in counts.values()):
+                  _fail('Project fine-cycle transformation cardinality changed', {'counts': counts})
+              return {
+                  'source_name': IZTRO_SOURCE_NAME,
+                  'source_revision': source_revision,
+                  'package_version': IZTRO_PACKAGE_VERSION,
+                  'run_timestamp': run_timestamp,
+                  'monthly_mutagen_uses_monthly_stem': links['monthly'],
+                  'daily_mutagen_uses_daily_stem': links['daily'],
+                  'hourly_mutagen_uses_hourly_stem': links['hourly'],
+                  'project_sample_transformations_each': 4,
+                  'project_sample_scopes': list(counts.keys()),
+                  'project_sample_stems': stems,
+                  'status': 'PASS',
+              }
+          PY
+
+      - name: Fetch exact pinned iztro source and package metadata
+        env:
+          REV: 814b77e6371e1050cac31bbf674db3c3138fcfde
+        run: |
+          set -euxo pipefail
+          curl -fsSL "https://raw.githubusercontent.com/SylarLong/iztro/$REV/src/astro/FunctionalAstrolabe.ts" -o /tmp/FunctionalAstrolabe.ts
+          curl -fsSL "https://raw.githubusercontent.com/SylarLong/iztro/$REV/package.json" -o /tmp/iztro-package.json
+          python - <<'PY'
+          import json
+          p=json.load(open('/tmp/iztro-package.json', encoding='utf-8'))
+          assert p['name']=='iztro'
+          assert p['version']=='2.6.0'
+          print('PINNED_IZTRO_SOURCE_PASS')
+          PY
+
+      - name: Run exact pinned iztro integration qualification
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from tools.qualify_ziwei_phase2b_public import qualify_iztro_source
+
+          source=Path('/tmp/FunctionalAstrolabe.ts').read_text(encoding='utf-8')
+          report=qualify_iztro_source(
+              source,
+              '814b77e6371e1050cac31bbf674db3c3138fcfde',
+              '2026-08-21T00:00:00Z',
+          )
+          out=Path('qualification/ziwei/phase2b')
+          out.mkdir(parents=True, exist_ok=True)
+          (out/'public-iztro-814b77e6.json').write_text(
+              json.dumps(report, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
+          assert report['status']=='PASS'
+          assert report['project_sample_transformations_each']==4
+          print('PUBLIC_IZTRO_INTEGRATION_PASS')
+          PY
+
+      - name: Verify GREEN and full regression
+        run: |
+          python -m unittest tests.test_ziwei_phase2b_qualification tests.test_ziwei_transformations -v
+          python -m unittest discover -v
+          python - <<'PY'
+          import json
+          lunar=json.load(open('qualification/ziwei/phase2b/public-lunar-lite-1d104fff.json', encoding='utf-8'))
+          iztro=json.load(open('qualification/ziwei/phase2b/public-iztro-814b77e6.json', encoding='utf-8'))
+          assert lunar['status']=='PASS' and lunar['cases_matched']==18
+          assert iztro['status']=='PASS'
+          assert all((iztro['monthly_mutagen_uses_monthly_stem'], iztro['daily_mutagen_uses_daily_stem'], iztro['hourly_mutagen_uses_hourly_stem']))
+          print('PUBLIC_LUNAR_LITE_QUALIFICATION_PASS')
+          print('PUBLIC_IZTRO_INTEGRATION_PASS')
+          PY
+
+      - name: Commit Task 10 to feature branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tools/qualify_ziwei_phase2b_public.py tests/test_ziwei_phase2b_qualification.py qualification/ziwei/phase2b/public-iztro-814b77e6.json
+          git commit -m 'test: qualify Ziwei fine-cycle iztro integration'
+          git push origin HEAD:feature/ziwei-fine-cycle-stem-resolver-v1
