@@ -35,7 +35,7 @@ Metaphysics Lab v1.1 正式版目前納入：
 - Project 紫微流月：斗君、流月命宮、流月十二宮重排
 - 問事雙階段流程：先盲判、後事件校準
 - Project 八字流年、流月、流日、流時推導
-- 23:00 換日
+- 八字 23:00 early-Zi 換日（八字引擎責任，不是 Resolver 的 civil date policy）
 - 五虎遁與五鼠遁
 - 天干十神推導
 - 節氣交界警告
@@ -50,11 +50,13 @@ v1.2 開發線另已加入：
 - Project 紫微流時定位：`implemented / experimental / on_demand`
 - 流時命宮與流時十二宮重排
 - 紫微流時自動測試、人工回歸與外部來源交叉校驗紀錄
+- Calendar Resolver v1：`implemented`，將 structured civil datetime + IANA timezone 正規化為可追溯 `CalendarContext`
+- Input Resolution / Precision Gate：上游 pure policy，先判斷問題所需最低時間精度，不足時追問／保留候選／降級
+- Ziwei Calendar Adapter：`implemented`，第一個正式 adapter；Bazi refactor 不包含在本次變更
 
 目前尚未具備：
 
 - 紫微細部四化／流曜／細層飛化
-- Calendar / Input Resolver
 - Cross-System Validation 正式引擎
 - 完整 Project 干支互動引擎
 - 奇門自動排盤引擎
@@ -92,8 +94,9 @@ routing        = default / on_demand
 目前開發線已把正式 Python 實作拆成：
 
 ```text
-engine/bazi/   八字正式模組
-engine/ziwei/  紫微正式模組
+engine/bazi/      八字正式模組
+engine/calendar/  system-neutral Calendar Resolver
+engine/ziwei/     紫微正式模組（含 Calendar adapter）
 ```
 
 八字與紫微維持不同曆法與推導邏輯，不混寫在同一支 Python。
@@ -332,7 +335,32 @@ routing = on_demand
 
 流時 core 只接受已解析的農曆日期與 `hour_branch`，不自行處理國曆轉農曆、timezone、DST 或 23:00 日界。一般問題不預設遍歷十二時辰；只在指定時辰、時段比較或確實需要提高到時辰解析度時按需調用。
 
-目前流時只做命宮與十二宮定位；流時天干、流時四化、流曜、細層飛化與 Calendar / Input Resolver 仍是後續 capability / infrastructure。
+目前流時只做命宮與十二宮定位；流時天干、流時四化、流曜與細層飛化仍是後續 capability。Calendar Resolver v1 已實作，並以 `engine/ziwei/calendar_adapter.py` 對接既有流月／流日／流時 core。
+
+---
+
+## Calendar Resolver v1
+
+目前 v1.2 開發線的 Calendar Resolver v1 已實作。它是 system-neutral 的民用時間／曆法 context 層，不是八字或紫微本身的命理日界引擎。
+
+固定契約：
+
+```text
+Calendar Resolver v1 = implemented
+Input Resolution / Precision Gate = upstream pure policy
+natural-language parsing = outside Resolver
+runtime lunar = lunar-python 1.4.8
+HKO validated range = 1901-01-01..2100-12-31
+2057-09-28..2057-10-27 = boundary_conflict
+2089-09-04 / 2097-08-07 = boundary_caution
+timezone = pinned tzdata 2026.3 / IANA 2026c
+Ziwei = first adapter
+Bazi refactor = not included
+```
+
+時間邊界固定為：**23:00 已屬子時，但 civil date 只在 00:00 換日**。Resolver 的 `metaphysics_day_boundary_applied = false`，因此不會把八字的 23:00 early-Zi 換日自動套到紫微。紫微自己的命理日界若未來要版本化，仍需另行定義與驗證。
+
+Resolver 第一版只接受 structured local civil datetime、IANA timezone 與可選 `utc_offset_hint`；自然語言時間解析、timezone 猜測、真太陽時、紫微 23:00 學派選擇都在 Resolver 外。
 
 ---
 
