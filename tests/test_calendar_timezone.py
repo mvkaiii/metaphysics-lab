@@ -16,6 +16,11 @@ class CalendarTimezoneTests(unittest.TestCase):
             normalize_local_time("2026-09-18T14:00:00+08:00", "Asia/Taipei")
         self.assertEqual(ctx.exception.error.code, "invalid_datetime")
 
+    def test_date_only_is_invalid_datetime(self):
+        with self.assertRaises(CalendarResolverException) as ctx:
+            normalize_local_time("2026-09-18", "Asia/Taipei")
+        self.assertEqual(ctx.exception.error.code, "invalid_datetime")
+
     def test_invalid_iana_timezone(self):
         with self.assertRaises(CalendarResolverException) as ctx:
             normalize_local_time("2026-09-18T14:00:00", "Mars/Olympus")
