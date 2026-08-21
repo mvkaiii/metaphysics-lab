@@ -1,0 +1,100 @@
+name: Phase 2B Task 11
+
+on:
+  pull_request:
+    branches:
+      - design/ziwei-fine-cycle-stem-resolver
+
+permissions:
+  contents: write
+
+jobs:
+  task11:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/ziwei-fine-cycle-stem-resolver-v1
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Write RED privacy tests
+        run: |
+          cat > tests/test_ziwei_phase2b_private_qualification.py <<'PY'
+          import json
+          import unittest
+          from pathlib import Path
+
+          PATH = Path('qualification/ziwei/phase2b/private-astralium-summary.json')
+
+
+          class ZiweiPhase2BPrivateQualificationTests(unittest.TestCase):
+              def test_private_fine_cycle_state_is_explicit_pending(self):
+                  payload = json.loads(PATH.read_text(encoding='utf-8'))
+                  self.assertEqual(payload['source_name'], 'Astralium')
+                  self.assertEqual(payload['phase'], '2B')
+                  self.assertEqual(payload['scope'], 'fine_cycle_stems_transformations_flying')
+                  self.assertEqual(payload['status'], 'PENDING')
+                  self.assertEqual(payload['reason_code'], 'fine_cycle_source_not_available')
+                  self.assertFalse(payload['raw_private_payload_committed'])
+
+              def test_private_summary_contains_no_raw_chart_payload(self):
+                  raw = PATH.read_text(encoding='utf-8')
+                  for forbidden in ('star_locations', 'palace_stems', 'expected_edges', 'birth_datetime', '出生年月', '姓名'):
+                      self.assertNotIn(forbidden, raw)
+                  payload = json.loads(raw)
+                  self.assertEqual(set(payload), {
+                      'source_name', 'phase', 'scope', 'status', 'reason_code',
+                      'reason', 'raw_private_payload_committed'
+                  })
+
+
+          if __name__ == '__main__':
+              unittest.main()
+          PY
+      - name: Verify RED
+        run: |
+          set +e
+          python -m unittest tests.test_ziwei_phase2b_private_qualification -v > task11-red.txt 2>&1
+          rc=$?
+          cat task11-red.txt
+          if [ "$rc" -eq 0 ]; then exit 1; fi
+          grep -q 'private-astralium-summary.json' task11-red.txt
+          echo TASK11_EXPECTED_RED
+      - name: Record aggregate-only Astralium pending state
+        run: |
+          mkdir -p qualification/ziwei/phase2b
+          cat > qualification/ziwei/phase2b/private-astralium-summary.json <<'JSON'
+          {
+            "source_name": "Astralium",
+            "phase": "2B",
+            "scope": "fine_cycle_stems_transformations_flying",
+            "status": "PENDING",
+            "reason_code": "fine_cycle_source_not_available",
+            "reason": "Current private Astralium source package does not provide a complete fine-cycle stem/transformation/flying payload for qualification.",
+            "raw_private_payload_committed": false
+          }
+          JSON
+      - name: Verify GREEN privacy and regression
+        run: |
+          python -m unittest tests.test_ziwei_phase2b_private_qualification -v
+          python -m unittest discover -v
+          python - <<'PY'
+          import json
+          p=json.load(open('qualification/ziwei/phase2b/private-astralium-summary.json', encoding='utf-8'))
+          assert p['status']=='PENDING'
+          assert p['reason_code']=='fine_cycle_source_not_available'
+          assert p['raw_private_payload_committed'] is False
+          print('ASTRALIUM_FINE_CYCLE_PENDING')
+          print('PRIVACY_PASS')
+          PY
+      - name: Commit Task 11 to feature branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add qualification/ziwei/phase2b/private-astralium-summary.json tests/test_ziwei_phase2b_private_qualification.py
+          git commit -m 'test: record Astralium fine-cycle qualification pending'
+          git push origin HEAD:feature/ziwei-fine-cycle-stem-resolver-v1
