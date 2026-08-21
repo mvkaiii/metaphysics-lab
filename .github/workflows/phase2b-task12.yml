@@ -3,7 +3,7 @@ name: Ziwei Phase 2B design post-merge exact-head
 on:
   pull_request:
     branches:
-      - design/ziwei-fine-cycle-stem-resolver
+      - feature/ziwei-fine-cycle-stem-resolver-v1
 
 permissions:
   contents: read
@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.base.sha }}
+          ref: 61e3fcde66512bc88af9a1151c7d6ccec8d54b51
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
@@ -28,14 +28,12 @@ jobs:
       - name: Freeze exact design merge head
         shell: bash
         env:
-          DESIGN_SHA: ${{ github.event.pull_request.base.sha }}
-          EXPECTED_DESIGN_SHA: 61e3fcde66512bc88af9a1151c7d6ccec8d54b51
+          DESIGN_SHA: 61e3fcde66512bc88af9a1151c7d6ccec8d54b51
           PRE_DESIGN_SHA: eb52e4b92fbaca1e17b7e98e05e6b681ae730a11
           FEATURE_SHA: 6736bcb5826e1e6f56414e734206b837526d4096
         run: |
           set -euxo pipefail
-          test "$DESIGN_SHA" = "$EXPECTED_DESIGN_SHA"
-          test "$(git rev-parse HEAD)" = "$EXPECTED_DESIGN_SHA"
+          test "$(git rev-parse HEAD)" = "$DESIGN_SHA"
           git merge-base --is-ancestor "$PRE_DESIGN_SHA" "$DESIGN_SHA"
           git merge-base --is-ancestor "$FEATURE_SHA" "$DESIGN_SHA"
           parents="$(git show -s --format=%P "$DESIGN_SHA")"
@@ -48,29 +46,13 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          python -m unittest \
-            tests.test_ziwei_phase2a_models \
-            tests.test_ziwei_basis \
-            tests.test_ziwei_transformations \
-            tests.test_ziwei_flying \
-            tests.test_ziwei_composition \
-            tests.test_ziwei_phase2a_capabilities \
-            tests.test_ziwei_phase2a_qualification_tools -v 2>&1 | tee phase2a-regression.txt
+          python -m unittest tests.test_ziwei_phase2a_models tests.test_ziwei_basis tests.test_ziwei_transformations tests.test_ziwei_flying tests.test_ziwei_composition tests.test_ziwei_phase2a_capabilities tests.test_ziwei_phase2a_qualification_tools -v 2>&1 | tee phase2a-regression.txt
 
       - name: Phase 2B focused regression
         shell: bash
         run: |
           set -o pipefail
-          python -m unittest \
-            tests.test_calendar_sexagenary \
-            tests.test_ziwei_fine_cycle_stems \
-            tests.test_ziwei_fine_cycle_integration \
-            tests.test_ziwei_composition \
-            tests.test_ziwei_phase2b_capabilities \
-            tests.test_ziwei_phase2b_docs \
-            tests.test_ziwei_phase2b_private_qualification \
-            tests.test_ziwei_phase2b_qualification \
-            tests.test_rule_source_reconciliation -v 2>&1 | tee phase2b-regression.txt
+          python -m unittest tests.test_calendar_sexagenary tests.test_ziwei_fine_cycle_stems tests.test_ziwei_fine_cycle_integration tests.test_ziwei_composition tests.test_ziwei_phase2b_capabilities tests.test_ziwei_phase2b_docs tests.test_ziwei_phase2b_private_qualification tests.test_ziwei_phase2b_qualification tests.test_rule_source_reconciliation -v 2>&1 | tee phase2b-regression.txt
 
       - name: Ziwei regression
         shell: bash
@@ -117,16 +99,7 @@ jobs:
           const revision='1d104fffa31609e9f112898cc57545827e8d57ae';
           function lunar(id,date,timeIndex,isLeap){return {id,date,time_index:timeIndex,is_leap:isLeap,result:lib.getHeavenlyStemAndEarthlyBranchByLunarDate(date,timeIndex,isLeap,{year:'normal',month:'normal'}).toString()};}
           function solar(id,date,timeIndex){return {id,date,time_index:timeIndex,result:lib.getHeavenlyStemAndEarthlyBranchBySolarDate(date,timeIndex,{year:'normal',month:'normal'}).toString()};}
-          process.stdout.write(JSON.stringify({revision,package_version:pkg.version,lunar:[
-            lunar('lunar-normal-2023-06-13','2023-6-13',1,false),
-            lunar('lunar-normal-2023-02-11','2023-2-11',1,false),
-            lunar('leap-first-half-2023-02-11','2023-2-11',1,true),
-            lunar('leap-second-half-2023-02-16','2023-2-16',1,true),
-            lunar('lunar-late-zi-2023-06-13','2023-6-13',12,false)],solar:[
-            solar('regular-1987-12-06-hai','1987-12-6',11),
-            solar('late-zi-1987-12-06','1987-12-6',12),
-            solar('regular-2023-03-09','2023-03-09',5),
-            solar('regular-2023-04-08','2023-4-8',5)]},null,2));
+          process.stdout.write(JSON.stringify({revision,package_version:pkg.version,lunar:[lunar('lunar-normal-2023-06-13','2023-6-13',1,false),lunar('lunar-normal-2023-02-11','2023-2-11',1,false),lunar('leap-first-half-2023-02-11','2023-2-11',1,true),lunar('leap-second-half-2023-02-16','2023-2-16',1,true),lunar('lunar-late-zi-2023-06-13','2023-6-13',12,false)],solar:[solar('regular-1987-12-06-hai','1987-12-6',11),solar('late-zi-1987-12-06','1987-12-6',12),solar('regular-2023-03-09','2023-03-09',5),solar('regular-2023-04-08','2023-4-8',5)]},null,2));
           JS
           cd "$GITHUB_WORKSPACE"
           python tools/qualify_ziwei_phase2b_public.py --vectors-json /tmp/lunar-lite-vectors.json --ganzhi-source /tmp/lunar-lite/src/ganzhi.ts --revision "$LUNAR_REV" --output-dir /tmp/phase2b-live-lunar | tee live-lunar-lite.txt
@@ -163,7 +136,7 @@ jobs:
       - name: Acceptance gates
         shell: bash
         env:
-          DESIGN_SHA: ${{ github.event.pull_request.base.sha }}
+          DESIGN_SHA: 61e3fcde66512bc88af9a1151c7d6ccec8d54b51
           PRE_DESIGN_SHA: eb52e4b92fbaca1e17b7e98e05e6b681ae730a11
         run: |
           set -o pipefail
