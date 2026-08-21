@@ -23,14 +23,15 @@ STACK_PROVENANCE = LayerProvenance(
 )
 
 
-def build_cycle_layer(
-    identity,
-    source,
-    transformations,
-    flying_edges,
-    provenance,
-    earthly_branch=None,
-):
+def _raise_component_mismatch(message, details=None):
+    raise ZiweiPhase2AError(
+        "layer_component_mismatch",
+        message,
+        details,
+    )
+
+
+def _validate_cycle_layer_components(identity, source, transformations, flying_edges):
     if source.scope not in SUPPORTED_SCOPES:
         raise ZiweiPhase2AError(
             "unsupported_scope",
@@ -42,11 +43,70 @@ def build_cycle_layer(
             "chart_basis_mismatch",
             "layer identity and source chart mismatch",
         )
+    if identity.scope != source.scope or identity.reference != source.reference:
+        _raise_component_mismatch(
+            "layer identity and cycle source scope/reference mismatch",
+            {
+                "identity_scope": identity.scope,
+                "source_scope": source.scope,
+                "identity_reference": identity.reference,
+                "source_reference": source.reference,
+            },
+        )
+    if identity.rule_profile != transformations.profile_id:
+        _raise_component_mismatch(
+            "layer identity and transformation profile mismatch",
+            {
+                "identity_rule_profile": identity.rule_profile,
+                "transformation_profile": transformations.profile_id,
+            },
+        )
+    if transformations.heavenly_stem != source.heavenly_stem:
+        _raise_component_mismatch(
+            "cycle source and transformation heavenly stem mismatch",
+            {
+                "source_stem": source.heavenly_stem,
+                "transformation_stem": transformations.heavenly_stem,
+            },
+        )
     if len(transformations.transformations) != 4 or len(flying_edges) != 4:
         raise ZiweiPhase2AError(
             "invalid_transformation_profile",
             "cycle layer requires four transformations and four edges",
         )
+    for item, edge in zip(transformations.transformations, flying_edges):
+        if (
+            edge.source != source
+            or edge.heavenly_stem != source.heavenly_stem
+            or edge.profile_id != transformations.profile_id
+            or edge.transformation_type != item.type
+            or edge.star != item.star
+        ):
+            _raise_component_mismatch(
+                "flying edge does not match cycle source and transformation set",
+                {
+                    "transformation_type": item.type.value,
+                    "transformation_star": item.star,
+                    "edge_type": edge.transformation_type.value,
+                    "edge_star": edge.star,
+                },
+            )
+
+
+def build_cycle_layer(
+    identity,
+    source,
+    transformations,
+    flying_edges,
+    provenance,
+    earthly_branch=None,
+):
+    _validate_cycle_layer_components(
+        identity,
+        source,
+        transformations,
+        flying_edges,
+    )
     return CycleTransformationLayer(
         identity,
         source,
