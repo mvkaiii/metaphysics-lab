@@ -1,0 +1,98 @@
+name: v1.2.0 naming sync
+
+on:
+  pull_request:
+    branches:
+      - docs/release-v1.2.0-sync
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/release-v1.2.0-sync
+          fetch-depth: 0
+
+      - name: Freeze expected docs head
+        run: |
+          test "$(git rev-parse HEAD)" = "b38bb2517d7c049478e15e8f1d54ee4ab13d6d66"
+
+      - name: Normalize capability naming
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          replacements = {
+              'README.md': [
+                  ('| 八字流年／流月／流日／流時 | implemented | stable | default |',
+                   '| 八字時間推導（流年／流月／流日／流時） | implemented | stable | default |'),
+                  ('- 完整 Project 干支互動引擎', '- 完整干支互動引擎'),
+              ],
+              'VERSION.md': [
+                  ('- Project Bazi Calendar Engine：v1.0.0', '- 八字時間推導引擎：v1.0.0'),
+                  ('| 八字流年／流月／流日／流時 | implemented | stable | default |',
+                   '| 八字時間推導（流年／流月／流日／流時） | implemented | stable | default |'),
+                  ('- 正式加入 Project 紫微流月定位。', '- 正式加入紫微流月定位。'),
+              ],
+              'CHANGELOG.md': [
+                  ('- 完整 Project 干支互動引擎', '- 完整干支互動引擎'),
+                  ('- 啟用 Project 紫微流月定位層。', '- 啟用紫微流月定位層。'),
+              ],
+              'docs/架構說明.md': [
+                  ('八字年月日時                     implemented / stable / default',
+                   '八字時間推導（流年／流月／流日／流時） implemented / stable / default'),
+                  ('- Project 流月／流日／流時', '- 流月／流日／流時（輸出屬 Project 推導盤面）'),
+                  ('- 完整 Project 干支互動引擎', '- 完整干支互動引擎'),
+              ],
+              'docs/快速開始.md': [
+                  ('## 10. 八字細時間層級', '## 10. 八字時間推導'),
+              ],
+              'docs/安裝到ChatGPT-Project.md': [
+                  ('八字正式能力包含流年、流月、流日、流時與天干十神等 Project 推導。',
+                   '八字時間推導可建立流年、流月、流日、流時與天干十神；計算結果屬於 Project 推導盤面。'),
+              ],
+          }
+
+          for filename, pairs in replacements.items():
+              path = Path(filename)
+              text = path.read_text(encoding='utf-8')
+              for old, new in pairs:
+                  count = text.count(old)
+                  assert count == 1, f'{filename}: expected exactly one occurrence of {old!r}, got {count}'
+                  text = text.replace(old, new)
+              path.write_text(text, encoding='utf-8')
+
+          files = [
+              Path('README.md'), Path('VERSION.md'), Path('CHANGELOG.md'),
+              Path('docs/架構說明.md'), Path('docs/快速開始.md'),
+              Path('docs/安裝到ChatGPT-Project.md'), Path('docs/更新與版本同步.md'),
+          ]
+          combined = '\n'.join(p.read_text(encoding='utf-8') for p in files)
+          forbidden = (
+              'Project 紫微流月',
+              'Project 八字流年',
+              'Project Bazi Calendar Engine',
+              'Project 流月／流日／流時',
+              '完整 Project 干支互動引擎',
+          )
+          for token in forbidden:
+              assert token not in combined, token
+          assert 'Project 推導盤面' in combined
+          assert '八字時間推導（流年／流月／流日／流時）' in combined
+          assert '紫微流月定位' in combined
+          print('NAMING_NORMALIZATION_PASS')
+          PY
+
+      - name: Commit naming normalization to docs branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -c core.quotePath=false diff -- README.md VERSION.md CHANGELOG.md docs/架構說明.md docs/快速開始.md docs/安裝到ChatGPT-Project.md docs/更新與版本同步.md
+          git add README.md VERSION.md CHANGELOG.md docs/架構說明.md docs/快速開始.md docs/安裝到ChatGPT-Project.md docs/更新與版本同步.md
+          test -n "$(git status --short)"
+          git commit -m "docs: normalize capability naming"
+          git push origin HEAD:docs/release-v1.2.0-sync
