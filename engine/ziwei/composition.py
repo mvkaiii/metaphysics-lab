@@ -93,6 +93,36 @@ def _validate_cycle_layer_components(identity, source, transformations, flying_e
             )
 
 
+def _validate_birth_year_layer(chart_identity, birth_year_layer):
+    if birth_year_layer is None:
+        return
+    if (
+        birth_year_layer.identity.scope != "birth_year"
+        or birth_year_layer.source.scope != "birth_year"
+    ):
+        _raise_component_mismatch(
+            "natal birth-year slot requires a birth_year layer",
+            {
+                "identity_scope": birth_year_layer.identity.scope,
+                "source_scope": birth_year_layer.source.scope,
+            },
+        )
+    if (
+        birth_year_layer.identity.chart_id != chart_identity.chart_id
+        or birth_year_layer.source.chart_identity != chart_identity
+    ):
+        raise ZiweiPhase2AError(
+            "chart_basis_mismatch",
+            "birth-year layer and natal stack belong to different charts",
+        )
+    _validate_cycle_layer_components(
+        birth_year_layer.identity,
+        birth_year_layer.source,
+        birth_year_layer.transformations,
+        birth_year_layer.flying_edges,
+    )
+
+
 def build_cycle_layer(
     identity,
     source,
@@ -154,6 +184,8 @@ def build_layer_stack(chart_identity, natal, cycles=(), small_limit=None):
             "chart_basis_mismatch",
             "natal basis and stack chart mismatch",
         )
+
+    _validate_birth_year_layer(chart_identity, natal.birth_year_layer)
 
     seen = {}
     ordered = []
