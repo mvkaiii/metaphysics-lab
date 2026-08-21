@@ -117,3 +117,43 @@ class FineCycleMonthTests(unittest.TestCase):
         with self.assertRaises(ZiweiFineCycleError) as cm2:
             resolve_month_stem(calendar_context(metaphysics_day_boundary_applied=True))
         self.assertEqual(cm2.exception.code, "calendar_boundary_already_applied")
+
+from engine.ziwei.fine_cycle_stems import resolve_day_stem
+
+
+class FineCycleDayTests(unittest.TestCase):
+    def test_2259_uses_civil_date(self):
+        result = resolve_day_stem(calendar_context(
+            gregorian_date=date(1987, 12, 6), local_hour=22, local_minute=59,
+        ))
+        self.assertEqual(result.effective_date, date(1987, 12, 6))
+        self.assertEqual((result.heavenly_stem, result.earthly_branch), ("己", "丑"))
+
+    def test_2300_advances_effective_date(self):
+        result = resolve_day_stem(calendar_context(
+            gregorian_date=date(1987, 12, 6), local_hour=23, local_minute=0,
+            hour_branch="子",
+        ))
+        self.assertEqual(result.effective_date, date(1987, 12, 7))
+        self.assertEqual((result.heavenly_stem, result.earthly_branch), ("庚", "寅"))
+        self.assertEqual(result.reference, "ziwei-day:1987-12-07@late_zi_forward-v1")
+
+    def test_0000_does_not_double_advance(self):
+        result = resolve_day_stem(calendar_context(
+            gregorian_date=date(1987, 12, 7), local_hour=0, local_minute=0,
+            hour_branch="子",
+        ))
+        self.assertEqual(result.effective_date, date(1987, 12, 7))
+        self.assertEqual((result.heavenly_stem, result.earthly_branch), ("庚", "寅"))
+
+    def test_preapplied_metaphysics_boundary_is_rejected(self):
+        with self.assertRaises(ZiweiFineCycleError) as cm:
+            resolve_day_stem(calendar_context(metaphysics_day_boundary_applied=True))
+        self.assertEqual(cm.exception.code, "calendar_boundary_already_applied")
+
+    def test_calendar_boundary_conflict_is_rejected_but_caution_is_preserved(self):
+        with self.assertRaises(ZiweiFineCycleError) as cm:
+            resolve_day_stem(calendar_context(calendar_status="boundary_conflict"))
+        self.assertEqual(cm.exception.code, "calendar_context_unusable")
+        caution = resolve_day_stem(calendar_context(calendar_status="boundary_caution"))
+        self.assertEqual(caution.calendar_validation_status, "boundary_caution")

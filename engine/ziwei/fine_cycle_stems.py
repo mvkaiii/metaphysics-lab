@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from datetime import timedelta
+
 from engine.calendar.models import CalendarContext
-from engine.calendar.sexagenary import five_tiger_month, lunar_year_stem
+from engine.calendar.sexagenary import five_tiger_month, lunar_year_stem, sexagenary_day
 
 from .errors import ZiweiFineCycleError
 from .models import FineCycleStemProfile, LayerProvenance, ResolvedCycleStem
@@ -95,6 +97,47 @@ def resolve_month_stem(
         profile.rule_version,
         civil_date,
         civil_date,
+        None,
+        context.validation.overall_status,
+        _provenance(profile),
+    )
+
+
+def _effective_ziwei_date(context: CalendarContext, profile: FineCycleStemProfile):
+    civil_date = context.normalized_time.gregorian_date
+    if profile.ziwei_day_boundary != DAY_BOUNDARY_PROFILE:
+        raise ZiweiFineCycleError(
+            "invalid_fine_cycle_profile",
+            "unsupported Ziwei day-boundary profile",
+            {"ziwei_day_boundary": profile.ziwei_day_boundary},
+        )
+    if context.normalized_time.local_datetime.hour >= 23:
+        return civil_date + timedelta(days=1)
+    return civil_date
+
+
+def resolve_day_stem(
+    context: CalendarContext,
+    profile_id: str = FINE_CYCLE_PROFILE_ID,
+) -> ResolvedCycleStem:
+    _ensure_usable_context(context)
+    profile = get_fine_cycle_profile(profile_id)
+    civil_date = context.normalized_time.gregorian_date
+    effective_date = _effective_ziwei_date(context, profile)
+    stem, branch = sexagenary_day(effective_date)
+    reference = "ziwei-day:%s@%s" % (
+        effective_date.isoformat(),
+        profile.ziwei_day_boundary,
+    )
+    return ResolvedCycleStem(
+        "daily",
+        reference,
+        stem,
+        branch,
+        profile.profile_id,
+        profile.rule_version,
+        civil_date,
+        effective_date,
         None,
         context.validation.overall_status,
         _provenance(profile),
