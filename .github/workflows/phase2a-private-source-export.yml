@@ -1,0 +1,20 @@
+name: Phase 2A private source export
+
+on:
+  pull_request:
+    branches:
+      - feature/ziwei-transformation-flying-core-v1
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Upload exact feature source for local private qualification
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase2a-private-qualification-source
+          path: |
+            engine/
+            tools/qualify_ziwei_phase2a_private.py
+            requirements.txt
