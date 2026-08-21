@@ -30,7 +30,13 @@ jobs:
           python ../helper/.github/phase2a-task9-doc-patch.py
           changed=$(git -c core.quotePath=false diff --name-only)
           printf '%s\n' "$changed"
-          test "$changed" = $'CHANGELOG.md\nREADME.md\nVERSION.md\ndocs/架構說明.md'
+          test -n "$changed"
+          while IFS= read -r file; do
+            case "$file" in
+              README.md|VERSION.md|CHANGELOG.md|docs/架構說明.md) ;;
+              *) echo "Unexpected doc scope: $file"; exit 1 ;;
+            esac
+          done <<< "$changed"
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add README.md VERSION.md CHANGELOG.md docs/架構說明.md
