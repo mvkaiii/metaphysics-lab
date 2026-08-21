@@ -1,0 +1,223 @@
+name: Phase 2B Task 2
+
+on:
+  pull_request:
+    branches:
+      - design/ziwei-fine-cycle-stem-resolver
+
+permissions:
+  contents: write
+
+jobs:
+  task2:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/ziwei-fine-cycle-stem-resolver-v1
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Write RED model/error tests
+        run: |
+          cat > tests/test_ziwei_fine_cycle_stems.py <<'PY'
+          import unittest
+          from dataclasses import FrozenInstanceError
+          from datetime import date
+
+          from engine.ziwei.errors import ZiweiFineCycleError, ZiweiPhase2AError
+          from engine.ziwei.models import FineCycleStemProfile, LayerProvenance, ResolvedCycleStem
+
+
+          class FineCycleModelTests(unittest.TestCase):
+              def test_phase2a_error_contract_still_exists(self):
+                  err = ZiweiPhase2AError("x", "message", {"a": 1})
+                  self.assertEqual(err.code, "x")
+                  self.assertEqual(err.details, {"a": 1})
+
+              def test_fine_cycle_error_contract(self):
+                  err = ZiweiFineCycleError(
+                      "invalid_fine_cycle_scope", "message", {"scope": "weekly"}
+                  )
+                  self.assertEqual(err.code, "invalid_fine_cycle_scope")
+                  self.assertEqual(err.details, {"scope": "weekly"})
+
+              def test_fine_cycle_profile_is_immutable(self):
+                  profile = FineCycleStemProfile(
+                      "p", "1", "lunar_month", "split_after_day_15",
+                      "lunar_year", "late_zi_forward-v1", "effective_ziwei_day_stem",
+                  )
+                  with self.assertRaises(FrozenInstanceError):
+                      profile.rule_version = "2"
+
+              def test_resolved_cycle_stem_is_immutable(self):
+                  provenance = LayerProvenance(
+                      "project_derived", "Metaphysics Lab", None, "p", "1", "test"
+                  )
+                  item = ResolvedCycleStem(
+                      "daily",
+                      "ziwei-day:2026-08-22@late_zi_forward-v1",
+                      "甲",
+                      "子",
+                      "ziwei-fine-cycle-lunar-late-zi-v1",
+                      "1.0-exp",
+                      date(2026, 8, 21),
+                      date(2026, 8, 22),
+                      None,
+                      "validated",
+                      provenance,
+                  )
+                  with self.assertRaises(FrozenInstanceError):
+                      item.heavenly_stem = "乙"
+
+
+          if __name__ == "__main__":
+              unittest.main()
+          PY
+      - name: Verify RED
+        run: |
+          set +e
+          python -m unittest tests.test_ziwei_fine_cycle_stems.FineCycleModelTests -v > task2-red.txt 2>&1
+          rc=$?
+          cat task2-red.txt
+          if [ "$rc" -eq 0 ]; then
+            echo "Task 2 unexpectedly GREEN before implementation"
+            exit 1
+          fi
+          grep -Eq "cannot import name 'ZiweiFineCycleError'|cannot import name 'FineCycleStemProfile'" task2-red.txt
+          echo TASK2_EXPECTED_RED
+      - name: Implement error contract and immutable models
+        run: |
+          cat >> engine/ziwei/errors.py <<'PY'
+
+
+          class ZiweiFineCycleError(ValueError):
+              def __init__(self, code, message, details=None):
+                  self.code = code
+                  self.details = dict(details or {})
+                  super().__init__(message)
+          PY
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('engine/ziwei/models.py')
+          text = path.read_text(encoding='utf-8')
+          if 'from datetime import date\n' not in text:
+              text = text.replace('from dataclasses import dataclass\n', 'from dataclasses import dataclass\nfrom datetime import date\n')
+          addition = '''\n\n@dataclass(frozen=True)\nclass FineCycleStemProfile:\n    profile_id: str\n    rule_version: str\n    month_basis: str\n    leap_month_policy: str\n    lunar_year_basis: str\n    ziwei_day_boundary: str\n    hour_stem_basis: str\n\n\n@dataclass(frozen=True)\nclass ResolvedCycleStem:\n    scope: str\n    reference: str\n    heavenly_stem: str\n    earthly_branch: str\n    profile_id: str\n    rule_version: str\n    civil_date: date\n    effective_date: date\n    hour_branch: Optional[str]\n    calendar_validation_status: str\n    provenance: LayerProvenance\n'''
+          if 'class FineCycleStemProfile:' not in text:
+              text += addition
+          path.write_text(text, encoding='utf-8')
+          PY
+      - name: Create reusable Phase 2B fixtures
+        run: |
+          cat > tests/ziwei_phase2b_fixtures.py <<'PY'
+          from datetime import date, datetime, timezone
+          from zoneinfo import ZoneInfo
+
+          from engine.calendar.models import (
+              CalendarContext,
+              CalendarInput,
+              CalendarPolicies,
+              LunarDate,
+              LunarProviderMetadata,
+              NormalizedTime,
+              ProviderBundle,
+              TimezoneProviderMetadata,
+              ValidationCheck,
+              ValidationMetadata,
+          )
+          from tests.ziwei_phase2a_fixtures import (
+              CHART,
+              PROVENANCE,
+              SYNTHETIC_PALACE_STEM_RECORDS,
+              SYNTHETIC_STAR_RECORDS,
+          )
+
+
+          def calendar_context(
+              gregorian_date=date(2023, 7, 30),
+              local_hour=1,
+              local_minute=30,
+              hour_branch="丑",
+              lunar_year=2023,
+              lunar_month=6,
+              lunar_day=13,
+              is_leap_month=False,
+              calendar_status="validated",
+              metaphysics_day_boundary_applied=False,
+              timezone_name="Asia/Taipei",
+          ):
+              zone = ZoneInfo(timezone_name)
+              local = datetime(
+                  gregorian_date.year,
+                  gregorian_date.month,
+                  gregorian_date.day,
+                  local_hour,
+                  local_minute,
+                  tzinfo=zone,
+              )
+              offset = local.strftime("%z")
+              offset = offset[:3] + ":" + offset[3:]
+              providers = ProviderBundle(
+                  LunarProviderMetadata("lunar-python", "1.4.8", "000c8a3"),
+                  TimezoneProviderMetadata("zoneinfo", "stdlib", "2026.3", "python-stdlib"),
+              )
+              calendar_check = ValidationCheck(calendar_status, "calendar-v1")
+              timezone_check = ValidationCheck("validated", "iana-tz-v1")
+              validation = ValidationMetadata(
+                  calendar_check,
+                  timezone_check,
+                  calendar_status,
+                  "1900-2100",
+                  "fixture-boundary" if calendar_status == "boundary_conflict" else None,
+                  (),
+              )
+              return CalendarContext(
+                  "1.0",
+                  "1.0",
+                  CalendarInput(local.strftime("%Y-%m-%dT%H:%M:%S"), timezone_name),
+                  NormalizedTime(
+                      local,
+                      local.astimezone(timezone.utc),
+                      offset,
+                      gregorian_date,
+                      timezone_name,
+                      hour_branch,
+                  ),
+                  LunarDate(lunar_year, lunar_month, lunar_day, is_leap_month),
+                  providers,
+                  validation,
+                  CalendarPolicies(
+                      "IANA timezone",
+                      "civil midnight",
+                      "local civil hour",
+                      metaphysics_day_boundary_applied,
+                  ),
+              )
+          PY
+      - name: Verify GREEN and regressions
+        run: |
+          python -m unittest tests.test_ziwei_fine_cycle_stems.FineCycleModelTests -v
+          python -m unittest tests.test_ziwei_phase2a_models -v
+          python - <<'PY'
+          from tests.ziwei_phase2b_fixtures import calendar_context
+          context = calendar_context()
+          assert context.lunar.year == 2023
+          assert context.lunar.month == 6
+          assert context.lunar.day == 13
+          assert context.normalized_time.hour_branch == '丑'
+          assert context.policies.metaphysics_day_boundary_applied is False
+          print('PHASE2B_FIXTURE_PASS')
+          PY
+          python -m unittest discover -v
+          echo FINE_CYCLE_MODEL_INVARIANTS_PASS
+      - name: Commit Task 2 to feature branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add engine/ziwei/errors.py engine/ziwei/models.py tests/ziwei_phase2b_fixtures.py tests/test_ziwei_fine_cycle_stems.py
+          git commit -m "feat: add Ziwei fine-cycle models and error contract"
+          git push origin HEAD:feature/ziwei-fine-cycle-stem-resolver-v1
