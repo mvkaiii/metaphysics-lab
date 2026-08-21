@@ -1,0 +1,45 @@
+{
+  "source_system": "Astralium",
+  "source_profile": "astralium-ziwei-v1-common（通行版）",
+  "source_digest": "sha256:f0f6e1d3abb74fb15a72aead6a257845ae9efaf1a1a14fbbbda53e2ff1cd5185",
+  "rule_profile": "metaphysics-lab-common-v1",
+  "rule_version": "1.0",
+  "transformation_profile": {
+    "checked": 40,
+    "matched": 40,
+    "mismatches": 0,
+    "status": "PASS"
+  },
+  "natal": {
+    "checked": 48,
+    "matched": 48,
+    "mismatches": 0,
+    "status": "PASS"
+  },
+  "decadal": {
+    "checked": 4,
+    "matched": 4,
+    "mismatches": 0,
+    "status": "PASS"
+  },
+  "yearly": {
+    "checked": 28,
+    "matched": 28,
+    "mismatches": 0,
+    "status": "PASS"
+  },
+  "flying_total": {
+    "checked": 80,
+    "matched": 80,
+    "mismatches": 0,
+    "status": "PASS"
+  },
+  "presentation": {
+    "checked": 11,
+    "matched": 11,
+    "mismatches": 0,
+    "status": "PASS"
+  },
+  "status": "PASS",
+  "run_timestamp": "2026-08-21T09:37:00Z"
+}
