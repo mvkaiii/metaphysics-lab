@@ -13,13 +13,13 @@
 ## Global Constraints
 
 - Spec 已由使用者於 2026-08-21 核准；implementation 不得自行擴 scope。
-- 第一版 profile id 固定 `metaphysics-lab-common-v1`，不得命名為 standard / canonical / 唯一標準。
+- 第一版 transformation profile id 固定 `metaphysics-lab-common-v1`。
 - Public qualification source 固定 `SylarLong/iztro` revision `814b77e6371e1050cac31bbf674db3c3138fcfde`；它只作 qualification，不是 runtime dependency。
 - Flying target basis v1 只允許 `natal_star_location`；不得重新安星。
-- `PalaceStemSource` 與 `CycleStemSource` 必須分型；cycle source 的 `geometric_relation` 必須為 `None`。
+- `PalaceStemSource` 與 `CycleStemSource` 必須分型；cycle source 的 `geometric_relation` 永遠為 `None`。
 - 底層 relation 只允許 `same_palace` / `opposite_palace_incoming` / `normal`；`↑/↓` 是 presentation mapping。
 - 本命十二宮 graph 必須 exactly 48 edges；每個可執行 cycle layer 必須 exactly 4 transformations + 4 flying edges。
-- Different scopes coexist; same `LayerIdentity` conflicts fail closed。禁止 last-write-wins。
+- 不同 scope 共存；同一 `LayerIdentity` 的重複／矛盾 fail closed。禁止 last-write-wins。
 - `monthly/daily/hourly transformations` 在 Phase 2A 永遠 `unavailable`，reason 固定 `fine_cycle_stem_resolver_not_enabled`。
 - Small limit v1 只作 context，不產生 transformation layer。
 - 不新增四化 scoring、resonance 強弱、final transformation state 或 AI interpretation。
@@ -27,53 +27,50 @@
 - 任何 RED 未證明就不得進 GREEN；任何 Gate FAIL 立即停止並查 root cause。
 - 不修改 Bazi implementation、Calendar Resolver semantics、Qimen、moving stars、Ziwei fine-cycle stem policy。
 - Feature branch 必須從本 design branch 核准 plan 的 exact head 建立；不得直接在 `main` 寫 implementation。
-- 所有 production code 必須可在 Python 3.9 parse；不得使用 PEP 604 `X | None` type syntax。
+- 所有 production code 必須可被 Python 3.9 parse；不得使用 PEP 604 `X | None` type syntax。
 
 ---
 
 ## File Map
 
-### 新增 production modules
+### Production
 
-- `engine/ziwei/errors.py` — Phase 2A stable error-code exception。
-- `engine/ziwei/models.py` — enums / frozen dataclasses / immutable contracts；不做 orchestration。
-- `engine/ziwei/basis.py` — `StarLocationRecord[]` / `PalaceStemRecord[]` 驗證與 immutable index materialization。
-- `engine/ziwei/transformation_profiles.py` — versioned 10-stem rule data + profile validation。
-- `engine/ziwei/transformations.py` — `heavenly_stem + profile_id -> TransformationSet`。
-- `engine/ziwei/flying.py` — geometry、4-edge cycle flying、48-edge natal graph、presentation mapping。
-- `engine/ziwei/composition.py` — layer construction、identity conflict、availability、readonly views。
+- Create: `engine/ziwei/errors.py`
+- Create: `engine/ziwei/models.py`
+- Create: `engine/ziwei/basis.py`
+- Create: `engine/ziwei/transformation_profiles.py`
+- Create: `engine/ziwei/transformations.py`
+- Create: `engine/ziwei/flying.py`
+- Create: `engine/ziwei/composition.py`
+- Modify: `engine/ziwei/common.py`
+- Modify: `engine/ziwei/capabilities.py`
+- Modify: `engine/ziwei/__init__.py`
 
-### 修改 production modules
+### Tests / synthetic fixtures
 
-- `engine/ziwei/common.py` — 新增 `validate_palace()` 與 single-source `opposite_palace()`。
-- `engine/ziwei/capabilities.py` — Phase 2A capability lifecycle；fine-cycle capability 只占位為 planned。
-- `engine/ziwei/__init__.py` — 僅 export Phase 2A core public contracts；不得 export 不存在的 fine-cycle transformation API。
+- Create: `tests/ziwei_phase2a_fixtures.py`
+- Create: `tests/test_ziwei_phase2a_models.py`
+- Create: `tests/test_ziwei_basis.py`
+- Create: `tests/test_ziwei_transformations.py`
+- Create: `tests/test_ziwei_flying.py`
+- Create: `tests/test_ziwei_composition.py`
+- Create: `tests/test_ziwei_phase2a_capabilities.py`
+- Create: `tests/test_ziwei_phase2a_qualification_tools.py`
 
-### 新增 tests / synthetic fixture
+### Qualification
 
-- `tests/ziwei_phase2a_fixtures.py` — 只放 synthetic chart / records；不含私人盤面。
-- `tests/test_ziwei_phase2a_models.py`
-- `tests/test_ziwei_basis.py`
-- `tests/test_ziwei_transformations.py`
-- `tests/test_ziwei_flying.py`
-- `tests/test_ziwei_composition.py`
-- `tests/test_ziwei_phase2a_capabilities.py`
-- `tests/test_ziwei_phase2a_qualification_tools.py`
+- Create: `tools/qualify_ziwei_phase2a_public.py`
+- Create: `tools/qualify_ziwei_phase2a_private.py`
+- Create after successful run: `qualification/ziwei/phase2a/public-iztro-814b77e6.json`
+- Create after successful run: `qualification/ziwei/phase2a/private-astralium-summary.json`
 
-### 新增 qualification tooling / evidence
+### Docs / release metadata
 
-- `tools/qualify_ziwei_phase2a_public.py` — 解析 pinned iztro `heavenlyStems.ts` 並核對 40 個四化值。
-- `tools/qualify_ziwei_phase2a_private.py` — 接受 repo 外 private normalized JSON，輸出 aggregate evidence；不寫 raw values。
-- `qualification/ziwei/phase2a/public-iztro-814b77e6.json` — 40/40 public evidence。
-- `qualification/ziwei/phase2a/private-astralium-summary.json` — 只含 digest、counts、status、timestamp 與非敏感 mismatch count。
-
-### 最終同步文件
-
-- `README.md`
-- `VERSION.md`
-- `CHANGELOG.md`
-- `docs/架構說明.md`
-- `core/命理分析作業規範.md` 僅在 capability 描述需要同步時修改；不得改盲判／事件校準規則。
+- Modify: `README.md`
+- Modify: `VERSION.md`
+- Modify: `CHANGELOG.md`
+- Modify: `docs/架構說明.md`
+- Modify only if capability wording must sync: `core/命理分析作業規範.md`
 
 ---
 
@@ -85,10 +82,10 @@
 - Test: `tests/test_ziwei_phase2a_models.py`
 
 **Interfaces:**
-- Produces: `ZiweiPhase2AError`
-- Produces all shared model types used by later tasks。
+- `ZiweiPhase2AError(code, message, details=None)`
+- Shared types: `TransformationType`, `GeometricRelation`, `LayerProvenance`, `Transformation`, `TransformationSet`, `ChartIdentity`, `StarLocationRecord`, `StarLocationIndex`, `PalaceStemRecord`, `PalaceStemIndex`, `PalaceStemSource`, `CycleStemSource`, `FlyingEdge`, `NatalFlyingGraph`, `LayerIdentity`, `AvailabilityRecord`, `CycleTransformationLayer`, `SmallLimitContext`
 
-- [ ] **Step 1: Write RED model tests**
+- [ ] **Step 1: Write RED tests**
 
 ```python
 # tests/test_ziwei_phase2a_models.py
@@ -96,12 +93,7 @@ import unittest
 from dataclasses import FrozenInstanceError
 
 from engine.ziwei.errors import ZiweiPhase2AError
-from engine.ziwei.models import (
-    ChartIdentity,
-    GeometricRelation,
-    Transformation,
-    TransformationType,
-)
+from engine.ziwei.models import ChartIdentity, GeometricRelation, Transformation, TransformationType
 
 
 class ZiweiPhase2AModelTests(unittest.TestCase):
@@ -124,7 +116,7 @@ class ZiweiPhase2AModelTests(unittest.TestCase):
             {"same_palace", "opposite_palace_incoming", "normal"},
         )
 
-    def test_chart_id_is_opaque_string(self):
+    def test_chart_identity_is_opaque(self):
         chart = ChartIdentity("chart-fixture-A", "natal", "synthetic-v1")
         self.assertEqual(chart.chart_id, "chart-fixture-A")
 ```
@@ -135,7 +127,7 @@ class ZiweiPhase2AModelTests(unittest.TestCase):
 python -m unittest tests.test_ziwei_phase2a_models -v
 ```
 
-Expected: FAIL with missing `engine.ziwei.errors` or `engine.ziwei.models`。若是其他失敗，先修 test setup。
+Expected: missing module/type failure only。
 
 - [ ] **Step 3: Implement Python 3.9-safe error class**
 
@@ -158,7 +150,7 @@ class ZiweiPhase2AError(ValueError):
         super().__init__(message)
 ```
 
-- [ ] **Step 4: Implement complete shared model contract**
+- [ ] **Step 4: Implement complete shared models**
 
 ```python
 # engine/ziwei/models.py
@@ -323,22 +315,20 @@ class SmallLimitContext:
     transformation_layer: None = None
 ```
 
-- [ ] **Step 5: Run GREEN + Python 3.9 syntax check**
+- [ ] **Step 5: Run GREEN + syntax gate**
 
 ```bash
 python -m unittest tests.test_ziwei_phase2a_models -v
 python -m py_compile engine/ziwei/errors.py engine/ziwei/models.py
 ```
 
-Expected: PASS / no syntax errors。
+Expected: PASS。
 
 - [ ] **Step 6: Existing regression**
 
 ```bash
 python -m unittest tests.test_engine_module_layout tests.test_ziwei_capabilities -v
 ```
-
-Expected: PASS；capability 尚未改動。
 
 - [ ] **Step 7: Commit**
 
@@ -349,7 +339,7 @@ git commit -m "feat: add Ziwei Phase 2A core models"
 
 ---
 
-### Task 2: Duplicate-safe Natal Basis Builders 與 Synthetic Fixture
+### Task 2: Duplicate-safe Natal Basis Builders + Synthetic Fixture
 
 **Files:**
 - Create: `engine/ziwei/basis.py`
@@ -362,27 +352,15 @@ git commit -m "feat: add Ziwei Phase 2A core models"
 - `build_star_location_index(records, chart_identity, provenance) -> StarLocationIndex`
 - `build_palace_stem_index(records, chart_identity, provenance) -> PalaceStemIndex`
 
-- [ ] **Step 1: Add explicit synthetic fixture data used across all Phase 2A tests**
+- [ ] **Step 1: Create explicit synthetic fixture data**
 
 ```python
 # tests/ziwei_phase2a_fixtures.py
 from engine.ziwei.common import PALACE_NAMES
-from engine.ziwei.models import (
-    ChartIdentity,
-    LayerProvenance,
-    PalaceStemRecord,
-    StarLocationRecord,
-)
+from engine.ziwei.models import ChartIdentity, LayerProvenance, PalaceStemRecord, StarLocationRecord
 
 CHART = ChartIdentity("chart-fixture-A", "natal", "synthetic-v1")
-PROVENANCE = LayerProvenance(
-    "validated_source_fact",
-    "synthetic",
-    "1",
-    None,
-    None,
-    None,
-)
+PROVENANCE = LayerProvenance("validated_source_fact", "synthetic", "1", None, None, None)
 
 TRANSFORMABLE_STARS = (
     "廉貞", "破軍", "武曲", "太陽", "天機",
@@ -401,9 +379,9 @@ SYNTHETIC_PALACE_STEM_RECORDS = tuple(
 )
 ```
 
-This fixture is synthetic and must never be replaced by the private user chart。
+This file is synthetic-only and must never be replaced by the private user chart。
 
-- [ ] **Step 2: Write RED duplicate / completeness tests**
+- [ ] **Step 2: Write RED basis tests**
 
 ```python
 # tests/test_ziwei_basis.py
@@ -428,18 +406,18 @@ class ZiweiBasisTests(unittest.TestCase):
             build_star_location_index(records, CHART, PROVENANCE)
         self.assertEqual(cm.exception.code, "duplicate_star_location")
 
-    def test_palace_stems_require_exactly_twelve_unique_palaces(self):
+    def test_palace_stems_require_all_twelve_unique_palaces(self):
         with self.assertRaises(ZiweiPhase2AError) as cm:
             build_palace_stem_index(SYNTHETIC_PALACE_STEM_RECORDS[:-1], CHART, PROVENANCE)
         self.assertEqual(cm.exception.code, "invalid_palace_stem_index")
 
-    def test_duplicate_palace_is_rejected_before_dict_materialization(self):
+    def test_duplicate_palace_is_rejected_before_mapping(self):
         records = SYNTHETIC_PALACE_STEM_RECORDS + (PalaceStemRecord("命宮", "甲"),)
         with self.assertRaises(ZiweiPhase2AError) as cm:
             build_palace_stem_index(records, CHART, PROVENANCE)
         self.assertEqual(cm.exception.code, "duplicate_palace_stem")
 
-    def test_valid_indexes_are_materialized(self):
+    def test_valid_indexes_materialize(self):
         stars = build_star_location_index(SYNTHETIC_STAR_RECORDS, CHART, PROVENANCE)
         stems = build_palace_stem_index(SYNTHETIC_PALACE_STEM_RECORDS, CHART, PROVENANCE)
         self.assertEqual(len(stars.locations), 15)
@@ -452,9 +430,7 @@ class ZiweiBasisTests(unittest.TestCase):
 python -m unittest tests.test_ziwei_basis -v
 ```
 
-Expected: FAIL because `basis.py` is missing。
-
-- [ ] **Step 4: Add `validate_palace()` without changing existing palace placement semantics**
+- [ ] **Step 4: Add `validate_palace()`**
 
 ```python
 # engine/ziwei/common.py
@@ -506,20 +482,16 @@ def build_palace_stem_index(records, chart_identity, provenance):
         if record.heavenly_stem not in LEGAL_STEMS:
             raise ZiweiPhase2AError("invalid_palace_stem_index", "invalid palace heavenly stem", {"stem": record.heavenly_stem})
         materialized[record.palace] = record.heavenly_stem
-    if tuple(materialized.keys()) != PALACE_NAMES and set(materialized.keys()) != set(PALACE_NAMES):
+    if len(materialized) != 12 or set(materialized) != set(PALACE_NAMES):
         raise ZiweiPhase2AError("invalid_palace_stem_index", "all twelve canonical palaces are required")
     return PalaceStemIndex(chart_identity, MappingProxyType(materialized), "validated", provenance)
 ```
 
-The final implementation may simplify the two completeness comparisons to a single `set` check; it must still accept all 12 canonical palaces regardless of input order and reject missing/extra/duplicate records。
-
-- [ ] **Step 6: Run GREEN + existing month regression**
+- [ ] **Step 6: GREEN + regression**
 
 ```bash
 python -m unittest tests.test_ziwei_basis tests.test_engine_module_layout tests.test_project_ziwei_month -v
 ```
-
-Expected: PASS。
 
 - [ ] **Step 7: Commit**
 
@@ -530,7 +502,7 @@ git commit -m "feat: add validated Ziwei natal basis indexes"
 
 ---
 
-### Task 3: Versioned 10-Stem Profile 與 Pure Transformation Core
+### Task 3: Versioned 10-Stem Transformation Core
 
 **Files:**
 - Create: `engine/ziwei/transformation_profiles.py`
@@ -550,6 +522,7 @@ git commit -m "feat: add validated Ziwei natal basis indexes"
 import unittest
 
 from engine.ziwei.errors import ZiweiPhase2AError
+from engine.ziwei.transformation_profiles import validate_transformation_profile
 from engine.ziwei.transformations import get_transformation_set
 
 EXPECTED = {
@@ -574,6 +547,7 @@ class ZiweiTransformationTests(unittest.TestCase):
             self.assertEqual(tuple(item.star for item in result.transformations), expected_stars)
             self.assertEqual(tuple(item.type.value for item in result.transformations), ("祿", "權", "科", "忌"))
             self.assertEqual(tuple(item.sequence for item in result.transformations), (0, 1, 2, 3))
+            self.assertEqual(result.provenance.classification, "project_derived")
             checked += 4
         self.assertEqual(checked, 40)
 
@@ -586,6 +560,11 @@ class ZiweiTransformationTests(unittest.TestCase):
         with self.assertRaises(ZiweiPhase2AError) as cm:
             get_transformation_set("甲", "unknown-v1")
         self.assertEqual(cm.exception.code, "unknown_profile")
+
+    def test_incomplete_profile_is_invalid_transformation_profile(self):
+        with self.assertRaises(ZiweiPhase2AError) as cm:
+            validate_transformation_profile("x", "1", {"甲": ("廉貞", "破軍", "武曲", "太陽")})
+        self.assertEqual(cm.exception.code, "invalid_transformation_profile")
 ```
 
 - [ ] **Step 2: Run RED**
@@ -594,9 +573,7 @@ class ZiweiTransformationTests(unittest.TestCase):
 python -m unittest tests.test_ziwei_transformations -v
 ```
 
-Expected: FAIL because modules are missing。
-
-- [ ] **Step 3: Implement exact profile table + validation**
+- [ ] **Step 3: Implement exact profile and validation**
 
 ```python
 # engine/ziwei/transformation_profiles.py
@@ -622,15 +599,15 @@ PROFILE = {
 def validate_transformation_profile(profile_id, rule_version, table):
     if not profile_id or not rule_version:
         raise ZiweiPhase2AError("invalid_transformation_profile", "profile id and rule version are required")
-    if set(table.keys()) != set(LEGAL_STEMS) or len(table) != 10:
+    if len(table) != 10 or set(table) != set(LEGAL_STEMS):
         raise ZiweiPhase2AError("invalid_transformation_profile", "profile must contain exactly ten stems")
     for stem in LEGAL_STEMS:
         stars = tuple(table[stem])
         if len(stars) != 4 or any(not star for star in stars):
-            raise ZiweiPhase2AError("invalid_transformation_profile", "each stem must provide exactly four non-empty stars", {"stem": stem})
+            raise ZiweiPhase2AError("invalid_transformation_profile", "each stem must provide four non-empty stars", {"stem": stem})
 ```
 
-- [ ] **Step 4: Implement pure transformation core**
+- [ ] **Step 4: Implement pure core**
 
 ```python
 # engine/ziwei/transformations.py
@@ -651,26 +628,19 @@ def get_transformation_set(heavenly_stem, profile_id=PROFILE_ID):
         for idx, star in enumerate(PROFILE[heavenly_stem])
     )
     provenance = LayerProvenance(
-        "project_derived",
-        "Metaphysics Lab",
-        None,
-        PROFILE_ID,
-        RULE_VERSION,
-        "engine.ziwei.transformations",
+        "project_derived", "Metaphysics Lab", None,
+        PROFILE_ID, RULE_VERSION, "engine.ziwei.transformations",
     )
     return TransformationSet(heavenly_stem, PROFILE_ID, RULE_VERSION, transformations, provenance)
 ```
 
-- [ ] **Step 5: GREEN + gate marker**
+- [ ] **Step 5: GREEN + gate**
 
 ```bash
 python -m unittest tests.test_ziwei_transformations -v
 python - <<'PY'
 from engine.ziwei.transformations import get_transformation_set
-checked = 0
-for stem in "甲乙丙丁戊己庚辛壬癸":
-    assert len(get_transformation_set(stem).transformations) == 4
-    checked += 4
+checked = sum(len(get_transformation_set(stem).transformations) for stem in "甲乙丙丁戊己庚辛壬癸")
 assert checked == 40
 print("TRANSFORMATION_TABLE_PASS 40/40")
 PY
@@ -685,7 +655,7 @@ git commit -m "feat: add versioned Ziwei transformation core"
 
 ---
 
-### Task 4: Exhaustive Palace Geometry 與 4-edge Flying
+### Task 4: Geometry、Flying Edges、48-edge Natal Graph、Presentation Mapping
 
 **Files:**
 - Modify: `engine/ziwei/common.py`
@@ -696,20 +666,25 @@ git commit -m "feat: add versioned Ziwei transformation core"
 - `opposite_palace(palace) -> str`
 - `classify_geometric_relation(source, target_palace) -> Optional[GeometricRelation]`
 - `fly_transformations(transformations, star_locations, source) -> Tuple[FlyingEdge, ...]`
+- `build_natal_flying_graph(palace_stems, star_locations, profile_id=PROFILE_ID) -> NatalFlyingGraph`
+- `presentation_relation(edge, profile_id="astralium-compatible-v1") -> Optional[str]`
 
-- [ ] **Step 1: Write RED 144-pair geometry tests**
+- [ ] **Step 1: Write RED geometry + negative tests**
 
 ```python
 # tests/test_ziwei_flying.py
 import unittest
 
+from engine.ziwei.basis import build_palace_stem_index, build_star_location_index
 from engine.ziwei.common import PALACE_NAMES, opposite_palace
-from engine.ziwei.flying import classify_geometric_relation
-from engine.ziwei.models import CycleStemSource, GeometricRelation, PalaceStemSource
-from tests.ziwei_phase2a_fixtures import CHART
+from engine.ziwei.errors import ZiweiPhase2AError
+from engine.ziwei.flying import classify_geometric_relation, fly_transformations
+from engine.ziwei.models import ChartIdentity, CycleStemSource, GeometricRelation, PalaceStemSource
+from engine.ziwei.transformations import get_transformation_set
+from tests.ziwei_phase2a_fixtures import CHART, PROVENANCE, SYNTHETIC_PALACE_STEM_RECORDS, SYNTHETIC_STAR_RECORDS
 
 
-class ZiweiFlyingGeometryTests(unittest.TestCase):
+class ZiweiFlyingTests(unittest.TestCase):
     def test_all_144_palace_pairs_classify_exactly(self):
         counts = {item: 0 for item in GeometricRelation}
         for source_palace in PALACE_NAMES:
@@ -724,20 +699,41 @@ class ZiweiFlyingGeometryTests(unittest.TestCase):
         for palace in PALACE_NAMES:
             self.assertEqual(opposite_palace(opposite_palace(palace)), palace)
 
-    def test_cycle_source_has_no_geometric_self_relation(self):
+    def test_cycle_source_never_has_self_relation(self):
         source = CycleStemSource("cycle_stem", CHART, "yearly", "2026", "丙")
         self.assertIsNone(classify_geometric_relation(source, "田宅宮"))
+
+    def test_cycle_transformation_set_creates_exactly_four_edges(self):
+        stars = build_star_location_index(SYNTHETIC_STAR_RECORDS, CHART, PROVENANCE)
+        source = CycleStemSource("cycle_stem", CHART, "yearly", "2026", "丙")
+        edges = fly_transformations(get_transformation_set("丙"), stars, source)
+        self.assertEqual(len(edges), 4)
+        self.assertTrue(all(edge.target_basis == "natal_star_location" for edge in edges))
+        self.assertTrue(all(edge.geometric_relation is None for edge in edges))
+
+    def test_missing_star_location_fails_closed(self):
+        stars = build_star_location_index(SYNTHETIC_STAR_RECORDS[:1], CHART, PROVENANCE)
+        source = CycleStemSource("cycle_stem", CHART, "yearly", "2026", "丙")
+        with self.assertRaises(ZiweiPhase2AError) as cm:
+            fly_transformations(get_transformation_set("丙"), stars, source)
+        self.assertEqual(cm.exception.code, "missing_star_location")
+
+    def test_chart_basis_mismatch_fails_closed(self):
+        stars = build_star_location_index(SYNTHETIC_STAR_RECORDS, CHART, PROVENANCE)
+        other = ChartIdentity("chart-other", "natal", "synthetic-v1")
+        source = CycleStemSource("cycle_stem", other, "yearly", "2026", "丙")
+        with self.assertRaises(ZiweiPhase2AError) as cm:
+            fly_transformations(get_transformation_set("丙"), stars, source)
+        self.assertEqual(cm.exception.code, "chart_basis_mismatch")
 ```
 
 - [ ] **Step 2: Run RED**
 
 ```bash
-python -m unittest tests.test_ziwei_flying.ZiweiFlyingGeometryTests -v
+python -m unittest tests.test_ziwei_flying -v
 ```
 
-Expected: FAIL because helper/module is missing。
-
-- [ ] **Step 3: Implement one canonical opposite helper and classifier**
+- [ ] **Step 3: Implement canonical opposite helper + classifier + 4-edge flying**
 
 ```python
 # engine/ziwei/common.py
@@ -750,9 +746,15 @@ def opposite_palace(palace: str) -> str:
 
 ```python
 # engine/ziwei/flying.py
-from .common import opposite_palace, validate_palace
+from __future__ import annotations
+
+from types import MappingProxyType
+
+from .common import PALACE_NAMES, opposite_palace, validate_palace
 from .errors import ZiweiPhase2AError
-from .models import CycleStemSource, GeometricRelation, PalaceStemSource
+from .models import CycleStemSource, FlyingEdge, GeometricRelation, NatalFlyingGraph, PalaceStemSource
+from .transformation_profiles import PROFILE_ID
+from .transformations import get_transformation_set
 
 
 def classify_geometric_relation(source, target_palace):
@@ -769,44 +771,6 @@ def classify_geometric_relation(source, target_palace):
     if source.palace == opposite_palace(target_palace):
         return GeometricRelation.OPPOSITE_PALACE_INCOMING
     return GeometricRelation.NORMAL
-```
-
-- [ ] **Step 4: Add RED 4-edge synthetic flying test**
-
-Append to `tests/test_ziwei_flying.py`:
-
-```python
-from engine.ziwei.basis import build_star_location_index
-from engine.ziwei.flying import fly_transformations
-from engine.ziwei.transformations import get_transformation_set
-from tests.ziwei_phase2a_fixtures import PROVENANCE, SYNTHETIC_STAR_RECORDS
-
-
-class ZiweiFlyingEdgeTests(unittest.TestCase):
-    def test_cycle_transformations_create_exactly_four_edges(self):
-        index = build_star_location_index(SYNTHETIC_STAR_RECORDS, CHART, PROVENANCE)
-        source = CycleStemSource("cycle_stem", CHART, "yearly", "2026", "丙")
-        edges = fly_transformations(get_transformation_set("丙"), index, source)
-        expected_targets = tuple(index.locations[star] for star in ("天同", "天機", "文昌", "廉貞"))
-        self.assertEqual(len(edges), 4)
-        self.assertEqual(tuple(edge.target_palace for edge in edges), expected_targets)
-        self.assertTrue(all(edge.geometric_relation is None for edge in edges))
-        self.assertTrue(all(edge.target_basis == "natal_star_location" for edge in edges))
-```
-
-- [ ] **Step 5: Run RED only for new edge test**
-
-```bash
-python -m unittest tests.test_ziwei_flying.ZiweiFlyingEdgeTests -v
-```
-
-Expected: FAIL because `fly_transformations` is missing。
-
-- [ ] **Step 6: Implement 4-edge flying with chart/missing-star fail closed**
-
-```python
-# engine/ziwei/flying.py
-from .models import FlyingEdge
 
 
 def fly_transformations(transformations, star_locations, source):
@@ -819,70 +783,31 @@ def fly_transformations(transformations, star_locations, source):
         target = star_locations.locations[item.star]
         edge_id = "%s:%s:%s:%s" % (source.kind, source.heavenly_stem, item.type.value, item.sequence)
         edges.append(FlyingEdge(
-            edge_id,
-            source,
-            source.heavenly_stem,
-            item.type,
-            item.star,
-            target,
-            "natal_star_location",
-            transformations.profile_id,
-            classify_geometric_relation(source, target),
-            transformations.provenance,
+            edge_id, source, source.heavenly_stem, item.type, item.star,
+            target, "natal_star_location", transformations.profile_id,
+            classify_geometric_relation(source, target), transformations.provenance,
         ))
     if len(edges) != 4:
         raise ZiweiPhase2AError("invalid_transformation_profile", "flying requires exactly four transformations")
     return tuple(edges)
 ```
 
-- [ ] **Step 7: GREEN + GEOMETRY marker**
+- [ ] **Step 4: Run partial GREEN for geometry/edges**
 
 ```bash
 python -m unittest tests.test_ziwei_flying -v
-python - <<'PY'
-from engine.ziwei.common import PALACE_NAMES
-from engine.ziwei.flying import classify_geometric_relation
-from engine.ziwei.models import ChartIdentity, GeometricRelation, PalaceStemSource
-chart = ChartIdentity("gate", "natal", "synthetic")
-counts = {item: 0 for item in GeometricRelation}
-for source_palace in PALACE_NAMES:
-    source = PalaceStemSource("palace_stem", chart, source_palace, "甲")
-    for target in PALACE_NAMES:
-        counts[classify_geometric_relation(source, target)] += 1
-assert counts[GeometricRelation.SAME_PALACE] == 12
-assert counts[GeometricRelation.OPPOSITE_PALACE_INCOMING] == 12
-assert counts[GeometricRelation.NORMAL] == 120
-print("GEOMETRY_144_PASS")
-PY
 ```
 
-- [ ] **Step 8: Commit**
+At this point graph/presentation tests are not added yet；all current tests must PASS。
 
-```bash
-git add engine/ziwei/common.py engine/ziwei/flying.py tests/test_ziwei_flying.py
-git commit -m "feat: add Ziwei flying geometry and edges"
-```
-
----
-
-### Task 5: 48-edge NatalFlyingGraph 與 Presentation Relation
-
-**Files:**
-- Modify: `engine/ziwei/flying.py`
-- Extend: `tests/test_ziwei_flying.py`
-
-**Interfaces:**
-- `build_natal_flying_graph(palace_stems, star_locations, profile_id=PROFILE_ID) -> NatalFlyingGraph`
-- `presentation_relation(edge, profile_id="astralium-compatible-v1") -> Optional[str]`
-
-- [ ] **Step 1: Write RED 48-edge graph test**
+- [ ] **Step 5: Add RED 48-edge graph + presentation tests**
 
 ```python
-from engine.ziwei.basis import build_palace_stem_index
-from tests.ziwei_phase2a_fixtures import SYNTHETIC_PALACE_STEM_RECORDS
+from engine.ziwei.flying import build_natal_flying_graph, presentation_relation
+from engine.ziwei.models import FlyingEdge, TransformationType
 
 
-class ZiweiNatalFlyingGraphTests(unittest.TestCase):
+class ZiweiNatalGraphTests(unittest.TestCase):
     def test_twelve_palaces_create_exactly_forty_eight_edges(self):
         stars = build_star_location_index(SYNTHETIC_STAR_RECORDS, CHART, PROVENANCE)
         stems = build_palace_stem_index(SYNTHETIC_PALACE_STEM_RECORDS, CHART, PROVENANCE)
@@ -890,25 +815,30 @@ class ZiweiNatalFlyingGraphTests(unittest.TestCase):
         self.assertEqual(len(graph.edges), 48)
         self.assertEqual(sum(len(v) for v in graph.outgoing_index.values()), 48)
         self.assertEqual(sum(len(v) for v in graph.incoming_index.values()), 48)
-        self.assertEqual(set(graph.outgoing_index.keys()), set(PALACE_NAMES))
+
+    def test_presentation_mapping_uses_geometry_only(self):
+        source = PalaceStemSource("palace_stem", CHART, "命宮", "甲")
+        same = FlyingEdge("same", source, "甲", TransformationType.LU, "廉貞", "命宮", "natal_star_location", "metaphysics-lab-common-v1", GeometricRelation.SAME_PALACE, PROVENANCE)
+        opposite = FlyingEdge("opposite", source, "甲", TransformationType.LU, "廉貞", "遷移宮", "natal_star_location", "metaphysics-lab-common-v1", GeometricRelation.OPPOSITE_PALACE_INCOMING, PROVENANCE)
+        normal = FlyingEdge("normal", source, "甲", TransformationType.LU, "廉貞", "財帛宮", "natal_star_location", "metaphysics-lab-common-v1", GeometricRelation.NORMAL, PROVENANCE)
+        cycle = FlyingEdge("cycle", CycleStemSource("cycle_stem", CHART, "yearly", "2026", "甲"), "甲", TransformationType.LU, "廉貞", "命宮", "natal_star_location", "metaphysics-lab-common-v1", None, PROVENANCE)
+        self.assertEqual(presentation_relation(same), "↓")
+        self.assertEqual(presentation_relation(opposite), "↑")
+        self.assertIsNone(presentation_relation(normal))
+        self.assertIsNone(presentation_relation(cycle))
 ```
 
-- [ ] **Step 2: Run RED**
+- [ ] **Step 6: Run RED for new tests**
 
 ```bash
-python -m unittest tests.test_ziwei_flying.ZiweiNatalFlyingGraphTests -v
+python -m unittest tests.test_ziwei_flying.ZiweiNatalGraphTests -v
 ```
 
-Expected: FAIL because graph builder is missing。
-
-- [ ] **Step 3: Implement graph builder**
+- [ ] **Step 7: Implement graph + isolated presentation mapping**
 
 ```python
-from types import MappingProxyType
-from .common import PALACE_NAMES
-from .models import NatalFlyingGraph, PalaceStemSource
-from .transformation_profiles import PROFILE_ID
-from .transformations import get_transformation_set
+# append to engine/ziwei/flying.py
+PRESENTATION_PROFILE_ID = "astralium-compatible-v1"
 
 
 def build_natal_flying_graph(palace_stems, star_locations, profile_id=PROFILE_ID):
@@ -932,54 +862,6 @@ def build_natal_flying_graph(palace_stems, star_locations, profile_id=PROFILE_ID
         MappingProxyType({key: tuple(value) for key, value in outgoing.items()}),
         MappingProxyType({key: tuple(value) for key, value in incoming.items()}),
     )
-```
-
-- [ ] **Step 4: Write explicit RED presentation mapping tests without undefined helpers**
-
-```python
-from engine.ziwei.models import FlyingEdge, TransformationType
-
-
-def _synthetic_edge(relation):
-    source = PalaceStemSource("palace_stem", CHART, "命宮", "甲")
-    return FlyingEdge(
-        "edge-test",
-        source,
-        "甲",
-        TransformationType.LU,
-        "廉貞",
-        "命宮",
-        "natal_star_location",
-        "metaphysics-lab-common-v1",
-        relation,
-        PROVENANCE,
-    )
-
-
-class ZiweiPresentationRelationTests(unittest.TestCase):
-    def test_same_palace_maps_down(self):
-        self.assertEqual(presentation_relation(_synthetic_edge(GeometricRelation.SAME_PALACE)), "↓")
-
-    def test_opposite_incoming_maps_up(self):
-        self.assertEqual(presentation_relation(_synthetic_edge(GeometricRelation.OPPOSITE_PALACE_INCOMING)), "↑")
-
-    def test_normal_and_cycle_none_have_no_arrow(self):
-        self.assertIsNone(presentation_relation(_synthetic_edge(GeometricRelation.NORMAL)))
-        self.assertIsNone(presentation_relation(_synthetic_edge(None)))
-```
-
-- [ ] **Step 5: Run RED for presentation tests**
-
-```bash
-python -m unittest tests.test_ziwei_flying.ZiweiPresentationRelationTests -v
-```
-
-Expected: FAIL because presentation function is missing。
-
-- [ ] **Step 6: Implement isolated presentation mapping**
-
-```python
-PRESENTATION_PROFILE_ID = "astralium-compatible-v1"
 
 
 def presentation_relation(edge, profile_id=PRESENTATION_PROFILE_ID):
@@ -994,38 +876,50 @@ def presentation_relation(edge, profile_id=PRESENTATION_PROFILE_ID):
     return mapping[edge.geometric_relation]
 ```
 
-- [ ] **Step 7: GREEN**
+- [ ] **Step 8: GREEN + 144 marker**
 
 ```bash
 python -m unittest tests.test_ziwei_flying -v
+python - <<'PY'
+from engine.ziwei.common import PALACE_NAMES
+from engine.ziwei.flying import classify_geometric_relation
+from engine.ziwei.models import ChartIdentity, GeometricRelation, PalaceStemSource
+chart = ChartIdentity("gate", "natal", "synthetic")
+counts = {item: 0 for item in GeometricRelation}
+for source_palace in PALACE_NAMES:
+    source = PalaceStemSource("palace_stem", chart, source_palace, "甲")
+    for target in PALACE_NAMES:
+        counts[classify_geometric_relation(source, target)] += 1
+assert counts[GeometricRelation.SAME_PALACE] == 12
+assert counts[GeometricRelation.OPPOSITE_PALACE_INCOMING] == 12
+assert counts[GeometricRelation.NORMAL] == 120
+print("GEOMETRY_144_PASS")
+PY
 ```
 
-Expected: PASS；graph exactly 48 edges。
-
-- [ ] **Step 8: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
-git add engine/ziwei/flying.py tests/test_ziwei_flying.py
-git commit -m "feat: add Ziwei natal flying graph"
+git add engine/ziwei/common.py engine/ziwei/flying.py tests/test_ziwei_flying.py
+git commit -m "feat: add Ziwei flying graph"
 ```
 
 ---
 
-### Task 6: Composition — No-overwrite, Conflict, Availability, Readonly Queries
+### Task 5: Composition Layer — Birth-year in Natal, Cycles Separate, No-overwrite
 
 **Files:**
-- Modify: `engine/ziwei/models.py` — add `NatalContext`, `ZiweiLayerStack`, query result records。
+- Modify: `engine/ziwei/models.py`
 - Create: `engine/ziwei/composition.py`
 - Test: `tests/test_ziwei_composition.py`
 
 **Interfaces:**
-- `build_cycle_layer(...) -> CycleTransformationLayer`
-- `build_layer_stack(chart_identity, natal, cycles=(), small_limit=None) -> ZiweiLayerStack`
-- `ZiweiCompositeView(stack).for_palace()` / `.for_star()` / `.for_transformation()`
+- `NatalContext` contains `birth_year_layer`。
+- `ZiweiLayerStack.cycles` contains decadal/yearly only in Phase 2A。
+- `build_cycle_layer()` supports `birth_year`, `decadal`, `yearly` but caller places birth-year inside natal reference frame。
+- `ZiweiCompositeView` exposes readonly queries only。
 
-- [ ] **Step 1: Add exact composition model records to `models.py` under RED tests**
-
-Add tests first:
+- [ ] **Step 1: RED composition model test, then add exact models**
 
 ```python
 # tests/test_ziwei_composition.py
@@ -1035,17 +929,14 @@ from engine.ziwei.models import AvailabilityRecord, NatalContext, ZiweiLayerStac
 
 
 class ZiweiCompositionModelTests(unittest.TestCase):
-    def test_fine_cycle_availability_record_is_explicit(self):
+    def test_availability_record_is_explicit(self):
         item = AvailabilityRecord("unavailable", "fine_cycle_stem_resolver_not_enabled")
         self.assertEqual(item.status, "unavailable")
 ```
 
-Run and confirm RED because `NatalContext` / `ZiweiLayerStack` do not yet exist。
-
-Then add:
+Run RED, then append to `engine/ziwei/models.py`:
 
 ```python
-# append to engine/ziwei/models.py
 @dataclass(frozen=True)
 class NatalContext:
     star_locations: StarLocationIndex
@@ -1074,78 +965,92 @@ class TransformationOccurrence:
     provenance: LayerProvenance
 ```
 
-- [ ] **Step 2: Define explicit synthetic stack helper in the test file**
+- [ ] **Step 2: Add explicit synthetic helpers and RED layer tests**
 
 ```python
+# continue tests/test_ziwei_composition.py
 from engine.ziwei.basis import build_palace_stem_index, build_star_location_index
+from engine.ziwei.errors import ZiweiPhase2AError
 from engine.ziwei.flying import build_natal_flying_graph, fly_transformations
-from engine.ziwei.models import CycleStemSource, LayerIdentity, NatalContext
+from engine.ziwei.models import CycleStemSource, LayerIdentity, NatalContext, TransformationType
 from engine.ziwei.transformations import get_transformation_set
 from tests.ziwei_phase2a_fixtures import CHART, PROVENANCE, SYNTHETIC_PALACE_STEM_RECORDS, SYNTHETIC_STAR_RECORDS
 
 
-def _natal_context():
+def _base_natal(birth_year_layer=None):
     stars = build_star_location_index(SYNTHETIC_STAR_RECORDS, CHART, PROVENANCE)
     stems = build_palace_stem_index(SYNTHETIC_PALACE_STEM_RECORDS, CHART, PROVENANCE)
-    return NatalContext(stars, stems, build_natal_flying_graph(stems, stars), None)
+    return NatalContext(stars, stems, build_natal_flying_graph(stems, stars), birth_year_layer)
 
 
-def _cycle_components(scope, reference, stem):
-    natal = _natal_context()
+def _components(scope, reference, stem, natal):
     source = CycleStemSource("cycle_stem", CHART, scope, reference, stem)
     transformations = get_transformation_set(stem)
     edges = fly_transformations(transformations, natal.star_locations, source)
     identity = LayerIdentity(CHART.chart_id, scope, reference, transformations.profile_id)
-    return natal, source, transformations, edges, identity
+    return source, transformations, edges, identity
 ```
 
-- [ ] **Step 3: Write RED strict layer tests**
+Add tests:
 
 ```python
-from engine.ziwei.composition import build_cycle_layer, build_layer_stack
-from engine.ziwei.errors import ZiweiPhase2AError
+from engine.ziwei.composition import ZiweiCompositeView, build_cycle_layer, build_layer_stack
 
 
 class ZiweiCompositionTests(unittest.TestCase):
-    def test_supported_cycle_layer_has_exactly_four_edges(self):
-        natal, source, transformations, edges, identity = _cycle_components("yearly", "2026", "丙")
-        layer = build_cycle_layer(identity, source, transformations, edges, PROVENANCE)
-        self.assertEqual(len(layer.flying_edges), 4)
-
     def test_fine_cycle_scope_is_rejected(self):
-        natal, source, transformations, edges, identity = _cycle_components("monthly", "2026-L07", "丙")
+        natal = _base_natal()
+        source, trans, edges, identity = _components("monthly", "2026-L07", "丙", natal)
         with self.assertRaises(ZiweiPhase2AError) as cm:
-            build_cycle_layer(identity, source, transformations, edges, PROVENANCE)
+            build_cycle_layer(identity, source, trans, edges, PROVENANCE)
         self.assertEqual(cm.exception.code, "unsupported_scope")
 
-    def test_same_identity_exact_duplicate_is_rejected(self):
-        natal, source, transformations, edges, identity = _cycle_components("yearly", "2026", "丙")
-        layer = build_cycle_layer(identity, source, transformations, edges, PROVENANCE)
+    def test_duplicate_layer_identity_is_rejected(self):
+        natal = _base_natal()
+        source, trans, edges, identity = _components("yearly", "2026", "丙", natal)
+        layer = build_cycle_layer(identity, source, trans, edges, PROVENANCE)
         with self.assertRaises(ZiweiPhase2AError) as cm:
             build_layer_stack(CHART, natal, (layer, layer))
         self.assertEqual(cm.exception.code, "duplicate_layer_identity")
 
-    def test_same_identity_conflicting_stem_is_layer_conflict(self):
-        natal, source_a, trans_a, edges_a, identity = _cycle_components("yearly", "2026", "丙")
+    def test_conflicting_same_identity_is_layer_conflict(self):
+        natal = _base_natal()
+        source_a, trans_a, edges_a, identity = _components("yearly", "2026", "丙", natal)
         layer_a = build_cycle_layer(identity, source_a, trans_a, edges_a, PROVENANCE)
-        source_b = CycleStemSource("cycle_stem", CHART, "yearly", "2026", "丁")
-        trans_b = get_transformation_set("丁")
-        edges_b = fly_transformations(trans_b, natal.star_locations, source_b)
+        source_b, trans_b, edges_b, unused_identity = _components("yearly", "2026", "丁", natal)
         layer_b = build_cycle_layer(identity, source_b, trans_b, edges_b, PROVENANCE)
         with self.assertRaises(ZiweiPhase2AError) as cm:
             build_layer_stack(CHART, natal, (layer_a, layer_b))
         self.assertEqual(cm.exception.code, "layer_conflict")
+
+    def test_birth_year_decadal_yearly_are_preserved_without_overwrite(self):
+        natal0 = _base_natal()
+        birth_source, birth_trans, birth_edges, birth_id = _components("birth_year", "natal", "乙", natal0)
+        birth_layer = build_cycle_layer(birth_id, birth_source, birth_trans, birth_edges, PROVENANCE)
+        natal = _base_natal(birth_layer)
+        dec_source, dec_trans, dec_edges, dec_id = _components("decadal", "43-52-virtual-age", "丙", natal)
+        year_source, year_trans, year_edges, year_id = _components("yearly", "2026", "丁", natal)
+        dec_layer = build_cycle_layer(dec_id, dec_source, dec_trans, dec_edges, PROVENANCE)
+        year_layer = build_cycle_layer(year_id, year_source, year_trans, year_edges, PROVENANCE)
+        stack = build_layer_stack(CHART, natal, (dec_layer, year_layer))
+        rows = ZiweiCompositeView(stack).for_transformation(TransformationType.JI)
+        self.assertEqual(tuple(row.scope for row in rows), ("birth_year", "decadal", "yearly"))
+
+    def test_fine_cycle_availability_remains_unavailable(self):
+        stack = build_layer_stack(CHART, _base_natal())
+        self.assertEqual(stack.availability["monthly_transformations"].status, "unavailable")
+        self.assertEqual(stack.availability["monthly_transformations"].reason, "fine_cycle_stem_resolver_not_enabled")
+        self.assertEqual(stack.availability["daily_transformations"].status, "unavailable")
+        self.assertEqual(stack.availability["hourly_transformations"].status, "unavailable")
 ```
 
-- [ ] **Step 4: Run RED**
+- [ ] **Step 3: Run RED**
 
 ```bash
 python -m unittest tests.test_ziwei_composition -v
 ```
 
-Expected: FAIL because composition functions are missing。
-
-- [ ] **Step 5: Implement strict builders and hard availability**
+- [ ] **Step 4: Implement strict Composition**
 
 ```python
 # engine/ziwei/composition.py
@@ -1154,15 +1059,11 @@ from __future__ import annotations
 from types import MappingProxyType
 
 from .errors import ZiweiPhase2AError
-from .models import (
-    AvailabilityRecord,
-    CycleTransformationLayer,
-    TransformationOccurrence,
-    ZiweiLayerStack,
-)
+from .models import AvailabilityRecord, CycleTransformationLayer, LayerProvenance, TransformationOccurrence, ZiweiLayerStack
 
 SUPPORTED_SCOPES = {"birth_year", "decadal", "yearly"}
 FINE_CYCLE_REASON = "fine_cycle_stem_resolver_not_enabled"
+STACK_PROVENANCE = LayerProvenance("project_derived", "Metaphysics Lab", None, None, "1.0", "engine.ziwei.composition")
 
 
 def build_cycle_layer(identity, source, transformations, flying_edges, provenance, earthly_branch=None):
@@ -1171,18 +1072,8 @@ def build_cycle_layer(identity, source, transformations, flying_edges, provenanc
     if source.chart_identity.chart_id != identity.chart_id:
         raise ZiweiPhase2AError("chart_basis_mismatch", "layer identity and source chart mismatch")
     if len(transformations.transformations) != 4 or len(flying_edges) != 4:
-        raise ZiweiPhase2AError("invalid_transformation_profile", "cycle layer requires exactly four transformations and four edges")
-    return CycleTransformationLayer(
-        identity,
-        source,
-        source.heavenly_stem,
-        earthly_branch,
-        transformations,
-        tuple(flying_edges),
-        provenance,
-        "validated",
-        AvailabilityRecord("available", None),
-    )
+        raise ZiweiPhase2AError("invalid_transformation_profile", "cycle layer requires four transformations and four edges")
+    return CycleTransformationLayer(identity, source, source.heavenly_stem, earthly_branch, transformations, tuple(flying_edges), provenance, "validated", AvailabilityRecord("available", None))
 
 
 def _availability():
@@ -1203,6 +1094,8 @@ def build_layer_stack(chart_identity, natal, cycles=(), small_limit=None):
     seen = {}
     ordered = []
     for layer in cycles:
+        if layer.identity.scope == "birth_year":
+            raise ZiweiPhase2AError("unsupported_scope", "birth_year layer belongs to natal reference frame")
         key = layer.identity
         if key in seen:
             if seen[key] == layer:
@@ -1210,67 +1103,22 @@ def build_layer_stack(chart_identity, natal, cycles=(), small_limit=None):
             raise ZiweiPhase2AError("layer_conflict", "conflicting facts for one layer identity")
         seen[key] = layer
         ordered.append(layer)
-    return ZiweiLayerStack(chart_identity, natal, tuple(ordered), small_limit, _availability(), PROVENANCE_FOR_STACK)
-```
-
-Define `PROVENANCE_FOR_STACK` in the same module as a `LayerProvenance("project_derived", "Metaphysics Lab", None, None, "1.0", "engine.ziwei.composition")` constant；do not import test provenance into production。
-
-- [ ] **Step 6: Write explicit RED query / no-overwrite tests**
-
-```python
-from engine.ziwei.composition import ZiweiCompositeView
-from engine.ziwei.models import TransformationType
+    return ZiweiLayerStack(chart_identity, natal, tuple(ordered), small_limit, _availability(), STACK_PROVENANCE)
 
 
-class ZiweiCompositeViewTests(unittest.TestCase):
-    def test_multiple_scopes_are_not_overwritten(self):
-        natal = _natal_context()
-        layers = []
-        for scope, reference, stem in (
-            ("birth_year", "natal", "乙"),
-            ("decadal", "43-52-virtual-age", "丙"),
-            ("yearly", "2026", "丁"),
-        ):
-            source = CycleStemSource("cycle_stem", CHART, scope, reference, stem)
-            trans = get_transformation_set(stem)
-            edges = fly_transformations(trans, natal.star_locations, source)
-            identity = LayerIdentity(CHART.chart_id, scope, reference, trans.profile_id)
-            layers.append(build_cycle_layer(identity, source, trans, edges, PROVENANCE))
-        stack = build_layer_stack(CHART, natal, tuple(layers))
-        rows = ZiweiCompositeView(stack).for_transformation(TransformationType.JI)
-        self.assertEqual(tuple(row.scope for row in rows), ("birth_year", "decadal", "yearly"))
-
-    def test_fine_cycle_availability_is_unavailable(self):
-        stack = build_layer_stack(CHART, _natal_context())
-        self.assertEqual(stack.availability["monthly_transformations"].status, "unavailable")
-        self.assertEqual(stack.availability["monthly_transformations"].reason, "fine_cycle_stem_resolver_not_enabled")
-        self.assertEqual(stack.availability["daily_transformations"].status, "unavailable")
-        self.assertEqual(stack.availability["hourly_transformations"].status, "unavailable")
-```
-
-- [ ] **Step 7: Implement readonly query view**
-
-```python
 class ZiweiCompositeView:
     def __init__(self, stack):
         self._stack = stack
 
     def _occurrences(self):
-        rows = []
-        all_layers = []
+        layers = []
         if self._stack.natal.birth_year_layer is not None:
-            all_layers.append(self._stack.natal.birth_year_layer)
-        all_layers.extend(self._stack.cycles)
-        for layer in all_layers:
+            layers.append(self._stack.natal.birth_year_layer)
+        layers.extend(self._stack.cycles)
+        rows = []
+        for layer in layers:
             for edge in layer.flying_edges:
-                rows.append(TransformationOccurrence(
-                    layer.identity.scope,
-                    layer.identity.reference,
-                    edge.transformation_type,
-                    edge.star,
-                    edge.target_palace,
-                    layer.provenance,
-                ))
+                rows.append(TransformationOccurrence(layer.identity.scope, layer.identity.reference, edge.transformation_type, edge.star, edge.target_palace, layer.provenance))
         return tuple(rows)
 
     def for_transformation(self, transformation_type):
@@ -1283,24 +1131,16 @@ class ZiweiCompositeView:
         return tuple(row for row in self._occurrences() if row.target_palace == palace)
 ```
 
-Do not add `score`, `resonance`, `current_mutagen`, or `final_transformation` fields/methods。
+No `score`, `resonance`, `current_mutagen`, `final_transformation` fields/methods。
 
-- [ ] **Step 8: GREEN + internal suite**
+- [ ] **Step 5: GREEN + internal suite**
 
 ```bash
 python -m unittest tests.test_ziwei_composition -v
-python -m unittest \
-  tests.test_ziwei_phase2a_models \
-  tests.test_ziwei_basis \
-  tests.test_ziwei_transformations \
-  tests.test_ziwei_flying \
-  tests.test_ziwei_composition \
-  -v
+python -m unittest tests.test_ziwei_phase2a_models tests.test_ziwei_basis tests.test_ziwei_transformations tests.test_ziwei_flying tests.test_ziwei_composition -v
 ```
 
-Expected: 0 failures / 0 errors。
-
-- [ ] **Step 9: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
 git add engine/ziwei/models.py engine/ziwei/composition.py tests/test_ziwei_composition.py
@@ -1309,17 +1149,12 @@ git commit -m "feat: add Ziwei transformation layer composition"
 
 ---
 
-### Task 7: Capability Lifecycle 與 Package Boundary
+### Task 6: Capability Lifecycle — Experimental First
 
 **Files:**
 - Modify: `engine/ziwei/capabilities.py`
 - Modify: `engine/ziwei/__init__.py`
 - Create: `tests/test_ziwei_phase2a_capabilities.py`
-
-**Interfaces:**
-- Internal gates passed → `ziwei.transformations` / `ziwei.flying` become `implemented / experimental / on_demand`。
-- Fine-cycle transformation/flying ids exist only as `planned`。
-- `ziwei.flowing_stars` remains `planned`。
 
 - [ ] **Step 1: Write RED capability tests**
 
@@ -1331,7 +1166,7 @@ from engine.ziwei.capabilities import can_execute, get_capability, should_run_by
 
 
 class ZiweiPhase2ACapabilityTests(unittest.TestCase):
-    def test_phase2a_core_is_experimental_on_demand_after_internal_gates(self):
+    def test_core_is_experimental_on_demand_after_internal_gates(self):
         for capability_id in ("ziwei.transformations", "ziwei.flying"):
             cap = get_capability(capability_id)
             self.assertEqual(cap["implementation"], "implemented")
@@ -1340,14 +1175,10 @@ class ZiweiPhase2ACapabilityTests(unittest.TestCase):
             self.assertTrue(can_execute(capability_id))
             self.assertFalse(should_run_by_default(capability_id))
 
-    def test_fine_cycle_capabilities_are_planned(self):
+    def test_fine_cycle_capabilities_remain_planned(self):
         ids = (
-            "ziwei.flow_month_transformations",
-            "ziwei.flow_day_transformations",
-            "ziwei.flow_hour_transformations",
-            "ziwei.flow_month_flying",
-            "ziwei.flow_day_flying",
-            "ziwei.flow_hour_flying",
+            "ziwei.flow_month_transformations", "ziwei.flow_day_transformations", "ziwei.flow_hour_transformations",
+            "ziwei.flow_month_flying", "ziwei.flow_day_flying", "ziwei.flow_hour_flying",
         )
         for capability_id in ids:
             self.assertEqual(get_capability(capability_id)["implementation"], "planned")
@@ -1357,15 +1188,17 @@ class ZiweiPhase2ACapabilityTests(unittest.TestCase):
         self.assertEqual(get_capability("ziwei.flowing_stars")["implementation"], "planned")
 ```
 
-- [ ] **Step 2: Run RED and confirm failure matches current planned registry**
+- [ ] **Step 2: Run RED**
 
 ```bash
 python -m unittest tests.test_ziwei_phase2a_capabilities -v
 ```
 
-- [ ] **Step 3: Update registry to experimental/on-demand and planned fine-cycle ids**
+Expected: current planned state causes failure。
 
-Use exact metadata:
+- [ ] **Step 3: Update registry**
+
+Use:
 
 ```python
 "ziwei.transformations": {
@@ -1388,34 +1221,24 @@ Use exact metadata:
 },
 ```
 
-Fine-cycle capability records use `implementation="planned"`, `maturity=None`, `routing="on_demand"`, `rule_version=None`。Existing month/day/hour records must not change。
+Fine-cycle records use `implementation="planned"`, `maturity=None`, `routing="on_demand"`, `rule_version=None`。Existing month/day/hour records do not change。
 
-- [ ] **Step 4: Update `engine/ziwei/__init__.py` conservatively**
+- [ ] **Step 4: Conservative package exports**
 
-Add only existing Phase 2A core exports such as:
+Add only existing core APIs:
 
 ```python
 from .transformations import get_transformation_set
 from .flying import build_natal_flying_graph, fly_transformations
 ```
 
-Do not export monthly/daily/hourly transformation or flying functions because they do not exist。
+Do not export fine-cycle transformation/flying functions。
 
-- [ ] **Step 5: GREEN + existing Ziwei regressions**
+- [ ] **Step 5: GREEN + existing Ziwei regression**
 
 ```bash
-python -m unittest \
-  tests.test_ziwei_phase2a_capabilities \
-  tests.test_ziwei_capabilities \
-  tests.test_project_ziwei_month \
-  tests.test_project_ziwei_day \
-  tests.test_project_ziwei_hour \
-  tests.test_ziwei_calendar_adapter \
-  tests.test_engine_module_layout \
-  -v
+python -m unittest tests.test_ziwei_phase2a_capabilities tests.test_ziwei_capabilities tests.test_project_ziwei_month tests.test_project_ziwei_day tests.test_project_ziwei_hour tests.test_ziwei_calendar_adapter tests.test_engine_module_layout -v
 ```
-
-Expected: PASS and existing timing maturity/routing unchanged。
 
 - [ ] **Step 6: Commit**
 
@@ -1426,19 +1249,19 @@ git commit -m "feat: register Ziwei Phase 2A capabilities"
 
 ---
 
-### Task 8: Public iztro Qualification 40/40
+### Task 7: Public iztro Qualification — 40/40 Independent Profile Check
 
 **Files:**
 - Create: `tools/qualify_ziwei_phase2a_public.py`
 - Create: `tests/test_ziwei_phase2a_qualification_tools.py`
-- Create after successful external run: `qualification/ziwei/phase2a/public-iztro-814b77e6.json`
+- Create after success: `qualification/ziwei/phase2a/public-iztro-814b77e6.json`
 
 **Interfaces:**
-- Parser: `parse_iztro_heavenly_stems(source_text) -> dict[str, tuple[str, ...]]`
-- Qualifier: `qualify_public_profile(source_table, source_revision, run_timestamp) -> dict`
-- CLI accepts `--source-ts`, `--output`, `--source-revision`。
+- `parse_iztro_heavenly_stems(source_text) -> dict`
+- `qualify_public_profile(source_table, source_revision, run_timestamp) -> dict`
+- CLI: `--source-ts`, `--source-revision`, `--output`
 
-- [ ] **Step 1: Write RED parser and qualification tests with an independent TypeScript fragment**
+- [ ] **Step 1: Write RED parser / pass / fail tests using independent source fragment**
 
 ```python
 # tests/test_ziwei_phase2a_qualification_tools.py
@@ -1463,7 +1286,7 @@ export const heavenlyStems = {
 
 
 class ZiweiPublicQualificationTests(unittest.TestCase):
-    def test_parser_extracts_ten_stems_without_using_project_profile(self):
+    def test_parser_extracts_ten_stems(self):
         table = parse_iztro_heavenly_stems(IZTRO_FRAGMENT)
         self.assertEqual(len(table), 10)
         self.assertEqual(table["丙"], ("天同", "天機", "文昌", "廉貞"))
@@ -1477,8 +1300,7 @@ class ZiweiPublicQualificationTests(unittest.TestCase):
         self.assertEqual(evidence["status"], "PASS")
 
     def test_one_external_mismatch_is_fail(self):
-        table = parse_iztro_heavenly_stems(IZTRO_FRAGMENT)
-        table = dict(table)
+        table = dict(parse_iztro_heavenly_stems(IZTRO_FRAGMENT))
         table["丙"] = ("天同", "天機", "文昌", "天機")
         evidence = qualify_public_profile(table, "814b77e6371e1050cac31bbf674db3c3138fcfde", "2026-08-21T00:00:00Z")
         self.assertEqual(evidence["cases_matched"], 39)
@@ -1491,9 +1313,7 @@ class ZiweiPublicQualificationTests(unittest.TestCase):
 python -m unittest tests.test_ziwei_phase2a_qualification_tools.ZiweiPublicQualificationTests -v
 ```
 
-- [ ] **Step 3: Implement deterministic parser with explicit key maps**
-
-Production tool must define explicit maps for all 10 stem keys and 15 star keys used by the pinned source, for example:
+- [ ] **Step 3: Implement deterministic parser with explicit maps**
 
 ```python
 STEM_KEYS = {
@@ -1507,11 +1327,11 @@ STAR_KEYS = {
 }
 ```
 
-Use a regex that extracts each named object’s `mutagen: [...]` array; require exactly 10 recognized stems and exactly 4 recognized star keys per stem。Unknown/missing keys must raise `ZiweiPhase2AError("qualification_mismatch", ...)` rather than being ignored。
+For each stem key, use regex `stem_key + r"\s*:\s*\{.*?mutagen:\s*\[(.*?)\]"` with `re.S`，extract exactly 4 quoted star keys，map all keys explicitly。Unknown/missing key raises `ZiweiPhase2AError("qualification_mismatch", ...)`。
 
-- [ ] **Step 4: Implement comparison evidence**
+- [ ] **Step 4: Implement 40-position comparison evidence**
 
-`qualify_public_profile()` calls production `get_transformation_set()` for each stem, compares 40 positions, and returns:
+Return exactly:
 
 ```python
 {
@@ -1527,7 +1347,7 @@ Use a regex that extracts each named object’s `mutagen: [...]` array; require 
 }
 ```
 
-CLI exits 0 only on PASS。
+CLI exits non-zero on FAIL。
 
 - [ ] **Step 5: GREEN unit tests**
 
@@ -1535,26 +1355,17 @@ CLI exits 0 only on PASS。
 python -m unittest tests.test_ziwei_phase2a_qualification_tools.ZiweiPublicQualificationTests -v
 ```
 
-- [ ] **Step 6: External exact-revision run**
+- [ ] **Step 6: Exact-revision external run**
 
-In a temporary validation workflow or verified local checkout, download exactly:
-
-```text
-https://raw.githubusercontent.com/SylarLong/iztro/814b77e6371e1050cac31bbf674db3c3138fcfde/src/data/heavenlyStems.ts
-```
-
-Then run:
+Fetch exact raw file at revision `814b77e6371e1050cac31bbf674db3c3138fcfde` into `/tmp/heavenlyStems.ts` and run:
 
 ```bash
-python tools/qualify_ziwei_phase2a_public.py \
-  --source-ts /tmp/heavenlyStems.ts \
-  --source-revision 814b77e6371e1050cac31bbf674db3c3138fcfde \
-  --output /tmp/public-iztro-evidence.json
+python tools/qualify_ziwei_phase2a_public.py --source-ts /tmp/heavenlyStems.ts --source-revision 814b77e6371e1050cac31bbf674db3c3138fcfde --output /tmp/public-iztro-evidence.json
 ```
 
-Expected: `40 / 40`, `mismatches=[]`, `status=PASS`。Network/revision/parser failure is a gate failure, not permission to substitute another revision。
+Required: `40/40`, `mismatches=[]`, `status=PASS`。Do not substitute another revision if fetch/parse fails。
 
-- [ ] **Step 7: Commit public tool + sanitized evidence**
+- [ ] **Step 7: Commit tool + sanitized evidence only**
 
 ```bash
 mkdir -p qualification/ziwei/phase2a
@@ -1563,41 +1374,36 @@ git add tools/qualify_ziwei_phase2a_public.py tests/test_ziwei_phase2a_qualifica
 git commit -m "test: qualify Ziwei transformation profile"
 ```
 
-Do not commit the downloaded TypeScript source or temporary validation workflow。
+Downloaded source and temporary workflow are not committed。
 
 ---
 
-### Task 9: Private Astralium Qualification 48 + 4 + 28 = 80 Without Raw Chart in Git
+### Task 8: Private Astralium Qualification — Explicit 10-Stem + 80 Flying Gates
 
 **Files:**
 - Create: `tools/qualify_ziwei_phase2a_private.py`
 - Extend: `tests/test_ziwei_phase2a_qualification_tools.py`
-- Create after successful real run: `qualification/ziwei/phase2a/private-astralium-summary.json`
+- Create after success: `qualification/ziwei/phase2a/private-astralium-summary.json`
 
-**Private normalized input schema:**
+**Private input contract, outside git only:**
 
-```json
-{
-  "source_profile": "astralium-ziwei-v1-common",
-  "chart_id": "opaque-private-chart-id",
-  "star_locations": [{"star": "...", "palace": "..."}],
-  "palace_stems": [{"palace": "...", "heavenly_stem": "..."}],
-  "natal_expected_edges": [{"source_palace": "...", "source_stem": "...", "type": "...", "star": "...", "target_palace": "..."}],
-  "decadal": {"reference": "...", "stem": "...", "expected_edges": []},
-  "yearly": [{"reference": "2023", "stem": "...", "expected_edges": []}],
-  "presentation_expected": [{"source_palace": "...", "type": "...", "arrow": "..."}]
-}
+```text
+source_profile: str
+chart_id: opaque str
+star_locations: list of {star: str, palace: str}
+palace_stems: list of {palace: str, heavenly_stem: str}
+natal_expected_edges: list of 48 {source_palace, source_stem, type, star, target_palace}
+decadal: {reference, stem, expected_edges[4]}
+yearly: exactly 7 entries {reference, stem, expected_edges[4]}
+presentation_expected: list of {source_palace, type, arrow}
 ```
 
-This schema is documented for an untracked `/tmp` file only. The literal `...` in this schema denotes private values supplied by the Project source and is not production code or a committed fixture。
+Output summary must not contain private star/palace/stem values。
 
-**Output summary must contain no star/palace/stem values from private input.**
-
-- [ ] **Step 1: Add an exact synthetic private-shaped fixture builder in tests**
-
-Append to `tests/test_ziwei_phase2a_qualification_tools.py`:
+- [ ] **Step 1: Add synthetic runner-shape builder**
 
 ```python
+# append tests/test_ziwei_phase2a_qualification_tools.py
 from engine.ziwei.basis import build_palace_stem_index, build_star_location_index
 from engine.ziwei.flying import build_natal_flying_graph, fly_transformations
 from engine.ziwei.models import CycleStemSource
@@ -1621,8 +1427,8 @@ def synthetic_private_shape():
     ]
     decadal_source = CycleStemSource("cycle_stem", CHART, "decadal", "43-52-virtual-age", "癸")
     decadal_edges = fly_transformations(get_transformation_set("癸"), stars, decadal_source)
-    yearly = []
     year_stems = (("2023", "癸"), ("2024", "甲"), ("2025", "乙"), ("2026", "丙"), ("2027", "丁"), ("2028", "戊"), ("2029", "己"))
+    yearly = []
     for reference, stem in year_stems:
         source = CycleStemSource("cycle_stem", CHART, "yearly", reference, stem)
         edges = fly_transformations(get_transformation_set(stem), stars, source)
@@ -1653,26 +1459,26 @@ def synthetic_private_shape():
     }
 ```
 
-This synthetic input deliberately uses production output to test the private runner’s counting/privacy mechanics only；it is not external qualification evidence。
+This only tests runner mechanics/privacy, not external correctness。
 
-- [ ] **Step 2: Write RED private-summary test**
+- [ ] **Step 2: Write RED private summary test**
 
 ```python
+import json
 from tools.qualify_ziwei_phase2a_private import qualify_private
 
 
 class ZiweiPrivateQualificationTests(unittest.TestCase):
-    def test_summary_has_80_counts_and_no_private_payload(self):
+    def test_summary_has_explicit_40_stem_and_80_flying_gates_without_private_payload(self):
         evidence = qualify_private(synthetic_private_shape(), "abc123", "2026-08-21T00:00:00Z")
+        self.assertEqual(evidence["transformation_profile"]["checked"], 40)
         self.assertEqual(evidence["natal"]["checked"], 48)
         self.assertEqual(evidence["decadal"]["checked"], 4)
         self.assertEqual(evidence["yearly"]["checked"], 28)
         self.assertEqual(evidence["flying_total"]["checked"], 80)
-        self.assertEqual(evidence["flying_total"]["matched"], 80)
         serialized = json.dumps(evidence, ensure_ascii=False)
         for forbidden in ("star_locations", "palace_stems", "expected_edges", "birth_datetime"):
             self.assertNotIn(forbidden, serialized)
-        self.assertEqual(evidence["source_digest_sha256"], "abc123")
         self.assertEqual(evidence["status"], "PASS")
 ```
 
@@ -1682,21 +1488,35 @@ class ZiweiPrivateQualificationTests(unittest.TestCase):
 python -m unittest tests.test_ziwei_phase2a_qualification_tools.ZiweiPrivateQualificationTests -v
 ```
 
-- [ ] **Step 4: Implement private runner from external facts only**
+- [ ] **Step 4: Implement private runner with separate transformation-profile extraction from external natal edges**
 
-`qualify_private(payload, digest, run_timestamp)` must:
+Algorithm:
 
-1. Convert `payload["star_locations"]` and `payload["palace_stems"]` to records and production indexes。
-2. Build `NatalFlyingGraph` and compare exactly 48 tuples `(source_palace, source_stem, type, star, target_palace)`。
-3. Build one decadal cycle from the supplied external `stem` and compare exactly 4 tuples。
+```python
+external_transformations = {}
+for edge in payload["natal_expected_edges"]:
+    key = (edge["source_stem"], edge["type"])
+    value = edge["star"]
+    if key in external_transformations and external_transformations[key] != value:
+        raise ZiweiPhase2AError("qualification_mismatch", "external source gives conflicting transformation stars")
+    external_transformations[key] = value
+```
+
+Require exactly all 10 stems × all 4 types = 40 unique keys。Compare these 40 external values to `get_transformation_set(stem)` before flying qualification。This is the explicit `ASTRALIUM_TRANSFORMATION_40_PASS` gate。
+
+Then:
+
+1. Build indexes from private records via production builders。
+2. Compare natal graph exactly 48 tuples `(source_palace, source_stem, type, star, target_palace)`。
+3. Compare decadal exactly 4 tuples。
 4. Require exactly seven yearly entries and compare exactly 28 tuples。
-5. Run presentation comparison separately if `presentation_expected` is non-empty。
-6. Return aggregate counts only；mismatch output is `{gate, mismatch_count}` without raw values。
-7. Return FAIL unless natal=48/48, decadal=4/4, yearly=28/28。
+5. Run presentation comparison separately。
+6. Output only aggregate counts / digest / status / gate-level mismatch counts。
+7. Overall PASS requires transformation=40/40 and flying=80/80。
 
-Use `hashlib.sha256(raw_input_bytes).hexdigest()` in CLI mode; the caller cannot provide a fake digest via CLI。
+CLI computes `sha256(raw_input_bytes)` itself and exits non-zero on any mismatch。
 
-- [ ] **Step 5: GREEN synthetic tool tests**
+- [ ] **Step 5: GREEN synthetic runner tests**
 
 ```bash
 python -m unittest tests.test_ziwei_phase2a_qualification_tools -v
@@ -1704,40 +1524,35 @@ python -m unittest tests.test_ziwei_phase2a_qualification_tools -v
 
 - [ ] **Step 6: Prepare real private normalized input outside git**
 
-Use only the Project source `紫微_基礎資料包_2026-08-19.md` and already-validated Project metadata. Create:
+Use only `紫微_基礎資料包_2026-08-19.md` and already-validated Project metadata to create `/tmp/ziwei-phase2a-astralium-private.json`。Every expected edge must come from the external Project source, never from the new engine。
 
-```text
-/tmp/ziwei-phase2a-astralium-private.json
-```
-
-Every expected edge in this file must be transcribed/extracted from the external Project source, never generated by the new engine. Before qualification:
+Before run:
 
 ```bash
 git status --short
 ```
 
-Expected: `/tmp` input absent from git status。
+The `/tmp` file must not appear。
 
 - [ ] **Step 7: Run real private qualification**
 
 ```bash
-python tools/qualify_ziwei_phase2a_private.py \
-  --input /tmp/ziwei-phase2a-astralium-private.json \
-  --output /tmp/private-astralium-summary.json
+python tools/qualify_ziwei_phase2a_private.py --input /tmp/ziwei-phase2a-astralium-private.json --output /tmp/private-astralium-summary.json
 ```
 
 Required markers:
 
 ```text
+ASTRALIUM_TRANSFORMATION_40_PASS
 ASTRALIUM_NATAL_48_PASS
 ASTRALIUM_DECADAL_4_PASS
 ASTRALIUM_YEARLY_28_PASS
 ASTRALIUM_FLYING_80_PASS
 ```
 
-79/80 or lower stops promotion。Do not edit private expected values before root-cause review。
+Any mismatch stops promotion。Expected values are not edited before root-cause review。
 
-- [ ] **Step 8: Privacy gate summary before commit**
+- [ ] **Step 8: Privacy gate summary**
 
 ```bash
 python - <<'PY'
@@ -1748,6 +1563,8 @@ data = json.loads(p.read_text())
 serialized = json.dumps(data, ensure_ascii=False)
 for forbidden in ('star_locations', 'palace_stems', 'expected_edges', 'birth_datetime', 'name'):
     assert forbidden not in serialized
+assert data['transformation_profile']['checked'] == 40
+assert data['transformation_profile']['matched'] == 40
 assert data['flying_total']['checked'] == 80
 assert data['flying_total']['matched'] == 80
 assert data['status'] == 'PASS'
@@ -1755,7 +1572,7 @@ print('PRIVACY_PASS')
 PY
 ```
 
-- [ ] **Step 9: Commit only runner + aggregate summary**
+- [ ] **Step 9: Commit runner + aggregate summary only**
 
 ```bash
 mkdir -p qualification/ziwei/phase2a
@@ -1765,26 +1582,23 @@ git diff --cached --name-only
 git commit -m "test: add Ziwei private qualification evidence"
 ```
 
-Confirm no `/tmp` input, raw Astralium export, birthday/time, or private chart fixture appears in staged files。
+No raw private input is staged。
 
 ---
 
-### Task 10: Stable Promotion + Documentation + Full Regression
+### Task 9: Stable Promotion + Docs + Regression Gates
 
 **Files:**
 - Modify: `engine/ziwei/capabilities.py`
-- Modify: `README.md`
-- Modify: `VERSION.md`
-- Modify: `CHANGELOG.md`
-- Modify: `docs/架構說明.md`
-- Modify only if wording must sync: `core/命理分析作業規範.md`
 - Extend: `tests/test_ziwei_phase2a_capabilities.py`
+- Modify: `README.md`, `VERSION.md`, `CHANGELOG.md`, `docs/架構說明.md`
+- Modify only if capability wording must sync: `core/命理分析作業規範.md`
 
-- [ ] **Step 1: Add RED stable-promotion test**
+- [ ] **Step 1: Add RED stable test**
 
 ```python
 class ZiweiPhase2AStablePromotionTests(unittest.TestCase):
-    def test_core_is_stable_but_remains_on_demand(self):
+    def test_core_is_stable_but_still_on_demand(self):
         for capability_id in ("ziwei.transformations", "ziwei.flying"):
             cap = get_capability(capability_id)
             self.assertEqual(cap["implementation"], "implemented")
@@ -1799,40 +1613,31 @@ class ZiweiPhase2AStablePromotionTests(unittest.TestCase):
 python -m unittest tests.test_ziwei_phase2a_capabilities.ZiweiPhase2AStablePromotionTests -v
 ```
 
-If failure is not `experimental != stable`, investigate before promotion。
+- [ ] **Step 3: Promote only two core records**
 
-- [ ] **Step 3: Promote only the two core capability records**
+Set `maturity="stable"`, `routing="on_demand"`, `rule_version="1.0"` for `ziwei.transformations` and `ziwei.flying`。Fine-cycle transformations/flying and `ziwei.flowing_stars` remain planned。
 
-Set `maturity="stable"`, `routing="on_demand"`, and final `rule_version="1.0"` for `ziwei.transformations` and `ziwei.flying`。Do not change fine-cycle or flowing-stars states。
+- [ ] **Step 4: Sync docs with exact evidence claims**
 
-- [ ] **Step 4: Synchronize docs with exact capability/evidence claims**
-
-Docs must state:
+Docs state:
 
 ```text
 Ziwei transformations = implemented / stable / on_demand
 Ziwei flying = implemented / stable / on_demand
 Fine-cycle transformations/flying = planned
 Flowing stars = planned
-Public pinned transformation qualification = 40 / 40
+Pinned iztro transformation qualification = 40 / 40
+Private Astralium transformation qualification = 40 / 40
 Private Astralium flying qualification = 80 / 80
 Private raw chart is not stored in repo
 ```
 
-`VERSION.md` remains on the current v1.2 development line unless a separate release decision exists；do not invent a release version。
+`VERSION.md` remains on current v1.2 development line unless a separate release decision exists。
 
-- [ ] **Step 5: Internal Phase 2A suite**
+- [ ] **Step 5: Phase 2A internal tests**
 
 ```bash
-python -m unittest \
-  tests.test_ziwei_phase2a_models \
-  tests.test_ziwei_basis \
-  tests.test_ziwei_transformations \
-  tests.test_ziwei_flying \
-  tests.test_ziwei_composition \
-  tests.test_ziwei_phase2a_capabilities \
-  tests.test_ziwei_phase2a_qualification_tools \
-  -v
+python -m unittest tests.test_ziwei_phase2a_models tests.test_ziwei_basis tests.test_ziwei_transformations tests.test_ziwei_flying tests.test_ziwei_composition tests.test_ziwei_phase2a_capabilities tests.test_ziwei_phase2a_qualification_tools -v
 ```
 
 Expected: 0 failures / 0 errors。
@@ -1843,22 +1648,11 @@ Expected: 0 failures / 0 errors。
 python -m unittest discover -s tests -p 'test_*ziwei*.py' -v
 ```
 
-Expected: 0 failures / 0 errors；existing month/day/hour behavior unchanged。
-
 - [ ] **Step 7: Calendar regression**
 
 ```bash
-python -m unittest \
-  tests.test_calendar_precision \
-  tests.test_calendar_models \
-  tests.test_calendar_timezone \
-  tests.test_calendar_lunar \
-  tests.test_calendar_resolver \
-  tests.test_calendar_package_exports \
-  -v
+python -m unittest tests.test_calendar_precision tests.test_calendar_models tests.test_calendar_timezone tests.test_calendar_lunar tests.test_calendar_resolver tests.test_calendar_package_exports -v
 ```
-
-Expected: PASS。
 
 - [ ] **Step 8: Bazi regression**
 
@@ -1866,30 +1660,25 @@ Expected: PASS。
 python -m unittest discover -s tests -p 'test_*bazi*.py' -v
 ```
 
-Expected: PASS。
-
 - [ ] **Step 9: Full repo regression**
 
 ```bash
 python -m unittest discover -v
 ```
 
-Expected: 0 failures / 0 errors。Record actual test count in PR evidence；do not predeclare a count。
+Record actual total test count；do not predict it in advance。
 
 - [ ] **Step 10: Scope + privacy diff gate**
 
-Compare feature branch to exact approved design head. Allowed categories:
+Allowed categories only:
 
 ```text
 engine/ziwei/ Phase 2A files
-tests/ziwei_phase2a_fixtures.py
-tests/test_ziwei_phase2a_*.py
-tests/test_ziwei_basis.py
-tests/test_ziwei_transformations.py
-tests/test_ziwei_flying.py
-tests/test_ziwei_composition.py
-tools/qualify_ziwei_phase2a_*.py
-qualification/ziwei/phase2a/*.json
+tests/ Phase 2A synthetic/test files
+tools/qualify_ziwei_phase2a_public.py
+tools/qualify_ziwei_phase2a_private.py
+qualification/ziwei/phase2a/public-iztro-814b77e6.json
+qualification/ziwei/phase2a/private-astralium-summary.json
 README.md
 VERSION.md
 CHANGELOG.md
@@ -1897,12 +1686,12 @@ docs/架構說明.md
 core/命理分析作業規範.md
 ```
 
-Reject Bazi implementation changes, Qimen, fine-cycle stem resolver, moving stars, raw private fixtures, or temporary validation workflow in product diff。
+Reject Bazi implementation changes、Qimen、fine-cycle stem resolver、moving stars、raw private fixtures、temporary validation workflow in product diff。
 
-- [ ] **Step 11: Commit promotion/docs only after all gates are green**
+- [ ] **Step 11: Commit stable promotion/docs only after every preceding gate passes**
 
 ```bash
-git add engine/ziwei/capabilities.py README.md VERSION.md CHANGELOG.md docs/架構說明.md tests/test_ziwei_phase2a_capabilities.py
+git add engine/ziwei/capabilities.py tests/test_ziwei_phase2a_capabilities.py README.md VERSION.md CHANGELOG.md docs/架構說明.md
 if git diff --quiet -- core/命理分析作業規範.md; then
   true
 else
@@ -1913,11 +1702,11 @@ git commit -m "docs: promote Ziwei Phase 2A capabilities"
 
 ---
 
-### Task 11: Exact-head Review → Feature→Design → Main Post-merge
+### Task 10: Exact-head Review → Feature→Design → Main Post-merge
 
 **Files:**
-- No new product code should be authored in this task。
-- Temporary validation workflow exists only on temporary validation branches and is never merged into product branches。
+- No new product code in this task。
+- Temporary validation workflow only on temporary branches and never merged。
 
 - [ ] **Step 1: Freeze exact feature head**
 
@@ -1926,11 +1715,11 @@ git status --short
 git rev-parse HEAD
 ```
 
-Expected: clean tree + recorded exact SHA。
+Require clean tree + recorded SHA。
 
-- [ ] **Step 2: Re-run and capture every required marker on exact head**
+- [ ] **Step 2: Re-run exact-head final gates and print markers only after actual success**
 
-Required evidence:
+Required markers:
 
 ```text
 TRANSFORMATION_TABLE_PASS
@@ -1941,11 +1730,13 @@ COMPOSITION_PASS
 NEGATIVE_CASES_PASS
 PROVENANCE_PASS
 AVAILABILITY_PASS
+EXTERNAL_PROFILE_PASS
+ASTRALIUM_TRANSFORMATION_40_PASS
 ASTRALIUM_NATAL_48_PASS
 ASTRALIUM_DECADAL_4_PASS
 ASTRALIUM_YEARLY_28_PASS
+ASTRALIUM_FLYING_80_PASS
 ASTRALIUM_PRESENTATION_QUALIFICATION_RECORDED
-EXTERNAL_PROFILE_PASS
 ZIWEI_REGRESSION_PASS
 CALENDAR_REGRESSION_PASS
 BAZI_REGRESSION_PASS
@@ -1954,14 +1745,14 @@ SCOPE_PASS
 PRIVACY_PASS
 ```
 
-The validation workflow/script must print each marker only after its underlying check exits successfully；do not print unconditional markers。
+A marker may not be printed unconditionally；each marker follows the check it represents。
 
-- [ ] **Step 3: Full diff review against approved design base**
+- [ ] **Step 3: Review complete diff against approved design base**
 
-Reviewer checks:
+Reviewer verifies:
 
 ```text
-no scoring or resonance interpretation
+no scoring/resonance interpretation
 no default routing
 no fine-cycle transformation runtime
 no moving stars
@@ -1969,14 +1760,15 @@ no Calendar/Bazi semantic change
 no raw private chart
 no last-write-wins input path
 cycle source geometric_relation always None
-private evidence contains aggregate data only
+birth_year stored in natal reference frame
+private evidence aggregate only
 ```
 
-Blocking finding returns to the owning Task and repeats RED→GREEN + regression。
+Any blocking finding returns to owning Task and repeats RED→GREEN + regression。
 
-- [ ] **Step 4: Open formal feature→design PR**
+- [ ] **Step 4: Open feature→design PR**
 
-PR body includes exact head SHA, changed-file count, actual full test count, 40/40 public qualification, 80/80 private flying qualification, scope/privacy PASS, and explicit out-of-scope list。Do not merge automatically。
+PR body includes exact head SHA、changed-file count、actual full test count、public 40/40、private transformation 40/40、private flying 80/80、scope/privacy PASS、out-of-scope boundaries。Do not merge automatically。
 
 - [ ] **Step 5: After explicit approval, squash merge with expected head SHA**
 
@@ -1986,23 +1778,23 @@ Squash title:
 feat: implement Ziwei Transformation & Flying Core v1
 ```
 
-If head moved after review, stop and repeat exact-head verification。
+If head moved, stop and repeat exact-head validation。
 
 - [ ] **Step 6: Design post-merge validation**
 
-Create temporary validation branch from exact merged design SHA, add only validation workflow, run complete gates, collect evidence, close validation PR without merge。
+Create temporary validation branch from exact design merge SHA、add only validation workflow、run full gates、collect evidence、close validation PR without merge。
 
 - [ ] **Step 7: Compare design→main**
 
-Require `behind_by=0` unless divergence has been explicitly reviewed and resolved。No temporary validation workflow may appear in formal diff。
+Require `behind_by=0` unless divergence has been explicitly reviewed and resolved。Temporary validation workflow must not appear in formal diff。
 
 - [ ] **Step 8: Open design→main PR and wait for explicit approval**
 
-PR must state stable/on-demand core only；fine-cycle transformations/flying and flowing stars remain planned。
+PR states core stable/on-demand only；fine-cycle transformations/flying and flowing stars remain planned。
 
 - [ ] **Step 9: Merge only after approval, then main post-merge validation**
 
-Temporary branch starts from exact merged main SHA and reruns the complete gate suite。Required final marker:
+Temporary validation branch starts from exact merged main SHA and reruns complete gates。Required final marker:
 
 ```text
 MAIN_POST_MERGE_PASS
@@ -2012,12 +1804,13 @@ Close validation PR without merge。
 
 - [ ] **Step 10: Completion evidence**
 
-Only declare Phase 2A complete when the final record includes:
+Only declare Phase 2A complete when final record includes:
 
 ```text
 main merge SHA
 actual full test count
-public qualification 40/40
+public transformation qualification 40/40
+private Astralium transformation qualification 40/40
 private Astralium flying qualification 80/80
 SCOPE_PASS
 PRIVACY_PASS
@@ -2028,20 +1821,21 @@ MAIN_POST_MERGE_PASS
 
 ## Plan Self-Review Checklist
 
-- [ ] All spec production responsibilities map to Tasks 1–7。
-- [ ] All validation/promotion requirements map to Tasks 8–11。
+- [ ] All spec production responsibilities map to Tasks 1–6。
+- [ ] All qualification/promotion requirements map to Tasks 7–10。
 - [ ] Python snippets are Python 3.9 parseable。
-- [ ] Every test helper referenced in the plan is explicitly defined。
-- [ ] Error codes use the spec contract；profile-shape errors use `invalid_transformation_profile`。
+- [ ] Every test helper referenced in this plan is explicitly defined。
+- [ ] Profile-shape errors use `invalid_transformation_profile` consistently。
 - [ ] Star/palace records are validated before mapping materialization。
 - [ ] Cycle sources never enter same/opposite relation classification。
-- [ ] Composition never exposes final transformation, score, resonance, or automatic weighting。
+- [ ] Birth-year layer lives in natal reference frame；decadal/yearly remain cycle layers。
+- [ ] Composition never exposes final transformation、score、resonance、automatic weighting。
 - [ ] Fine-cycle transformations/flying and moving stars remain planned/unavailable。
-- [ ] Stable promotion occurs only after 40/40 public + 80/80 private qualification + regressions。
+- [ ] Stable promotion requires public 40/40 + private transformation 40/40 + private flying 80/80 + full regressions。
 - [ ] Private raw chart never enters repo；only aggregate evidence is committed。
-- [ ] Existing Ziwei, Calendar, Bazi, full repo, scope/privacy and merged-main validation are hard gates。
+- [ ] Existing Ziwei、Calendar、Bazi、full repo、scope/privacy、design post-merge、main post-merge are hard gates。
 - [ ] No failure path permits silent expected-value rewrite。
 
 ## Execution Boundary
 
-Implementation must not start until the user reviews and approves this written implementation plan. After approval, create an isolated feature worktree/branch from the exact `design/ziwei-transformation-flying-core` head and execute Task 1 first under TDD. Do not batch Tasks 1–11 into one commit or bypass RED evidence.
+Implementation must not start until the user reviews and approves this written implementation plan. After approval, create an isolated feature worktree/branch from the exact `design/ziwei-transformation-flying-core` head and execute Task 1 first under TDD. Do not batch Tasks 1–10 into one commit or bypass RED evidence.
