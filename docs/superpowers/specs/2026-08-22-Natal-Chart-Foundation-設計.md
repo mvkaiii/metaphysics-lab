@@ -35,7 +35,7 @@ Birth Input Resolution
 → Ziwei Natal Builder
 → Normalized Natal Model
 → Cross-check / Qualification
-→ Markdown Data Pack Export
+→ Canonical Markdown Data Pack Export
 ```
 
 同時保留既有外部盤面入口：
@@ -202,6 +202,19 @@ downgrade
 - 建完整 Ziwei Natal：需要能唯一決定紫微有效時辰與性別相關大限。
 - 若真太陽時修正可能跨時辰／跨日，必須視為 material boundary，不可忽略。
 
+### 4.4 Calendar validation 必須向下游傳遞
+
+Natal Builder 不得把 Calendar Resolver 的 validation metadata 丟掉。
+
+v1 規則：
+
+- `validated`：可正常進入 Project-native natal calculation。
+- `boundary_caution`：可建立結果，但必須保存 caution；若差異可能影響核心命盤，升級人工／外部校驗。
+- `boundary_conflict`：Project-native natal calculation 對受影響欄位 fail closed，不得標示為已校驗命盤。
+- `out_of_validated_range`：最多產生 explicit unqualified candidate；不得以 stable/default 身分進 Resolved View，除非有另外固定並通過的 external qualification profile。
+
+Phase 2C0 不得因「Natal Engine需要更早年份」而把 Calendar Resolver 既有 validated range 宣稱自動擴張。
+
 ---
 
 ## 五、Location Resolver
@@ -234,6 +247,8 @@ resolution_status
 - 多義地名無法唯一解析時必須 ask／keep candidates，不得靜默猜城市。
 - timezone 必須可追溯到 provider／tzdb。
 - 歷史出生時間應使用該日期有效的 timezone / DST 規則，不只使用今天的 UTC offset。
+- 一般排盤以城市／行政區等足以解析經緯度與 timezone 的最低必要地理精度為原則，不要求使用者提供街道、醫院或完整住址。
+- 若使用者主動提供更精確地址，canonical natal model 仍只保存排盤所需的最小地理資料與來源，不因便利而把私人完整地址寫入共用 repo／qualification fixture。
 
 Location Resolver 是上游解析能力，不把地點猜測責任塞進 Calendar Resolver。
 
@@ -316,7 +331,7 @@ qualification_target = Astralium-compatible behavior
 
 不得把這個 profile 宣稱成唯一紫微標準。
 
-精確 equation-of-time 算法必須在 capability 可執行前固定成可重現公式並版本化；若公式尚未固定或 qualification 未通過，該 capability 不得假裝 implemented。
+精確 equation-of-time 算法必須在 capability 可執行前固定成可重現公式並版本化；若公式尚未固定或 qualification 未通過，該 capability 不得假裝 implemented。公式選型屬 implementation qualification task，不是由一般使用者在 UI 選擇的排盤選項。
 
 ### 7.2 八字獨立 profile
 
@@ -584,6 +599,8 @@ selected source = Astralium
 reason = project_natal_engine_experimental
 ```
 
+Resolved View 採欄位級 resolution，不因單一欄位 conflict 就整張 external 或 Project chart 覆蓋另一張。
+
 ---
 
 ## 十二、Reconciliation 狀態
@@ -671,7 +688,7 @@ maturity = experimental
 若同時有 Astralium：
 
 - MATCH / EQUIVALENT：confidence 提升。
-- CONFLICT：Project 結果仍保留，但 Resolved View 預設選用已提供的 Astralium 原始盤面。
+- CONFLICT：Project 結果仍保留，但 Resolved View 對衝突欄位預設選用已提供且可解析的 Astralium 原始盤面。
 - 不得為了 match Astralium 反向修改 Project raw result。
 
 ### 14.2 Project Natal Engine = Stable 後
@@ -708,7 +725,7 @@ Lifecycle：
 - `bazi.natal_chart`：implemented / experimental / on_demand 起步。
 - `ziwei.natal_chart`：implemented / experimental / on_demand 起步。
 - `natal.reconciliation`：implemented 後可 stable，但不等於 chart engines stable。
-- `natal.markdown_export`：schema 穩定後可 stable。
+- `natal.markdown_export`：canonical schema 穩定後可 stable。
 
 只有 qualification gate 達標後，`bazi.natal_chart` / `ziwei.natal_chart` 才能升：
 
@@ -738,6 +755,8 @@ Project Natal Engine 不因單一命盤 PASS 即升 Stable。
 不同timezone
 DST地區
 歷史timezone
+Calendar boundary caution/conflict
+Calendar validated range 內外
 ```
 
 ### 16.1 Bazi qualification
@@ -797,7 +816,7 @@ Astralium是主要 private qualification source之一，但不得宣稱為唯一
 
 - 共用 repo 不保存私人 raw birth chart。
 - qualification repo artifact 只保存 aggregate summary、case id、digest、pass/fail counts、版本資訊。
-- 私人出生時間、地址、命盤全文不得因測試方便進共用 repo。
+- 私人出生時間、完整地址、命盤全文不得因測試方便進共用 repo。
 
 ---
 
@@ -814,6 +833,8 @@ location_not_resolved
 timezone_not_resolved
 historical_timezone_unavailable
 calendar_resolution_failed
+calendar_boundary_conflict
+calendar_out_of_validated_range
 true_solar_profile_unavailable
 true_solar_boundary_conflict
 bazi_time_profile_conflict
@@ -828,9 +849,20 @@ invalid_natal_schema
 
 ---
 
-## 十八、Markdown Data Pack Exporter
+## 十八、Canonical Markdown Data Pack Exporter
 
-LLM不負責重新計算命盤，只負責將 validated structured model 轉成標準文件。
+ChatGPT 可以負責辨識「需要建立／更新資料包」並觸發輸出，但 canonical MD 內容必須來自 validated structured model，而不是讓 LLM 再算一次命盤。
+
+正式原則：
+
+```text
+Validated Natal Model
+→ deterministic / schema-driven Markdown Exporter
+→ canonical MD data pack
+→ ChatGPT 可再做摘要、說明、對話呈現
+```
+
+ChatGPT不得在 exporter 後自由改寫 deterministic chart facts；若要加命理解讀，必須放在與盤面事實分離的區塊／文件。
 
 預期輸出：
 
@@ -841,7 +873,7 @@ LLM不負責重新計算命盤，只負責將 validated structured model 轉成�
 命盤核心摘要.md        # 若 workflow 需要
 ```
 
-每份 MD 至少包含：
+每份 canonical MD 至少包含：
 
 ```text
 資料來源
@@ -948,7 +980,7 @@ Reconciliation / Validation
           ↓
 Resolved View
           ↓
-Markdown Exporter
+Canonical Markdown Exporter
           ↓
 Analysis Orchestration
    ├─ Bazi analysis
@@ -993,6 +1025,7 @@ engine/natal/
 - `engine/ziwei/natal.py` 不 import Bazi day-boundary policy。
 - Transformation/Flying 仍 reuse Phase 2A stable core。
 - LLM 不作 deterministic chart math。
+- canonical MD exporter 不作命理解讀。
 
 ---
 
@@ -1005,18 +1038,19 @@ Phase 2C0 v1 只有在以下全部成立時才算功能完成：
 3. 使用者提供模糊資料時，Precision Gate 不補假值。
 4. Location Resolver 能提供可追溯的 coordinates + historical timezone，或 fail closed。
 5. `reported_civil_time` 永遠保留。
-6. Ziwei true-solar profile 為 versioned、可重現並通過既定 qualification gate。
-7. Bazi default 與 true-solar candidate 差異可被偵測，不靜默改柱。
-8. Bazi v1 scope 可產四柱、藏干、十神與大運核心資料。
-9. Ziwei v1 scope 可產命身宮、十二宮、宮干、五行局、核心星曜／亮度、命主身主、生年四化、本命48飛化與大限。
-10. Astralium匯入與Project重算可同時保留，不互相覆寫。
-11. reconciliation 可輸出 MATCH / EQUIVALENT / CONFLICT / NOT_COMPARABLE。
-12. BLOCKING CONFLICT 不被靜默吞掉。
-13. Experimental期間外部 Astralium 與Project BLOCKING衝突時，Resolved View 預設保留外部盤作分析basis。
-14. MD Exporter只從 structured validated model 產文件，不重新排盤。
-15. 共用repo不保存私人raw chart。
-16. Phase 2A / 2B regression 必須全綠。
-17. `ziwei.flowing_stars` 仍保持 planned，2C0不得偷做 Phase 2C。
+6. Calendar validation status 會傳遞到 Natal Builder；`boundary_conflict` 不被包成已校驗盤。
+7. Ziwei true-solar profile 為 versioned、可重現並通過既定 qualification gate。
+8. Bazi default 與 true-solar candidate 差異可被偵測，不靜默改柱。
+9. Bazi v1 scope 可產四柱、藏干、十神與大運核心資料。
+10. Ziwei v1 scope 可產命身宮、十二宮、宮干、五行局、核心星曜／亮度、命主身主、生年四化、本命48飛化與大限。
+11. Astralium匯入與Project重算可同時保留，不互相覆寫。
+12. reconciliation 可輸出 MATCH / EQUIVALENT / CONFLICT / NOT_COMPARABLE。
+13. BLOCKING CONFLICT 不被靜默吞掉。
+14. Experimental期間外部 Astralium 與Project BLOCKING衝突時，Resolved View 對衝突欄位預設保留外部盤作分析basis。
+15. Canonical MD Exporter只從 structured validated model 產文件，不重新排盤或混入AI推論。
+16. 共用repo不保存私人raw chart／完整地址。
+17. Phase 2A / 2B regression 必須全綠。
+18. `ziwei.flowing_stars` 仍保持 planned，2C0不得偷做 Phase 2C。
 
 ---
 
