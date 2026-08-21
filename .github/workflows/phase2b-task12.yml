@@ -1,4 +1,4 @@
-name: Phase 2B Review Docs GREEN v2
+name: Phase 2B Review Docs GREEN v3
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  review-docs-green-v2:
+  review-docs-green-v3:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,7 +33,7 @@ jobs:
             'tests/test_rule_source_reconciliation.py' \
             'tests/test_ziwei_phase2b_docs.py' \
             | sort > /tmp/expected-files.txt
-          git diff --name-only | sort > /tmp/actual-files.txt
+          git -c core.quotePath=false diff --name-only | sort > /tmp/actual-files.txt
           diff -u /tmp/expected-files.txt /tmp/actual-files.txt
           echo REVIEW_FIX_SCOPE_PASS
 
