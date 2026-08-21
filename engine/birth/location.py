@@ -145,6 +145,7 @@ class NominatimLocationProvider:
             exactly_one=False,
             limit=5,
             addressdetails=True,
+            featuretype="city",
         )
         if not locations:
             return ()
