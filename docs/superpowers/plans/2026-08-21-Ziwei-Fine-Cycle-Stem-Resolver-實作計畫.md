@@ -6,7 +6,7 @@
 
 **Architecture:** `CalendarContext` 保持 neutral civil/calendar fact source；`engine/calendar/sexagenary.py` 提供不含命理日界的純六十甲子數學；`engine/ziwei/fine_cycle_stems.py` 套用 `ziwei-fine-cycle-lunar-late-zi-v1` profile 解析 monthly/daily/hourly stems；`engine/ziwei/fine_cycle.py` 只負責把 `ResolvedCycleStem` 接到既有 `get_transformation_set()`、`fly_transformations()`、`build_cycle_layer()`。Composition 正式增加 `monthly / daily / hourly` scopes，但保留 Phase 2A duplicate/conflict/chart-isolation invariants。
 
-**Tech Stack:** Python 3.9+ compatible syntax、標準函式庫 `datetime` / `dataclasses` / `unittest`、既有 `engine.calendar`、`engine.ziwei`；公開 qualification 解析 pinned GitHub source text，不增加 Node/npm runtime dependency。
+**Tech Stack:** Python 3.9+ compatible syntax、標準函式庫 `datetime` / `dataclasses` / `unittest` / `unittest.mock`、既有 `engine.calendar`、`engine.ziwei`；公開 qualification 解析 pinned GitHub source text，不增加 Node/npm runtime dependency。
 
 **Spec:** `docs/superpowers/specs/2026-08-21-Ziwei-Fine-Cycle-Stem-Resolver-設計.md`
 
@@ -58,17 +58,22 @@
 
 ### 修改
 
-- `core/命理分析作業規範.md`：先做 v1.2 runtime state reconciliation；Phase 2B promotion 後再加入 fine-cycle stem/flying 正式邊界。
-- `core/命理推導計算規則.md`：移除 Calendar Resolver 未實作與舊 capability 敘述；完成後加入 Phase 2B profile。
-- `core/核心提示詞.md`：同步 Calendar Resolver / fine-cycle capability boundary。
-- `core/紫微流月推導規則.md`：同步流時現況與 fine-cycle transformation/flying 狀態。
-- `core/紫微流日推導規則.md`：同步流時／Calendar Resolver 現況，完成後引用 Phase 2B day-stem profile。
-- `core/紫微流時推導規則.md`：移除 Calendar Resolver 未實作舊敘述，完成後加入 hour stem / late-Zi policy。
-- `engine/ziwei/errors.py`：新增 `ZiweiFineCycleError`，保留既有 class 不動。
-- `engine/ziwei/models.py`：新增 immutable `FineCycleStemProfile` / `ResolvedCycleStem`。
-- `engine/ziwei/capabilities.py`：新增 stem capability，promotion transformation/flying fine-cycle IDs。
-- `engine/ziwei/composition.py`：擴充 fine-cycle scopes 與 availability；保留 duplicate/conflict protections。
-- `README.md`、`CHANGELOG.md`、`docs/架構說明.md`、`docs/快速開始.md`、`docs/安裝到ChatGPT-Project.md`、`docs/更新與版本同步.md`：只在 Phase 2B exact-head gates 全綠後同步 implemented/experimental/on_demand 狀態；不在前面 Task 預先宣稱完成。
+- `core/命理分析作業規範.md`
+- `core/命理推導計算規則.md`
+- `core/核心提示詞.md`
+- `core/紫微流月推導規則.md`
+- `core/紫微流日推導規則.md`
+- `core/紫微流時推導規則.md`
+- `engine/ziwei/errors.py`
+- `engine/ziwei/models.py`
+- `engine/ziwei/capabilities.py`
+- `engine/ziwei/composition.py`
+- `README.md`
+- `CHANGELOG.md`
+- `docs/架構說明.md`
+- `docs/快速開始.md`
+- `docs/安裝到ChatGPT-Project.md`
+- `docs/更新與版本同步.md`
 
 ### 預設不修改
 
@@ -80,7 +85,7 @@
 - `engine/ziwei/transformations.py`
 - `engine/ziwei/flying.py`
 
-若實作中發現必須修改上述檔案，先停止並做 scope review；不得順手修改。
+若 implementation 發現必須修改上述檔案，立即停止該 Task、記錄理由並做 scope review；不得順手修改。
 
 ---
 
@@ -88,20 +93,13 @@
 
 **Files:**
 - Create: `tests/test_rule_source_reconciliation.py`
-- Modify: `core/命理分析作業規範.md`
-- Modify: `core/命理推導計算規則.md`
-- Modify: `core/核心提示詞.md`
-- Modify: `core/紫微流月推導規則.md`
-- Modify: `core/紫微流日推導規則.md`
-- Modify: `core/紫微流時推導規則.md`
+- Modify: six `core/*.md` rule files listed in File Map
 
 **Interfaces:**
-- Consumes: current runtime states from `engine/ziwei/capabilities.py` and Calendar Resolver v1 already in `main`.
-- Produces: rule-source baseline where existing features are described consistently; no Phase 2B capability is promoted yet.
+- Consumes: current `engine/ziwei/capabilities.py` states and Calendar Resolver v1 already in `main`.
+- Produces: rule-source baseline that describes existing runtime facts consistently; Phase 2B fine-cycle transformation/flying remains planned at this Task.
 
 - [ ] **Step 1: Write the RED rule-source test**
-
-Create `tests/test_rule_source_reconciliation.py` with explicit current-state assertions:
 
 ```python
 import unittest
@@ -119,17 +117,30 @@ FILES = (
 
 
 class RuleSourceReconciliationTests(unittest.TestCase):
-    def test_current_runtime_capabilities_are_not_documented_as_missing(self):
-        combined = "\n".join((ROOT / p).read_text(encoding="utf-8") for p in FILES)
-        self.assertNotIn("Calendar / Input Resolver\n", combined)
-        self.assertNotIn("Calendar Resolver\n- Cross-System Validation", combined)
-        self.assertNotIn("Project 紫微流月定位層", combined)
-        self.assertNotIn("Project Bazi Calendar Engine", combined)
+    def _combined(self):
+        return "\n".join((ROOT / path).read_text(encoding="utf-8") for path in FILES)
+
+    def test_existing_runtime_capabilities_are_documented_as_existing(self):
+        combined = self._combined()
         self.assertIn("Calendar Resolver v1", combined)
+        self.assertIn("紫微流月定位", combined)
+        self.assertIn("紫微流日定位", combined)
+        self.assertIn("紫微流時定位", combined)
         self.assertIn("Ziwei Transformation Core", combined)
         self.assertIn("Ziwei Flying Core", combined)
 
-    def test_fine_cycle_transformations_are_not_prematurely_marked_implemented(self):
+    def test_stale_missing_runtime_statements_are_removed(self):
+        combined = self._combined()
+        for forbidden in (
+            "Calendar / Input Resolver\n",
+            "Calendar Resolver、timezone、國曆轉農曆與 23:00 日界 policy 尚未實作",
+            "Project 紫微流月定位層",
+            "Project 紫微流日定位層",
+            "Project 紫微流時定位層",
+        ):
+            self.assertNotIn(forbidden, combined)
+
+    def test_phase2b_fine_cycle_is_not_prematurely_promoted(self):
         text = (ROOT / "core/命理推導計算規則.md").read_text(encoding="utf-8")
         self.assertIn("流月／流日／流時細部四化", text)
         self.assertIn("planned", text.lower())
@@ -139,21 +150,19 @@ if __name__ == "__main__":
     unittest.main()
 ```
 
-The exact forbidden strings may be adjusted only to match the stale wording present on the feature base; the semantic assertions above must remain: existing Calendar/Phase2A capabilities cannot be described as missing, while Phase2B fine-cycle transformations still cannot be described as implemented.
+Note: `Project Bazi Calendar Engine` may remain inside historical engine metadata if it is the literal legacy engine name; the capability/user-facing label must be `八字時間推導`. Do not fail a historical metadata string solely because it contains `Project`.
 
-- [ ] **Step 2: Run RED and confirm it fails for stale docs, not test syntax**
-
-Run:
+- [ ] **Step 2: Run RED and verify failure reason**
 
 ```bash
 python -m unittest tests.test_rule_source_reconciliation -v
 ```
 
-Expected: at least one assertion fails because current `core/` docs still contain stale Calendar/Phase2A wording. Any import/syntax error is an invalid RED and must be fixed before continuing.
+Expected: assertion failure caused by stale core wording. Syntax/import failure is not an acceptable RED.
 
 - [ ] **Step 3: Reconcile only existing runtime facts**
 
-Apply these exact semantic updates across the six core docs:
+All six core documents must converge on this state:
 
 ```text
 Calendar Resolver v1 = implemented neutral infrastructure
@@ -162,31 +171,27 @@ Calendar Resolver v1 = implemented neutral infrastructure
 紫微流時定位 = implemented / experimental / on_demand
 Ziwei Transformation Core = implemented / stable / on_demand
 Ziwei Flying Core = implemented / stable / on_demand
-流月／流日／流時四化 = planned / on_demand   # still Phase 2B pending at Task 0
-流月／流日／流時飛化 = planned / on_demand   # still Phase 2B pending at Task 0
+流月／流日／流時四化 = planned / on_demand
+流月／流日／流時飛化 = planned / on_demand
 流曜 = planned / on_demand
 ```
 
-Use capability names such as `紫微流月定位` and `八字時間推導`; reserve `Project 推導盤面` only for data classification.
+`Project 推導盤面` remains a data-classification term, not a capability prefix.
 
-- [ ] **Step 4: Run GREEN gate**
+- [ ] **Step 4: Run GREEN and full baseline regression**
 
 ```bash
 python -m unittest tests.test_rule_source_reconciliation -v
 python -m unittest discover -v
 ```
 
-Expected: reconciliation test PASS and full repository still PASS at the current baseline count or higher.
+Expected: PASS and full count >= 132.
 
-- [ ] **Step 5: Record marker and commit**
-
-Only after the assertions pass:
+- [ ] **Step 5: Commit only after the gate passes**
 
 ```text
 RULE_SOURCE_RECONCILIATION_PASS
 ```
-
-Commit:
 
 ```bash
 git add core tests/test_rule_source_reconciliation.py
@@ -202,16 +207,18 @@ git commit -m "docs: reconcile Ziwei runtime rule sources"
 - Create: `tests/test_calendar_sexagenary.py`
 
 **Interfaces:**
-- Consumes: Python `datetime.date`; raw valid heavenly stem / earthly branch strings.
-- Produces:
-  - `gregorian_jdn(value: date) -> int`
-  - `sexagenary_day(value: date) -> tuple[str, str]`
-  - `lunar_year_stem(lunar_year: int) -> str`
-  - `five_tiger_month(year_stem: str, effective_month_ordinal: int) -> tuple[str, str]`
-  - `five_mouse_hour(day_stem: str, hour_branch: str) -> tuple[str, str]`
-- These functions do not know `CalendarContext`, Bazi, Ziwei profile, 23:00, leap-month split, or chart identity.
 
-- [ ] **Step 1: Write RED tests for known public vectors and invariants**
+```python
+gregorian_jdn(value: date) -> int
+sexagenary_day(value: date) -> tuple[str, str]
+lunar_year_stem(lunar_year: int) -> str
+five_tiger_month(year_stem: str, effective_month_ordinal: int) -> tuple[str, str]
+five_mouse_hour(day_stem: str, hour_branch: str) -> tuple[str, str]
+```
+
+No function in this module accepts `CalendarContext` or applies a 23:00 policy.
+
+- [ ] **Step 1: Write RED tests**
 
 ```python
 import unittest
@@ -230,22 +237,38 @@ class CalendarSexagenaryTests(unittest.TestCase):
         self.assertEqual(sexagenary_day(date(2023, 3, 9)), ("丙", "寅"))
         self.assertEqual(sexagenary_day(date(2023, 4, 8)), ("丙", "申"))
         self.assertEqual(sexagenary_day(date(1987, 12, 6)), ("己", "丑"))
+        self.assertEqual(sexagenary_day(date(1987, 12, 7)), ("庚", "寅"))
 
-    def test_lunar_year_stem_cycles(self):
+    def test_lunar_year_stem_cycle(self):
         self.assertEqual(lunar_year_stem(2023), "癸")
         self.assertEqual(lunar_year_stem(2083), "癸")
 
-    def test_five_tiger_month_vectors(self):
+    def test_five_tiger_vectors(self):
         self.assertEqual(five_tiger_month("癸", 1), ("甲", "寅"))
         self.assertEqual(five_tiger_month("癸", 6), ("己", "未"))
         self.assertEqual(five_tiger_month("癸", 13), ("丙", "寅"))
 
     def test_five_mouse_vectors(self):
         self.assertEqual(five_mouse_hour("己", "丑"), ("乙", "丑"))
+        self.assertEqual(five_mouse_hour("己", "亥"), ("乙", "亥"))
         self.assertEqual(five_mouse_hour("庚", "子"), ("丙", "子"))
-```
 
-Also add invalid-stem/branch/month tests that expect `ValueError`, not silent modulo fallback.
+    def test_invalid_inputs_fail_closed(self):
+        with self.assertRaises(ValueError):
+            five_tiger_month("X", 1)
+        with self.assertRaises(ValueError):
+            five_tiger_month("甲", 0)
+        with self.assertRaises(ValueError):
+            five_tiger_month("甲", 14)
+        with self.assertRaises(ValueError):
+            five_mouse_hour("X", "子")
+        with self.assertRaises(ValueError):
+            five_mouse_hour("甲", "X")
+
+
+if __name__ == "__main__":
+    unittest.main()
+```
 
 - [ ] **Step 2: Verify RED**
 
@@ -253,11 +276,9 @@ Also add invalid-stem/branch/month tests that expect `ValueError`, not silent mo
 python -m unittest tests.test_calendar_sexagenary -v
 ```
 
-Expected: import failure because `engine.calendar.sexagenary` does not exist. This is the intended RED.
+Expected: `ModuleNotFoundError: engine.calendar.sexagenary`.
 
-- [ ] **Step 3: Implement the minimal neutral helper**
-
-Create `engine/calendar/sexagenary.py`:
+- [ ] **Step 3: Implement the neutral helper**
 
 ```python
 from __future__ import annotations
@@ -268,18 +289,12 @@ GAN = tuple("甲乙丙丁戊己庚辛壬癸")
 ZHI = tuple("子丑寅卯辰巳午未申酉戌亥")
 MONTH_ZHI = tuple("寅卯辰巳午未申酉戌亥子丑")
 FIRST_MONTH_STEM = {
-    "甲": "丙", "己": "丙",
-    "乙": "戊", "庚": "戊",
-    "丙": "庚", "辛": "庚",
-    "丁": "壬", "壬": "壬",
-    "戊": "甲", "癸": "甲",
+    "甲": "丙", "己": "丙", "乙": "戊", "庚": "戊", "丙": "庚",
+    "辛": "庚", "丁": "壬", "壬": "壬", "戊": "甲", "癸": "甲",
 }
 FIRST_HOUR_STEM = {
-    "甲": "甲", "己": "甲",
-    "乙": "丙", "庚": "丙",
-    "丙": "戊", "辛": "戊",
-    "丁": "庚", "壬": "庚",
-    "戊": "壬", "癸": "壬",
+    "甲": "甲", "己": "甲", "乙": "丙", "庚": "丙", "丙": "戊",
+    "辛": "戊", "丁": "庚", "壬": "庚", "戊": "壬", "癸": "壬",
 }
 
 
@@ -307,8 +322,8 @@ def five_tiger_month(year_stem: str, effective_month_ordinal: int) -> tuple[str,
         raise ValueError("invalid heavenly stem")
     if not 1 <= effective_month_ordinal <= 13:
         raise ValueError("effective_month_ordinal must be 1..13")
-    start = GAN.index(FIRST_MONTH_STEM[year_stem])
     offset = effective_month_ordinal - 1
+    start = GAN.index(FIRST_MONTH_STEM[year_stem])
     return GAN[(start + offset) % 10], MONTH_ZHI[offset % 12]
 
 
@@ -322,16 +337,14 @@ def five_mouse_hour(day_stem: str, hour_branch: str) -> tuple[str, str]:
     return GAN[(start + branch_index) % 10], hour_branch
 ```
 
-Do not import Bazi code.
-
-- [ ] **Step 4: Run targeted and Bazi regression**
+- [ ] **Step 4: Run GREEN + Bazi regression**
 
 ```bash
 python -m unittest tests.test_calendar_sexagenary -v
 python -m unittest tests.test_project_bazi_calendar -v
 ```
 
-Expected: both PASS; Phase 2B helper must not alter Bazi output.
+Expected: both PASS; no Bazi production file changed.
 
 - [ ] **Step 5: Commit**
 
@@ -342,7 +355,7 @@ git commit -m "feat: add neutral sexagenary calendar helpers"
 
 ---
 
-### Task 2: Add Fine-Cycle Error Contract, Immutable Models, and Profile
+### Task 2: Add Fine-Cycle Error Contract, Models, and Test Fixture
 
 **Files:**
 - Modify: `engine/ziwei/errors.py`
@@ -351,13 +364,15 @@ git commit -m "feat: add neutral sexagenary calendar helpers"
 - Create: `tests/test_ziwei_fine_cycle_stems.py`
 
 **Interfaces:**
-- Produces `ZiweiFineCycleError(code, message, details=None)` without changing `ZiweiPhase2AError`.
-- Produces immutable `FineCycleStemProfile` and `ResolvedCycleStem`.
-- Produces `DEFAULT_FINE_CYCLE_PROFILE` and `get_fine_cycle_profile(profile_id)` in Task 3's module; Task 2 locks model shape first.
+
+```python
+ZiweiFineCycleError(code: str, message: str, details: Mapping | None = None)
+FineCycleStemProfile
+ResolvedCycleStem
+calendar_context(...) -> CalendarContext
+```
 
 - [ ] **Step 1: Write RED model/error tests**
-
-Add to `tests/test_ziwei_fine_cycle_stems.py`:
 
 ```python
 import unittest
@@ -365,21 +380,21 @@ from dataclasses import FrozenInstanceError
 from datetime import date
 
 from engine.ziwei.errors import ZiweiFineCycleError, ZiweiPhase2AError
-from engine.ziwei.models import FineCycleStemProfile, LayerProvenance, ResolvedCycleStem
+from engine.ziwei.models import LayerProvenance, ResolvedCycleStem
 
 
 class FineCycleModelTests(unittest.TestCase):
-    def test_phase2a_error_contract_still_exists(self):
-        err = ZiweiPhase2AError("x", "message", {"a": 1})
-        self.assertEqual(err.code, "x")
-        self.assertEqual(err.details, {"a": 1})
+    def test_phase2a_error_contract_remains(self):
+        error = ZiweiPhase2AError("x", "message", {"a": 1})
+        self.assertEqual(error.code, "x")
+        self.assertEqual(error.details, {"a": 1})
 
     def test_fine_cycle_error_contract(self):
-        err = ZiweiFineCycleError("invalid_fine_cycle_scope", "message", {"scope": "weekly"})
-        self.assertEqual(err.code, "invalid_fine_cycle_scope")
-        self.assertEqual(err.details, {"scope": "weekly"})
+        error = ZiweiFineCycleError("invalid_fine_cycle_scope", "message", {"scope": "weekly"})
+        self.assertEqual(error.code, "invalid_fine_cycle_scope")
+        self.assertEqual(error.details, {"scope": "weekly"})
 
-    def test_resolved_cycle_stem_is_immutable(self):
+    def test_resolved_cycle_stem_is_frozen(self):
         provenance = LayerProvenance("project_derived", "Metaphysics Lab", None, "p", "1", "test")
         item = ResolvedCycleStem(
             "daily", "ziwei-day:2026-08-22@late_zi_forward-v1", "甲", "子",
@@ -390,9 +405,31 @@ class FineCycleModelTests(unittest.TestCase):
             item.heavenly_stem = "乙"
 ```
 
-Model signatures to lock:
+- [ ] **Step 2: Verify RED**
+
+```bash
+python -m unittest tests.test_ziwei_fine_cycle_stems.FineCycleModelTests -v
+```
+
+Expected: new imports are missing.
+
+- [ ] **Step 3: Add error and dataclasses**
+
+Append without altering `ZiweiPhase2AError`:
 
 ```python
+class ZiweiFineCycleError(ValueError):
+    def __init__(self, code, message, details=None):
+        self.code = code
+        self.details = dict(details or {})
+        super().__init__(message)
+```
+
+Add to `models.py`:
+
+```python
+from datetime import date
+
 @dataclass(frozen=True)
 class FineCycleStemProfile:
     profile_id: str
@@ -418,41 +455,66 @@ class ResolvedCycleStem:
     provenance: LayerProvenance
 ```
 
-- [ ] **Step 2: Verify RED**
+- [ ] **Step 4: Create exact CalendarContext fixture builder**
 
-```bash
-python -m unittest tests.test_ziwei_fine_cycle_stems.FineCycleModelTests -v
-```
-
-Expected: import failures for the new class/model names.
-
-- [ ] **Step 3: Add error/model definitions**
-
-Append a new class to `engine/ziwei/errors.py` without touching `ZiweiPhase2AError`:
+`tests/ziwei_phase2b_fixtures.py`:
 
 ```python
-class ZiweiFineCycleError(ValueError):
-    def __init__(self, code, message, details=None):
-        self.code = code
-        self.details = dict(details or {})
-        super().__init__(message)
+from datetime import date, datetime, timezone
+from zoneinfo import ZoneInfo
+
+from engine.calendar.models import (
+    CalendarContext, CalendarInput, CalendarPolicies, LunarDate,
+    LunarProviderMetadata, NormalizedTime, ProviderBundle,
+    TimezoneProviderMetadata, ValidationCheck, ValidationMetadata,
+)
+from tests.ziwei_phase2a_fixtures import CHART, PROVENANCE, SYNTHETIC_STAR_RECORDS
+
+
+def calendar_context(
+    gregorian_date=date(2023, 7, 30),
+    local_hour=1,
+    local_minute=30,
+    hour_branch="丑",
+    lunar_year=2023,
+    lunar_month=6,
+    lunar_day=13,
+    is_leap_month=False,
+    calendar_status="validated",
+    metaphysics_day_boundary_applied=False,
+):
+    zone = ZoneInfo("Asia/Taipei")
+    local = datetime(
+        gregorian_date.year, gregorian_date.month, gregorian_date.day,
+        local_hour, local_minute, tzinfo=zone,
+    )
+    utc = local.astimezone(timezone.utc)
+    offset = local.strftime("%z")
+    offset = offset[:3] + ":" + offset[3:]
+    return CalendarContext(
+        "1.0",
+        "1.0.0",
+        CalendarInput(local.strftime("%Y-%m-%d %H:%M"), "Asia/Taipei"),
+        NormalizedTime(local, utc, offset, gregorian_date, "Asia/Taipei", hour_branch),
+        LunarDate(lunar_year, lunar_month, lunar_day, is_leap_month),
+        ProviderBundle(
+            LunarProviderMetadata("lunar-python", "1.4.8", "000c8a3"),
+            TimezoneProviderMetadata("zoneinfo", "stdlib", "2026.3", "system"),
+        ),
+        ValidationMetadata(
+            ValidationCheck(calendar_status, "calendar-test-v1"),
+            ValidationCheck("validated", "timezone-test-v1"),
+            calendar_status,
+            "1900-2100",
+            "test-boundary" if calendar_status == "boundary_conflict" else None,
+            (),
+        ),
+        CalendarPolicies(
+            "IANA timezone", "civil_midnight", "two_hour_branch",
+            metaphysics_day_boundary_applied,
+        ),
+    )
 ```
-
-Add the two frozen dataclasses above to `engine/ziwei/models.py`; import `date` from `datetime`.
-
-- [ ] **Step 4: Add Phase 2B fixture builders**
-
-Create `tests/ziwei_phase2b_fixtures.py` with a `calendar_context(...)` helper that constructs the existing immutable `CalendarContext` using real `CalendarInput`, `NormalizedTime`, `LunarDate`, `ProviderBundle`, `ValidationMetadata`, and `CalendarPolicies`. Default fixture:
-
-```text
-civil datetime = 2023-07-30 01:30 Asia/Taipei
-lunar date = 2023-06-13 non-leap
-hour branch = 丑
-calendar validation = validated
-metaphysics_day_boundary_applied = false
-```
-
-Also re-export/import `CHART`, `PROVENANCE`, `SYNTHETIC_STAR_RECORDS` from `tests.ziwei_phase2a_fixtures` for later integration tests instead of copying the chart fixture.
 
 - [ ] **Step 5: Run GREEN**
 
@@ -461,13 +523,9 @@ python -m unittest tests.test_ziwei_fine_cycle_stems.FineCycleModelTests -v
 python -m unittest tests.test_ziwei_phase2a_models -v
 ```
 
-Expected: PASS; Phase 2A models remain unchanged.
+Only after PASS emit `FINE_CYCLE_MODEL_INVARIANTS_PASS`.
 
-- [ ] **Step 6: Marker and commit**
-
-```text
-FINE_CYCLE_MODEL_INVARIANTS_PASS
-```
+- [ ] **Step 6: Commit**
 
 ```bash
 git add engine/ziwei/errors.py engine/ziwei/models.py tests/ziwei_phase2b_fixtures.py tests/test_ziwei_fine_cycle_stems.py
@@ -483,19 +541,20 @@ git commit -m "feat: add Ziwei fine-cycle models and error contract"
 - Modify: `tests/test_ziwei_fine_cycle_stems.py`
 
 **Interfaces:**
-- `get_fine_cycle_profile(profile_id: str = FINE_CYCLE_PROFILE_ID) -> FineCycleStemProfile`
-- `resolve_month_stem(context: CalendarContext, profile_id: str = FINE_CYCLE_PROFILE_ID) -> ResolvedCycleStem`
-- Internal `_ensure_usable_context(context)` shared by day/hour tasks later.
 
-- [ ] **Step 1: Write RED profile + monthly tests**
+```python
+FINE_CYCLE_PROFILE_ID = "ziwei-fine-cycle-lunar-late-zi-v1"
+FINE_CYCLE_RULE_VERSION = "1.0-exp"
+DAY_BOUNDARY_PROFILE = "late_zi_forward-v1"
+get_fine_cycle_profile(profile_id=FINE_CYCLE_PROFILE_ID) -> FineCycleStemProfile
+resolve_month_stem(context, profile_id=FINE_CYCLE_PROFILE_ID) -> ResolvedCycleStem
+```
+
+- [ ] **Step 1: Write RED monthly tests**
 
 ```python
 from engine.ziwei.errors import ZiweiFineCycleError
-from engine.ziwei.fine_cycle_stems import (
-    FINE_CYCLE_PROFILE_ID,
-    get_fine_cycle_profile,
-    resolve_month_stem,
-)
+from engine.ziwei.fine_cycle_stems import get_fine_cycle_profile, resolve_month_stem
 from tests.ziwei_phase2b_fixtures import calendar_context
 
 
@@ -511,31 +570,36 @@ class FineCycleMonthTests(unittest.TestCase):
             get_fine_cycle_profile("unknown")
         self.assertEqual(cm.exception.code, "invalid_fine_cycle_profile")
 
-    def test_public_2023_lunar_sixth_month_vector(self):
+    def test_public_lunar_sixth_month_vector(self):
         result = resolve_month_stem(calendar_context(lunar_year=2023, lunar_month=6, lunar_day=13))
         self.assertEqual((result.heavenly_stem, result.earthly_branch), ("己", "未"))
         self.assertEqual(result.reference, "lunar:2023-06")
 
-    def test_leap_month_day_15_and_16_split(self):
-        before = resolve_month_stem(calendar_context(lunar_year=2023, lunar_month=2, lunar_day=15, is_leap_month=True))
-        after = resolve_month_stem(calendar_context(lunar_year=2023, lunar_month=2, lunar_day=16, is_leap_month=True))
+    def test_leap_day_15_and_16_split(self):
+        before = resolve_month_stem(calendar_context(
+            lunar_year=2023, lunar_month=2, lunar_day=15, is_leap_month=True,
+        ))
+        after = resolve_month_stem(calendar_context(
+            lunar_year=2023, lunar_month=2, lunar_day=16, is_leap_month=True,
+        ))
         self.assertEqual(before.reference, "lunar:2023-L02-A")
         self.assertEqual(after.reference, "lunar:2023-L02-B")
         self.assertEqual((before.heavenly_stem, before.earthly_branch), ("乙", "卯"))
         self.assertEqual((after.heavenly_stem, after.earthly_branch), ("丙", "辰"))
 
+    def test_synthetic_leap_twelfth_second_half_uses_ordinal_13(self):
+        result = resolve_month_stem(calendar_context(
+            lunar_year=2023, lunar_month=12, lunar_day=16, is_leap_month=True,
+        ))
+        self.assertEqual(result.reference, "lunar:2023-L12-B")
+        self.assertEqual((result.heavenly_stem, result.earthly_branch), ("丙", "寅"))
+
     def test_23xx_does_not_advance_month_stem(self):
-        context = calendar_context(
-            local_hour=23,
-            lunar_year=2023,
-            lunar_month=6,
-            lunar_day=30,
-        )
-        result = resolve_month_stem(context)
+        result = resolve_month_stem(calendar_context(
+            local_hour=23, lunar_year=2023, lunar_month=6, lunar_day=30,
+        ))
         self.assertEqual((result.heavenly_stem, result.earthly_branch), ("己", "未"))
 ```
-
-Add a synthetic leap-twelfth day-16 test asserting ordinal 13 behavior continues the stem sequence and returns 寅 branch; label it synthetic in the test name.
 
 - [ ] **Step 2: Verify RED**
 
@@ -543,76 +607,102 @@ Add a synthetic leap-twelfth day-16 test asserting ordinal 13 behavior continues
 python -m unittest tests.test_ziwei_fine_cycle_stems.FineCycleMonthTests -v
 ```
 
-Expected: import failure because `fine_cycle_stems.py` does not exist.
+Expected: `engine.ziwei.fine_cycle_stems` is missing.
 
-- [ ] **Step 3: Implement profile, context guard, reference builder, month resolver**
-
-Core constants:
+- [ ] **Step 3: Implement profile/context guard/month resolver**
 
 ```python
+from __future__ import annotations
+
+from datetime import timedelta
+
+from engine.calendar.models import CalendarContext
+from engine.calendar.sexagenary import five_mouse_hour, five_tiger_month, lunar_year_stem, sexagenary_day
+from .errors import ZiweiFineCycleError
+from .models import FineCycleStemProfile, LayerProvenance, ResolvedCycleStem
+
 FINE_CYCLE_PROFILE_ID = "ziwei-fine-cycle-lunar-late-zi-v1"
 FINE_CYCLE_RULE_VERSION = "1.0-exp"
 DAY_BOUNDARY_PROFILE = "late_zi_forward-v1"
 DEFAULT_FINE_CYCLE_PROFILE = FineCycleStemProfile(
-    FINE_CYCLE_PROFILE_ID,
-    FINE_CYCLE_RULE_VERSION,
-    "lunar_month",
-    "split_after_day_15",
-    "lunar_year",
-    DAY_BOUNDARY_PROFILE,
+    FINE_CYCLE_PROFILE_ID, FINE_CYCLE_RULE_VERSION, "lunar_month",
+    "split_after_day_15", "lunar_year", DAY_BOUNDARY_PROFILE,
     "effective_ziwei_day_stem",
 )
-```
 
-Required guard behavior:
 
-```python
-def _ensure_usable_context(context):
+def get_fine_cycle_profile(profile_id=FINE_CYCLE_PROFILE_ID):
+    if profile_id != FINE_CYCLE_PROFILE_ID:
+        raise ZiweiFineCycleError(
+            "invalid_fine_cycle_profile", "unknown Ziwei fine-cycle profile",
+            {"profile_id": profile_id},
+        )
+    return DEFAULT_FINE_CYCLE_PROFILE
+
+
+def _ensure_usable_context(context: CalendarContext) -> None:
     if context.validation.calendar_conversion.status == "boundary_conflict":
         raise ZiweiFineCycleError(
-            "calendar_context_unusable",
-            "calendar conversion is in boundary conflict",
+            "calendar_context_unusable", "calendar conversion is in boundary conflict",
             {"boundary_id": context.validation.boundary_id},
         )
     if context.policies.metaphysics_day_boundary_applied:
         raise ZiweiFineCycleError(
             "calendar_boundary_already_applied",
-            "metaphysics day boundary must be applied by the Ziwei profile exactly once",
+            "Ziwei day boundary must be applied exactly once by the fine-cycle profile",
         )
+
+
+def _provenance(profile):
+    return LayerProvenance(
+        "project_derived", "Metaphysics Lab", None,
+        profile.profile_id, profile.rule_version,
+        "engine.ziwei.fine_cycle_stems",
+    )
+
+
+def resolve_month_stem(context, profile_id=FINE_CYCLE_PROFILE_ID):
+    _ensure_usable_context(context)
+    profile = get_fine_cycle_profile(profile_id)
+    year, month, day = context.lunar.year, context.lunar.month, context.lunar.day
+    leap = context.lunar.is_leap_month
+    ordinal = month + (1 if leap and day >= 16 else 0)
+    stem, branch = five_tiger_month(lunar_year_stem(year), ordinal)
+    if not leap:
+        reference = f"lunar:{year:04d}-{month:02d}"
+    elif day <= 15:
+        reference = f"lunar:{year:04d}-L{month:02d}-A"
+    else:
+        reference = f"lunar:{year:04d}-L{month:02d}-B"
+    civil = context.normalized_time.gregorian_date
+    return ResolvedCycleStem(
+        "monthly", reference, stem, branch,
+        profile.profile_id, profile.rule_version,
+        civil, civil, None,
+        context.validation.overall_status,
+        _provenance(profile),
+    )
 ```
 
-Monthly reference rules:
-
-```python
-if not context.lunar.is_leap_month:
-    reference = f"lunar:{year:04d}-{month:02d}"
-elif day <= 15:
-    reference = f"lunar:{year:04d}-L{month:02d}-A"
-else:
-    reference = f"lunar:{year:04d}-L{month:02d}-B"
-```
-
-Use `lunar_year_stem()` and `five_tiger_month()` from `engine.calendar.sexagenary`; do not duplicate the tables.
-
-- [ ] **Step 4: Run GREEN + existing month regression**
+- [ ] **Step 4: Run GREEN + existing month/calendar adapter regression**
 
 ```bash
 python -m unittest tests.test_ziwei_fine_cycle_stems.FineCycleMonthTests -v
 python -m unittest tests.test_project_ziwei_month tests.test_ziwei_calendar_adapter -v
 ```
 
-Expected: PASS; existing palace month positioning is unchanged.
-
-- [ ] **Step 5: Markers and commit**
+After PASS emit:
 
 ```text
 MONTH_STEM_INVARIANTS_PASS
 LEAP_MONTH_BOUNDARY_PASS
 ```
 
+- [ ] **Step 5: Commit**
+
 ```bash
 git add engine/ziwei/fine_cycle_stems.py tests/test_ziwei_fine_cycle_stems.py
-git commit -m "feat: resolve Ziwei fine-cycle monthly stems"
+git commit -m "feat: resolve Ziwei monthly stems"
 ```
 
 ---
@@ -624,10 +714,12 @@ git commit -m "feat: resolve Ziwei fine-cycle monthly stems"
 - Modify: `tests/test_ziwei_fine_cycle_stems.py`
 
 **Interfaces:**
-- `resolve_day_stem(context: CalendarContext, profile_id: str = FINE_CYCLE_PROFILE_ID) -> ResolvedCycleStem`
-- Internal `_effective_ziwei_date(context, profile) -> date`.
 
-- [ ] **Step 1: Write RED day-boundary tests**
+```python
+resolve_day_stem(context, profile_id=FINE_CYCLE_PROFILE_ID) -> ResolvedCycleStem
+```
+
+- [ ] **Step 1: Write RED boundary tests**
 
 ```python
 from datetime import date
@@ -642,7 +734,7 @@ class FineCycleDayTests(unittest.TestCase):
         self.assertEqual(result.effective_date, date(1987, 12, 6))
         self.assertEqual((result.heavenly_stem, result.earthly_branch), ("己", "丑"))
 
-    def test_2300_advances_effective_date(self):
+    def test_2300_advances_one_day(self):
         result = resolve_day_stem(calendar_context(
             gregorian_date=date(1987, 12, 6), local_hour=23, local_minute=0,
         ))
@@ -656,7 +748,7 @@ class FineCycleDayTests(unittest.TestCase):
         ))
         self.assertEqual(result.effective_date, date(1987, 12, 7))
 
-    def test_preapplied_metaphysics_boundary_is_rejected(self):
+    def test_preapplied_boundary_is_rejected(self):
         with self.assertRaises(ZiweiFineCycleError) as cm:
             resolve_day_stem(calendar_context(metaphysics_day_boundary_applied=True))
         self.assertEqual(cm.exception.code, "calendar_boundary_already_applied")
@@ -665,9 +757,11 @@ class FineCycleDayTests(unittest.TestCase):
         with self.assertRaises(ZiweiFineCycleError) as cm:
             resolve_day_stem(calendar_context(calendar_status="boundary_conflict"))
         self.assertEqual(cm.exception.code, "calendar_context_unusable")
-```
 
-Also assert `boundary_caution` is preserved as `calendar_validation_status == "boundary_caution"` rather than rejected.
+    def test_boundary_caution_is_preserved(self):
+        result = resolve_day_stem(calendar_context(calendar_status="boundary_caution"))
+        self.assertEqual(result.calendar_validation_status, "boundary_caution")
+```
 
 - [ ] **Step 2: Verify RED**
 
@@ -675,29 +769,39 @@ Also assert `boundary_caution` is preserved as `calendar_validation_status == "b
 python -m unittest tests.test_ziwei_fine_cycle_stems.FineCycleDayTests -v
 ```
 
-Expected: missing function or failed assertions.
+Expected: `resolve_day_stem` missing.
 
-- [ ] **Step 3: Implement minimal daily resolver**
+- [ ] **Step 3: Implement effective-date helper and daily resolver**
 
 ```python
 def _effective_ziwei_date(context, profile):
+    if profile.ziwei_day_boundary != DAY_BOUNDARY_PROFILE:
+        raise ZiweiFineCycleError(
+            "invalid_fine_cycle_profile", "unsupported Ziwei day boundary profile",
+            {"boundary": profile.ziwei_day_boundary},
+        )
     civil = context.normalized_time.gregorian_date
     local = context.normalized_time.local_datetime
-    if profile.ziwei_day_boundary != DAY_BOUNDARY_PROFILE:
-        raise ZiweiFineCycleError("invalid_fine_cycle_profile", "unsupported day boundary profile")
     return civil + timedelta(days=1) if local.hour >= 23 else civil
 
 
 def resolve_day_stem(context, profile_id=FINE_CYCLE_PROFILE_ID):
     _ensure_usable_context(context)
     profile = get_fine_cycle_profile(profile_id)
+    civil = context.normalized_time.gregorian_date
     effective = _effective_ziwei_date(context, profile)
     stem, branch = sexagenary_day(effective)
-    reference = "ziwei-day:%s@%s" % (effective.isoformat(), profile.ziwei_day_boundary)
-    return ResolvedCycleStem(...)
+    reference = "ziwei-day:%s@%s" % (
+        effective.isoformat(), profile.ziwei_day_boundary,
+    )
+    return ResolvedCycleStem(
+        "daily", reference, stem, branch,
+        profile.profile_id, profile.rule_version,
+        civil, effective, None,
+        context.validation.overall_status,
+        _provenance(profile),
+    )
 ```
-
-`civil_date` is the CalendarContext civil Gregorian date; `effective_date` is the profile-adjusted date. Do not mutate CalendarContext.
 
 - [ ] **Step 4: Run GREEN + Calendar/Bazi boundary regression**
 
@@ -706,14 +810,14 @@ python -m unittest tests.test_ziwei_fine_cycle_stems.FineCycleDayTests -v
 python -m unittest tests.test_calendar_resolver tests.test_calendar_timezone tests.test_project_bazi_calendar -v
 ```
 
-Expected: PASS. Calendar remains midnight-based; Bazi retains its own existing output.
-
-- [ ] **Step 5: Markers and commit**
+After PASS emit:
 
 ```text
 DAY_STEM_BOUNDARY_PASS
 CALENDAR_BOUNDARY_DOUBLE_APPLY_REJECTED
 ```
+
+- [ ] **Step 5: Commit**
 
 ```bash
 git add engine/ziwei/fine_cycle_stems.py tests/test_ziwei_fine_cycle_stems.py
@@ -729,12 +833,15 @@ git commit -m "feat: resolve Ziwei daily stems with late-Zi boundary"
 - Modify: `tests/test_ziwei_fine_cycle_stems.py`
 
 **Interfaces:**
-- `resolve_hour_stem(context: CalendarContext, profile_id: str = FINE_CYCLE_PROFILE_ID) -> ResolvedCycleStem`
-- Must call/derive from the exact same effective day calculation as `resolve_day_stem()`.
-
-- [ ] **Step 1: Write RED hour tests**
 
 ```python
+resolve_hour_stem(context, profile_id=FINE_CYCLE_PROFILE_ID) -> ResolvedCycleStem
+```
+
+- [ ] **Step 1: Write RED hour/coherence tests**
+
+```python
+from engine.calendar.sexagenary import GAN, ZHI, five_mouse_hour
 from engine.ziwei.fine_cycle_stems import resolve_hour_stem
 
 
@@ -746,19 +853,23 @@ class FineCycleHourTests(unittest.TestCase):
         self.assertEqual((result.heavenly_stem, result.earthly_branch), ("乙", "亥"))
 
     def test_late_zi_uses_next_day_stem_for_hour(self):
-        day = resolve_day_stem(calendar_context(
+        context = calendar_context(
             gregorian_date=date(1987, 12, 6), local_hour=23, local_minute=30, hour_branch="子",
-        ))
-        hour = resolve_hour_stem(calendar_context(
-            gregorian_date=date(1987, 12, 6), local_hour=23, local_minute=30, hour_branch="子",
-        ))
+        )
+        day = resolve_day_stem(context)
+        hour = resolve_hour_stem(context)
         self.assertEqual(day.heavenly_stem, "庚")
         self.assertEqual((hour.heavenly_stem, hour.earthly_branch), ("丙", "子"))
         self.assertEqual(hour.effective_date, day.effective_date)
         self.assertEqual(hour.reference, "ziwei-hour:1987-12-07:子@late_zi_forward-v1")
-```
 
-Add 10 day-stem × 12 hour-branch invariant loop against `five_mouse_hour()` to cover all groups.
+    def test_all_day_stem_hour_branch_pairs_are_defined(self):
+        for day_stem in GAN:
+            for branch in ZHI:
+                hour_stem, returned_branch = five_mouse_hour(day_stem, branch)
+                self.assertIn(hour_stem, GAN)
+                self.assertEqual(returned_branch, branch)
+```
 
 - [ ] **Step 2: Verify RED**
 
@@ -766,42 +877,47 @@ Add 10 day-stem × 12 hour-branch invariant loop against `five_mouse_hour()` to 
 python -m unittest tests.test_ziwei_fine_cycle_stems.FineCycleHourTests -v
 ```
 
-Expected: missing function or coherence assertion failure.
+Expected: `resolve_hour_stem` missing.
 
-- [ ] **Step 3: Implement hourly resolver**
-
-Implementation requirement:
+- [ ] **Step 3: Implement hourly resolver using the same effective date**
 
 ```python
 def resolve_hour_stem(context, profile_id=FINE_CYCLE_PROFILE_ID):
     _ensure_usable_context(context)
     profile = get_fine_cycle_profile(profile_id)
+    civil = context.normalized_time.gregorian_date
     effective = _effective_ziwei_date(context, profile)
     day_stem, _ = sexagenary_day(effective)
     stem, branch = five_mouse_hour(day_stem, context.normalized_time.hour_branch)
     reference = "ziwei-hour:%s:%s@%s" % (
-        effective.isoformat(), branch, profile.ziwei_day_boundary
+        effective.isoformat(), branch, profile.ziwei_day_boundary,
     )
-    return ResolvedCycleStem(...)
+    return ResolvedCycleStem(
+        "hourly", reference, stem, branch,
+        profile.profile_id, profile.rule_version,
+        civil, effective, branch,
+        context.validation.overall_status,
+        _provenance(profile),
+    )
 ```
 
-Do not call Bazi `time_pillar()` and do not recompute hour branch from civil hour.
+Do not call `engine.bazi.calendar.time_pillar()` and do not derive branch from `local_datetime.hour`.
 
-- [ ] **Step 4: Run GREEN and existing flow-hour regression**
+- [ ] **Step 4: Run GREEN + existing flow-hour regression**
 
 ```bash
 python -m unittest tests.test_ziwei_fine_cycle_stems.FineCycleHourTests -v
 python -m unittest tests.test_project_ziwei_hour tests.test_ziwei_calendar_adapter -v
 ```
 
-Expected: PASS.
-
-- [ ] **Step 5: Markers and commit**
+After PASS emit:
 
 ```text
 HOUR_STEM_INVARIANTS_PASS
 LATE_ZI_COHERENCE_PASS
 ```
+
+- [ ] **Step 5: Commit**
 
 ```bash
 git add engine/ziwei/fine_cycle_stems.py tests/test_ziwei_fine_cycle_stems.py
@@ -810,130 +926,79 @@ git commit -m "feat: resolve Ziwei hourly stems coherently"
 
 ---
 
-### Task 6: Integrate Resolved Stems with Transformation and Flying Core
+### Task 6: Integrate Fine-Cycle Resolutions into Transformation/Flying/Composition
 
 **Files:**
 - Create: `engine/ziwei/fine_cycle.py`
 - Create: `tests/test_ziwei_fine_cycle_integration.py`
+- Modify: `engine/ziwei/composition.py`
+- Modify: `tests/test_ziwei_composition.py`
 
 **Interfaces:**
-- Consumes `ResolvedCycleStem`, `ChartIdentity`, `StarLocationIndex`.
-- Produces `build_fine_cycle_layer(resolution, chart_identity, star_locations, transformation_profile_id=PROFILE_ID) -> CycleTransformationLayer`.
-- Reuses existing `get_transformation_set()`, `fly_transformations()`, `build_cycle_layer()`; no new four-transformation table.
 
-- [ ] **Step 1: Write RED integration tests**
+```python
+build_fine_cycle_layer(
+    resolution: ResolvedCycleStem,
+    chart_identity: ChartIdentity,
+    star_locations: StarLocationIndex,
+    transformation_profile_id: str = PROFILE_ID,
+) -> CycleTransformationLayer
+```
+
+The implementation must use existing `get_transformation_set`, `fly_transformations`, and `build_cycle_layer`.
+
+- [ ] **Step 1: Write RED integration/composition tests**
+
+`tests/test_ziwei_fine_cycle_integration.py`:
 
 ```python
 import unittest
+from unittest.mock import patch
 
 from engine.ziwei.basis import build_star_location_index
-from engine.ziwei.errors import ZiweiFineCycleError
+from engine.ziwei.errors import ZiweiFineCycleError, ZiweiPhase2AError
 from engine.ziwei.fine_cycle import build_fine_cycle_layer
-from engine.ziwei.fine_cycle_stems import resolve_month_stem
+from engine.ziwei.fine_cycle_stems import resolve_day_stem, resolve_hour_stem, resolve_month_stem
+from engine.ziwei.models import ChartIdentity
+from engine.ziwei.transformations import get_transformation_set
 from tests.ziwei_phase2b_fixtures import CHART, PROVENANCE, SYNTHETIC_STAR_RECORDS, calendar_context
 
 
-class FineCycleTransformationIntegrationTests(unittest.TestCase):
-    def test_month_resolution_builds_four_transformations_and_edges(self):
-        stars = build_star_location_index(SYNTHETIC_STAR_RECORDS, CHART, PROVENANCE)
-        resolution = resolve_month_stem(calendar_context(lunar_year=2023, lunar_month=6, lunar_day=13))
-        layer = build_fine_cycle_layer(resolution, CHART, stars)
-        self.assertEqual(layer.identity.scope, "monthly")
-        self.assertEqual(layer.identity.reference, resolution.reference)
-        self.assertEqual(layer.heavenly_stem, resolution.heavenly_stem)
-        self.assertEqual(len(layer.transformations.transformations), 4)
-        self.assertEqual(len(layer.flying_edges), 4)
+class FineCycleIntegrationTests(unittest.TestCase):
+    def setUp(self):
+        self.stars = build_star_location_index(SYNTHETIC_STAR_RECORDS, CHART, PROVENANCE)
 
-    def test_chart_mismatch_is_rejected(self):
-        # Build star index for a different ChartIdentity and assert fail closed.
-        with self.assertRaises(Exception):
-            ...
-```
-
-Do not leave the ellipsis in the committed test. Materialize `ChartIdentity("other", "natal", "synthetic-v1")`, build its star index, pass it with the original chart identity, and assert the existing `ZiweiPhase2AError.code == "chart_basis_mismatch"`.
-
-Add a test constructing a tampered `ResolvedCycleStem` whose scope/reference/stem is inconsistent with the requested source and assert `ZiweiFineCycleError.code == "fine_cycle_stem_mismatch"` before lower-level flying executes.
-
-- [ ] **Step 2: Verify RED**
-
-```bash
-python -m unittest tests.test_ziwei_fine_cycle_integration.FineCycleTransformationIntegrationTests -v
-```
-
-Expected: import failure because `fine_cycle.py` does not exist.
-
-- [ ] **Step 3: Implement thin orchestration**
-
-Core shape:
-
-```python
-from .composition import build_cycle_layer
-from .errors import ZiweiFineCycleError
-from .flying import fly_transformations
-from .models import CycleStemSource, LayerIdentity
-from .transformation_profiles import PROFILE_ID
-from .transformations import get_transformation_set
-
-FINE_SCOPES = {"monthly", "daily", "hourly"}
-
-
-def build_fine_cycle_layer(resolution, chart_identity, star_locations, transformation_profile_id=PROFILE_ID):
-    if resolution.scope not in FINE_SCOPES:
-        raise ZiweiFineCycleError(
-            "invalid_fine_cycle_scope", "unsupported fine-cycle scope", {"scope": resolution.scope}
+    def test_each_scope_builds_four_transformations_and_four_edges(self):
+        resolutions = (
+            resolve_month_stem(calendar_context()),
+            resolve_day_stem(calendar_context()),
+            resolve_hour_stem(calendar_context()),
         )
-    if star_locations.chart_identity != chart_identity:
-        from .errors import ZiweiPhase2AError
-        raise ZiweiPhase2AError("chart_basis_mismatch", "fine-cycle chart and star index mismatch")
-    source = CycleStemSource(
-        "cycle_stem", chart_identity, resolution.scope, resolution.reference, resolution.heavenly_stem
-    )
-    transformations = get_transformation_set(resolution.heavenly_stem, transformation_profile_id)
-    if transformations.heavenly_stem != resolution.heavenly_stem:
-        raise ZiweiFineCycleError("fine_cycle_stem_mismatch", "resolved and transformation stems differ")
-    edges = fly_transformations(transformations, star_locations, source)
-    identity = LayerIdentity(
-        chart_identity.chart_id, resolution.scope, resolution.reference, transformations.profile_id
-    )
-    return build_cycle_layer(
-        identity, source, transformations, edges, resolution.provenance,
-        earthly_branch=resolution.earthly_branch,
-    )
+        for resolution in resolutions:
+            layer = build_fine_cycle_layer(resolution, CHART, self.stars)
+            self.assertEqual(layer.identity.scope, resolution.scope)
+            self.assertEqual(layer.identity.reference, resolution.reference)
+            self.assertEqual(layer.heavenly_stem, resolution.heavenly_stem)
+            self.assertEqual(len(layer.transformations.transformations), 4)
+            self.assertEqual(len(layer.flying_edges), 4)
+
+    def test_chart_mismatch_fails_closed(self):
+        other = ChartIdentity("other", "natal", "synthetic-v1")
+        resolution = resolve_month_stem(calendar_context())
+        with self.assertRaises(ZiweiPhase2AError) as cm:
+            build_fine_cycle_layer(resolution, other, self.stars)
+        self.assertEqual(cm.exception.code, "chart_basis_mismatch")
+
+    def test_internal_transformation_stem_mismatch_fails_closed(self):
+        resolution = resolve_month_stem(calendar_context())
+        wrong = get_transformation_set("丁" if resolution.heavenly_stem != "丁" else "丙")
+        with patch("engine.ziwei.fine_cycle.get_transformation_set", return_value=wrong):
+            with self.assertRaises(ZiweiFineCycleError) as cm:
+                build_fine_cycle_layer(resolution, CHART, self.stars)
+        self.assertEqual(cm.exception.code, "fine_cycle_stem_mismatch")
 ```
 
-Do not calculate month/day/hour stem inside this module.
-
-- [ ] **Step 4: Run targeted tests**
-
-At this point the existing Composition scope guard is expected to reject monthly/daily/hourly. That is acceptable only if the RED proves the remaining failure is exactly `unsupported_scope` from Composition. Record that as the dependency for Task 7; do not weaken the test to accept failure.
-
-```bash
-python -m unittest tests.test_ziwei_fine_cycle_integration.FineCycleTransformationIntegrationTests -v
-```
-
-Expected before Task 7: the orchestration reaches `build_cycle_layer()` and fails specifically because Composition does not yet accept the fine scope. This is a staged RED, not a Task 6 GREEN.
-
-- [ ] **Step 5: Commit orchestration only after confirming the staged RED reason**
-
-Commit the module and test as an intentionally staged dependency commit only if repository workflow allows RED commits on feature branches; otherwise fold Task 6 and Task 7 into one local RED→GREEN cycle and make the commit after Task 7. Preferred repository behavior here is **no persistent RED commit**, so do not push a failing feature head.
-
----
-
-### Task 7: Expand Composition to Monthly / Daily / Hourly Scopes
-
-**Files:**
-- Modify: `engine/ziwei/composition.py`
-- Modify: `tests/test_ziwei_composition.py`
-- Modify: `tests/test_ziwei_fine_cycle_integration.py`
-
-**Interfaces:**
-- `SUPPORTED_SCOPES = {"birth_year", "decadal", "yearly", "monthly", "daily", "hourly"}`.
-- Existing `build_cycle_layer()` now accepts fine scopes under the same component-coherence invariants.
-- `_availability()` reports fine-cycle transformations as conditional/available-by-resolution rather than hard unavailable.
-
-- [ ] **Step 1: Replace old RED test that expects fine-cycle rejection**
-
-In `tests/test_ziwei_composition.py`, replace `test_fine_cycle_scope_is_rejected` with explicit accepted-scope tests:
+Update `tests/test_ziwei_composition.py`:
 
 ```python
 def test_fine_cycle_scopes_are_supported(self):
@@ -946,56 +1011,114 @@ def test_fine_cycle_scopes_are_supported(self):
         source, trans, edges, identity = _components(scope, reference, "丙", natal)
         layer = build_cycle_layer(identity, source, trans, edges, PROVENANCE)
         self.assertEqual(layer.identity.scope, scope)
+
+
+def test_unknown_cycle_scope_is_still_rejected(self):
+    natal = _base_natal()
+    source, trans, edges, identity = _components("weekly", "week:1", "丙", natal)
+    with self.assertRaises(ZiweiPhase2AError) as cm:
+        build_cycle_layer(identity, source, trans, edges, PROVENANCE)
+    self.assertEqual(cm.exception.code, "unsupported_scope")
 ```
 
-Add tests proving:
-
-- same fine-cycle identity duplicated → `duplicate_layer_identity`;
-- same identity different layer → `layer_conflict`;
-- monthly/daily/hourly can coexist with yearly in one stack;
-- fine-cycle chart mismatch still → `chart_basis_mismatch`;
-- arbitrary scope `weekly` still → `unsupported_scope`.
+Add a coexistence test that creates one yearly, one monthly, one daily and one hourly layer, calls `build_layer_stack`, and asserts the four identities remain distinct. Add duplicate fine-cycle identity tests by reusing the same built monthly layer twice and expecting `duplicate_layer_identity`; create a second monthly layer with same `LayerIdentity` but altered `earthly_branch` using `dataclasses.replace()` and expect `layer_conflict`.
 
 - [ ] **Step 2: Verify RED**
 
 ```bash
-python -m unittest tests.test_ziwei_composition -v
-python -m unittest tests.test_ziwei_fine_cycle_integration -v
+python -m unittest tests.test_ziwei_fine_cycle_integration tests.test_ziwei_composition -v
 ```
 
-Expected: fine scopes fail because current `SUPPORTED_SCOPES` is Phase2A-only.
+Expected: fine scope rejected by current `SUPPORTED_SCOPES` and/or missing `fine_cycle.py`.
 
-- [ ] **Step 3: Expand Composition minimally**
-
-Change:
+- [ ] **Step 3: Expand Composition without weakening Phase 2A invariants**
 
 ```python
-SUPPORTED_SCOPES = {"birth_year", "decadal", "yearly", "monthly", "daily", "hourly"}
+SUPPORTED_SCOPES = {
+    "birth_year", "decadal", "yearly", "monthly", "daily", "hourly",
+}
 ```
 
-Update the unsupported-scope message to no longer say "Phase 2A does not execute fine-cycle transformations". Keep all identity/source/profile/stem/edge coherence checks unchanged.
-
-Update availability from hard `unavailable / fine_cycle_stem_resolver_not_enabled` to:
+Keep all current identity/source/profile/stem/edge coherence checks. Replace hard fine-cycle unavailability with:
 
 ```python
-"monthly_transformations": AvailabilityRecord("conditional", "matching_resolved_stem_required")
-"daily_transformations": AvailabilityRecord("conditional", "matching_resolved_stem_required")
-"hourly_transformations": AvailabilityRecord("conditional", "matching_resolved_stem_required")
+"monthly_transformations": AvailabilityRecord("conditional", "matching_resolved_stem_required"),
+"daily_transformations": AvailabilityRecord("conditional", "matching_resolved_stem_required"),
+"hourly_transformations": AvailabilityRecord("conditional", "matching_resolved_stem_required"),
 ```
 
-Do not mark a layer available unless an actual `CycleTransformationLayer` has been built.
+- [ ] **Step 4: Implement thin fine-cycle orchestration**
 
-- [ ] **Step 4: Run GREEN**
+```python
+from .composition import build_cycle_layer
+from .errors import ZiweiFineCycleError, ZiweiPhase2AError
+from .flying import fly_transformations
+from .models import CycleStemSource, LayerIdentity
+from .transformation_profiles import PROFILE_ID
+from .transformations import get_transformation_set
+
+FINE_SCOPES = {"monthly", "daily", "hourly"}
+
+
+def build_fine_cycle_layer(
+    resolution,
+    chart_identity,
+    star_locations,
+    transformation_profile_id=PROFILE_ID,
+):
+    if resolution.scope not in FINE_SCOPES:
+        raise ZiweiFineCycleError(
+            "invalid_fine_cycle_scope", "unsupported fine-cycle scope",
+            {"scope": resolution.scope},
+        )
+    if star_locations.chart_identity != chart_identity:
+        raise ZiweiPhase2AError(
+            "chart_basis_mismatch", "fine-cycle chart and star index mismatch",
+        )
+    source = CycleStemSource(
+        "cycle_stem", chart_identity, resolution.scope,
+        resolution.reference, resolution.heavenly_stem,
+    )
+    transformations = get_transformation_set(
+        resolution.heavenly_stem, transformation_profile_id,
+    )
+    if transformations.heavenly_stem != resolution.heavenly_stem:
+        raise ZiweiFineCycleError(
+            "fine_cycle_stem_mismatch",
+            "resolved stem and transformation stem differ",
+            {
+                "resolved_stem": resolution.heavenly_stem,
+                "transformation_stem": transformations.heavenly_stem,
+            },
+        )
+    edges = fly_transformations(transformations, star_locations, source)
+    identity = LayerIdentity(
+        chart_identity.chart_id, resolution.scope,
+        resolution.reference, transformations.profile_id,
+    )
+    layer = build_cycle_layer(
+        identity, source, transformations, edges,
+        resolution.provenance, earthly_branch=resolution.earthly_branch,
+    )
+    if (
+        layer.identity.scope != resolution.scope
+        or layer.identity.reference != resolution.reference
+        or layer.heavenly_stem != resolution.heavenly_stem
+    ):
+        raise ZiweiFineCycleError(
+            "fine_cycle_reference_conflict",
+            "built layer does not preserve resolved fine-cycle identity",
+        )
+    return layer
+```
+
+- [ ] **Step 5: Run GREEN + Phase2A flying/composition regression**
 
 ```bash
-python -m unittest tests.test_ziwei_composition -v
-python -m unittest tests.test_ziwei_fine_cycle_integration -v
-python -m unittest tests.test_ziwei_flying -v
+python -m unittest tests.test_ziwei_fine_cycle_integration tests.test_ziwei_composition tests.test_ziwei_flying -v
 ```
 
-Expected: PASS.
-
-- [ ] **Step 5: Markers and commit Task 6 + Task 7 together if needed**
+After PASS emit:
 
 ```text
 FINE_CYCLE_TRANSFORMATIONS_PASS
@@ -1004,6 +1127,8 @@ FINE_CYCLE_COMPOSITION_PASS
 FINE_CYCLE_NEGATIVE_CASES_PASS
 ```
 
+- [ ] **Step 6: Commit**
+
 ```bash
 git add engine/ziwei/fine_cycle.py engine/ziwei/composition.py tests/test_ziwei_fine_cycle_integration.py tests/test_ziwei_composition.py
 git commit -m "feat: integrate Ziwei fine-cycle transformation layers"
@@ -1011,7 +1136,7 @@ git commit -m "feat: integrate Ziwei fine-cycle transformation layers"
 
 ---
 
-### Task 8: Promote Capability Lifecycle to Implemented / Experimental / On-Demand
+### Task 7: Promote Capability Lifecycle to Implemented / Experimental / On-Demand
 
 **Files:**
 - Modify: `engine/ziwei/capabilities.py`
@@ -1019,20 +1144,26 @@ git commit -m "feat: integrate Ziwei fine-cycle transformation layers"
 - Modify: `tests/test_ziwei_phase2a_capabilities.py`
 
 **Interfaces:**
-- New IDs: `ziwei.flow_month_stem`, `ziwei.flow_day_stem`, `ziwei.flow_hour_stem`.
-- Existing fine-cycle transformation/flying IDs move from planned to implemented experimental.
-- `ziwei.flowing_stars` remains planned.
 
-- [ ] **Step 1: Write RED lifecycle tests**
+New IDs:
+
+```text
+ziwei.flow_month_stem
+ziwei.flow_day_stem
+ziwei.flow_hour_stem
+```
+
+Existing fine-cycle transformation/flying IDs move from planned to implemented/experimental/on_demand. `ziwei.flowing_stars` stays planned.
+
+- [ ] **Step 1: Write RED capability tests**
 
 ```python
 import unittest
-
 from engine.ziwei.capabilities import can_execute, get_capability, should_run_by_default
 
 
 class ZiweiPhase2BCapabilityTests(unittest.TestCase):
-    def test_fine_cycle_stems_are_experimental_on_demand(self):
+    def test_stem_capabilities_are_experimental_on_demand(self):
         for capability_id in (
             "ziwei.flow_month_stem", "ziwei.flow_day_stem", "ziwei.flow_hour_stem",
         ):
@@ -1045,21 +1176,25 @@ class ZiweiPhase2BCapabilityTests(unittest.TestCase):
             self.assertFalse(should_run_by_default(capability_id))
 
     def test_fine_cycle_transformations_and_flying_are_experimental_on_demand(self):
-        for capability_id in (
+        ids = (
             "ziwei.flow_month_transformations", "ziwei.flow_day_transformations", "ziwei.flow_hour_transformations",
             "ziwei.flow_month_flying", "ziwei.flow_day_flying", "ziwei.flow_hour_flying",
-        ):
+        )
+        for capability_id in ids:
             cap = get_capability(capability_id)
-            self.assertEqual((cap["implementation"], cap["maturity"], cap["routing"]),
-                             ("implemented", "experimental", "on_demand"))
+            self.assertEqual(
+                (cap["implementation"], cap["maturity"], cap["routing"], cap["rule_version"]),
+                ("implemented", "experimental", "on_demand", "1.0-exp"),
+            )
             self.assertTrue(can_execute(capability_id))
             self.assertFalse(should_run_by_default(capability_id))
 
     def test_flowing_stars_remain_planned(self):
         self.assertEqual(get_capability("ziwei.flowing_stars")["implementation"], "planned")
+        self.assertFalse(can_execute("ziwei.flowing_stars"))
 ```
 
-Update Phase2A test `test_fine_cycle_capabilities_remain_planned` so it no longer asserts stale Phase2A state. Replace it with an invariant that Phase2A core remains stable/on-demand and flowing stars remain planned; Phase2B lifecycle belongs only in the new test file.
+Replace the stale Phase2A test that requires all fine-cycle IDs to be planned; keep Phase2A assertions that `ziwei.transformations` and `ziwei.flying` remain stable/on_demand.
 
 - [ ] **Step 2: Verify RED**
 
@@ -1067,28 +1202,25 @@ Update Phase2A test `test_fine_cycle_capabilities_remain_planned` so it no longe
 python -m unittest tests.test_ziwei_phase2b_capabilities -v
 ```
 
-Expected: missing stem IDs / planned fine-cycle transformations.
+Expected: new IDs missing and existing fine-cycle IDs still planned.
 
-- [ ] **Step 3: Update registry**
-
-Stem modules:
+- [ ] **Step 3: Update registry with exact dependency graph**
 
 ```text
-ziwei.flow_month_stem -> engine.ziwei.fine_cycle_stems
-ziwei.flow_day_stem   -> engine.ziwei.fine_cycle_stems
-ziwei.flow_hour_stem  -> engine.ziwei.fine_cycle_stems
+ziwei.flow_month_stem -> engine.ziwei.fine_cycle_stems -> ()
+ziwei.flow_day_stem   -> engine.ziwei.fine_cycle_stems -> ()
+ziwei.flow_hour_stem  -> engine.ziwei.fine_cycle_stems -> ()
+
+ziwei.flow_month_transformations -> flow_month_stem + ziwei.transformations
+ziwei.flow_day_transformations   -> flow_day_stem + ziwei.transformations
+ziwei.flow_hour_transformations  -> flow_hour_stem + ziwei.transformations
+
+ziwei.flow_month_flying -> flow_month_transformations + ziwei.flying
+ziwei.flow_day_flying   -> flow_day_transformations + ziwei.flying
+ziwei.flow_hour_flying  -> flow_hour_transformations + ziwei.flying
 ```
 
-Dependencies:
-
-```text
-flow_month_transformations -> flow_month_stem + ziwei.transformations
-flow_day_transformations   -> flow_day_stem + ziwei.transformations
-flow_hour_transformations  -> flow_hour_stem + ziwei.transformations
-flow_*_flying              -> matching flow_*_transformations + ziwei.flying
-```
-
-All Phase2B promoted capabilities:
+All nine Phase2B IDs use:
 
 ```text
 implementation = implemented
@@ -1097,21 +1229,15 @@ routing = on_demand
 rule_version = 1.0-exp
 ```
 
-Do not modify `ziwei.flow_month_palaces` maturity/routing and do not promote existing flow day/hour palace positioning.
-
 - [ ] **Step 4: Run GREEN**
 
 ```bash
 python -m unittest tests.test_ziwei_phase2b_capabilities tests.test_ziwei_phase2a_capabilities tests.test_ziwei_capabilities -v
 ```
 
-Expected: PASS.
+After PASS emit `CAPABILITY_EXPERIMENTAL_ON_DEMAND_PASS`.
 
-- [ ] **Step 5: Marker and commit**
-
-```text
-CAPABILITY_EXPERIMENTAL_ON_DEMAND_PASS
-```
+- [ ] **Step 5: Commit**
 
 ```bash
 git add engine/ziwei/capabilities.py tests/test_ziwei_phase2b_capabilities.py tests/test_ziwei_phase2a_capabilities.py
@@ -1120,36 +1246,43 @@ git commit -m "feat: enable experimental Ziwei fine-cycle capabilities"
 
 ---
 
-### Task 9: Build Public lunar-lite Qualification
+### Task 8: Build Reproducible Public Qualification for lunar-lite and iztro
 
 **Files:**
 - Create: `tools/qualify_ziwei_phase2b_public.py`
 - Create: `tests/test_ziwei_phase2b_qualification.py`
-- Create after qualification run: `qualification/ziwei/phase2b/public-lunar-lite-1d104fff.json`
+- Create: `qualification/ziwei/phase2b/public-lunar-lite-1d104fff.json`
+- Create: `qualification/ziwei/phase2b/public-iztro-814b77e6.json`
 
 **Interfaces:**
-- Tool consumes local copies of pinned upstream source files passed by path; it never fetches network at runtime.
-- `parse_lunar_lite_vectors(source_text: str) -> tuple[dict, ...]`
-- `qualify_lunar_lite(vectors, source_revision, run_timestamp) -> dict`
 
-- [ ] **Step 1: Write RED parser and report-contract tests**
-
-Test fixture source text should contain a minimal excerpt with the exact pinned public vectors, including:
-
-```text
-lunar 2023-6-13, timeIndex 1, non-leap -> 癸卯 己未 己丑 乙丑
-lunar 2023-6-13, timeIndex 12, non-leap -> 癸卯 己未 庚寅 丙子
-lunar 2023-2-11, timeIndex 1, leap -> 癸卯 乙卯 己丑 乙丑
-solar 1987-12-6, timeIndex 11 -> 丁卯 辛亥 己丑 乙亥
-solar 1987-12-6, timeIndex 12 -> 丁卯 辛亥 庚寅 丙子
+```python
+normalize_ts(source_text: str) -> str
+qualify_lunar_lite_source(ganzhi_source: str, tests_source: str, source_revision: str, run_timestamp: str) -> dict
+qualify_iztro_source(functional_source: str, source_revision: str, run_timestamp: str) -> dict
 ```
 
-Tests must verify:
+Production runtime never imports this tool.
 
-- parser rejects missing/changed expected vectors with `ZiweiFineCycleError("qualification_mismatch", ...)`;
-- report includes source name `SylarLong/lunar-lite`, revision `1d104fffa31609e9f112898cc57545827e8d57ae`, package `0.2.8`;
-- externally covered cases are separated from synthetic-only edge cases;
-- no Astralium fields appear.
+- [ ] **Step 1: Write RED qualification contract tests**
+
+```python
+import unittest
+from tools.qualify_ziwei_phase2b_public import qualify_iztro_source, qualify_lunar_lite_source
+
+
+class Phase2BPublicQualificationTests(unittest.TestCase):
+    def test_lunar_lite_requires_pinned_public_vectors(self):
+        with self.assertRaises(Exception):
+            qualify_lunar_lite_source("", "", "1d104fff", "2026-08-21T00:00:00Z")
+
+    def test_iztro_requires_each_fine_scope_mutagen_link(self):
+        bad = "monthly: { mutagen: getMutagensByHeavenlyStem(monthly[0]) }"
+        with self.assertRaises(Exception):
+            qualify_iztro_source(bad, "814b77e6", "2026-08-21T00:00:00Z")
+```
+
+In the committed test, assert `ZiweiFineCycleError.code == "qualification_mismatch"` for both cases, not a generic exception.
 
 - [ ] **Step 2: Verify RED**
 
@@ -1157,15 +1290,108 @@ Tests must verify:
 python -m unittest tests.test_ziwei_phase2b_qualification -v
 ```
 
-Expected: missing qualification tool import.
+Expected: tool module missing.
 
-- [ ] **Step 3: Implement parser/evaluator**
+- [ ] **Step 3: Implement deterministic source normalization and lunar-lite evidence**
 
-Follow Phase2A tool style: parser only reads text supplied through CLI. It must compare Project outputs from `five_tiger_month`, `sexagenary_day`, `five_mouse_hour`, and fine-cycle resolver where enough CalendarContext data is constructible.
+Use whitespace-normalized source rather than a fragile TypeScript AST dependency:
 
-CLI:
+```python
+import re
+
+LUNAR_LITE_REQUIRED_VECTORS = (
+    ("lunar-2023-06-13-chou", 'date: "2023-6-13", timeIndex: 1, isLeap: false, result: "癸卯 己未 己丑 乙丑"),
+    ("lunar-2023-06-13-late-zi", 'date: "2023-6-13", timeIndex: 12, isLeap: false, result: "癸卯 己未 庚寅 丙子"),
+    ("lunar-2023-leap-02-11", 'date: "2023-2-11", timeIndex: 1, isLeap: true, result: "癸卯 乙卯 己丑 乙丑"),
+    ("solar-1987-12-06-hai", 'date: "1987-12-6", timeIndex: 11, result: "丁卯 辛亥 己丑 乙亥"),
+    ("solar-1987-12-06-late-zi", 'date: "1987-12-6", timeIndex: 12, result: "丁卯 辛亥 庚寅 丙子"),
+)
+
+
+def normalize_ts(source_text):
+    return re.sub(r"\s+", " ", source_text).strip()
+
+
+def _require_fragment(text, fragment, vector_id):
+    if fragment not in text:
+        raise ZiweiFineCycleError(
+            "qualification_mismatch", "pinned upstream vector is missing or changed",
+            {"vector_id": vector_id},
+        )
+```
+
+`qualify_lunar_lite_source()` must first assert the pinned `ganzhi.ts` contains the five-tiger `FIVE_TIGER` usage, `getDayGanExact`, `getDayZhiExact`, `getTimeGan`, and `getTimeZhi`. It then requires all five normalized test-vector fragments above and compares Project math:
 
 ```text
+2023 lunar month 6 -> 己未
+2023 leap lunar month 2 day 11 -> 乙卯
+1987-12-06 day -> 己丑
+1987-12-07 day -> 庚寅
+己 day / 亥 hour -> 乙亥
+庚 day / 子 hour -> 丙子
+```
+
+Report fields:
+
+```json
+{
+  "source_name": "SylarLong/lunar-lite",
+  "source_revision": "1d104fffa31609e9f112898cc57545827e8d57ae",
+  "package_version": "0.2.8",
+  "cases_checked": 6,
+  "cases_matched": 6,
+  "not_externally_covered": ["leap_twelfth_second_half"],
+  "mismatches": [],
+  "status": "PASS"
+}
+```
+
+- [ ] **Step 4: Implement iztro integration evidence**
+
+Normalize `FunctionalAstrolabe.ts` and require all three fragments:
+
+```python
+IZTRO_REQUIRED = {
+    "monthly": "mutagen: getMutagensByHeavenlyStem(monthly[0])",
+    "daily": "mutagen: getMutagensByHeavenlyStem(daily[0])",
+    "hourly": "mutagen: getMutagensByHeavenlyStem(hourly[0])",
+}
+```
+
+`qualify_iztro_source()` returns:
+
+```json
+{
+  "source_name": "SylarLong/iztro",
+  "source_revision": "814b77e6371e1050cac31bbf674db3c3138fcfde",
+  "package_version": "2.6.0",
+  "monthly_mutagen_uses_monthly_stem": true,
+  "daily_mutagen_uses_daily_stem": true,
+  "hourly_mutagen_uses_hourly_stem": true,
+  "project_sample_transformations_each": 4,
+  "status": "PASS"
+}
+```
+
+Project sample transformation count must be obtained by calling `get_transformation_set()` for one resolved stem from each scope, not hard-coded into the assertion path.
+
+- [ ] **Step 5: Add CLI and run against exact pinned snapshots**
+
+CLI arguments:
+
+```text
+--lunar-lite-ganzhi-ts
+--lunar-lite-tests-ts
+--iztro-functional-ts
+--lunar-lite-revision
+--iztro-revision
+--output-dir
+--run-timestamp
+```
+
+Validation command:
+
+```bash
 python tools/qualify_ziwei_phase2b_public.py \
   --lunar-lite-ganzhi-ts /tmp/lunar-lite-ganzhi.ts \
   --lunar-lite-tests-ts /tmp/lunar-lite-ganzhi.test.ts \
@@ -1176,149 +1402,64 @@ python tools/qualify_ziwei_phase2b_public.py \
   --run-timestamp 2026-08-21T00:00:00Z
 ```
 
-The tool may produce both public JSON files in one run, but keep lunar-lite and iztro evidence separate.
+Downloaded source snapshots remain temporary and are never committed.
 
-- [ ] **Step 4: Run qualification against exact pinned sources**
-
-Fetch source snapshots outside production runtime using the pinned revisions, save them to temporary validation paths, and run the CLI. Expected lunar-lite report:
-
-```text
-status = PASS
-external_coverage > 0
-mismatches = []
-not_externally_covered includes leap-twelfth-half edge if no pinned vector exists
-```
-
-Only then print:
-
-```text
-PUBLIC_LUNAR_LITE_QUALIFICATION_PASS
-```
-
-- [ ] **Step 5: Run tests and commit evidence**
-
-```bash
-python -m unittest tests.test_ziwei_phase2b_qualification -v
-```
-
-Commit only source metadata, public expected vectors/comparison results, and evidence digests. Do not commit downloaded upstream source files.
-
-```bash
-git add tools/qualify_ziwei_phase2b_public.py tests/test_ziwei_phase2b_qualification.py qualification/ziwei/phase2b/public-lunar-lite-1d104fff.json
-git commit -m "test: qualify Ziwei fine-cycle stems against lunar-lite"
-```
-
----
-
-### Task 10: Qualify iztro Fine-Cycle Stem→Mutagen Integration
-
-**Files:**
-- Modify: `tools/qualify_ziwei_phase2b_public.py`
-- Modify: `tests/test_ziwei_phase2b_qualification.py`
-- Create after qualification run: `qualification/ziwei/phase2b/public-iztro-814b77e6.json`
-
-**Interfaces:**
-- `parse_iztro_fine_cycle_integration(source_text: str) -> dict[str, bool]`.
-- Must prove pinned iztro `monthly`, `daily`, `hourly` each feed their own stem into `getMutagensByHeavenlyStem(...)`.
-
-- [ ] **Step 1: Write RED source-contract tests**
-
-Tests must require these semantic patterns in pinned `FunctionalAstrolabe.ts`:
-
-```text
-monthly ... mutagen: getMutagensByHeavenlyStem(monthly[0])
-daily   ... mutagen: getMutagensByHeavenlyStem(daily[0])
-hourly  ... mutagen: getMutagensByHeavenlyStem(hourly[0])
-```
-
-The parser must fail if any one scope is absent or references a different stem source.
-
-- [ ] **Step 2: Verify RED**
-
-```bash
-python -m unittest tests.test_ziwei_phase2b_qualification -v
-```
-
-Expected: iztro integration test fails until parser/evidence path is implemented.
-
-- [ ] **Step 3: Implement and run pinned-source integration qualification**
-
-The evidence JSON must contain:
-
-```json
-{
-  "source_name": "SylarLong/iztro",
-  "source_revision": "814b77e6371e1050cac31bbf674db3c3138fcfde",
-  "package_version": "2.6.0",
-  "monthly_mutagen_uses_monthly_stem": true,
-  "daily_mutagen_uses_daily_stem": true,
-  "hourly_mutagen_uses_hourly_stem": true,
-  "status": "PASS"
-}
-```
-
-Also run at least one Project resolution per scope through `get_transformation_set()` and assert exactly four transformations; this verifies our integration path, not iztro's star locations.
-
-Only then print:
-
-```text
-PUBLIC_IZTRO_INTEGRATION_PASS
-```
-
-- [ ] **Step 4: Regression and commit**
+- [ ] **Step 6: Run GREEN**
 
 ```bash
 python -m unittest tests.test_ziwei_phase2b_qualification tests.test_ziwei_transformations -v
 ```
 
+Only after both JSON reports are PASS emit:
+
+```text
+PUBLIC_LUNAR_LITE_QUALIFICATION_PASS
+PUBLIC_IZTRO_INTEGRATION_PASS
+```
+
+- [ ] **Step 7: Commit tool/tests/public evidence**
+
 ```bash
-git add tools/qualify_ziwei_phase2b_public.py tests/test_ziwei_phase2b_qualification.py qualification/ziwei/phase2b/public-iztro-814b77e6.json
-git commit -m "test: qualify fine-cycle transformation integration against iztro"
+git add tools/qualify_ziwei_phase2b_public.py tests/test_ziwei_phase2b_qualification.py qualification/ziwei/phase2b/public-*.json
+git commit -m "test: qualify Ziwei fine-cycle public evidence"
 ```
 
 ---
 
-### Task 11: Record Astralium Pending State and Enforce Privacy
+### Task 9: Record Astralium Pending State and Enforce Privacy
 
 **Files:**
 - Create: `qualification/ziwei/phase2b/private-astralium-summary.json`
 - Modify: `tests/test_ziwei_phase2b_qualification.py`
 
-**Interfaces:**
-- Repo stores only aggregate `PENDING`; no raw chart, birthday, name, star locations, palace stems, expected fine-cycle edges.
+**Interfaces:** repo stores only aggregate pending evidence.
 
-- [ ] **Step 1: Write RED privacy/pending tests**
+- [ ] **Step 1: Write RED privacy test**
 
 ```python
-import json
-from pathlib import Path
-
-
-def test_private_summary_is_pending_without_raw_chart_payload(self):
-    path = Path("qualification/ziwei/phase2b/private-astralium-summary.json")
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    self.assertEqual(payload["status"], "PENDING")
-    self.assertEqual(payload["reason_code"], "fine_cycle_source_not_available")
-    raw = path.read_text(encoding="utf-8")
-    for forbidden in (
-        "star_locations", "palace_stems", "expected_edges", "birth_datetime", "出生年月", "姓名"
-    ):
-        self.assertNotIn(forbidden, raw)
+class Phase2BPrivateQualificationTests(unittest.TestCase):
+    def test_private_summary_is_pending_without_raw_chart(self):
+        path = Path("qualification/ziwei/phase2b/private-astralium-summary.json")
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(payload["status"], "PENDING")
+        self.assertEqual(payload["reason_code"], "fine_cycle_source_not_available")
+        raw = path.read_text(encoding="utf-8")
+        for forbidden in (
+            "star_locations", "palace_stems", "expected_edges",
+            "birth_datetime", "出生年月", "姓名",
+        ):
+            self.assertNotIn(forbidden, raw)
 ```
-
-Use `unittest.TestCase` syntax in the actual file.
 
 - [ ] **Step 2: Verify RED**
 
 ```bash
-python -m unittest tests.test_ziwei_phase2b_qualification -v
+python -m unittest tests.test_ziwei_phase2b_qualification.Phase2BPrivateQualificationTests -v
 ```
 
-Expected: missing private summary file.
+Expected: file missing.
 
-- [ ] **Step 3: Create aggregate pending summary**
-
-Exact minimal payload:
+- [ ] **Step 3: Create exact aggregate summary**
 
 ```json
 {
@@ -1332,63 +1473,51 @@ Exact minimal payload:
 }
 ```
 
-- [ ] **Step 4: Run GREEN**
+- [ ] **Step 4: Run GREEN and commit**
 
 ```bash
 python -m unittest tests.test_ziwei_phase2b_qualification -v
+git add qualification/ziwei/phase2b/private-astralium-summary.json tests/test_ziwei_phase2b_qualification.py
+git commit -m "test: record pending Astralium fine-cycle qualification"
 ```
 
-Only then record:
+Only after PASS emit:
 
 ```text
 ASTRALIUM_FINE_CYCLE_PENDING
 PRIVACY_PASS
 ```
 
-- [ ] **Step 5: Commit**
-
-```bash
-git add qualification/ziwei/phase2b/private-astralium-summary.json tests/test_ziwei_phase2b_qualification.py
-git commit -m "test: record pending Astralium fine-cycle qualification"
-```
-
 ---
 
-### Task 12: Promote Formal Rules and User-Facing Docs After Code Gates Are Green
+### Task 10: Promote Formal Rules and User-Facing Docs After Code Gates Are Green
 
 **Files:**
-- Modify: `core/命理分析作業規範.md`
-- Modify: `core/命理推導計算規則.md`
-- Modify: `core/核心提示詞.md`
-- Modify: `core/紫微流月推導規則.md`
-- Modify: `core/紫微流日推導規則.md`
-- Modify: `core/紫微流時推導規則.md`
-- Modify: `README.md`
-- Modify: `CHANGELOG.md`
-- Modify: `docs/架構說明.md`
-- Modify: `docs/快速開始.md`
-- Modify: `docs/安裝到ChatGPT-Project.md`
-- Modify: `docs/更新與版本同步.md`
+- Modify: six core rule docs
+- Modify: `README.md`, `CHANGELOG.md`, `docs/架構說明.md`, `docs/快速開始.md`, `docs/安裝到ChatGPT-Project.md`, `docs/更新與版本同步.md`
+- Modify: `tests/test_rule_source_reconciliation.py`
 
-**Interfaces:**
-- Documents exact implemented state only after Tasks 1–11 are green.
-- Formal Metaphysics Lab release version remains `v1.2.0` during feature/design integration; a later release-maintenance step decides whether to cut `v1.3.0`. Do not silently retag v1.2.0.
+**Interfaces:** documents only capabilities that have passed Tasks 1–9.
 
-- [ ] **Step 1: Write/update documentation consistency test before changing docs**
+- [ ] **Step 1: Convert reconciliation test to post-Phase2B RED**
 
-Extend `tests/test_rule_source_reconciliation.py` so post-Phase2B docs must contain:
+Add exact positive strings:
 
-```text
-ziwei-fine-cycle-lunar-late-zi-v1
-late_zi_forward-v1
-流月／流日／流時天干 = implemented / experimental / on_demand
-流月／流日／流時四化 = implemented / experimental / on_demand
-流月／流日／流時飛化 = implemented / experimental / on_demand
-流曜 = planned / on_demand
-Astralium fine-cycle qualification = pending
+```python
+def test_phase2b_documented_state_matches_runtime(self):
+    combined = self._combined() + "\n" + (ROOT / "README.md").read_text(encoding="utf-8")
+    for required in (
+        "ziwei-fine-cycle-lunar-late-zi-v1",
+        "late_zi_forward-v1",
+        "implemented / experimental / on_demand",
+        "Astralium fine-cycle qualification = pending",
+    ):
+        self.assertIn(required, combined)
+    self.assertIn("流曜", combined)
+    self.assertIn("planned", combined.lower())
 ```
 
-It must also reject statements that Calendar Resolver performs the Ziwei 23:00 rollover or that fine-cycle capabilities are default/stable.
+Add negative assertions that no doc says fine-cycle stem/transformation/flying is Stable or Default, and no doc says Calendar Resolver itself performs the Ziwei 23:00 rollover.
 
 - [ ] **Step 2: Verify RED**
 
@@ -1396,35 +1525,36 @@ It must also reject statements that Calendar Resolver performs the Ziwei 23:00 r
 python -m unittest tests.test_rule_source_reconciliation -v
 ```
 
-Expected: fail because docs have not yet been promoted.
+Expected: missing Phase2B promoted wording.
 
-- [ ] **Step 3: Update formal rules and README/docs**
+- [ ] **Step 3: Update formal docs with exact state**
 
-Required public wording:
+Every capability table/section must converge on:
 
 ```text
 Ziwei Fine Cycle Stem Resolver v1
-- implementation: implemented
-- maturity: experimental
-- routing: on_demand
-- rule profile: ziwei-fine-cycle-lunar-late-zi-v1
-- day boundary: late_zi_forward-v1
-- public qualification: lunar-lite PASS; iztro integration PASS
-- private Astralium fine-cycle qualification: pending
+profile = ziwei-fine-cycle-lunar-late-zi-v1
+day boundary = late_zi_forward-v1
+flow_month/day/hour_stem = implemented / experimental / on_demand / 1.0-exp
+flow_month/day/hour_transformations = implemented / experimental / on_demand / 1.0-exp
+flow_month/day/hour_flying = implemented / experimental / on_demand / 1.0-exp
+flowing_stars = planned / on_demand
+public qualification = lunar-lite PASS + iztro integration PASS
+Astralium fine-cycle qualification = pending
 ```
 
-Clarify:
+Also state:
 
-- `Project 推導盤面` remains the data classification.
-- Calendar Resolver remains neutral and midnight-based.
-- Monthly boundary remains lunar; 23:00 affects day/hour stem only.
-- Fine-cycle four transformations/flying are now executable on demand.
-- Flowing stars remain Phase 2C planned.
-- Existing flow day/hour palace positioning maturity remains Experimental.
+```text
+Calendar Resolver = neutral civil/calendar infrastructure
+23:00 policy = Ziwei fine-cycle profile responsibility
+monthly stem boundary = lunar month; late-Zi does not pre-switch month
+Project 推導盤面 = data classification, not capability prefix
+```
 
-`CHANGELOG.md` should add an **Unreleased / Phase 2B** section rather than pretending a new formal release tag already exists. `VERSION.md` is intentionally not modified in this feature plan; formal version bump happens only after Phase 2B reaches `main` and a separate release decision is made.
+`CHANGELOG.md` gets `## Unreleased｜Phase 2B` because no new formal release tag exists yet. Do not change or move `v1.2.0`; `VERSION.md` remains the current formal release record until a later release-maintenance decision.
 
-- [ ] **Step 4: Run docs consistency + local link check**
+- [ ] **Step 4: Run docs/local-links GREEN**
 
 ```bash
 python -m unittest tests.test_rule_source_reconciliation -v
@@ -1443,9 +1573,7 @@ print('LOCAL_LINKS_PASS')
 PY
 ```
 
-Expected: PASS.
-
-- [ ] **Step 5: Commit docs**
+- [ ] **Step 5: Commit**
 
 ```bash
 git add core README.md CHANGELOG.md docs tests/test_rule_source_reconciliation.py
@@ -1454,43 +1582,34 @@ git commit -m "docs: document experimental Ziwei fine-cycle capabilities"
 
 ---
 
-### Task 13: Exact-Head Final Validation and Promotion Gate
+### Task 11: Exact-Head Final Validation, Review, and Merge Gates
 
-**Files:**
-- No production changes unless a validation failure reveals a real defect; any defect requires its own RED/GREEN fix before re-running this task.
-- Temporary validation workflow must stay outside the formal feature diff and must never be merged.
+**Files:** no formal production changes unless a defect is found; any defect starts a new RED/GREEN loop before this Task restarts.
 
-**Interfaces:**
-- Consumes exact feature head.
-- Produces evidence that all acceptance markers correspond to actual assertions on the same SHA.
+**Interfaces:** consumes exact feature head and produces reproducible acceptance evidence.
 
-- [ ] **Step 1: Freeze exact feature SHA and formal diff scope**
-
-Record:
+- [ ] **Step 1: Freeze exact feature SHA and formal diff**
 
 ```bash
 FEATURE_SHA=$(git rev-parse HEAD)
-echo "$FEATURE_SHA"
+echo "FEATURE_SHA=$FEATURE_SHA"
 git -c core.quotePath=false diff --name-only design/ziwei-fine-cycle-stem-resolver...HEAD
 ```
 
-Assert changed files are only those declared by this plan plus the plan/spec themselves; no Qimen, unrelated Bazi production code, private chart, or permanent `.github/` workflow.
+Formal diff must be restricted to the files listed by this plan plus spec/plan. Reject Qimen changes, unrelated Bazi production changes, raw private data, or permanent validation workflow changes.
 
-- [ ] **Step 2: Python supported-version syntax gate**
-
-At minimum parse all changed production Python files as Python 3.9 syntax:
+- [ ] **Step 2: Python 3.9 syntax gate**
 
 ```bash
 python - <<'PY'
 import ast, subprocess
 files = subprocess.check_output(
-    ['git', '-c', 'core.quotePath=false', 'diff', '--name-only', 'design/ziwei-fine-cycle-stem-resolver...HEAD'],
-    text=True,
+    ['git', '-c', 'core.quotePath=false', 'diff', '--name-only',
+     'design/ziwei-fine-cycle-stem-resolver...HEAD'], text=True,
 ).splitlines()
 for path in files:
     if path.endswith('.py') and (path.startswith('engine/') or path.startswith('tools/')):
-        source = open(path, encoding='utf-8').read()
-        ast.parse(source, filename=path, feature_version=(3, 9))
+        ast.parse(open(path, encoding='utf-8').read(), filename=path, feature_version=(3, 9))
 print('PYTHON39_SYNTAX_PASS')
 PY
 ```
@@ -1507,9 +1626,7 @@ python -m unittest \
   tests.test_ziwei_phase2b_qualification -v
 ```
 
-Expected: all PASS.
-
-- [ ] **Step 4: Run Ziwei / Calendar / Bazi / full regressions**
+- [ ] **Step 4: Run complete regressions and record actual counts**
 
 ```bash
 python -m unittest discover -v -s tests -p 'test_ziwei*.py'
@@ -1518,7 +1635,7 @@ python -m unittest tests.test_project_bazi_calendar -v
 python -m unittest discover -v
 ```
 
-Record actual counts from output; do not hard-code expected new totals in advance. Existing v1.2.0 baseline lower bounds are:
+Counts are read from actual output, not predicted. Lower bounds from v1.2.0:
 
 ```text
 Ziwei >= 83
@@ -1527,28 +1644,29 @@ Bazi >= 10
 Full repo >= 132
 ```
 
-All must be PASS and new counts must not drop below baseline.
+Any lower count or failure stops the gate.
 
-- [ ] **Step 5: Re-run qualification and privacy/scope gates on the same SHA**
+- [ ] **Step 5: Re-run public qualification on exact pinned sources**
 
-Using exact pinned public source snapshots, re-run `tools/qualify_ziwei_phase2b_public.py` and assert both committed public JSONs match the regenerated result except allowed run timestamp metadata. Re-run private-summary forbidden-key scan.
+Regenerate both public JSONs using Task 8 CLI. Compare regenerated JSON to committed evidence after removing only `run_timestamp`. `status`, source revision, package version, expected vectors, coverage and mismatch lists must match exactly.
 
-- [ ] **Step 6: Assert capability boundaries**
+- [ ] **Step 6: Assert privacy and capability boundaries**
 
-Programmatically verify on exact head:
+Programmatic assertions must verify:
 
 ```text
-ziwei.flow_month_stem/day/hour_stem = implemented / experimental / on_demand / 1.0-exp
-ziwei.flow_month/day/hour_transformations = implemented / experimental / on_demand / 1.0-exp
-ziwei.flow_month/day/hour_flying = implemented / experimental / on_demand / 1.0-exp
-ziwei.flowing_stars = planned / on_demand / not executable
-ziwei.transformations/flying = still implemented / stable / on_demand / 1.0
-flow_day_palaces / flow_hour_palaces remain experimental / on_demand
+flow_month/day/hour_stem = implemented / experimental / on_demand / 1.0-exp
+flow_month/day/hour_transformations = implemented / experimental / on_demand / 1.0-exp
+flow_month/day/hour_flying = implemented / experimental / on_demand / 1.0-exp
+ziwei.transformations / ziwei.flying = still stable / on_demand / 1.0
+flow_day_palaces / flow_hour_palaces = still experimental / on_demand
+ziwei.flowing_stars = planned and not executable
+private Astralium summary = PENDING and contains no forbidden raw fields
 ```
 
-- [ ] **Step 7: Emit acceptance markers only after assertions pass**
+- [ ] **Step 7: Emit markers only from passed assertions**
 
-Final evidence must contain all of:
+Final evidence must contain:
 
 ```text
 RULE_SOURCE_RECONCILIATION_PASS
@@ -1577,60 +1695,57 @@ LOCAL_LINKS_PASS
 PYTHON39_SYNTAX_PASS
 ```
 
-- [ ] **Step 8: Request code review on exact feature head**
+- [ ] **Step 8: Review exact feature head**
 
-Review specifically for:
+Reviewer must explicitly inspect:
 
-- hidden reuse of Bazi policy;
-- month boundary/day boundary cross-contamination;
-- 23:00 double rollover;
-- resolved stem/source/identity mismatch;
-- fine-cycle layer collision;
-- accidental default/stable promotion;
-- private Astralium leakage;
-- synthetic test mislabeled as external qualification.
+```text
+no hidden import/reuse of Bazi policy
+no month/day boundary cross-contamination
+no 23:00 double rollover
+ResolvedCycleStem/source/layer identity coherence
+fine-cycle duplicate/conflict semantics
+no accidental Stable/Default promotion
+no private Astralium leakage
+no synthetic case labeled external qualification
+```
 
-Important findings require independent RED→GREEN fixes and a full exact-head revalidation.
+Each Important/Critical finding requires a new failing test, minimal fix, targeted GREEN, then a complete Task 11 rerun.
 
 - [ ] **Step 9: Stop at feature→design approval gate**
 
-When exact feature head is fully GREEN, open formal PR:
+Open formal PR:
 
 ```text
 feature/ziwei-fine-cycle-stem-resolver-v1
 → design/ziwei-fine-cycle-stem-resolver
 ```
 
-Do **not** merge automatically. Report exact SHA, diff scope, test counts, qualification evidence, and ask for explicit user approval.
+Report exact feature SHA, formal file list, actual test counts, public qualification results, private pending state, scope/privacy status. Do not merge until user explicitly approves that PR.
 
 ---
 
 ## Post-Feature Integration Procedure
 
-After user explicitly approves feature→design:
+After explicit feature→design approval:
 
-1. Re-read PR state/head/base/mergeability and verify exact approved head SHA.
+1. Re-read PR state, base, head SHA and mergeability; reject head drift.
 2. Squash merge feature→design.
-3. Run design post-merge validation on the actual design merge commit with the same gates and actual test counts.
-4. If any gate fails, stop; do not open design→main.
-5. If GREEN, open formal design→main PR.
-6. Stop and obtain a **second explicit user approval**.
-7. After design→main merge, run post-main exact-head validation again.
-8. Only after post-main is GREEN may Phase 2B be called closed.
-9. Formal release version/tag is a separate release-maintenance decision; do not silently reuse or move `v1.2.0`.
+3. Re-run all Task 11 gates against the actual design merge commit.
+4. Any failure stops; do not create design→main PR.
+5. If GREEN, create formal design→main PR.
+6. Obtain a second explicit user merge approval.
+7. Squash merge design→main only after approval.
+8. Re-run Task 11 equivalent gates against the actual `main` merge commit.
+9. Only post-main GREEN closes Phase 2B.
+10. Formal release version/tag remains a separate release-maintenance decision; never move/reuse `v1.2.0`.
 
 ---
 
-## Plan Self-Review Checklist
+## Plan Self-Review Result
 
-Before execution, verify:
-
-- [ ] Every spec requirement maps to Task 0–13.
-- [ ] No `TBD`, `TODO`, "similar to Task N", or unspecified error handling remains.
-- [ ] Function names are consistent across tasks: `sexagenary_day`, `five_tiger_month`, `five_mouse_hour`, `resolve_month_stem`, `resolve_day_stem`, `resolve_hour_stem`, `build_fine_cycle_layer`.
-- [ ] Error classes remain separated: existing `ZiweiPhase2AError`; new `ZiweiFineCycleError`.
-- [ ] Public profile IDs and rule versions exactly match the approved spec.
-- [ ] Fine-cycle capabilities never become default or stable in v1.
-- [ ] Flowing stars remain out of scope.
-- [ ] No private Astralium raw payload enters the repository.
-- [ ] No implementation begins until the user explicitly approves this plan.
+- Spec coverage: Tasks 0–11 cover rule-source reconciliation, neutral sexagenary math, models/errors, month/day/hour stems, late-Zi, Calendar protection, stable references, Transformation/Flying integration, Composition, capability lifecycle, public qualification, Astralium pending/privacy, docs, regression, review and merge gates.
+- Placeholder scan: no `TBD`, `TODO`, ellipsis placeholder, generic "add tests" step, or unspecified error-handling step remains.
+- Type consistency: plan uses only `sexagenary_day`, `lunar_year_stem`, `five_tiger_month`, `five_mouse_hour`, `resolve_month_stem`, `resolve_day_stem`, `resolve_hour_stem`, `build_fine_cycle_layer`, `ZiweiFineCycleError`, and the existing Phase 2A APIs with consistent signatures.
+- Scope: flowing stars, Qimen, AI interpretation, scoring, Bazi policy changes and private Astralium reverse inference remain out of scope.
+- Implementation gate: no production code may be written until the user explicitly approves this plan.
