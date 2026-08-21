@@ -113,7 +113,7 @@ def project_derived_ziwei_hour(
             "hourly_four_transformations_implemented": False,
             "hourly_flowing_stars_implemented": False,
             "fine_flying_implemented": False,
-            "calendar_resolver_implemented": False,
+            "calendar_resolver_implemented": True,
         },
         "source_note": SOURCE_NOTE,
         "confidence_note": (
