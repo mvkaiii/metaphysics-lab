@@ -1,0 +1,55 @@
+name: Calendar Resolver post-merge validation
+
+on:
+  pull_request:
+    branches:
+      - design/calendar-resolver
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONTZPATH: ""
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -r requirements.txt
+      - name: Run final verification
+        shell: bash
+        run: |
+          set -e
+          python -m unittest \
+            tests.test_calendar_precision \
+            tests.test_calendar_models \
+            tests.test_calendar_timezone \
+            tests.test_calendar_lunar \
+            tests.test_calendar_resolver \
+            tests.test_calendar_package_exports \
+            tests.test_ziwei_calendar_adapter \
+            -v
+          python -m unittest discover -v
+          python -c "from importlib.metadata import version; import tzdata; assert version('lunar_python') == '1.4.8'; assert version('tzdata') == '2026.3'; assert tzdata.IANA_VERSION == '2026c'; print('PROVENANCE_PASS')"
+          python - <<'PY'
+          from pathlib import Path
+          files = [Path('README.md'), Path('docs/架構說明.md'), Path('docs/安裝到ChatGPT-Project.md'), Path('docs/更新與版本同步.md'), Path('core/命理分析作業規範.md'), Path('VERSION.md'), Path('CHANGELOG.md')]
+          text = '\n'.join(p.read_text() for p in files)
+          for phrase in ('Calendar / Input Resolver = planned','Calendar / Input Resolver：尚未實作','Calendar Resolver：尚未實作','未來 Calendar / Input Resolver'):
+              assert phrase not in text, phrase
+          assert '1901-01-01..2100-12-31' in text
+          assert '2057-09-28..2057-10-27' in text
+          assert '2089-09-04' in text and '2097-08-07' in text
+          assert 'metaphysics_day_boundary_applied = false' in text
+          assert 'lunar-python==1.4.8' in text and 'tzdata==2026.3' in text
+          assert 'date-only' in Path('docs/架構說明.md').read_text() or '00:00' in Path('docs/架構說明.md').read_text()
+          core = Path('core/命理分析作業規範.md').read_text()
+          assert '第一階段盲判 → 第二階段事件校準' in core
+          assert '改寫第一版盲判' in core
+          print('DOCS_SANITY_PASS')
+          PY
+          changed=$(git -c core.quotePath=false diff --name-only origin/design/calendar-resolver...HEAD)
+          test "$changed" = ".github/workflows/calendar-resolver-postmerge-validation.yml"
+          echo POSTMERGE_SCOPE_PASS
