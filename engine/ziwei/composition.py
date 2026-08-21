@@ -11,7 +11,7 @@ from .models import (
     ZiweiLayerStack,
 )
 
-SUPPORTED_SCOPES = {"birth_year", "decadal", "yearly"}
+SUPPORTED_SCOPES = {"birth_year", "decadal", "yearly", "monthly", "daily", "hourly"}
 FINE_CYCLE_REASON = "fine_cycle_stem_resolver_not_enabled"
 STACK_PROVENANCE = LayerProvenance(
     "project_derived",
@@ -35,7 +35,7 @@ def _validate_cycle_layer_components(identity, source, transformations, flying_e
     if source.scope not in SUPPORTED_SCOPES:
         raise ZiweiPhase2AError(
             "unsupported_scope",
-            "Phase 2A does not execute fine-cycle transformations",
+            "unsupported Ziwei transformation layer scope",
             {"scope": source.scope},
         )
     if source.chart_identity.chart_id != identity.chart_id:
@@ -162,13 +162,13 @@ def _availability():
                 "conditional", "trusted_yearly_stem_required"
             ),
             "monthly_transformations": AvailabilityRecord(
-                "unavailable", FINE_CYCLE_REASON
+                "conditional", "matching_resolved_stem_required"
             ),
             "daily_transformations": AvailabilityRecord(
-                "unavailable", FINE_CYCLE_REASON
+                "conditional", "matching_resolved_stem_required"
             ),
             "hourly_transformations": AvailabilityRecord(
-                "unavailable", FINE_CYCLE_REASON
+                "conditional", "matching_resolved_stem_required"
             ),
         }
     )

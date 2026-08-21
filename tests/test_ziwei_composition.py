@@ -46,9 +46,20 @@ class ZiweiCompositionModelTests(unittest.TestCase):
 
 
 class ZiweiCompositionTests(unittest.TestCase):
-    def test_fine_cycle_scope_is_rejected(self):
+    def test_fine_cycle_scopes_are_supported(self):
         natal = _base_natal()
-        source, trans, edges, identity = _components("monthly", "2026-L07", "丙", natal)
+        for scope, reference in (
+            ("monthly", "lunar:2026-07"),
+            ("daily", "ziwei-day:2026-08-21@late_zi_forward-v1"),
+            ("hourly", "ziwei-hour:2026-08-21:申@late_zi_forward-v1"),
+        ):
+            source, trans, edges, identity = _components(scope, reference, "丙", natal)
+            layer = build_cycle_layer(identity, source, trans, edges, PROVENANCE)
+            self.assertEqual(layer.identity.scope, scope)
+
+    def test_arbitrary_scope_still_fails_closed(self):
+        natal = _base_natal()
+        source, trans, edges, identity = _components("weekly", "2026-W34", "丙", natal)
         with self.assertRaises(ZiweiPhase2AError) as cm:
             build_cycle_layer(identity, source, trans, edges, PROVENANCE)
         self.assertEqual(cm.exception.code, "unsupported_scope")
@@ -151,12 +162,44 @@ class ZiweiCompositionTests(unittest.TestCase):
         rows = ZiweiCompositeView(stack).for_transformation(TransformationType.JI)
         self.assertEqual(tuple(row.scope for row in rows), ("birth_year", "decadal", "yearly"))
 
-    def test_fine_cycle_availability_remains_unavailable(self):
+    def test_fine_cycle_availability_requires_matching_resolution(self):
         stack = build_layer_stack(CHART, _base_natal())
-        self.assertEqual(stack.availability["monthly_transformations"].status, "unavailable")
-        self.assertEqual(stack.availability["monthly_transformations"].reason, "fine_cycle_stem_resolver_not_enabled")
-        self.assertEqual(stack.availability["daily_transformations"].status, "unavailable")
-        self.assertEqual(stack.availability["hourly_transformations"].status, "unavailable")
+        for key in ("monthly_transformations", "daily_transformations", "hourly_transformations"):
+            self.assertEqual(stack.availability[key].status, "conditional")
+            self.assertEqual(stack.availability[key].reason, "matching_resolved_stem_required")
+
+    def test_fine_cycle_duplicate_identity_and_conflict_semantics(self):
+        natal = _base_natal()
+        source_a, trans_a, edges_a, identity = _components(
+            "monthly", "lunar:2026-07", "丙", natal
+        )
+        layer_a = build_cycle_layer(identity, source_a, trans_a, edges_a, PROVENANCE)
+        with self.assertRaises(ZiweiPhase2AError) as cm_dup:
+            build_layer_stack(CHART, natal, (layer_a, layer_a))
+        self.assertEqual(cm_dup.exception.code, "duplicate_layer_identity")
+        source_b, trans_b, edges_b, unused = _components(
+            "monthly", "lunar:2026-07", "丁", natal
+        )
+        layer_b = build_cycle_layer(identity, source_b, trans_b, edges_b, PROVENANCE)
+        with self.assertRaises(ZiweiPhase2AError) as cm_conflict:
+            build_layer_stack(CHART, natal, (layer_a, layer_b))
+        self.assertEqual(cm_conflict.exception.code, "layer_conflict")
+
+    def test_yearly_monthly_daily_hourly_coexist_without_overwrite(self):
+        natal = _base_natal()
+        specs = (
+            ("yearly", "2026", "丁"),
+            ("monthly", "lunar:2026-07", "丙"),
+            ("daily", "ziwei-day:2026-08-21@late_zi_forward-v1", "乙"),
+            ("hourly", "ziwei-hour:2026-08-21:申@late_zi_forward-v1", "甲"),
+        )
+        layers = []
+        for scope, reference, stem in specs:
+            source, trans, edges, identity = _components(scope, reference, stem, natal)
+            layers.append(build_cycle_layer(identity, source, trans, edges, PROVENANCE))
+        stack = build_layer_stack(CHART, natal, tuple(layers))
+        self.assertEqual(tuple(layer.identity.scope for layer in stack.cycles),
+                         ("yearly", "monthly", "daily", "hourly"))
 
 
 if __name__ == "__main__":
