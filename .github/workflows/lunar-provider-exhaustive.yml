@@ -1,0 +1,65 @@
+name: Lunar provider exhaustive qualification
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exhaustive-qualification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout probe branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Create provider environments
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python -m venv /tmp/lunar-pypi
+          python -m venv /tmp/lunar-git
+          /tmp/lunar-pypi/bin/python -m pip install --upgrade pip
+          /tmp/lunar-git/bin/python -m pip install --upgrade pip
+          /tmp/lunar-pypi/bin/python -m pip install "lunar_python==1.4.8"
+          /tmp/lunar-git/bin/python -m pip install "git+https://github.com/6tail/lunar-python.git@000c8a3d74eed098d6256a28fdd51b869324c559"
+          /tmp/lunar-pypi/bin/python - <<'PY'
+          from importlib.metadata import version
+          print('PyPI installed lunar_python:', version('lunar_python'))
+          assert version('lunar_python') == '1.4.8'
+          PY
+          /tmp/lunar-git/bin/python - <<'PY'
+          from importlib.metadata import version
+          print('Git commit installed lunar_python:', version('lunar_python'))
+          assert version('lunar_python') == '1.4.8'
+          PY
+
+      - name: Exhaustive comparison for both provider paths
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p /tmp/hko-calendar-cache
+
+          set +e
+          /tmp/lunar-pypi/bin/python validation/provider_qualification/lunar_python_vs_hko_exhaustive.py --cache-dir /tmp/hko-calendar-cache | tee /tmp/pypi-exhaustive.log
+          pypi_status=${PIPESTATUS[0]}
+
+          /tmp/lunar-git/bin/python validation/provider_qualification/lunar_python_vs_hko_exhaustive.py --cache-dir /tmp/hko-calendar-cache | tee /tmp/git-exhaustive.log
+          git_status=${PIPESTATUS[0]}
+          set -e
+
+          echo "pypi_status=${pypi_status}"
+          echo "git_status=${git_status}"
+
+          if [ "${pypi_status}" -ne 0 ] || [ "${git_status}" -ne 0 ]; then
+            exit 1
+          fi
