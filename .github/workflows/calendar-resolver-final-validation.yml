@@ -80,7 +80,7 @@ jobs:
           cat docs-sanity.txt
 
           git fetch origin feature/calendar-resolver-v1
-          git diff --name-only origin/feature/calendar-resolver-v1...HEAD | sort > task8-scope.txt
+          git -c core.quotePath=false diff --name-only origin/feature/calendar-resolver-v1...HEAD | sort > task8-scope.txt
           cat task8-scope.txt
           python - <<'PY' >> task8-scope.txt 2>&1
           import subprocess
@@ -96,7 +96,8 @@ jobs:
               'tests/test_calendar_package_exports.py',
           }
           changed = set(subprocess.check_output([
-              'git', 'diff', '--name-only', 'origin/feature/calendar-resolver-v1...HEAD'
+              'git', '-c', 'core.quotePath=false', 'diff', '--name-only',
+              'origin/feature/calendar-resolver-v1...HEAD'
           ], text=True).splitlines())
           unexpected = sorted(changed - allowed)
           assert not unexpected, unexpected
