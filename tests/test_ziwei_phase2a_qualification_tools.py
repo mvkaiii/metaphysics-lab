@@ -5,6 +5,16 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from engine.ziwei.basis import build_palace_stem_index, build_star_location_index
+from engine.ziwei.flying import build_natal_flying_graph, fly_transformations
+from engine.ziwei.models import CycleStemSource
+from engine.ziwei.transformations import get_transformation_set
+from tests.ziwei_phase2a_fixtures import (
+    CHART,
+    PROVENANCE,
+    SYNTHETIC_PALACE_STEM_RECORDS,
+    SYNTHETIC_STAR_RECORDS,
+)
 from tools.qualify_ziwei_phase2a_public import (
     parse_iztro_heavenly_stems,
     qualify_public_profile,
@@ -24,6 +34,82 @@ export const heavenlyStems = {
   guiHeavenly: { mutagen: ['pojunMaj', 'jumenMaj', 'taiyinMaj', 'tanlangMaj'] },
 };
 """
+
+
+def synthetic_private_shape():
+    stars = build_star_location_index(SYNTHETIC_STAR_RECORDS, CHART, PROVENANCE)
+    stems = build_palace_stem_index(SYNTHETIC_PALACE_STEM_RECORDS, CHART, PROVENANCE)
+    graph = build_natal_flying_graph(stems, stars)
+    natal_expected = [
+        {
+            "source_palace": edge.source.palace,
+            "source_stem": edge.source.heavenly_stem,
+            "type": edge.transformation_type.value,
+            "star": edge.star,
+            "target_palace": edge.target_palace,
+        }
+        for edge in graph.edges
+    ]
+    decadal_source = CycleStemSource(
+        "cycle_stem", CHART, "decadal", "43-52-virtual-age", "癸"
+    )
+    decadal_edges = fly_transformations(
+        get_transformation_set("癸"), stars, decadal_source
+    )
+    year_stems = (
+        ("2023", "癸"),
+        ("2024", "甲"),
+        ("2025", "乙"),
+        ("2026", "丙"),
+        ("2027", "丁"),
+        ("2028", "戊"),
+        ("2029", "己"),
+    )
+    yearly = []
+    for reference, stem in year_stems:
+        source = CycleStemSource("cycle_stem", CHART, "yearly", reference, stem)
+        edges = fly_transformations(get_transformation_set(stem), stars, source)
+        yearly.append(
+            {
+                "reference": reference,
+                "stem": stem,
+                "expected_edges": [
+                    {
+                        "type": edge.transformation_type.value,
+                        "star": edge.star,
+                        "target_palace": edge.target_palace,
+                    }
+                    for edge in edges
+                ],
+            }
+        )
+    return {
+        "source_profile": "synthetic-private-shape-v1",
+        "chart_id": CHART.chart_id,
+        "star_locations": [
+            {"star": record.star, "palace": record.palace}
+            for record in SYNTHETIC_STAR_RECORDS
+        ],
+        "palace_stems": [
+            {"palace": record.palace, "heavenly_stem": record.heavenly_stem}
+            for record in SYNTHETIC_PALACE_STEM_RECORDS
+        ],
+        "natal_expected_edges": natal_expected,
+        "decadal": {
+            "reference": "43-52-virtual-age",
+            "stem": "癸",
+            "expected_edges": [
+                {
+                    "type": edge.transformation_type.value,
+                    "star": edge.star,
+                    "target_palace": edge.target_palace,
+                }
+                for edge in decadal_edges
+            ],
+        },
+        "yearly": yearly,
+        "presentation_expected": [],
+    }
 
 
 class ZiweiPublicQualificationTests(unittest.TestCase):
@@ -81,6 +167,31 @@ class ZiweiPublicQualificationTests(unittest.TestCase):
             self.assertEqual(completed.returncode, 0, completed.stderr)
             evidence = json.loads(output_path.read_text(encoding="utf-8"))
             self.assertEqual(evidence["status"], "PASS")
+
+
+class ZiweiPrivateQualificationTests(unittest.TestCase):
+    def test_summary_has_explicit_40_stem_and_80_flying_gates_without_private_payload(self):
+        from tools.qualify_ziwei_phase2a_private import qualify_private
+
+        evidence = qualify_private(
+            synthetic_private_shape(),
+            "abc123",
+            "2026-08-21T00:00:00Z",
+        )
+        self.assertEqual(evidence["transformation_profile"]["checked"], 40)
+        self.assertEqual(evidence["natal"]["checked"], 48)
+        self.assertEqual(evidence["decadal"]["checked"], 4)
+        self.assertEqual(evidence["yearly"]["checked"], 28)
+        self.assertEqual(evidence["flying_total"]["checked"], 80)
+        serialized = json.dumps(evidence, ensure_ascii=False)
+        for forbidden in (
+            "star_locations",
+            "palace_stems",
+            "expected_edges",
+            "birth_datetime",
+        ):
+            self.assertNotIn(forbidden, serialized)
+        self.assertEqual(evidence["status"], "PASS")
 
 
 if __name__ == "__main__":
