@@ -1,0 +1,56 @@
+name: Phase 2A Task 4 GREEN
+
+on:
+  pull_request:
+    branches:
+      - feature/ziwei-transformation-flying-core-v1
+
+jobs:
+  green:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run full Task 4 flying suite
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m unittest tests.test_ziwei_flying -v 2>&1 | tee task4-green.txt
+      - name: Verify 144 geometry combinations and 48-edge graph
+        shell: bash
+        run: |
+          python - <<'PY' | tee task4-markers.txt
+          from engine.ziwei.basis import build_palace_stem_index, build_star_location_index
+          from engine.ziwei.common import PALACE_NAMES
+          from engine.ziwei.flying import build_natal_flying_graph, classify_geometric_relation
+          from engine.ziwei.models import GeometricRelation, PalaceStemSource
+          from tests.ziwei_phase2a_fixtures import CHART, PROVENANCE, SYNTHETIC_PALACE_STEM_RECORDS, SYNTHETIC_STAR_RECORDS
+
+          counts = {item: 0 for item in GeometricRelation}
+          for source_palace in PALACE_NAMES:
+              source = PalaceStemSource("palace_stem", CHART, source_palace, "甲")
+              for target in PALACE_NAMES:
+                  counts[classify_geometric_relation(source, target)] += 1
+          assert counts[GeometricRelation.SAME_PALACE] == 12, counts
+          assert counts[GeometricRelation.OPPOSITE_PALACE_INCOMING] == 12, counts
+          assert counts[GeometricRelation.NORMAL] == 120, counts
+          print("GEOMETRY_144_PASS 12/12/120")
+
+          stars = build_star_location_index(SYNTHETIC_STAR_RECORDS, CHART, PROVENANCE)
+          stems = build_palace_stem_index(SYNTHETIC_PALACE_STEM_RECORDS, CHART, PROVENANCE)
+          graph = build_natal_flying_graph(stems, stars)
+          assert len(graph.edges) == 48, len(graph.edges)
+          print("NATAL_GRAPH_PASS 48/48")
+          PY
+      - name: Upload GREEN evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase2a-task4-green-evidence
+          path: |
+            task4-green.txt
+            task4-markers.txt
