@@ -53,6 +53,9 @@ v1.2 開發線另已加入：
 - Calendar Resolver v1：`implemented`，將 structured civil datetime + IANA timezone 正規化為可追溯 `CalendarContext`
 - Input Resolution / Precision Gate：上游 pure policy，先判斷問題所需最低時間精度，不足時追問／保留候選／降級
 - Ziwei Calendar Adapter：`implemented`，第一個正式 adapter；Bazi refactor 不包含在本次變更
+- Ziwei Transformation Core：`implemented / stable / on_demand`，固定十干四化 profile，不處理流月／流日／流時天干
+- Ziwei Flying Core：`implemented / stable / on_demand`，只依已校驗本命星曜位置建立飛化 edge / natal graph
+- Phase 2A qualification：pinned iztro 十干四化 `40/40`、私人 Astralium 十干四化 `40/40`、飛化 `80/80`；repo 不保存私人 raw chart
 - Ziwei Transformation Core v1：`implemented / stable / on_demand`，固定版本化十天干四化 profile；一般問事不預設執行
 - Ziwei Flying Core v1：`implemented / stable / on_demand`，支援本命十二宮宮干飛化與生年／大限／流年四化落宮；不同時間層不互相覆寫
 - Phase 2A qualification：pinned iztro 十干四化 `40/40`、私有 Astralium 十干四化 `40/40`、飛化 `80/80`；repo 僅保存 aggregate evidence，不保存私人 raw chart
@@ -85,6 +88,8 @@ routing        = default / on_demand
 紫微流月定位 = implemented / stable / default
 紫微流日定位 = implemented / experimental / on_demand
 紫微流時定位 = implemented / experimental / on_demand
+紫微十干四化核心 = implemented / stable / on_demand
+紫微飛化核心 = implemented / stable / on_demand
 紫微四化核心   = implemented / stable / on_demand
 紫微飛化核心   = implemented / stable / on_demand
 ```
