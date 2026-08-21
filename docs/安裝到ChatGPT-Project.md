@@ -113,7 +113,32 @@ engine/ziwei/day.py
 engine/ziwei/hour.py
 ```
 
-流時 core 採 1.5 架構，只接受已解析的農曆日期與 `hour_branch`。它不自行處理民用 datetime、timezone、DST、國曆轉農曆或 23:00 日界 policy；這些責任留給未來 Calendar / Input Resolver。
+流時 core 仍只接受已解析的農曆日期與 `hour_branch`，不自行處理民用 datetime、timezone、DST 或國曆轉農曆。v1.2 開發線已由 Calendar Resolver v1 負責 structured civil datetime + IANA timezone → `CalendarContext`，再由 Ziwei Calendar Adapter 傳入既有流月／流日／流時 core。Resolver 不套用任何命理日界；23:00 是子時，但 civil date 只在 00:00 換日。
+
+### 要使用 Calendar Resolver v1
+
+實際 Python 執行環境必須同步並保持同版：
+
+```text
+requirements.txt
+engine/calendar/__init__.py
+engine/calendar/precision.py
+engine/calendar/models.py
+engine/calendar/timezone.py
+engine/calendar/lunar.py
+engine/calendar/resolver.py
+engine/ziwei/calendar_adapter.py
+```
+
+並執行：
+
+```bash
+pip install -r requirements.txt
+```
+
+目前 exact runtime dependencies 為 `lunar-python==1.4.8` 與 `tzdata==2026.3`（IANA `2026c`）。缺少 exact dependencies 時，不得宣稱 Calendar Resolver 可執行。
+
+Resolver v1 只接受 structured civil datetime、IANA timezone 與可選 `utc_offset_hint`；自然語言解析與命理日界 policy 都在 Resolver 外。
 
 完整 Python 環境或未來 Skill 建議直接使用：
 
@@ -136,7 +161,8 @@ engine.ziwei.capabilities
 紫微流日定位 = implemented / experimental / on_demand
 紫微流時定位 = implemented / experimental / on_demand
 紫微細部四化／流曜／細層飛化 = planned / on_demand
-Calendar / Input Resolver = planned
+Calendar / Input Resolver = implemented (Calendar Resolver v1.0.0)
+Ziwei Calendar Adapter = implemented
 Cross-System Validation = planned
 ```
 
@@ -271,7 +297,8 @@ engine/ziwei/hour.py
 - 紫微流月：Stable / Default。
 - 紫微流日：Experimental / On-demand，可執行但不預設跑。
 - 紫微流時：Experimental / On-demand，可執行但不預設跑。
-- 流時四化、流曜、飛化、Calendar Resolver：尚未實作。
+- Calendar Resolver v1：已實作；Ziwei Calendar Adapter 已實作。
+- 流時四化、流曜、飛化：尚未實作。
 
 ---
 
