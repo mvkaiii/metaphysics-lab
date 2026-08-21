@@ -96,7 +96,7 @@ Full repository   132/132 PASS
 
 ### 文件與版本治理
 
-- `README.md` 改成目前正式能力矩陣，移除 v1.2 開發線與重複 capability 描述。
+- `README.md` 改成目前正式能力矩陣，移除舊開發線標示與重複 capability 描述。
 - `VERSION.md` 正式發布 v1.2.0，區分目前狀態與歷史版本。
 - `CHANGELOG.md` 成為 release 歷程主檔。
 - `docs/更新與版本同步.md` 負責 migration / Project 檔案替換清單。
