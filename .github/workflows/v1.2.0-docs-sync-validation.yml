@@ -1,0 +1,97 @@
+name: v1.2.0 docs sync validation
+
+on:
+  pull_request:
+    branches:
+      - docs/release-v1.2.0-sync
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Freeze exact docs head
+        env:
+          DOCS_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          echo "DOCS_SHA=$DOCS_SHA"
+          test "$DOCS_SHA" = "b38bb2517d7c049478e15e8f1d54ee4ab13d6d66"
+      - name: Full repository regression
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m unittest discover -v 2>&1 | tee full-repo.txt
+      - name: Docs scope and consistency
+        shell: bash
+        env:
+          DOCS_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          python - <<'PY'
+          import re
+          import subprocess
+          from pathlib import Path
+
+          base = '2a91ff3f83940bc46d608a949d6f474022239346'
+          docs = subprocess.check_output(
+              ['git', '-c', 'core.quotePath=false', 'diff', '--name-only', base + '...' + '${{ github.event.pull_request.base.sha }}'],
+              text=True,
+          ).splitlines()
+          expected = {
+              'README.md', 'VERSION.md', 'CHANGELOG.md',
+              'docs/架構說明.md', 'docs/快速開始.md',
+              'docs/安裝到ChatGPT-Project.md', 'docs/更新與版本同步.md',
+          }
+          assert set(docs) == expected, sorted(set(docs) ^ expected)
+          assert not any(p.startswith('engine/') or p.startswith('core/') or p.startswith('tests/') for p in docs)
+          print('DOCS_SCOPE_PASS')
+
+          readme = Path('README.md').read_text(encoding='utf-8')
+          version = Path('VERSION.md').read_text(encoding='utf-8')
+          changelog = Path('CHANGELOG.md').read_text(encoding='utf-8')
+          architecture = Path('docs/架構說明.md').read_text(encoding='utf-8')
+          quick = Path('docs/快速開始.md').read_text(encoding='utf-8')
+          install = Path('docs/安裝到ChatGPT-Project.md').read_text(encoding='utf-8')
+          sync = Path('docs/更新與版本同步.md').read_text(encoding='utf-8')
+
+          assert '目前正式版本：**v1.2.0｜2026-08-21**' in readme
+          assert 'v1.2 開發線' not in readme
+          assert '## 最新正式發布' in version and 'v1.2.0' in version
+          assert '開發線' not in version
+          assert '## v1.2.0｜2026-08-21' in changelog
+          assert '未發布｜v1.2' not in changelog
+          for text in (readme, version, changelog, architecture, quick, install, sync):
+              assert 'Ziwei Transformation Core' in text or 'Transformation Core' in text
+              assert 'Ziwei Flying Core' in text or 'Flying Core' in text
+          assert 'Calendar Resolver v1 已正式實作' in quick
+          assert 'engine/ziwei/transformation_profiles.py' in install
+          assert 'engine/ziwei/composition.py' in sync
+          assert 'Fine Cycle Stem Resolver' in readme
+          assert '流月／流日／流時四化與飛化' in version
+          print('VERSION_CONSISTENCY_PASS')
+
+          # Local markdown link check for the seven changed docs.
+          for rel in expected:
+              path = Path(rel)
+              text = path.read_text(encoding='utf-8')
+              for target in re.findall(r'\[[^\]]+\]\(([^)]+)\)', text):
+                  if target.startswith(('http://', 'https://', '#', 'mailto:')):
+                      continue
+                  target = target.split('#', 1)[0]
+                  if not target:
+                      continue
+                  resolved = (path.parent / target).resolve()
+                  assert resolved.exists(), f'broken local link: {rel} -> {target}'
+          print('LOCAL_LINKS_PASS')
+
+          full = Path('full-repo.txt').read_text(encoding='utf-8')
+          m = re.findall(r'Ran (\d+) tests', full)
+          assert m and 'FAILED' not in full and '\nOK\n' in full
+          print('FULL_REPO_PASS count=' + m[-1])
+          PY
