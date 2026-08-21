@@ -2,62 +2,122 @@
 
 ## 最新正式發布
 
-- Metaphysics Lab Core：v1.1.0
+- Metaphysics Lab Core：**v1.2.0**
+- 發布日期：**2026-08-21**
+- Release baseline：`main` post-merge verified
+
+主要元件：
+
 - 命理推導計算規則：v1.2
 - Project Bazi Calendar Engine：v1.0.0
-- Metaphysics Lab 紫微流月定位引擎：v1.0.0
-- 紫微流月推導規則：v1.0
+- 紫微流月定位引擎：v1.0.0
+- 紫微流日定位引擎：v1.0.0-exp
+- 紫微流時定位引擎：v1.0.0-exp
+- Calendar Resolver：v1.0.0
+- Ziwei Transformation Core：v1.0.0
+- Ziwei Flying Core：v1.0.0
 - 問事追蹤制度：v1.0
-- 發布日期：2026-08-20
 
-## v1.2 開發線狀態
+---
 
-目前 v1.2 開發線在 v1.1 正式版之上增加模組化架構、capability 狀態模型與 Calendar Resolver infrastructure。
+## v1.2.0 Capability 狀態
 
-- 八字正式模組：`engine/bazi/calendar.py`
-- 紫微流月：`implemented / stable / default`
-- Metaphysics Lab 紫微流日定位引擎：v1.0.0-exp
-- 紫微流日推導規則：v1.0-exp
-- 紫微流日：`implemented / experimental / on_demand`
-- Metaphysics Lab 紫微流時定位引擎：v1.0.0-exp
-- 紫微流時推導規則：v1.0-exp
-- 紫微流時：`implemented / experimental / on_demand`
-- Metaphysics Lab Calendar Resolver：v1.0.0
-- Calendar / Input Resolver：implemented
-- Ziwei Calendar Adapter：implemented
-- Ziwei Transformation Core v1：`implemented / stable / on_demand`
-- Ziwei Flying Core v1：`implemented / stable / on_demand`
-- Phase 2A 公開 iztro 十干四化 qualification：`40 / 40 PASS`
-- Phase 2A 私有 Astralium 十干四化 qualification：`40 / 40 PASS`
-- Phase 2A 私有 Astralium flying qualification：`80 / 80 PASS`
-- 紫微流月／流日／流時細運四化／飛化：`planned / on_demand`
-- 紫微流曜：`planned / on_demand`
-- Cross-System Validation：planned
+| Capability | Implementation | Maturity | Routing / Role |
+|---|---|---|---|
+| 八字流年／流月／流日／流時 | implemented | stable | default |
+| 紫微流月定位 | implemented | stable | default |
+| 紫微流日定位 | implemented | experimental | on_demand |
+| 紫微流時定位 | implemented | experimental | on_demand |
+| Calendar Resolver v1 | implemented | stable infrastructure | upstream |
+| Ziwei Calendar Adapter | implemented | stable infrastructure | adapter |
+| Ziwei Transformation Core v1 | implemented | stable | on_demand |
+| Ziwei Flying Core v1 | implemented | stable | on_demand |
+| 紫微流月／流日／流時四化與飛化 | planned | — | on_demand |
+| 紫微流曜 | planned | — | on_demand |
+| Cross-System Validation | planned | — | — |
+| 奇門自動排盤引擎 | planned | — | — |
 
-`Experimental / On-demand` 代表能力已有可執行 Python 與驗證紀錄，但一般年度／月份問事不預設執行，分析時也必須降權；不等於 Stable，也不等於能力不存在。
+`Experimental / On-demand` 代表能力已有可執行 Python 與驗證紀錄，但一般年度／月份問事不預設執行，分析時也必須降權。
 
-## 相容性
+`Stable / On-demand` 代表能力已通過既定 promotion gate，但仍不代表每次問事都要預設執行。
+
+---
+
+## v1.2.0 Qualification / Regression Baseline
+
+### Ziwei Transformation & Flying Core
+
+```text
+pinned iztro 十干四化             40/40 PASS
+私有 Astralium 十干四化           40/40 PASS
+Astralium 本命飛化                48/48 PASS
+Astralium 大限飛化                 4/4 PASS
+Astralium 2023–2029 流年飛化      28/28 PASS
+Astralium flying total             80/80 PASS
+Astralium-compatible presentation  11/11 PASS
+```
+
+### main post-merge regression
+
+```text
+Phase 2A internal  43/43 PASS
+Ziwei              83/83 PASS
+Calendar           35/35 PASS
+Bazi               10/10 PASS
+Full repository   132/132 PASS
+```
+
+Private Astralium raw chart 與 normalized qualification input 不存 repo；repo 只保存 aggregate evidence 與 digest。
+
+---
+
+## Runtime / Compatibility
 
 - Python：3.9 以上
-- 時區：八字引擎需支援 `zoneinfo`
-- 八字流月／流日／流時：已啟用
-- 紫微流月：Stable，只含斗君、流月命宮、流月十二宮
-- 紫微流月月份邊界：農曆初一；閏月拆半
-- 紫微流日：v1.1 正式版未包含；v1.2 開發線已實作為 Experimental / On-demand
-- 紫微流時：v1.1 正式版未包含；v1.2 開發線已實作為 Experimental / On-demand，只含流時命宮與十二宮定位
-- Calendar / Input Resolver：v1.2 開發線已實作 v1.0.0；需要 `lunar-python 1.4.8` 與 `tzdata 2026.3`
-- Ziwei Calendar Adapter：v1.2 開發線已實作
-- 紫微十天干四化核心：v1.2 開發線已實作為 Stable / On-demand；rule profile `metaphysics-lab-common-v1`
-- 紫微本命宮干、生年、大限、流年飛化核心：v1.2 開發線已實作為 Stable / On-demand
-- Phase 2A qualification：pinned iztro `40/40`；私有 Astralium 四化 `40/40`、飛化 `80/80`；raw private chart 不存 repo
-- 紫微流月／流日／流時細運四化／飛化與流曜：尚未實作，維持 Planned / On-demand
+- Calendar Resolver lunar provider：`lunar-python==1.4.8`
+- Timezone provider：`tzdata==2026.3` / IANA `2026c`
+- Calendar Resolver Gregorian→Lunar HKO validated range：`1901-01-01..2100-12-31`
+- `2057-09-28..2057-10-27`：`boundary_conflict`
+- `2089-09-04`、`2097-08-07`：`boundary_caution`
+- 23:00 已屬子時，但 Resolver civil date 只在 00:00 換日
+- 八字 23:00 early-Zi 仍由八字引擎負責
+- 紫微 23:00 命理日界尚未固定，不自動沿用八字規則
 
-## 邊界提醒
+---
 
-八字流月採節氣月；紫微流月採農曆月。兩者在同一國曆日期可能不同月，屬正常設計，不是 bug。
+## 版本治理規則
 
-Calendar Resolver v1 的 Gregorian→Lunar HKO exhaustive validated range 為 `1901-01-01..2100-12-31`；`2057-09-28..2057-10-27` 為 `boundary_conflict`，`2089-09-04` 與 `2097-08-07` 為 `boundary_caution`。2100 之後若 provider 可算，只能標記 `out_of_validated_range`，不得宣稱已通過 HKO validated range。
+`VERSION.md` 只回答「目前正式有效的是什麼」。歷史變更請看 `CHANGELOG.md`，升級操作請看 `docs/更新與版本同步.md`。
 
-Calendar Resolver v1 使用 pinned `tzdata 2026.3 / IANA 2026c`。23:00 已屬子時，但 civil date 只在 00:00 換日，`metaphysics_day_boundary_applied = false`。八字既有 23:00 early-Zi 規則仍由八字引擎負責；紫微不自動沿用。
+以下變更必須留下版本歷程並重新跑對應 gate：
 
-紫微流日／流時 core 仍接受已解析農曆資料；Ziwei Calendar Adapter 可把成功且可用的 `CalendarContext` 傳入既有 core。自然語言解析、真太陽時與紫微 23:00 命理日界仍在 Resolver 外。
+- 會改變命盤計算結果的規則
+- 時間／日期邊界
+- rule profile
+- schema / data contract
+- capability implementation / maturity / routing
+- qualification source 或 promotion gate
+
+建議版本語意：
+
+- patch：不改演算法語意的修正、文件錯誤、測試補強
+- minor：新增正式 capability、啟用新的可執行規則層
+- major：破壞性 schema／API／核心規則相容性變更
+
+正式 Git tag / GitHub Release 應在 release 文件 merge、main regression 完成後建立，避免 tag 指向尚未收斂的中間狀態。
+
+---
+
+## 歷史版本
+
+### v1.1.0｜2026-08-20
+
+- 正式加入 Project 紫微流月定位。
+- 建立流年斗君、流月命宮、流月十二宮重排。
+- 建立安裝、資料準備、更新同步與快速開始文件。
+
+### v1.0.0｜2026-08-20
+
+- 建立 Metaphysics Lab 共用核心架構。
+- 建立問事「先盲判、後事件校準」制度。
+- 建立八字流年、流月、流日、流時固定算法與測試基線。
