@@ -43,6 +43,15 @@ def fly_transformations(transformations, star_locations, source):
             "chart_basis_mismatch",
             "source and star index belong to different charts",
         )
+    if transformations.heavenly_stem != source.heavenly_stem:
+        raise ZiweiPhase2AError(
+            "flying_source_mismatch",
+            "transformation set and flying source heavenly stem mismatch",
+            {
+                "transformation_stem": transformations.heavenly_stem,
+                "source_stem": source.heavenly_stem,
+            },
+        )
     edges = []
     for item in transformations.transformations:
         if item.star not in star_locations.locations:
