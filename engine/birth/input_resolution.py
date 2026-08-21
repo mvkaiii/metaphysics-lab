@@ -73,6 +73,12 @@ def _failure(
     )
 
 
+def _birth_time_precision_error(reason: Optional[str]) -> str:
+    if reason in ("ambiguous_input", "insufficient_precision"):
+        return "ambiguous_birth_time"
+    return reason or "ambiguous_birth_time"
+
+
 def resolve_birth_input(
     payload: Mapping[str, object],
     *,
@@ -98,10 +104,7 @@ def resolve_birth_input(
 
         if "birth_time_range" in payload:
             raw_range = payload["birth_time_range"]
-            if (
-                not isinstance(raw_range, (list, tuple))
-                or len(raw_range) != 2
-            ):
+            if not isinstance(raw_range, (list, tuple)) or len(raw_range) != 2:
                 return _failure(error_code="ambiguous_birth_time")
             start = _parse_time(raw_range[0])
             end = _parse_time(raw_range[1])
@@ -117,7 +120,7 @@ def resolve_birth_input(
                 is_unique=birth_time.is_exact,
             )
             if not precision.can_execute:
-                return _failure(error_code=precision.reason)
+                return _failure(error_code=_birth_time_precision_error(precision.reason))
         else:
             parsed_time = _parse_time(payload["birth_time"])
             birth_time = BirthTimeInput(
@@ -132,7 +135,7 @@ def resolve_birth_input(
                 is_unique=True,
             )
             if not precision.can_execute:
-                return _failure(error_code=precision.reason)
+                return _failure(error_code=_birth_time_precision_error(precision.reason))
 
         birth_input = BirthInput(
             sex=sex,
