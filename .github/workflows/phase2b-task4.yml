@@ -1,0 +1,109 @@
+name: Phase 2B Task 4
+
+on:
+  pull_request:
+    branches:
+      - design/ziwei-fine-cycle-stem-resolver
+
+permissions:
+  contents: write
+
+jobs:
+  task4:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/ziwei-fine-cycle-stem-resolver-v1
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Write RED daily tests
+        run: |
+          cat >> tests/test_ziwei_fine_cycle_stems.py <<'PY'
+
+          from engine.ziwei.fine_cycle_stems import resolve_day_stem
+
+
+          class FineCycleDayTests(unittest.TestCase):
+              def test_2259_uses_civil_date(self):
+                  result = resolve_day_stem(calendar_context(
+                      gregorian_date=date(1987, 12, 6), local_hour=22, local_minute=59,
+                  ))
+                  self.assertEqual(result.effective_date, date(1987, 12, 6))
+                  self.assertEqual((result.heavenly_stem, result.earthly_branch), ("己", "丑"))
+
+              def test_2300_advances_effective_date(self):
+                  result = resolve_day_stem(calendar_context(
+                      gregorian_date=date(1987, 12, 6), local_hour=23, local_minute=0,
+                      hour_branch="子",
+                  ))
+                  self.assertEqual(result.effective_date, date(1987, 12, 7))
+                  self.assertEqual((result.heavenly_stem, result.earthly_branch), ("庚", "寅"))
+                  self.assertEqual(result.reference, "ziwei-day:1987-12-07@late_zi_forward-v1")
+
+              def test_0000_does_not_double_advance(self):
+                  result = resolve_day_stem(calendar_context(
+                      gregorian_date=date(1987, 12, 7), local_hour=0, local_minute=0,
+                      hour_branch="子",
+                  ))
+                  self.assertEqual(result.effective_date, date(1987, 12, 7))
+                  self.assertEqual((result.heavenly_stem, result.earthly_branch), ("庚", "寅"))
+
+              def test_preapplied_metaphysics_boundary_is_rejected(self):
+                  with self.assertRaises(ZiweiFineCycleError) as cm:
+                      resolve_day_stem(calendar_context(metaphysics_day_boundary_applied=True))
+                  self.assertEqual(cm.exception.code, "calendar_boundary_already_applied")
+
+              def test_calendar_boundary_conflict_is_rejected_but_caution_is_preserved(self):
+                  with self.assertRaises(ZiweiFineCycleError) as cm:
+                      resolve_day_stem(calendar_context(calendar_status="boundary_conflict"))
+                  self.assertEqual(cm.exception.code, "calendar_context_unusable")
+                  caution = resolve_day_stem(calendar_context(calendar_status="boundary_caution"))
+                  self.assertEqual(caution.calendar_validation_status, "boundary_caution")
+          PY
+      - name: Verify RED
+        run: |
+          set +e
+          python -m unittest tests.test_ziwei_fine_cycle_stems.FineCycleDayTests -v > task4-red.txt 2>&1
+          rc=$?
+          cat task4-red.txt
+          if [ "$rc" -eq 0 ]; then
+            echo "Task 4 unexpectedly GREEN before implementation"
+            exit 1
+          fi
+          grep -q "cannot import name 'resolve_day_stem'" task4-red.txt
+          echo TASK4_EXPECTED_RED
+      - name: Implement daily resolver
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('engine/ziwei/fine_cycle_stems.py')
+          text = path.read_text(encoding='utf-8')
+          text = text.replace('from __future__ import annotations\n\n', 'from __future__ import annotations\n\nfrom datetime import timedelta\n\n')
+          text = text.replace(
+              'from engine.calendar.sexagenary import five_tiger_month, lunar_year_stem\n',
+              'from engine.calendar.sexagenary import five_tiger_month, lunar_year_stem, sexagenary_day\n',
+          )
+          addition = '''\n\ndef _effective_ziwei_date(context: CalendarContext, profile: FineCycleStemProfile):\n    civil_date = context.normalized_time.gregorian_date\n    if profile.ziwei_day_boundary != DAY_BOUNDARY_PROFILE:\n        raise ZiweiFineCycleError(\n            "invalid_fine_cycle_profile",\n            "unsupported Ziwei day-boundary profile",\n            {"ziwei_day_boundary": profile.ziwei_day_boundary},\n        )\n    if context.normalized_time.local_datetime.hour >= 23:\n        return civil_date + timedelta(days=1)\n    return civil_date\n\n\ndef resolve_day_stem(\n    context: CalendarContext,\n    profile_id: str = FINE_CYCLE_PROFILE_ID,\n) -> ResolvedCycleStem:\n    _ensure_usable_context(context)\n    profile = get_fine_cycle_profile(profile_id)\n    civil_date = context.normalized_time.gregorian_date\n    effective_date = _effective_ziwei_date(context, profile)\n    stem, branch = sexagenary_day(effective_date)\n    reference = "ziwei-day:%s@%s" % (\n        effective_date.isoformat(),\n        profile.ziwei_day_boundary,\n    )\n    return ResolvedCycleStem(\n        "daily",\n        reference,\n        stem,\n        branch,\n        profile.profile_id,\n        profile.rule_version,\n        civil_date,\n        effective_date,\n        None,\n        context.validation.overall_status,\n        _provenance(profile),\n    )\n'''
+          if 'def resolve_day_stem(' not in text:
+              text += addition
+          path.write_text(text, encoding='utf-8')
+          PY
+      - name: Verify GREEN and boundary regressions
+        run: |
+          python -m unittest tests.test_ziwei_fine_cycle_stems.FineCycleDayTests -v
+          python -m unittest tests.test_calendar_resolver tests.test_calendar_timezone tests.test_project_bazi_calendar -v
+          python -m unittest discover -v
+          echo DAY_STEM_BOUNDARY_PASS
+          echo CALENDAR_BOUNDARY_DOUBLE_APPLY_REJECTED
+      - name: Commit Task 4 to feature branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add engine/ziwei/fine_cycle_stems.py tests/test_ziwei_fine_cycle_stems.py
+          git commit -m "feat: resolve Ziwei daily stems with late-Zi boundary"
+          git push origin HEAD:feature/ziwei-fine-cycle-stem-resolver-v1
