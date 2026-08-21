@@ -1,0 +1,403 @@
+name: Phase 2B Task 9
+
+on:
+  pull_request:
+    branches:
+      - design/ziwei-fine-cycle-stem-resolver
+
+permissions:
+  contents: write
+
+jobs:
+  task9:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/ziwei-fine-cycle-stem-resolver-v1
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Write RED qualification tests
+        run: |
+          cat > tests/test_ziwei_phase2b_qualification.py <<'PY'
+          import json
+          import unittest
+          from pathlib import Path
+
+          from engine.ziwei.errors import ZiweiFineCycleError
+          from tools.qualify_ziwei_phase2b_public import (
+              parse_lunar_lite_contract,
+              parse_lunar_lite_vectors,
+              qualify_lunar_lite,
+          )
+
+
+          class ZiweiPhase2BLunarLiteQualificationTests(unittest.TestCase):
+              def test_parser_extracts_required_pinned_vectors(self):
+                  source = r'''
+                  test("getHeavenlyStemAndEarthlyBranchByLunarDate()", () => {
+                    const data = [
+                      { date: "2023-6-13", timeIndex: 1, isLeap: false, result: "癸卯 己未 己丑 乙丑", },
+                      { date: "2023-6-13", timeIndex: 12, isLeap: false, result: "癸卯 己未 庚寅 丙子", },
+                      { date: "2023-2-11", timeIndex: 1, isLeap: true, result: "癸卯 乙卯 己丑 乙丑", },
+                      { date: "2023-2-11", timeIndex: 1, isLeap: false, result: "癸卯 甲寅 己未 乙丑", },
+                    ];
+                  });
+                  test("getHeavenlyStemAndEarthlyBranchBySolarDate()", () => {
+                    const data = [
+                      { date: "1987-12-6", timeIndex: 11, result: "丁卯 辛亥 己丑 乙亥", },
+                      { date: "1987-12-6", timeIndex: 12, result: "丁卯 辛亥 庚寅 丙子", },
+                      { date: "2023-03-09", timeIndex: 5, result: "癸卯 乙卯 丙寅 癸巳", },
+                      { date: "2023-4-8", timeIndex: 5, result: "癸卯 丙辰 丙申 癸巳", },
+                    ];
+                  });
+                  '''
+                  vectors = parse_lunar_lite_vectors(source)
+                  keys = {(row["kind"], row["date"], row["time_index"], row.get("is_leap")) for row in vectors}
+                  self.assertIn(("lunar", "2023-6-13", 12, False), keys)
+                  self.assertIn(("lunar", "2023-2-11", 1, True), keys)
+                  self.assertIn(("solar", "1987-12-6", 12, None), keys)
+                  self.assertIn(("solar", "2023-03-09", 5, None), keys)
+
+              def test_parser_rejects_changed_or_missing_required_vector(self):
+                  bad = r'''
+                  test("getHeavenlyStemAndEarthlyBranchByLunarDate()", () => {
+                    const data = [{ date: "2023-6-13", timeIndex: 1, isLeap: false, result: "癸卯 己未 己丑 乙丑", }];
+                  });
+                  test("getHeavenlyStemAndEarthlyBranchBySolarDate()", () => {
+                    const data = [{ date: "1987-12-6", timeIndex: 12, result: "丁卯 辛亥 己丑 丙子", }];
+                  });
+                  '''
+                  with self.assertRaises(ZiweiFineCycleError) as cm:
+                      parse_lunar_lite_vectors(bad)
+                  self.assertEqual(cm.exception.code, "qualification_mismatch")
+
+              def test_contract_parser_requires_normal_month_and_exact_day_time_sources(self):
+                  good = '''
+                  const fixLeap = lunar.getMonth() < 0 && lunar.getDay() > 15 ? 1 : 0;
+                  FIVE_TIGER[HEAVENLY_STEMS.indexOf(yearlyGan)]
+                  lunar.getDayGanExact()
+                  lunar.getDayZhiExact()
+                  lunar.getTimeGan()
+                  lunar.getTimeZhi()
+                  '''
+                  parsed = parse_lunar_lite_contract(good)
+                  self.assertTrue(all(parsed.values()))
+                  with self.assertRaises(ZiweiFineCycleError) as cm:
+                      parse_lunar_lite_contract(good.replace("lunar.getTimeGan()", ""))
+                  self.assertEqual(cm.exception.code, "qualification_mismatch")
+
+              def test_report_marks_synthetic_edge_as_not_externally_covered(self):
+                  vectors = [
+                      {"kind": "lunar", "date": "2023-6-13", "time_index": 1, "is_leap": False,
+                       "result": "癸卯 己未 己丑 乙丑"},
+                      {"kind": "lunar", "date": "2023-6-13", "time_index": 12, "is_leap": False,
+                       "result": "癸卯 己未 庚寅 丙子"},
+                      {"kind": "lunar", "date": "2023-2-11", "time_index": 1, "is_leap": True,
+                       "result": "癸卯 乙卯 己丑 乙丑"},
+                      {"kind": "lunar", "date": "2023-2-11", "time_index": 1, "is_leap": False,
+                       "result": "癸卯 甲寅 己未 乙丑"},
+                      {"kind": "solar", "date": "1987-12-6", "time_index": 11, "is_leap": None,
+                       "result": "丁卯 辛亥 己丑 乙亥"},
+                      {"kind": "solar", "date": "1987-12-6", "time_index": 12, "is_leap": None,
+                       "result": "丁卯 辛亥 庚寅 丙子"},
+                      {"kind": "solar", "date": "2023-03-09", "time_index": 5, "is_leap": None,
+                       "result": "癸卯 乙卯 丙寅 癸巳"},
+                      {"kind": "solar", "date": "2023-4-8", "time_index": 5, "is_leap": None,
+                       "result": "癸卯 丙辰 丙申 癸巳"},
+                  ]
+                  report = qualify_lunar_lite(vectors, "rev", "ts")
+                  self.assertEqual(report["status"], "PASS")
+                  self.assertEqual(report["cases_checked"], report["cases_matched"])
+                  self.assertGreater(report["cases_checked"], 0)
+                  self.assertEqual(report["mismatches"], [])
+                  self.assertIn("leap_twelfth_month_second_half", report["not_externally_covered"])
+
+              def test_committed_lunar_report_contract(self):
+                  path = Path("qualification/ziwei/phase2b/public-lunar-lite-1d104fff.json")
+                  payload = json.loads(path.read_text(encoding="utf-8"))
+                  self.assertEqual(payload["source_name"], "SylarLong/lunar-lite")
+                  self.assertEqual(payload["source_revision"], "1d104fffa31609e9f112898cc57545827e8d57ae")
+                  self.assertEqual(payload["package_version"], "0.2.8")
+                  self.assertEqual(payload["status"], "PASS")
+                  self.assertEqual(payload["mismatches"], [])
+                  self.assertIn("late_zi_day_hour", payload["external_coverage"])
+                  self.assertIn("leap_twelfth_month_second_half", payload["not_externally_covered"])
+                  raw = path.read_text(encoding="utf-8")
+                  self.assertNotIn("Astralium", raw)
+
+
+          if __name__ == "__main__":
+              unittest.main()
+          PY
+      - name: Verify RED
+        run: |
+          set +e
+          python -m unittest tests.test_ziwei_phase2b_qualification -v > task9-red.txt 2>&1
+          rc=$?
+          cat task9-red.txt
+          if [ "$rc" -eq 0 ]; then
+            echo "Task 9 unexpectedly GREEN before qualification tool"
+            exit 1
+          fi
+          grep -q "No module named 'tools.qualify_ziwei_phase2b_public'" task9-red.txt
+          echo TASK9_EXPECTED_RED
+      - name: Implement pinned lunar-lite qualification tool
+        run: |
+          cat > tools/qualify_ziwei_phase2b_public.py <<'PY'
+          from __future__ import annotations
+
+          import argparse
+          import json
+          import re
+          import sys
+          from datetime import date, timedelta
+          from pathlib import Path
+
+          _REPO_ROOT = Path(__file__).resolve().parents[1]
+          if str(_REPO_ROOT) not in sys.path:
+              sys.path.insert(0, str(_REPO_ROOT))
+
+          from engine.calendar.sexagenary import (
+              five_mouse_hour,
+              five_tiger_month,
+              lunar_year_stem,
+              sexagenary_day,
+          )
+          from engine.ziwei.errors import ZiweiFineCycleError
+          from engine.ziwei.fine_cycle_stems import FINE_CYCLE_PROFILE_ID, FINE_CYCLE_RULE_VERSION
+
+          LUNAR_LITE_NAME = "SylarLong/lunar-lite"
+          LUNAR_LITE_PACKAGE_VERSION = "0.2.8"
+          REQUIRED_LUNAR = {
+              ("2023-6-13", 1, False): "癸卯 己未 己丑 乙丑",
+              ("2023-6-13", 12, False): "癸卯 己未 庚寅 丙子",
+              ("2023-2-11", 1, True): "癸卯 乙卯 己丑 乙丑",
+              ("2023-2-11", 1, False): "癸卯 甲寅 己未 乙丑",
+          }
+          REQUIRED_SOLAR = {
+              ("1987-12-6", 11): "丁卯 辛亥 己丑 乙亥",
+              ("1987-12-6", 12): "丁卯 辛亥 庚寅 丙子",
+              ("2023-03-09", 5): "癸卯 乙卯 丙寅 癸巳",
+              ("2023-4-8", 5): "癸卯 丙辰 丙申 癸巳",
+          }
+
+
+          def _fail(message, details=None):
+              raise ZiweiFineCycleError("qualification_mismatch", message, details)
+
+
+          def _test_block(source_text: str, test_name: str) -> str:
+              marker = 'test("%s"' % test_name
+              start = source_text.find(marker)
+              if start < 0:
+                  _fail("missing lunar-lite test block", {"test": test_name})
+              data_start = source_text.find("const data = [", start)
+              if data_start < 0:
+                  _fail("missing lunar-lite data array", {"test": test_name})
+              data_end = source_text.find("];", data_start)
+              if data_end < 0:
+                  _fail("unterminated lunar-lite data array", {"test": test_name})
+              return source_text[data_start:data_end]
+
+
+          def _objects(block: str):
+              rows = []
+              for chunk in re.findall(r"\{(.*?)\}", block, re.S):
+                  date_match = re.search(r'date\s*:\s*["\']([^"\']+)["\']', chunk)
+                  time_match = re.search(r"timeIndex\s*:\s*(\d+)", chunk)
+                  result_match = re.search(r'result\s*:\s*["\']([^"\']+)["\']', chunk)
+                  if not (date_match and time_match and result_match):
+                      continue
+                  leap_match = re.search(r"isLeap\s*:\s*(true|false)", chunk)
+                  rows.append({
+                      "date": date_match.group(1),
+                      "time_index": int(time_match.group(1)),
+                      "is_leap": None if leap_match is None else leap_match.group(1) == "true",
+                      "result": result_match.group(1),
+                  })
+              return rows
+
+
+          def parse_lunar_lite_vectors(source_text: str):
+              lunar_rows = _objects(_test_block(source_text, "getHeavenlyStemAndEarthlyBranchByLunarDate()"))
+              solar_rows = _objects(_test_block(source_text, "getHeavenlyStemAndEarthlyBranchBySolarDate()"))
+              indexed_lunar = {(r["date"], r["time_index"], r["is_leap"]): r for r in lunar_rows}
+              indexed_solar = {(r["date"], r["time_index"]): r for r in solar_rows}
+              selected = []
+              for key, expected in REQUIRED_LUNAR.items():
+                  row = indexed_lunar.get(key)
+                  if row is None or row["result"] != expected:
+                      _fail("required lunar-lite lunar vector missing or changed", {"key": key, "expected": expected})
+                  selected.append({"kind": "lunar", **row})
+              for key, expected in REQUIRED_SOLAR.items():
+                  row = indexed_solar.get(key)
+                  if row is None or row["result"] != expected:
+                      _fail("required lunar-lite solar vector missing or changed", {"key": key, "expected": expected})
+                  selected.append({"kind": "solar", **row})
+              return tuple(selected)
+
+
+          def parse_lunar_lite_contract(source_text: str):
+              checks = {
+                  "normal_month_leap_split": bool(re.search(
+                      r"fixLeap\s*=\s*lunar\.getMonth\(\)\s*<\s*0\s*&&\s*lunar\.getDay\(\)\s*>\s*15\s*\?\s*1\s*:\s*0",
+                      source_text,
+                  )),
+                  "five_tiger_source": "FIVE_TIGER[HEAVENLY_STEMS.indexOf(yearlyGan)]" in re.sub(r"\s+", "", source_text),
+                  "exact_day_stem": "lunar.getDayGanExact()" in source_text,
+                  "exact_day_branch": "lunar.getDayZhiExact()" in source_text,
+                  "time_stem": "lunar.getTimeGan()" in source_text,
+                  "time_branch": "lunar.getTimeZhi()" in source_text,
+              }
+              # Whitespace-neutral check for the FIVE_TIGER expression.
+              compact = re.sub(r"\s+", "", source_text)
+              checks["five_tiger_source"] = "FIVE_TIGER[HEAVENLY_STEMS.indexOf(yearlyGan)]" in compact
+              missing = [name for name, ok in checks.items() if not ok]
+              if missing:
+                  _fail("lunar-lite Ganzhi contract changed", {"missing": missing})
+              return checks
+
+
+          def _parse_ymd(value: str) -> date:
+              year, month, day = (int(part) for part in value.split("-"))
+              return date(year, month, day)
+
+
+          def _pillars(value: str):
+              parts = tuple(value.split())
+              if len(parts) != 4 or any(len(item) != 2 for item in parts):
+                  _fail("invalid four-pillar vector", {"value": value})
+              return parts
+
+
+          def qualify_lunar_lite(vectors, source_revision: str, run_timestamp: str):
+              mismatches = []
+              checks = []
+
+              def compare(case_id, category, expected, project):
+                  ok = expected == project
+                  checks.append({
+                      "case_id": case_id,
+                      "category": category,
+                      "expected_external": expected,
+                      "project": project,
+                      "matched": ok,
+                  })
+                  if not ok:
+                      mismatches.append(checks[-1])
+
+              for row in vectors:
+                  year_pillar, month_pillar, day_pillar, hour_pillar = _pillars(row["result"])
+                  if row["kind"] == "lunar":
+                      lunar_year, lunar_month, lunar_day = (int(p) for p in row["date"].split("-"))
+                      effective_month = lunar_month + (1 if row["is_leap"] and lunar_day > 15 else 0)
+                      month_project = "".join(five_tiger_month(lunar_year_stem(lunar_year), effective_month))
+                      case_id = "lunar:%s:t%s:%s" % (
+                          row["date"], row["time_index"], "leap" if row["is_leap"] else "normal"
+                      )
+                      compare(case_id, "lunar_month_ganzhi", month_pillar, month_project)
+                      hour_project = "".join(five_mouse_hour(day_pillar[0], hour_pillar[1]))
+                      compare(case_id, "hour_stem_from_external_day_stem", hour_pillar, hour_project)
+                  else:
+                      civil = _parse_ymd(row["date"])
+                      effective = civil + timedelta(days=1) if row["time_index"] == 12 else civil
+                      project_day_tuple = sexagenary_day(effective)
+                      project_day = "".join(project_day_tuple)
+                      case_id = "solar:%s:t%s" % (row["date"], row["time_index"])
+                      compare(case_id, "ziwei_effective_day_ganzhi", day_pillar, project_day)
+                      project_hour = "".join(five_mouse_hour(project_day_tuple[0], hour_pillar[1]))
+                      compare(case_id, "hour_ganzhi", hour_pillar, project_hour)
+
+              matched = sum(1 for item in checks if item["matched"])
+              return {
+                  "source_name": LUNAR_LITE_NAME,
+                  "source_revision": source_revision,
+                  "package_version": LUNAR_LITE_PACKAGE_VERSION,
+                  "rule_profile": FINE_CYCLE_PROFILE_ID,
+                  "rule_version": FINE_CYCLE_RULE_VERSION,
+                  "cases_checked": len(checks),
+                  "cases_matched": matched,
+                  "external_coverage": [
+                      "lunar_month_ganzhi",
+                      "leap_month_first_half",
+                      "regular_day_hour",
+                      "late_zi_day_hour",
+                  ],
+                  "not_externally_covered": ["leap_twelfth_month_second_half"],
+                  "checks": checks,
+                  "mismatches": mismatches,
+                  "status": "PASS" if matched == len(checks) and not mismatches else "FAIL",
+                  "run_timestamp": run_timestamp,
+              }
+
+
+          def main(argv=None):
+              parser = argparse.ArgumentParser()
+              parser.add_argument("--lunar-lite-ganzhi-ts", required=True)
+              parser.add_argument("--lunar-lite-tests-ts", required=True)
+              parser.add_argument("--lunar-lite-revision", required=True)
+              parser.add_argument("--output-dir", required=True)
+              parser.add_argument("--run-timestamp", default="2026-08-21T00:00:00Z")
+              args = parser.parse_args(argv)
+
+              ganzhi_source = Path(args.lunar_lite_ganzhi_ts).read_text(encoding="utf-8")
+              tests_source = Path(args.lunar_lite_tests_ts).read_text(encoding="utf-8")
+              parse_lunar_lite_contract(ganzhi_source)
+              vectors = parse_lunar_lite_vectors(tests_source)
+              report = qualify_lunar_lite(vectors, args.lunar_lite_revision, args.run_timestamp)
+              output_dir = Path(args.output_dir)
+              output_dir.mkdir(parents=True, exist_ok=True)
+              output = output_dir / "public-lunar-lite-1d104fff.json"
+              output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+              if report["status"] == "PASS":
+                  print("PUBLIC_LUNAR_LITE_QUALIFICATION_PASS %d/%d" % (
+                      report["cases_matched"], report["cases_checked"]
+                  ))
+                  return 0
+              print("PUBLIC_LUNAR_LITE_QUALIFICATION_FAIL %d/%d" % (
+                  report["cases_matched"], report["cases_checked"]
+              ))
+              return 1
+
+
+          if __name__ == "__main__":
+              raise SystemExit(main())
+          PY
+      - name: Fetch exact pinned public source snapshots
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/SylarLong/lunar-lite/1d104fffa31609e9f112898cc57545827e8d57ae/src/ganzhi.ts -o /tmp/lunar-lite-ganzhi.ts
+          curl -fsSL https://raw.githubusercontent.com/SylarLong/lunar-lite/1d104fffa31609e9f112898cc57545827e8d57ae/src/__tests__/ganzhi.test.ts -o /tmp/lunar-lite-ganzhi.test.ts
+          curl -fsSL https://raw.githubusercontent.com/SylarLong/lunar-lite/1d104fffa31609e9f112898cc57545827e8d57ae/package.json -o /tmp/lunar-lite-package.json
+          python - <<'PY'
+          import json
+          payload = json.load(open('/tmp/lunar-lite-package.json', encoding='utf-8'))
+          assert payload['name'] == 'lunar-lite'
+          assert payload['version'] == '0.2.8'
+          print('PINNED_LUNAR_LITE_SOURCE_PASS')
+          PY
+      - name: Run exact pinned public qualification
+        run: |
+          python tools/qualify_ziwei_phase2b_public.py \
+            --lunar-lite-ganzhi-ts /tmp/lunar-lite-ganzhi.ts \
+            --lunar-lite-tests-ts /tmp/lunar-lite-ganzhi.test.ts \
+            --lunar-lite-revision 1d104fffa31609e9f112898cc57545827e8d57ae \
+            --output-dir qualification/ziwei/phase2b \
+            --run-timestamp 2026-08-21T00:00:00Z
+      - name: Verify GREEN and full regression
+        run: |
+          python -m unittest tests.test_ziwei_phase2b_qualification -v
+          python -m unittest tests.test_calendar_sexagenary tests.test_ziwei_fine_cycle_stems -v
+          python -m unittest discover -v
+          echo PUBLIC_LUNAR_LITE_QUALIFICATION_PASS
+      - name: Commit Task 9 to feature branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/qualify_ziwei_phase2b_public.py tests/test_ziwei_phase2b_qualification.py qualification/ziwei/phase2b/public-lunar-lite-1d104fff.json
+          git commit -m "test: qualify Ziwei fine-cycle stems against lunar-lite"
+          git push origin HEAD:feature/ziwei-fine-cycle-stem-resolver-v1
