@@ -1,0 +1,57 @@
+name: Phase 2A Task 6 GREEN
+
+on:
+  pull_request:
+    branches:
+      - feature/ziwei-transformation-flying-core-v1
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run capability and Ziwei regressions
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m unittest \
+            tests.test_ziwei_phase2a_capabilities \
+            tests.test_ziwei_capabilities \
+            tests.test_project_ziwei_month \
+            tests.test_project_ziwei_day \
+            tests.test_project_ziwei_hour \
+            tests.test_ziwei_calendar_adapter \
+            tests.test_engine_module_layout -v 2>&1 | tee task6-green.txt
+      - name: Assert routing invariants
+        shell: bash
+        run: |
+          python - <<'PY' | tee task6-routing.txt
+          from engine.ziwei.capabilities import get_capability, can_execute, should_run_by_default
+          for cid in ('ziwei.transformations', 'ziwei.flying'):
+              cap = get_capability(cid)
+              assert cap['implementation'] == 'implemented', cap
+              assert cap['maturity'] == 'experimental', cap
+              assert cap['routing'] == 'on_demand', cap
+              assert can_execute(cid)
+              assert not should_run_by_default(cid)
+          month = get_capability('ziwei.flow_month_palaces')
+          day = get_capability('ziwei.flow_day_palaces')
+          hour = get_capability('ziwei.flow_hour_palaces')
+          assert (month['maturity'], month['routing']) == ('stable', 'default')
+          assert (day['maturity'], day['routing']) == ('experimental', 'on_demand')
+          assert (hour['maturity'], hour['routing']) == ('experimental', 'on_demand')
+          print('CAPABILITY_ROUTING_PASS')
+          PY
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase2a-task6-green-evidence
+          path: |
+            task6-green.txt
+            task6-routing.txt
