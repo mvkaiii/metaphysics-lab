@@ -30,7 +30,12 @@ class ZiweiPhase2BDocumentationTests(unittest.TestCase):
         self.assertIn('fine-cycle profile', self.arch)
 
     def test_qualification_state_is_documented_without_overclaim(self):
-        for text in (self.readme, self.arch, self.rules, self.changelog):
+        extra = (
+            Path("docs/快速開始.md").read_text(encoding="utf-8"),
+            Path("docs/安裝到ChatGPT-Project.md").read_text(encoding="utf-8"),
+            Path("docs/更新與版本同步.md").read_text(encoding="utf-8"),
+        )
+        for text in (self.readme, self.arch, self.rules, self.changelog, *extra):
             self.assertIn('lunar-lite', text)
             self.assertIn('18/18 PASS', text)
             self.assertIn('iztro', text)
