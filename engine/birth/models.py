@@ -135,3 +135,45 @@ class BirthInputResolution:
             "error_code": self.error_code,
             "allowed_actions": list(self.allowed_actions),
         }
+
+
+@dataclass(frozen=True)
+class GeocodeCandidate:
+    name: str
+    latitude: float
+    longitude: float
+    country_code: str
+    raw_id: str
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+            "country_code": self.country_code,
+            "raw_id": self.raw_id,
+        }
+
+
+@dataclass(frozen=True)
+class ResolvedBirthPlace:
+    canonical_name: str
+    latitude: float
+    longitude: float
+    timezone: str
+    provider_name: str
+    provider_version: str
+    resolution_status: str
+    provider_reference: Optional[str] = None
+
+    def to_dict(self) -> dict:
+        return {
+            "canonical_name": self.canonical_name,
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+            "timezone": self.timezone,
+            "provider_name": self.provider_name,
+            "provider_version": self.provider_version,
+            "resolution_status": self.resolution_status,
+            "provider_reference": self.provider_reference,
+        }
