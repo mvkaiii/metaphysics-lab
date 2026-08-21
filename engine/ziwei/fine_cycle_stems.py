@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 from engine.calendar.models import CalendarContext
-from engine.calendar.sexagenary import five_tiger_month, lunar_year_stem, sexagenary_day
+from engine.calendar.sexagenary import five_mouse_hour, five_tiger_month, lunar_year_stem, sexagenary_day
 
 from .errors import ZiweiFineCycleError
 from .models import FineCycleStemProfile, LayerProvenance, ResolvedCycleStem
@@ -139,6 +139,39 @@ def resolve_day_stem(
         civil_date,
         effective_date,
         None,
+        context.validation.overall_status,
+        _provenance(profile),
+    )
+
+
+def resolve_hour_stem(
+    context: CalendarContext,
+    profile_id: str = FINE_CYCLE_PROFILE_ID,
+) -> ResolvedCycleStem:
+    _ensure_usable_context(context)
+    profile = get_fine_cycle_profile(profile_id)
+    civil_date = context.normalized_time.gregorian_date
+    effective_date = _effective_ziwei_date(context, profile)
+    day_stem, _ = sexagenary_day(effective_date)
+    stem, branch = five_mouse_hour(
+        day_stem,
+        context.normalized_time.hour_branch,
+    )
+    reference = "ziwei-hour:%s:%s@%s" % (
+        effective_date.isoformat(),
+        branch,
+        profile.ziwei_day_boundary,
+    )
+    return ResolvedCycleStem(
+        "hourly",
+        reference,
+        stem,
+        branch,
+        profile.profile_id,
+        profile.rule_version,
+        civil_date,
+        effective_date,
+        branch,
         context.validation.overall_status,
         _provenance(profile),
     )

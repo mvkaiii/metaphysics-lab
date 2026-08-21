@@ -157,3 +157,65 @@ class FineCycleDayTests(unittest.TestCase):
         self.assertEqual(cm.exception.code, "calendar_context_unusable")
         caution = resolve_day_stem(calendar_context(calendar_status="boundary_caution"))
         self.assertEqual(caution.calendar_validation_status, "boundary_caution")
+
+from engine.calendar.sexagenary import GAN, ZHI, five_mouse_hour
+from engine.ziwei.fine_cycle_stems import resolve_hour_stem
+
+
+class FineCycleHourTests(unittest.TestCase):
+    def test_public_regular_hour_vector(self):
+        result = resolve_hour_stem(calendar_context(
+            gregorian_date=date(1987, 12, 6),
+            local_hour=21,
+            local_minute=30,
+            hour_branch="亥",
+        ))
+        self.assertEqual((result.heavenly_stem, result.earthly_branch), ("乙", "亥"))
+        self.assertEqual(result.effective_date, date(1987, 12, 6))
+        self.assertEqual(result.hour_branch, "亥")
+
+    def test_late_zi_uses_next_day_stem_for_hour(self):
+        context = calendar_context(
+            gregorian_date=date(1987, 12, 6),
+            local_hour=23,
+            local_minute=30,
+            hour_branch="子",
+        )
+        day = resolve_day_stem(context)
+        hour = resolve_hour_stem(context)
+        self.assertEqual(day.heavenly_stem, "庚")
+        self.assertEqual((hour.heavenly_stem, hour.earthly_branch), ("丙", "子"))
+        self.assertEqual(hour.effective_date, day.effective_date)
+        self.assertEqual(hour.reference, "ziwei-hour:1987-12-07:子@late_zi_forward-v1")
+
+    def test_all_ten_day_stems_by_twelve_hour_branches(self):
+        first_hour_stem = {
+            "甲": "甲", "己": "甲",
+            "乙": "丙", "庚": "丙",
+            "丙": "戊", "辛": "戊",
+            "丁": "庚", "壬": "庚",
+            "戊": "壬", "癸": "壬",
+        }
+        for day_stem in GAN:
+            start = GAN.index(first_hour_stem[day_stem])
+            for branch_index, branch in enumerate(ZHI):
+                expected = (GAN[(start + branch_index) % 10], branch)
+                self.assertEqual(five_mouse_hour(day_stem, branch), expected)
+
+    def test_resolver_uses_calendar_hour_branch_without_recomputing_from_clock(self):
+        result = resolve_hour_stem(calendar_context(
+            gregorian_date=date(1987, 12, 6),
+            local_hour=21,
+            local_minute=30,
+            hour_branch="子",
+        ))
+        self.assertEqual(result.earthly_branch, "子")
+        self.assertEqual(result.hour_branch, "子")
+
+    def test_hour_inherits_context_fail_closed_guards(self):
+        with self.assertRaises(ZiweiFineCycleError) as cm1:
+            resolve_hour_stem(calendar_context(calendar_status="boundary_conflict"))
+        self.assertEqual(cm1.exception.code, "calendar_context_unusable")
+        with self.assertRaises(ZiweiFineCycleError) as cm2:
+            resolve_hour_stem(calendar_context(metaphysics_day_boundary_applied=True))
+        self.assertEqual(cm2.exception.code, "calendar_boundary_already_applied")
