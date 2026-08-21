@@ -3,7 +3,7 @@ import unittest
 from geopy.exc import GeocoderServiceError
 
 from engine.birth.errors import BirthFoundationError
-from engine.birth.location import resolve_birth_place
+from engine.birth.location import NominatimLocationProvider, resolve_birth_place
 from engine.birth.models import BirthPlaceInput, GeocodeCandidate
 
 
@@ -50,6 +50,15 @@ class OfflineProvider:
         raise GeocoderServiceError("provider offline")
 
 
+class RecordingGeocoder:
+    def __init__(self):
+        self.kwargs = None
+
+    def geocode(self, query, **kwargs):
+        self.kwargs = kwargs
+        return []
+
+
 class BirthLocationTests(unittest.TestCase):
     def test_unique_place_resolves_coordinates_and_iana_timezone(self):
         result = resolve_birth_place(BirthPlaceInput("台北市"), FakeProvider())
@@ -73,6 +82,15 @@ class BirthLocationTests(unittest.TestCase):
         with self.assertRaises(BirthFoundationError) as caught:
             resolve_birth_place(BirthPlaceInput("台北市"), OfflineProvider())
         self.assertEqual(caught.exception.code, "location_provider_unavailable")
+
+    def test_nominatim_default_adapter_requests_city_level_features(self):
+        provider = NominatimLocationProvider("test-agent")
+        recorder = RecordingGeocoder()
+        provider._geocoder = recorder
+        self.assertEqual(provider.geocode("London, UK"), ())
+        self.assertEqual(recorder.kwargs["featuretype"], "city")
+        self.assertFalse(recorder.kwargs["exactly_one"])
+        self.assertEqual(recorder.kwargs["limit"], 5)
 
 
 if __name__ == "__main__":
