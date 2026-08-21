@@ -128,7 +128,10 @@ jobs:
 
           design = '7f907e913a59f06a472680616f703c32f2c21b56'
           feature = os.environ['FEATURE_BASE_SHA']
-          files = subprocess.check_output(['git', 'diff', '--name-only', design + '...' + feature], text=True).splitlines()
+          files = subprocess.check_output(
+              ['git', '-c', 'core.quotePath=false', 'diff', '--name-only', design + '...' + feature],
+              text=True,
+          ).splitlines()
           print('FEATURE_BASE_SHA=' + feature)
           for item in files:
               print(item)
