@@ -3,7 +3,12 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 
 from engine.ziwei.errors import ZiweiPhase2AError
 from engine.ziwei.transformation_profiles import PROFILE_ID, RULE_VERSION
@@ -138,9 +143,7 @@ def main(argv=None):
     if evidence["status"] == "PASS":
         print("EXTERNAL_PROFILE_PASS 40/40")
         return 0
-    print(
-        "EXTERNAL_PROFILE_FAIL %d/40" % evidence["cases_matched"]
-    )
+    print("EXTERNAL_PROFILE_FAIL %d/40" % evidence["cases_matched"])
     return 1
 
 
