@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -25,9 +27,9 @@ jobs:
         run: |
           python - <<'PY' | tee baseline-scope.txt
           import subprocess
-          files = subprocess.check_output([
-              'git','diff','--name-only','origin/feature/ziwei-transformation-flying-core-v1...HEAD'
-          ], text=True).splitlines()
+          files = subprocess.check_output(
+              ['git', 'diff', '--name-only', 'HEAD^', 'HEAD'], text=True
+          ).splitlines()
           expected = ['.github/workflows/ziwei-phase2a-baseline.yml']
           assert files == expected, files
           print('BASELINE_SCOPE_PASS')
