@@ -112,3 +112,61 @@ def main(argv=None):
 
 if __name__ == '__main__':
     raise SystemExit(main())
+
+IZTRO_SOURCE_NAME = 'SylarLong/iztro'
+IZTRO_PACKAGE_VERSION = '2.6.0'
+
+
+def normalize_ts(source_text: str) -> str:
+    return re.sub(r'\s+', '', source_text)
+
+
+def _project_fine_cycle_sample_counts():
+    from engine.calendar.resolver import resolve_calendar
+    from engine.ziwei.fine_cycle_stems import resolve_day_stem, resolve_hour_stem, resolve_month_stem
+    from engine.ziwei.transformations import get_transformation_set
+
+    calendar = resolve_calendar('2023-07-30T21:30:00', 'Asia/Taipei')
+    if not calendar.ok or calendar.context is None:
+        _fail('Project calendar sample could not be resolved')
+    context = calendar.context
+    resolutions = (
+        resolve_month_stem(context),
+        resolve_day_stem(context),
+        resolve_hour_stem(context),
+    )
+    counts = {}
+    stems = {}
+    for resolution in resolutions:
+        transformation_set = get_transformation_set(resolution.heavenly_stem)
+        counts[resolution.scope] = len(transformation_set.transformations)
+        stems[resolution.scope] = resolution.heavenly_stem
+    return counts, stems
+
+
+def qualify_iztro_source(functional_source: str, source_revision: str, run_timestamp: str) -> dict:
+    normalized = normalize_ts(functional_source)
+    links = {
+        'monthly': bool(re.search(r'monthly:\{[^}]*mutagen:getMutagensByHeavenlyStem\(monthly\[0\]\)', normalized)),
+        'daily': bool(re.search(r'daily:\{[^}]*mutagen:getMutagensByHeavenlyStem\(daily\[0\]\)', normalized)),
+        'hourly': bool(re.search(r'hourly:\{[^}]*mutagen:getMutagensByHeavenlyStem\(hourly\[0\]\)', normalized)),
+    }
+    missing = [scope for scope, ok in links.items() if not ok]
+    if missing:
+        _fail('iztro fine-cycle mutagen source linkage changed', {'missing_scopes': missing})
+    counts, stems = _project_fine_cycle_sample_counts()
+    if set(counts) != {'monthly', 'daily', 'hourly'} or any(value != 4 for value in counts.values()):
+        _fail('Project fine-cycle transformation cardinality changed', {'counts': counts})
+    return {
+        'source_name': IZTRO_SOURCE_NAME,
+        'source_revision': source_revision,
+        'package_version': IZTRO_PACKAGE_VERSION,
+        'run_timestamp': run_timestamp,
+        'monthly_mutagen_uses_monthly_stem': links['monthly'],
+        'daily_mutagen_uses_daily_stem': links['daily'],
+        'hourly_mutagen_uses_hourly_stem': links['hourly'],
+        'project_sample_transformations_each': 4,
+        'project_sample_scopes': list(counts.keys()),
+        'project_sample_stems': stems,
+        'status': 'PASS',
+    }

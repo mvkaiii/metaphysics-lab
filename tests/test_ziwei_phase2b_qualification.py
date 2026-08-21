@@ -62,3 +62,40 @@ class ZiweiPhase2BLunarLiteQualificationTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+from tools.qualify_ziwei_phase2b_public import qualify_iztro_source
+
+
+class ZiweiPhase2BIztroQualificationTests(unittest.TestCase):
+    def test_iztro_requires_each_fine_scope_mutagen_link(self):
+        bad = '''monthly: { mutagen: getMutagensByHeavenlyStem(monthly[0]) }'''
+        with self.assertRaises(ZiweiFineCycleError) as cm:
+            qualify_iztro_source(bad, '814b77e6', '2026-08-21T00:00:00Z')
+        self.assertEqual(cm.exception.code, 'qualification_mismatch')
+
+    def test_iztro_source_links_each_scope_to_its_own_stem(self):
+        good = '''
+        monthly: { index: 1, mutagen: getMutagensByHeavenlyStem(monthly[0]), stars: x },
+        daily: { index: 2, mutagen: getMutagensByHeavenlyStem(daily[0]), stars: y },
+        hourly: { index: 3, mutagen: getMutagensByHeavenlyStem(hourly[0]), stars: z },
+        '''
+        report = qualify_iztro_source(good, '814b77e6', '2026-08-21T00:00:00Z')
+        self.assertEqual(report['status'], 'PASS')
+        self.assertTrue(report['monthly_mutagen_uses_monthly_stem'])
+        self.assertTrue(report['daily_mutagen_uses_daily_stem'])
+        self.assertTrue(report['hourly_mutagen_uses_hourly_stem'])
+        self.assertEqual(report['project_sample_transformations_each'], 4)
+
+    def test_committed_iztro_report_contract(self):
+        path = Path('qualification/ziwei/phase2b/public-iztro-814b77e6.json')
+        payload = json.loads(path.read_text(encoding='utf-8'))
+        self.assertEqual(payload['source_name'], 'SylarLong/iztro')
+        self.assertEqual(payload['source_revision'], '814b77e6371e1050cac31bbf674db3c3138fcfde')
+        self.assertEqual(payload['package_version'], '2.6.0')
+        self.assertEqual(payload['status'], 'PASS')
+        self.assertTrue(payload['monthly_mutagen_uses_monthly_stem'])
+        self.assertTrue(payload['daily_mutagen_uses_daily_stem'])
+        self.assertTrue(payload['hourly_mutagen_uses_hourly_stem'])
+        self.assertEqual(payload['project_sample_transformations_each'], 4)
+        self.assertEqual(set(payload['project_sample_scopes']), {'monthly', 'daily', 'hourly'})
+        self.assertNotIn('Astralium', path.read_text(encoding='utf-8'))
