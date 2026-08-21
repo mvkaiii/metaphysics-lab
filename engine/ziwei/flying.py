@@ -1,8 +1,20 @@
 from __future__ import annotations
 
-from .common import opposite_palace, validate_palace
+from types import MappingProxyType
+
+from .common import PALACE_NAMES, opposite_palace, validate_palace
 from .errors import ZiweiPhase2AError
-from .models import CycleStemSource, FlyingEdge, GeometricRelation, PalaceStemSource
+from .models import (
+    CycleStemSource,
+    FlyingEdge,
+    GeometricRelation,
+    NatalFlyingGraph,
+    PalaceStemSource,
+)
+from .transformation_profiles import PROFILE_ID
+from .transformations import get_transformation_set
+
+PRESENTATION_PROFILE_ID = "astralium-compatible-v1"
 
 
 def classify_geometric_relation(source, target_palace):
@@ -66,3 +78,59 @@ def fly_transformations(transformations, star_locations, source):
             "flying requires exactly four transformations",
         )
     return tuple(edges)
+
+
+def build_natal_flying_graph(palace_stems, star_locations, profile_id=PROFILE_ID):
+    if palace_stems.chart_identity != star_locations.chart_identity:
+        raise ZiweiPhase2AError(
+            "chart_basis_mismatch",
+            "natal indexes belong to different charts",
+        )
+    edges = []
+    for palace in PALACE_NAMES:
+        stem = palace_stems.stems[palace]
+        source = PalaceStemSource(
+            "palace_stem",
+            palace_stems.chart_identity,
+            palace,
+            stem,
+        )
+        edges.extend(
+            fly_transformations(
+                get_transformation_set(stem, profile_id),
+                star_locations,
+                source,
+            )
+        )
+    if len(edges) != 48:
+        raise ZiweiPhase2AError(
+            "invalid_palace_stem_index",
+            "natal flying graph must contain exactly 48 edges",
+        )
+    outgoing = {palace: [] for palace in PALACE_NAMES}
+    incoming = {palace: [] for palace in PALACE_NAMES}
+    for edge in edges:
+        outgoing[edge.source.palace].append(edge)
+        incoming[edge.target_palace].append(edge)
+    return NatalFlyingGraph(
+        palace_stems.chart_identity,
+        tuple(edges),
+        MappingProxyType({key: tuple(value) for key, value in outgoing.items()}),
+        MappingProxyType({key: tuple(value) for key, value in incoming.items()}),
+    )
+
+
+def presentation_relation(edge, profile_id=PRESENTATION_PROFILE_ID):
+    if profile_id != PRESENTATION_PROFILE_ID:
+        raise ZiweiPhase2AError(
+            "unknown_profile",
+            "unknown presentation profile",
+            {"profile_id": profile_id},
+        )
+    mapping = {
+        GeometricRelation.SAME_PALACE: "↓",
+        GeometricRelation.OPPOSITE_PALACE_INCOMING: "↑",
+        GeometricRelation.NORMAL: None,
+        None: None,
+    }
+    return mapping[edge.geometric_relation]
