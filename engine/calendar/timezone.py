@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from importlib.metadata import PackageNotFoundError, version
@@ -19,6 +20,9 @@ EXPECTED_IANA_VERSION = "2026c"
 TIMEZONE_SOURCE_REVISION = "a44279419071b7aa41ebe7eca301ebb2e759571a"
 TIMEZONE_PROFILE = "tzdata-2026.3-iana-2026c-v1"
 ZHI = tuple("子丑寅卯辰巳午未申酉戌亥")
+_CIVIL_DATETIME_PATTERN = re.compile(
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,6})?)?$"
+)
 
 
 def hour_branch(hour: int) -> str:
@@ -61,6 +65,12 @@ def _parse_offset_hint(value: str) -> timedelta:
 
 
 def _parse_civil(value: str) -> datetime:
+    if _CIVIL_DATETIME_PATTERN.fullmatch(value) is None:
+        raise CalendarResolverException(
+            "invalid_datetime",
+            "civil_datetime must include an explicit local time in ISO form YYYY-MM-DDTHH:MM[:SS[.ffffff]]",
+            {"value": value},
+        )
     try:
         parsed = datetime.fromisoformat(value)
     except ValueError as exc:
