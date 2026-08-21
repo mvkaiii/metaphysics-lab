@@ -16,6 +16,7 @@ from .models import (
     ValidationMetadata,
     combine_validation_status,
 )
+from .resolver import resolve_calendar
 
 __all__ = [
     "PrecisionAssessment",
@@ -36,4 +37,5 @@ __all__ = [
     "ValidationCheck",
     "ValidationMetadata",
     "combine_validation_status",
+    "resolve_calendar",
 ]
