@@ -1,0 +1,11 @@
+{
+  "source_name": "SylarLong/iztro",
+  "source_revision": "814b77e6371e1050cac31bbf674db3c3138fcfde",
+  "rule_profile": "metaphysics-lab-common-v1",
+  "rule_version": "1.0",
+  "cases_checked": 40,
+  "cases_matched": 40,
+  "mismatches": [],
+  "status": "PASS",
+  "run_timestamp": "2026-08-21T09:37:49Z"
+}
