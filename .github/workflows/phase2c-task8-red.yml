@@ -1,0 +1,17 @@
+name: Phase 2C Task 8 RED
+
+on:
+  pull_request:
+    branches:
+      - feature/ziwei-flowing-stars-v1
+
+jobs:
+  red:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run Task 8 RED docs contract
+        run: python -m unittest tests.test_ziwei_phase2c_docs -v
