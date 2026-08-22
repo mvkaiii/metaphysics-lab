@@ -86,7 +86,8 @@ class Phase2C0DocumentationTests(unittest.TestCase):
         current_docs = "\n".join((read("readme"), read("changelog")))
         self.assertIn("ziwei.flowing_stars", current_docs)
         self.assertIn("implemented / experimental / on_demand", current_docs)
-        self.assertIn("Phase 2C Ziwei Flowing Stars", current_docs)
+        self.assertIn("Phase 2C｜Ziwei Flowing Stars", current_docs)
+        self.assertIn("## v1.3.0｜2026-08-23", current_docs)
 
         historical_docs = "\n".join((read("readme"), read("changelog"), read("update")))
         self.assertIn("Phase 2C0", historical_docs)
