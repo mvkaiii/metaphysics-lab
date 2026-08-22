@@ -132,10 +132,19 @@ class BaziNatalQualificationTests(unittest.TestCase):
         self.assertTrue(all(char in "0123456789abcdef" for char in digest))
         self.assertTrue(FORBIDDEN_KEYS.isdisjoint(set(walk_keys(public))))
 
-    def test_private_evidence_remains_pending_without_private_source_and_is_privacy_safe(self):
+    def test_private_evidence_records_authorized_aggregate_pass_without_raw_source(self):
         private = json.loads(PRIVATE_SUMMARY.read_text(encoding="utf-8"))
         self.assertEqual(private["classification"], "private_bazi_natal_qualification_summary")
-        self.assertEqual(private["status"], "PENDING")
+        self.assertEqual(private["status"], "PASS")
+        self.assertEqual(private["case_count"], 1)
+        self.assertEqual(private["matched_field_count"], 6)
+        self.assertEqual(private["profile_difference_count"], 3)
+        self.assertEqual(private["unexpected_mismatch_count"], 0)
+        self.assertFalse(private["promotion_allowed"])
+        self.assertFalse(private["contains_raw_birth_data"])
+        self.assertFalse(private["contains_raw_chart_payload"])
+        self.assertTrue(private["source_digest"].startswith("sha256:"))
+        self.assertEqual(len(private["source_digest"]), 71)
         self.assertTrue(FORBIDDEN_KEYS.isdisjoint(set(walk_keys(private))))
 
 
