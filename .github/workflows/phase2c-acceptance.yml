@@ -1,0 +1,142 @@
+name: Phase 2C Final Acceptance
+
+on:
+  pull_request:
+    branches:
+      - feature/ziwei-flowing-stars-v1
+
+jobs:
+  focused:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+      - name: Focused Phase 2C suite
+        run: |
+          python -m unittest \
+            tests.test_ziwei_phase2c_rule_source \
+            tests.test_calendar_sexagenary_phase2c \
+            tests.test_ziwei_flowing_star_models \
+            tests.test_ziwei_flowing_star_sources \
+            tests.test_ziwei_flowing_stars \
+            tests.test_ziwei_flowing_star_view \
+            tests.test_ziwei_phase2c_capabilities \
+            tests.test_ziwei_phase2c_qualification \
+            tests.test_ziwei_phase2c_docs \
+            tests.test_ziwei_phase2c_acceptance -v
+          echo PHASE2C_ACCEPTANCE_FOCUSED_PASS
+
+  full:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+      - name: Full repository regression
+        run: |
+          python -m unittest discover -s tests -p 'test*.py'
+          echo PHASE2C_FULL_REPO_PASS
+
+  python39:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - name: Python 3.9 syntax gate
+        run: |
+          python --version
+          python - <<'PY'
+          import sys
+          assert sys.version_info[:2] == (3, 9), sys.version
+          PY
+          python -m compileall -q engine tools tests
+          echo PHASE2C_PYTHON39_PASS
+
+  qualification:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+      - name: Lock formal feature and validation-only diff
+        run: |
+          git fetch origin feature/ziwei-flowing-stars-v1
+          FORMAL_SHA="$(git rev-parse origin/feature/ziwei-flowing-stars-v1)"
+          echo "PHASE2C_FORMAL_FEATURE_SHA=$FORMAL_SHA"
+          test "$FORMAL_SHA" = "633df8828533c4da4eab8a565050d0e3cfd080cf"
+          git diff --name-only origin/feature/ziwei-flowing-stars-v1...HEAD | sort > /tmp/phase2c-changed.txt
+          printf '%s\n' '.github/workflows/phase2c-acceptance.yml' '.github/workflows/phase2c-tdd.yml' | sort > /tmp/phase2c-expected.txt
+          diff -u /tmp/phase2c-expected.txt /tmp/phase2c-changed.txt
+          if git ls-tree -r --name-only origin/feature/ziwei-flowing-stars-v1 | grep -q '^.github/workflows/phase2c-'; then
+            echo 'Temporary Phase 2C workflow leaked into formal feature'
+            exit 1
+          fi
+          echo PHASE2C_VALIDATION_DIFF_ONLY_WORKFLOWS_PASS
+      - name: Public and private qualification gate
+        run: |
+          python tools/qualify_ziwei_phase2c.py --public | tee /tmp/phase2c-qualification.log
+          grep -Fx 'IZTRO_FLOWING_STARS_600_600_PASS' /tmp/phase2c-qualification.log
+          grep -Fx 'IZTRO_FLOWING_STARS_0_UNEXPECTED_MISMATCH' /tmp/phase2c-qualification.log
+          grep -Fx 'PHASE2C_PRIVATE_FLOWING_STARS_PENDING_OK' /tmp/phase2c-qualification.log
+      - name: Privacy scope digests and capability evidence
+        run: |
+          python -m unittest tests.test_ziwei_phase2c_acceptance -v
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          from engine.ziwei.capabilities import get_capability
+
+          summary_path = Path('qualification/ziwei/phase2c/phase2c-summary.json')
+          fixture_path = Path('qualification/ziwei/phase2c/public-iztro-flowing-star-vectors.json')
+          summary = json.loads(summary_path.read_text(encoding='utf-8'))
+          fixture_sha = hashlib.sha256(fixture_path.read_bytes()).hexdigest()
+          summary_sha = hashlib.sha256(summary_path.read_bytes()).hexdigest()
+          assert fixture_sha == summary['public_qualification']['fixture_digest_sha256']
+          print('PHASE2C_VALIDATION_SHA=' + __import__('subprocess').check_output(['git', 'rev-parse', 'HEAD'], text=True).strip())
+          print('PHASE2C_SUMMARY_SHA256=' + summary_sha)
+          print('PHASE2C_FIXTURE_SHA256=' + fixture_sha)
+          for capability_id in (
+              'ziwei.flowing_stars',
+              'ziwei.transformations',
+              'ziwei.flying',
+              'ziwei.flow_month_stem',
+              'ziwei.flow_day_stem',
+              'ziwei.flow_hour_stem',
+              'ziwei.natal_chart',
+          ):
+              cap = get_capability(capability_id)
+              state = '/'.join((cap['implementation'], cap['maturity'], cap['routing'], cap['rule_version']))
+              assert summary['capability_states'][capability_id] == state
+              print('PHASE2C_CAPABILITY_%s=%s' % (capability_id, state))
+          print('PHASE2C_PRIVACY_SCOPE_EVIDENCE_PASS')
+          PY
+
+  acceptance-pass:
+    runs-on: ubuntu-24.04
+    needs:
+      - focused
+      - full
+      - python39
+      - qualification
+    steps:
+      - name: Final Phase 2C acceptance marker
+        run: echo PHASE2C_ACCEPTANCE_PASS
