@@ -22,3 +22,4 @@ jobs:
           python -m unittest discover -s tests -p 'test_calendar*.py' -v
           python -m unittest discover -s tests -p 'test_ziwei*.py' -v
           python -m unittest discover -s tests -p 'test_bazi*.py' -v
+          python -m unittest discover -s tests -p 'test_natal*.py' -v
