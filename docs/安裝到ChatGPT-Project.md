@@ -1,235 +1,153 @@
-# 安裝到 ChatGPT Project
+# 安裝到 ChatGPT / Claude Project
 
-本文件說明如何把 Metaphysics Lab 正式核心與 **Unreleased Phase 2C0｜Natal Chart Foundation** 安裝到 ChatGPT Project，同時把共用程式與私人 Case 分開管理。
+這份文件給一般使用者。安裝 Metaphysics Lab 不需要理解開發 repo，也不需要自己拼裝多個 Python 模組。
 
-核心原則：
+## 安裝檔案
 
-> GitHub 保存系統核心；ChatGPT Project 保存實際分析環境與私人 Case。
-
-GitHub 更新不應直接覆蓋命主私人資料。
-
----
-
-## 一、Project Instructions
-
-把：
+你需要三個發行檔：
 
 ```text
-core/核心提示詞.md
+metaphysics_lab.py
+METAPHYSICS_CORE.md
+PROJECT_INSTRUCTIONS.md
 ```
 
-同步到 ChatGPT Project Instructions。
+安裝方式固定為：
 
-核心提示詞負責：
+1. 上傳 `metaphysics_lab.py` 到 Project。
+2. 上傳 `METAPHYSICS_CORE.md` 到 Project。
+3. 開啟 Project Instructions，把 `PROJECT_INSTRUCTIONS.md` 的全文複製進去。
 
-- 資料讀取順序
-- 問事先盲判、後事件校準
-- 八字／紫微／奇門分工
-- **八種資料類型**，包含 Project 原生盤面
-- Input Resolution / Precision Gate
-- External / Project / Resolved
-- 高風險領域與信心邊界
+所以是**兩個上傳檔＋一份貼進 Project Instructions 的文字**。
 
-若提示詞更新，Project Instructions 也要同步。
+ChatGPT Project 與 Claude Project 的介面名稱可能不同，但概念相同：兩個檔案放入專案知識／檔案區，最高層 Instructions 放入專案指示區。
 
----
+## 建議模型／推理設定
 
-## 二、基礎規則
+Metaphysics Lab 的完整分析包含多步 deterministic 資料、八字／紫微交叉、證據層級與盲判／事件校準，因此建議：
 
-至少加入：
+- **High reasoning：完整本命、流年、多人合盤、重大決策的預設。**
+- Medium：一般分析、Case 維護、較單純問題。
+- Instant：適合快速行政操作；不建議作為完整命理解讀預設。
 
-```text
-core/命理分析作業規範.md
-core/命理推導計算規則.md
-core/紫微流月推導規則.md
-```
+平台的具體模型名稱會變動，因此 Project Instructions 不硬編某一個模型名稱；重點是選擇當下平台提供的高推理模式。
 
-需要流日／流時時再加入：
+## 第一次啟動
 
-```text
-core/紫微流日推導規則.md
-core/紫微流時推導規則.md
-```
+三個發行檔設定完成後，直接說：
 
-固定原則：**Precision must be earned by input.** 輸入不足只能追問、保留候選或降級；不得自行補值。
+> **開始建立我的命理專案。**
 
----
+AI 應依 `PROJECT_INSTRUCTIONS.md` 與 `METAPHYSICS_CORE.md` 自動進入初始化流程，而不是要求你閱讀技術文件。
 
-## 三、Phase 2C0 Natal Foundation modules
-
-若環境要真正執行 Project 原生本命盤，至少同步同版：
-
-```text
-requirements.txt
-
-engine/birth/
-engine/calendar/
-engine/bazi/
-engine/ziwei/
-engine/natal/
-
-templates/natal/
-```
-
-其中：
-
-- `engine/birth/`：輸入、地點、時間 views。
-- `engine/calendar/`：neutral civil/calendar infrastructure。
-- `engine/bazi/natal.py`：Project Bazi Natal。
-- `engine/ziwei/natal.py`：Project Ziwei Natal。
-- `engine/natal/`：External import、Normalized Natal Model、reconciliation、authority、orchestration、Markdown export。
-
-Phase 2C0 capability：
-
-```text
-birth.input_resolution    = implemented / experimental / on_demand / 1.0-exp
-birth.location_resolution = implemented / experimental / on_demand / 1.0-exp
-birth.true_solar_time     = implemented / experimental / on_demand / 1.0-exp
-bazi.natal_chart          = implemented / experimental / on_demand / 1.0-exp
-ziwei.natal_chart         = implemented / experimental / on_demand / 1.0-exp
-natal.reconciliation      = implemented / stable / on_demand / 1.0
-natal.markdown_export     = implemented / stable / on_demand / 1.0
-ziwei.flowing_stars       = planned / on_demand
-```
-
-Bazi / Ziwei Natal 目前仍是 **Experimental**，不要因 orchestration 可用就升 Stable。
-
----
-
-## 四、使用者最小輸入
-
-完整 Mode A：
+若尚未有 Case，AI 只收集缺少的出生資料。完整 Mode A 通常是：
 
 - 性別
 - Gregorian 出生日期
 - 出生時間
 - 出生地
 
-例如：
+出生時間不確定時，AI 不得自行補成精確分鐘；地點有多個合理候選時，也不得自己猜。
 
-> 男，1984年3月13日19:20，台北市出生
+## 三個發行檔的責任邊界
 
-如果使用者說：
+### `metaphysics_lab.py`
 
-> 1990年5月6日，高雄出生
+只負責 deterministic 工作：
 
-只追問缺少的性別與出生時間。
+- runtime capability / dependency 狀態
+- 本命建立與 reconciliation
+- 八字／紫微可重現計算
+- forecast context
+- Case Markdown export / validation / migration
 
-如果使用者說：
+它不負責自由文字的命理解讀，也不替使用者做人生決策。
 
-> 大概晚上7、8點
+### `METAPHYSICS_CORE.md`
 
-不得猜中點；保留候選。候選跨越改盤邊界時追問，未跨 material boundary 時可在現有精度下繼續。
+固定提供 AI 工作流程與分析治理，包括：
 
----
+- task classification
+- 證據／資料層級
+- 先盲判、再事件校準
+- Input Precision Gate
+- Case 建立與更新規則
+- runtime 不可執行時的 fallback
 
-## 五、Location / Calendar / time views
+### `PROJECT_INSTRUCTIONS.md`
 
-使用者不必手動輸入經緯度或 timezone。Location Resolver 解析 birthplace name；Calendar Resolver 接受 structured civil datetime + IANA timezone。
+是最高層 AI 指示，負責：
 
-**Calendar Resolver 不負責真太陽時。**
+- 角色與語氣
+- 八種資料類型
+- External / Project / Resolved
+- 八字／紫微／奇門分工
+- 高風險領域限制
+- 禁止事項與信心標示
 
-Phase 2C0 至少保留：
+它的內容要放在 Project Instructions，不是當成一般知識檔讓 AI 自己猜何時讀。
+
+## 建立 Case
+
+第一次本命資料完成後，AI 應產生九份私人檔案：
 
 ```text
-reported_civil_time
-normalized_civil_time
-bazi_effective_time
-ziwei_effective_time
+00_專案索引.md
+01_命盤核心摘要.md
+02_命盤資料校驗紀錄.md
+03_八字結構化資料包.md
+04_紫微基礎資料包.md
+05_驗證事件紀錄.md
+06_流年追蹤紀錄.md
+07_問事追蹤紀錄.md
+08_重大決策紀錄.md
 ```
 
-八字與紫微使用獨立 time profile。Ziwei Natal ordinary UX 使用 Project default true-solar profile；原始 civil time 不會被覆蓋。
+把這九份加入自己的 Project。它們是私人 Case，不會被共用 runtime 更新自動覆蓋。
 
----
+AI 後續應採增量更新。例如新增一筆已驗證事件，只替換 `05_驗證事件紀錄.md`；不是每次重建九份。
 
-## 六、External / Project / Resolved
+## 有 Astralium／第三方命盤時
 
-有 Astralium 或其他 structured external chart 時，不要把它覆蓋 Project 自算結果。
+第三方盤是可選 External source，不是安裝必要條件。
 
-固定三層：
+若同時存在 Project deterministic natal 與 external structured chart，AI 應保留：
 
 ```text
 External / Project / Resolved
-```
-
-固定 status：
-
-```text
 MATCH / EQUIVALENT / CONFLICT / NOT_COMPARABLE
 ```
 
-Astralium 為可選 external qualification source，不是 runtime dependency。Experimental Project 與 external 發生實質衝突時，Resolved 預設採 external；原 conflict 仍保留。
+不能為了讓盤看起來一致而改寫任何一方 raw view。
 
----
+## 如果 AI 無法執行 Python
 
-## 七、既有八字／Calendar／Ziwei modules
+Project 能保存 Python 檔，不代表每次對話都有 Python execution。
 
-Compatibility wrapper：
+若當次環境**無法執行 Python**，AI 必須明確說明，**不得假裝**已經跑過 `metaphysics_lab.py`。
 
-```text
-engine/project_bazi_calendar.py
-engine/project_ziwei_month.py
-engine/project_ziwei_day.py
-engine/project_ziwei_hour.py
+本機 fallback：
+
+```bash
+python metaphysics_lab.py request --input request.json --pretty
 ```
 
-wrapper 不是獨立單檔引擎；要實際執行仍需同版 package modules。
+或：
 
-Calendar Resolver：structured local civil datetime + IANA timezone → `CalendarContext`。civil date 在 00:00 換日；23:00 已屬子時但 Resolver 不套命理日界。
-
----
-
-## 八、Ziwei Transformation / Flying / Fine Cycle
-
-Ziwei Transformation Core 與 Flying Core 已 Stable / On-demand。
-
-Unreleased Phase 2B Fine Cycle：
-
-```text
-profile      = ziwei-fine-cycle-lunar-late-zi-v1
-day_boundary = late_zi_forward-v1
-stem / transformations / flying = implemented / experimental / on_demand
+```bash
+python metaphysics_lab.py request --input - --pretty
 ```
 
-Calendar Resolver 保持 neutral；23:00 紫微 effective-day 前進只由 fine-cycle profile 套用。
+把 JSON 結果交回 AI 後繼續分析。這個 fallback 使用的是同一個發行 runtime，因此不會另建第二套命盤算法。
 
-Qualification：
+## 平常更新
 
-```text
-pinned lunar-lite 1d104fff...   18/18 PASS
-pinned iztro 814b77e6...        integration PASS
-Astralium fine-cycle             PENDING
-```
+一般 Runtime 更新只需要替換 Project 裡的 `metaphysics_lab.py`。
 
-`leap_twelfth_month_second_half` 為 synthetic internal coverage，not externally qualified。`ziwei.flowing_stars`／流曜仍 planned / on_demand。
+`METAPHYSICS_CORE.md`、Project Instructions 與私人 Case 不應因每一次 runtime 更新就重建；只有 Project Contract 或 Case Schema 明確變更時才照 migration 指示處理。
 
----
+完整規則見 [更新與版本同步](更新與版本同步.md)。
 
-## 九、私人 Case
+## 隱私
 
-從 templates 建立自己的：
-
-```text
-命盤核心摘要.md
-命盤資料校驗紀錄.md
-驗證事件紀錄.md
-流年追蹤紀錄.md
-問事追蹤紀錄.md
-重大決策紀錄.md
-```
-
-私人出生資料、原始八字／紫微資料、Astralium raw chart、PDF、截圖不要提交回共用 repo。
-
-第一次啟動先做命盤建立／校驗，確認 source classification、External / Project / Resolved、時間 profile 與 BLOCKING conflict，再進未來預測。
-
----
-
-## 十、Python 執行與驗證
-
-把 `.py` 放進 Project 代表保存正式算法來源，不代表每個 ChatGPT 對話都會自動執行 Python。
-
-只有真的有執行證據時，才可宣稱「程式已計算」「測試已通過」。
-
-Phase 2C0 qualification summary 只能保存 aggregate counts、digest、versions、status；私人 raw payload 不進 repo。
-
-完整升級流程請看 [更新與版本同步](更新與版本同步.md)。
+出生資料、Case Markdown、私人事件、raw third-party chart、PDF 與截圖不要提交回共用 GitHub repo。共用發行檔本身不得包含私人 Case 資料。

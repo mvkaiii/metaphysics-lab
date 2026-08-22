@@ -1,6 +1,8 @@
 import unittest
 from pathlib import Path
 
+from engine.distribution.runtime import dispatch
+
 
 class ZiweiPhase2BDocumentationTests(unittest.TestCase):
     def setUp(self):
@@ -9,40 +11,54 @@ class ZiweiPhase2BDocumentationTests(unittest.TestCase):
         self.rules = Path('core/命理推導計算規則.md').read_text(encoding='utf-8')
         self.changelog = Path('CHANGELOG.md').read_text(encoding='utf-8')
         self.version = Path('VERSION.md').read_text(encoding='utf-8')
+        self.capabilities = dispatch('runtime_info', {})['data']['capabilities']
 
-    def test_phase2b_profile_and_day_boundary_are_documented(self):
-        for text in (self.readme, self.arch, self.rules):
-            self.assertIn('ziwei-fine-cycle-lunar-late-zi-v1', text)
-            self.assertIn('late_zi_forward-v1', text)
+    def test_phase2b_profile_and_day_boundary_are_documented_in_rule_history(self):
+        historical = self.arch + '\n' + self.rules + '\n' + self.changelog
+        self.assertIn('ziwei-fine-cycle-lunar-late-zi-v1', historical)
+        self.assertIn('late_zi_forward-v1', historical)
+        self.assertIn('Fine Cycle', historical)
 
     def test_capability_state_is_experimental_on_demand_not_stable_default(self):
-        for text in (self.readme, self.arch, self.rules):
-            self.assertIn('implemented / experimental / on_demand', text)
-        self.assertNotIn('紫微流月／流日／流時四化與飛化 | planned', self.readme)
-        self.assertNotIn('紫微流月／流日／流時四化與飛化     planned', self.arch)
-        self.assertNotIn('Fine Cycle Stem Resolver（紫微流月／流日／流時天干）', self.readme.split('## 目前仍未實作', 1)[-1])
+        for capability_id in (
+            'ziwei.flow_month_stem',
+            'ziwei.flow_day_stem',
+            'ziwei.flow_hour_stem',
+            'ziwei.flow_month_transformations',
+            'ziwei.flow_day_transformations',
+            'ziwei.flow_hour_transformations',
+            'ziwei.flow_month_flying',
+            'ziwei.flow_day_flying',
+            'ziwei.flow_hour_flying',
+        ):
+            cap = self.capabilities[capability_id]
+            self.assertEqual(cap['implementation'], 'implemented')
+            self.assertEqual(cap['maturity'], 'experimental')
+            self.assertEqual(cap['routing'], 'on_demand')
+        self.assertNotIn('Fine Cycle Stem Resolver = implemented / stable / default', self.readme)
+        self.assertIn('runtime_info', self.readme)
 
-    def test_calendar_boundary_ownership_is_explicit(self):
-        for text in (self.readme, self.arch, self.rules):
-            self.assertIn('Calendar Resolver', text)
-            self.assertIn('23:00', text)
-        self.assertIn('neutral', self.readme.lower())
-        self.assertIn('fine-cycle profile', self.arch)
+    def test_calendar_boundary_ownership_is_explicit_in_canonical_rules(self):
+        canonical = self.arch + '\n' + self.rules
+        self.assertIn('Calendar Resolver', canonical)
+        self.assertIn('23:00', canonical)
+        self.assertIn('neutral', canonical.lower())
+        self.assertIn('fine-cycle profile', canonical)
+        self.assertIn('late_zi_forward-v1', canonical)
 
     def test_qualification_state_is_documented_without_overclaim(self):
-        extra = (
-            Path("docs/快速開始.md").read_text(encoding="utf-8"),
-            Path("docs/安裝到ChatGPT-Project.md").read_text(encoding="utf-8"),
-            Path("docs/更新與版本同步.md").read_text(encoding="utf-8"),
-        )
-        for text in (self.readme, self.arch, self.rules, self.changelog, *extra):
-            self.assertIn('lunar-lite', text)
-            self.assertIn('18/18 PASS', text)
-            self.assertIn('iztro', text)
-            self.assertIn('Astralium', text)
-            self.assertIn('PENDING', text)
-        self.assertIn('leap_twelfth_month_second_half', self.arch)
-        self.assertIn('not externally qualified', self.readme)
+        historical = self.arch + '\n' + self.rules + '\n' + self.changelog
+        for needle in ('lunar-lite', '18/18 PASS', 'iztro', 'Astralium', 'PENDING'):
+            self.assertIn(needle, historical)
+        self.assertIn('leap_twelfth_month_second_half', historical)
+        self.assertIn('not externally qualified', historical)
+        self.assertNotIn('Astralium fine-cycle             PASS', historical)
+
+    def test_readme_delegates_dynamic_phase2b_state_to_runtime(self):
+        self.assertIn('runtime_info', self.readme)
+        self.assertIn('CHANGELOG.md', self.readme)
+        self.assertNotIn('ziwei-fine-cycle-lunar-late-zi-v1', self.readme)
+        self.assertNotIn('18/18 PASS', self.readme)
 
     def test_project_derived_is_classification_not_capability_prefix(self):
         self.assertIn('Project 推導盤面', self.readme)

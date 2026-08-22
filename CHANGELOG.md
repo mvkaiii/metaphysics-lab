@@ -1,5 +1,19 @@
 # 變更紀錄
 
+## Unreleased｜AI Distribution Pack
+
+- 新增 AI-first 發行形式：一般使用者只需要 `metaphysics_lab.py`、`METAPHYSICS_CORE.md` 與 `PROJECT_INSTRUCTIONS.md`；前兩者加入 Project，後者貼入 Project Instructions。
+- 新增 deterministic single-file `dist/ai/metaphysics_lab.py`；模組化 source 維持 repo 內可測試／可 qualification，build output 不 vendor 第三方 package source。
+- 新增 `runtime_info`、portable natal / reconciliation、deterministic forecast context 與 Case export 等 structured runtime actions；Python 負責計算，AI 負責解讀。
+- pre-resolved location path 可在沒有 location network packages 的環境使用；無可靠地點來源時 fail closed，不猜地點。
+- forecast context 只 materialize requested scopes；月／日／時 transformation/flying 與 flowing stars 共用同一 resolved source，避免兩套 stem / boundary 漂移。
+- 新增九份私人 Case Markdown Pack、schema validation、same-schema migration contract 與 append-first record update；第一版 blind forecast 不可覆寫。
+- 新增 deterministic builder、build digest、`--check`、單檔 CLI 與 modular ↔ bundled parity tests。
+- `runtime-info` 不需展開完整 engine；缺少核心 dependency 的計算 action 回 machine-readable error，不輸出 traceback。
+- 使用者文件改為 mobile-first / AI-first：推薦 High reasoning，並提供 AI host 無法執行 Python 時的同一單檔 local CLI fallback。
+- 一般 Runtime 更新預設只替換 `metaphysics_lab.py`；Project Contract 或 Case Schema 只有在明確 migration 通知時才同步。
+- 本段為 Unreleased；`VERSION.md`、Git tag、GitHub Release 與 v1.2.0 release identity 不變，也沒有任何 capability 因本次發行包而升 Stable。
+
 ## Unreleased｜Phase 2C Ziwei Flowing Stars
 
 - 新增 `ziwei.flowing_stars` = implemented / experimental / on_demand / 1.0-exp；profile `ziwei-flowing-stars-common-v1`。
