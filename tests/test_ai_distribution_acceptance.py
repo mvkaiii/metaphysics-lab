@@ -61,13 +61,17 @@ class AIDistributionAcceptanceTests(unittest.TestCase):
         self.assertEqual(caps["ziwei.flowing_stars"]["routing"], "on_demand")
         self.assertEqual(caps["bazi.natal_chart"]["maturity"], "experimental")
         self.assertEqual(caps["ziwei.natal_chart"]["maturity"], "experimental")
+        self.assertEqual(caps["natal.reconciliation"]["maturity"], "stable")
+        self.assertEqual(caps["natal.markdown_export"]["maturity"], "stable")
 
-    def test_formal_release_identity_is_still_v1_2_0(self):
+    def test_formal_release_identity_is_v1_3_0(self):
         text = (ROOT / "VERSION.md").read_text(encoding="utf-8")
-        self.assertIn("Metaphysics Lab Core：**v1.2.0**", text)
-        self.assertIn("發布日期：**2026-08-21**", text)
-        self.assertNotIn("AI Distribution Pack", text)
-        self.assertNotRegex(text, r"最新正式發布[\s\S]{0,100}v1\.3\.0")
+        self.assertIn("Metaphysics Lab Core：**v1.3.0**", text)
+        self.assertIn("發布日期：**2026-08-23**", text)
+        self.assertIn("AI Distribution Pack", text)
+        self.assertIn("AI Distribution Runtime：v1.0-exp", text)
+        self.assertIn("release 本身不改變 capability maturity", text)
+        self.assertNotRegex(text, r"最新正式發布[\s\S]{0,100}v1\.2\.0")
 
     def test_distribution_contains_no_private_case_payload_files(self):
         self.assertEqual({path.name for path in DIST.iterdir()}, EXPECTED_ARTIFACTS)
