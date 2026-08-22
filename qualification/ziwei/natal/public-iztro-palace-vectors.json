@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.0",
+  "classification": "public_ziwei_natal_palace_vectors",
+  "oracle": {
+    "engine": "iztro",
+    "version": "2.6.0",
+    "revision": "814b77e6371e1050cac31bbf674db3c3138fcfde",
+    "contract_sha256": "7352277909bf482bf7b9ba12b0b5ce1a7d8c714d18038a26c51527d262b9d17c",
+    "sources": [
+      "src/astro/palace.ts:getSoulAndBody,getFiveElementsClass",
+      "src/utils/index.ts:fixLunarMonthIndex,fixIndex",
+      "src/data/constants.ts:HEAVENLY_STEMS,EARTHLY_BRANCHES,TIGER_RULE"
+    ]
+  },
+  "notes": {
+    "month_hour_case_count": 144,
+    "palace_stem_year_case_count": 10,
+    "legal_bureau_combination_count": 60,
+    "leap_month_policy": "matrix consumes effective lunar month 1..12 after upstream profile resolution",
+    "branch_order": "子丑寅卯辰巳午未申酉戌亥"
+  },
+  "month_hour_matrix": [
+    {"lunar_month": 1, "hour_branches": "子丑寅卯辰巳午未申酉戌亥", "ming_branches": "寅丑子亥戌酉申未午巳辰卯", "body_branches": "寅卯辰巳午未申酉戌亥子丑"},
+    {"lunar_month": 2, "hour_branches": "子丑寅卯辰巳午未申酉戌亥", "ming_branches": "卯寅丑子亥戌酉申未午巳辰", "body_branches": "卯辰巳午未申酉戌亥子丑寅"},
+    {"lunar_month": 3, "hour_branches": "子丑寅卯辰巳午未申酉戌亥", "ming_branches": "辰卯寅丑子亥戌酉申未午巳", "body_branches": "辰巳午未申酉戌亥子丑寅卯"},
+    {"lunar_month": 4, "hour_branches": "子丑寅卯辰巳午未申酉戌亥", "ming_branches": "巳辰卯寅丑子亥戌酉申未午", "body_branches": "巳午未申酉戌亥子丑寅卯辰"},
+    {"lunar_month": 5, "hour_branches": "子丑寅卯辰巳午未申酉戌亥", "ming_branches": "午巳辰卯寅丑子亥戌酉申未", "body_branches": "午未申酉戌亥子丑寅卯辰巳"},
+    {"lunar_month": 6, "hour_branches": "子丑寅卯辰巳午未申酉戌亥", "ming_branches": "未午巳辰卯寅丑子亥戌酉申", "body_branches": "未申酉戌亥子丑寅卯辰巳午"},
+    {"lunar_month": 7, "hour_branches": "子丑寅卯辰巳午未申酉戌亥", "ming_branches": "申未午巳辰卯寅丑子亥戌酉", "body_branches": "申酉戌亥子丑寅卯辰巳午未"},
+    {"lunar_month": 8, "hour_branches": "子丑寅卯辰巳午未申酉戌亥", "ming_branches": "酉申未午巳辰卯寅丑子亥戌", "body_branches": "酉戌亥子丑寅卯辰巳午未申"},
+    {"lunar_month": 9, "hour_branches": "子丑寅卯辰巳午未申酉戌亥", "ming_branches": "戌酉申未午巳辰卯寅丑子亥", "body_branches": "戌亥子丑寅卯辰巳午未申酉"},
+    {"lunar_month": 10, "hour_branches": "子丑寅卯辰巳午未申酉戌亥", "ming_branches": "亥戌酉申未午巳辰卯寅丑子", "body_branches": "亥子丑寅卯辰巳午未申酉戌"},
+    {"lunar_month": 11, "hour_branches": "子丑寅卯辰巳午未申酉戌亥", "ming_branches": "子亥戌酉申未午巳辰卯寅丑", "body_branches": "子丑寅卯辰巳午未申酉戌亥"},
+    {"lunar_month": 12, "hour_branches": "子丑寅卯辰巳午未申酉戌亥", "ming_branches": "丑子亥戌酉申未午巳辰卯寅", "body_branches": "丑寅卯辰巳午未申酉戌亥子"}
+  ],
+  "palace_stem_matrix": [
+    {"birth_year_stem": "甲", "branches": "子丑寅卯辰巳午未申酉戌亥", "heavenly_stems": "丙丁丙丁戊己庚辛壬癸甲乙"},
+    {"birth_year_stem": "乙", "branches": "子丑寅卯辰巳午未申酉戌亥", "heavenly_stems": "戊己戊己庚辛壬癸甲乙丙丁"},
+    {"birth_year_stem": "丙", "branches": "子丑寅卯辰巳午未申酉戌亥", "heavenly_stems": "庚辛庚辛壬癸甲乙丙丁戊己"},
+    {"birth_year_stem": "丁", "branches": "子丑寅卯辰巳午未申酉戌亥", "heavenly_stems": "壬癸壬癸甲乙丙丁戊己庚辛"},
+    {"birth_year_stem": "戊", "branches": "子丑寅卯辰巳午未申酉戌亥", "heavenly_stems": "甲乙甲乙丙丁戊己庚辛壬癸"},
+    {"birth_year_stem": "己", "branches": "子丑寅卯辰巳午未申酉戌亥", "heavenly_stems": "丙丁丙丁戊己庚辛壬癸甲乙"},
+    {"birth_year_stem": "庚", "branches": "子丑寅卯辰巳午未申酉戌亥", "heavenly_stems": "戊己戊己庚辛壬癸甲乙丙丁"},
+    {"birth_year_stem": "辛", "branches": "子丑寅卯辰巳午未申酉戌亥", "heavenly_stems": "庚辛庚辛壬癸甲乙丙丁戊己"},
+    {"birth_year_stem": "壬", "branches": "子丑寅卯辰巳午未申酉戌亥", "heavenly_stems": "壬癸壬癸甲乙丙丁戊己庚辛"},
+    {"birth_year_stem": "癸", "branches": "子丑寅卯辰巳午未申酉戌亥", "heavenly_stems": "甲乙甲乙丙丁戊己庚辛壬癸"}
+  ],
+  "bureau_legend": {"2": "水二局", "3": "木三局", "4": "金四局", "5": "土五局", "6": "火六局"},
+  "bureau_matrix": [
+    {"representative_year_stem": "甲", "branches": "子丑寅卯辰巳午未申酉戌亥", "heavenly_stems": "丙丁丙丁戊己庚辛壬癸甲乙", "bureau_codes": "226633554466"},
+    {"representative_year_stem": "乙", "branches": "子丑寅卯辰巳午未申酉戌亥", "heavenly_stems": "戊己戊己庚辛壬癸甲乙丙丁", "bureau_codes": "665544332255"},
+    {"representative_year_stem": "丙", "branches": "子丑寅卯辰巳午未申酉戌亥", "heavenly_stems": "庚辛庚辛壬癸甲乙丙丁戊己", "bureau_codes": "553322446633"},
+    {"representative_year_stem": "丁", "branches": "子丑寅卯辰巳午未申酉戌亥", "heavenly_stems": "壬癸壬癸甲乙丙丁戊己庚辛", "bureau_codes": "334466225544"},
+    {"representative_year_stem": "戊", "branches": "子丑寅卯辰巳午未申酉戌亥", "heavenly_stems": "甲乙甲乙丙丁戊己庚辛壬癸", "bureau_codes": "442255663322"}
+  ]
+}
