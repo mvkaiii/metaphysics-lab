@@ -3,13 +3,12 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import datetime
-from typing import Any, Mapping, Optional
+from typing import TYPE_CHECKING, Any, Mapping, Optional
 
 from engine.bazi.natal import build_bazi_natal, compare_bazi_time_views
 from engine.birth.calendar_adapter import resolve_birth_calendar
 from engine.birth.input_resolution import resolve_birth_input
-from engine.birth.location import LocationProvider, resolve_birth_place
-from engine.birth.models import BirthInput, BirthInputResolution
+from engine.birth.models import BirthInput, BirthInputResolution, ResolvedBirthPlace
 from engine.birth.time_views import build_birth_time_views
 from engine.ziwei.natal import build_ziwei_natal
 from engine.ziwei.natal_time import build_ziwei_birth_basis
@@ -18,6 +17,9 @@ from .errors import NatalFoundationError
 from .external import import_external_natal
 from .models import ExternalNatalView, NatalSource, NormalizedNatalChart, ProjectNatalView
 from .reconciliation import reconcile_natal
+
+if TYPE_CHECKING:
+    from engine.birth.location import LocationProvider
 
 
 _PROJECT_SOURCE_VERSION = "phase2c0-exp"
@@ -139,7 +141,9 @@ def _project_validation_status(calendar, ziwei_basis) -> str:
 
 def build_project_natal(
     birth_input: BirthInput,
-    location_provider: LocationProvider,
+    location_provider: Optional["LocationProvider"] = None,
+    *,
+    resolved_location: Optional[ResolvedBirthPlace] = None,
 ) -> ProjectNatalView:
     if not isinstance(birth_input, BirthInput):
         raise NatalFoundationError("invalid_natal_input", "birth_input must be BirthInput")
@@ -149,8 +153,29 @@ def build_project_natal(
             "complete Project natal build requires sex",
             {"missing_fields": ("sex",)},
         )
+    if location_provider is not None and resolved_location is not None:
+        raise NatalFoundationError(
+            "ambiguous_location_resolution",
+            "provide either location_provider or resolved_location, not both",
+        )
+    if location_provider is None and resolved_location is None:
+        raise NatalFoundationError(
+            "location_resolution_required",
+            "Project natal build requires location_provider or resolved_location",
+        )
 
-    location = resolve_birth_place(birth_input.birth_place, location_provider)
+    if resolved_location is not None:
+        if not isinstance(resolved_location, ResolvedBirthPlace):
+            raise NatalFoundationError(
+                "invalid_resolved_location",
+                "resolved_location must be ResolvedBirthPlace",
+            )
+        location = resolved_location
+    else:
+        from engine.birth.location import resolve_birth_place
+
+        location = resolve_birth_place(birth_input.birth_place, location_provider)
+
     calendar = _calendar_context(birth_input, location)
     time_views = build_birth_time_views(calendar, location)
 
