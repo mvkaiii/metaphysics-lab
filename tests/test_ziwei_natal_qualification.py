@@ -55,14 +55,26 @@ class ZiweiNatalQualificationTests(unittest.TestCase):
         self.assertEqual(authorities["natal_48_flying"], "phase2a_public_qualified")
         self.assertNotIn("Astralium_MATCH", json.dumps(result, ensure_ascii=False))
 
-    def test_private_summary_is_pending_and_contains_no_raw_payload(self):
+    def test_private_summary_records_authorized_aggregate_pass_without_raw_payload(self):
         summary = json.loads(PRIVATE_SUMMARY.read_text(encoding="utf-8"))
-        self.assertEqual(summary["status"], "PENDING")
+        self.assertEqual(summary["status"], "PASS")
         self.assertEqual(summary["source_system"], "Astralium")
-        self.assertEqual(summary["case_count"], 0)
+        self.assertEqual(summary["case_count"], 1)
+        self.assertEqual(summary["aggregate_field_conflicts"]["unexpected_mismatch_count"], 0)
+        matches = summary["aggregate_field_matches"]
+        self.assertEqual(matches["palace_structure_match_count"], 12)
+        self.assertEqual(matches["star_position_match_count"], 26)
+        self.assertEqual(matches["brightness_match_count"], 20)
+        self.assertEqual(matches["birth_transformation_match_count"], 4)
+        self.assertEqual(matches["natal_flying_match_count"], 48)
+        self.assertEqual(matches["decadal_cycle_match_count"], 12)
+        self.assertEqual(matches["total_match_count"], 129)
+        self.assertEqual(matches["total_equivalent_count"], 1)
         self.assertFalse(summary["contains_raw_birth_data"])
         self.assertFalse(summary["contains_raw_chart_payload"])
         self.assertFalse(summary["promotion_allowed"])
+        self.assertTrue(summary["source_digest"].startswith("sha256:"))
+        self.assertTrue(summary["aggregate_digest"].startswith("sha256:"))
         serialized = json.dumps(summary, ensure_ascii=False).lower()
         for forbidden in ("birth_datetime", "reported_datetime", "full_address", "raw_chart", "latitude", "longitude"):
             self.assertNotIn('"%s"' % forbidden, serialized)
