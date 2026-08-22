@@ -9,4 +9,5 @@ SUPPORTED_ACTIONS = (
     "runtime_info",
     "build_natal",
     "reconcile_natal",
+    "resolve_forecast_context",
 )
