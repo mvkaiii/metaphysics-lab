@@ -87,7 +87,14 @@ jobs:
           assert forbidden.isdisjoint(set(walk_keys(summary)))
           assert forbidden.isdisjoint(set(walk_keys(private)))
           assert private['classification'] == 'private_bazi_natal_qualification_summary'
-          assert private['status'] == 'PENDING'
+          assert private['status'] == 'PASS'
+          assert private['case_count'] == 1
+          assert private['matched_field_count'] == 6
+          assert private['profile_difference_count'] == 3
+          assert private['unexpected_mismatch_count'] == 0
+          assert private['promotion_allowed'] is False
+          assert private['contains_raw_birth_data'] is False
+          assert private['contains_raw_chart_payload'] is False
           print('BAZI_NATAL_EVIDENCE_ACCEPTANCE_PASS')
           PY
       - name: Upload live qualification evidence
