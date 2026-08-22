@@ -8,6 +8,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable, Mapping, Optional
 
+from timezonefinder import TimezoneFinder
+
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -32,6 +34,19 @@ def _rounded(value: object) -> Optional[float]:
     return round(float(value), 4)
 
 
+def _candidate_summary(candidate, timezone_finder: TimezoneFinder) -> dict:
+    return {
+        "name": candidate.name,
+        "latitude": _rounded(candidate.latitude),
+        "longitude": _rounded(candidate.longitude),
+        "country_code": candidate.country_code,
+        "timezone": timezone_finder.timezone_at(
+            lng=candidate.longitude,
+            lat=candidate.latitude,
+        ),
+    }
+
+
 def build_summary(
     records: Iterable[Mapping[str, object]],
     *,
@@ -49,6 +64,7 @@ def build_summary(
                 "longitude": _rounded(record.get("longitude")),
                 "timezone": record.get("timezone"),
                 "error_code": record.get("error_code"),
+                "candidates": list(record.get("candidates") or ()),
             }
         )
     pass_count = sum(item["status"] == "PASS" for item in results)
@@ -66,12 +82,26 @@ def build_summary(
     }
 
 
+class _CapturingProvider:
+    def __init__(self, provider: NominatimLocationProvider) -> None:
+        self._provider = provider
+        self.name = provider.name
+        self.version = provider.version
+        self.last_candidates = ()
+
+    def geocode(self, query: str):
+        self.last_candidates = tuple(self._provider.geocode(query))
+        return self.last_candidates
+
+
 def qualify(provider: NominatimLocationProvider) -> tuple[dict, bool, bool]:
     records = []
     infrastructure_failure = False
+    timezone_finder = TimezoneFinder(in_memory=True)
+    capturing_provider = _CapturingProvider(provider)
     for query in PUBLIC_CASES:
         try:
-            resolved = resolve_birth_place(BirthPlaceInput(query), provider)
+            resolved = resolve_birth_place(BirthPlaceInput(query), capturing_provider)
             records.append(
                 {
                     "query": query,
@@ -80,11 +110,18 @@ def qualify(provider: NominatimLocationProvider) -> tuple[dict, bool, bool]:
                     "longitude": resolved.longitude,
                     "timezone": resolved.timezone,
                     "error_code": None,
+                    "candidates": (),
                 }
             )
         except BirthFoundationError as exc:
             if exc.code == "location_provider_unavailable":
                 infrastructure_failure = True
+            candidates = ()
+            if exc.code == "ambiguous_birth_place":
+                candidates = tuple(
+                    _candidate_summary(candidate, timezone_finder)
+                    for candidate in capturing_provider.last_candidates
+                )
             records.append(
                 {
                     "query": query,
@@ -93,6 +130,7 @@ def qualify(provider: NominatimLocationProvider) -> tuple[dict, bool, bool]:
                     "longitude": None,
                     "timezone": None,
                     "error_code": exc.code,
+                    "candidates": candidates,
                 }
             )
             if infrastructure_failure:
