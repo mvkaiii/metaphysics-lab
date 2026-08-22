@@ -22,8 +22,11 @@ class ZiweiPhase2ACapabilityTests(unittest.TestCase):
             self.assertEqual(cap["routing"], "on_demand")
             self.assertEqual(cap["rule_version"], "1.0")
 
-    def test_flowing_stars_remain_planned(self):
-        self.assertEqual(get_capability("ziwei.flowing_stars")["implementation"], "planned")
+    def test_flowing_stars_activation_does_not_promote_phase2a_core(self):
+        flowing = get_capability("ziwei.flowing_stars")
+        self.assertEqual((flowing["implementation"], flowing["maturity"]), ("implemented", "experimental"))
+        for capability_id in ("ziwei.transformations", "ziwei.flying"):
+            self.assertEqual(get_capability(capability_id)["maturity"], "stable")
 
 
 class ZiweiPhase2AStablePromotionTests(unittest.TestCase):

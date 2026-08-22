@@ -72,19 +72,25 @@ class Phase2C0DocumentationTests(unittest.TestCase):
         self.assertIn("候選", combined)
         self.assertIn("大概晚上7、8點", combined)
 
-    def test_natal_capabilities_remain_experimental_and_phase2c_stays_planned(self):
+    def test_natal_capabilities_remain_experimental_after_phase2c_activation(self):
         self.assertEqual(get_bazi_capability("bazi.natal_chart")["maturity"], "experimental")
         ziwei_natal = get_ziwei_capability("ziwei.natal_chart")
         self.assertEqual(ziwei_natal["maturity"], "experimental")
-        flowing = get_ziwei_capability("ziwei.flowing_stars")
-        self.assertEqual(flowing["implementation"], "planned")
-        self.assertIsNone(flowing["maturity"])
 
-        docs = "\n".join((read("readme"), read("changelog"), read("update")))
-        self.assertIn("ziwei.flowing_stars", docs)
-        self.assertIn("planned", docs.lower())
-        self.assertIn("Experimental", docs)
-        self.assertIn("Phase 2C0", docs)
+        flowing = get_ziwei_capability("ziwei.flowing_stars")
+        self.assertEqual(flowing["implementation"], "implemented")
+        self.assertEqual(flowing["maturity"], "experimental")
+        self.assertEqual(flowing["routing"], "on_demand")
+        self.assertEqual(flowing["rule_version"], "1.0-exp")
+
+        current_docs = "\n".join((read("readme"), read("changelog")))
+        self.assertIn("ziwei.flowing_stars", current_docs)
+        self.assertIn("implemented / experimental / on_demand", current_docs)
+        self.assertIn("Phase 2C Ziwei Flowing Stars", current_docs)
+
+        historical_docs = "\n".join((read("readme"), read("changelog"), read("update")))
+        self.assertIn("Phase 2C0", historical_docs)
+        self.assertIn("Experimental", historical_docs)
 
 
 if __name__ == "__main__":

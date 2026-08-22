@@ -47,10 +47,13 @@ class ZiweiPhase2BCapabilityTests(unittest.TestCase):
             self.assertEqual((cap["implementation"], cap["maturity"], cap["routing"], cap["rule_version"]),
                              ("implemented", "stable", "on_demand", "1.0"))
 
-    def test_flowing_stars_remain_planned_and_not_executable(self):
+    def test_flowing_stars_activation_does_not_promote_fine_cycle_stems(self):
         cap = get_capability("ziwei.flowing_stars")
-        self.assertEqual(cap["implementation"], "planned")
-        self.assertFalse(can_execute("ziwei.flowing_stars"))
+        self.assertEqual((cap["implementation"], cap["maturity"], cap["routing"]),
+                         ("implemented", "experimental", "on_demand"))
+        self.assertTrue(can_execute("ziwei.flowing_stars"))
+        for capability_id in ("ziwei.flow_month_stem", "ziwei.flow_day_stem", "ziwei.flow_hour_stem"):
+            self.assertEqual(get_capability(capability_id)["maturity"], "experimental")
 
     def test_dependencies_are_scope_specific(self):
         self.assertEqual(
