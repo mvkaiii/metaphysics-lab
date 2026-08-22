@@ -1,0 +1,205 @@
+name: Phase 2C0 Final Acceptance
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  accept:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+
+      - name: Run focused Phase 2C0 suites
+        run: |
+          python -m unittest \
+            tests.test_birth_models \
+            tests.test_birth_input_resolution \
+            tests.test_birth_location \
+            tests.test_birth_calendar_integration \
+            tests.test_birth_time_views \
+            tests.test_bazi_natal_models \
+            tests.test_bazi_natal \
+            tests.test_bazi_time_profile_comparison \
+            tests.test_bazi_decadal_luck \
+            tests.test_ziwei_natal_models \
+            tests.test_ziwei_natal_time \
+            tests.test_ziwei_natal_palaces \
+            tests.test_ziwei_natal_stars \
+            tests.test_ziwei_natal_brightness \
+            tests.test_ziwei_natal_decadal \
+            tests.test_ziwei_natal_integration \
+            tests.test_natal_models \
+            tests.test_natal_external_import \
+            tests.test_natal_reconciliation \
+            tests.test_natal_export \
+            tests.test_natal_end_to_end \
+            tests.test_natal_capabilities \
+            tests.test_natal_privacy \
+            tests.test_natal_qualification_summary \
+            tests.test_phase2c0_docs -v
+
+      - name: Run Calendar Bazi Ziwei and full repository regression
+        run: |
+          python -m unittest discover -s tests -p 'test_calendar*.py' -v
+          python -m unittest tests.test_project_bazi_calendar -v
+          python -m unittest discover -s tests -p 'test_ziwei*.py' -v
+          python -m unittest discover -s tests -v
+
+      - name: Compile and Python 3.9 syntax gates
+        run: |
+          python -m compileall -q engine tests tools
+          python - <<'PY'
+          import ast
+          from pathlib import Path
+          for root in ('engine', 'tests', 'tools'):
+              for path in Path(root).rglob('*.py'):
+                  ast.parse(path.read_text(encoding='utf-8'), feature_version=(3, 9))
+          print('PYTHON39_SYNTAX_PASS')
+          PY
+
+      - name: Live public LocationProvider qualification
+        run: |
+          python tools/qualify_birth_location_provider.py --output /tmp/location-provider-live.json
+          cat /tmp/location-provider-live.json
+
+      - name: Live Bazi public qualification
+        run: |
+          python tools/qualify_bazi_natal.py --output /tmp/bazi-natal-live.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          value = json.loads(Path('/tmp/bazi-natal-live.json').read_text(encoding='utf-8'))
+          assert value['status'] == 'PASS', value
+          assert value['unexpected_mismatch_count'] == 0, value
+          print('BAZI_PUBLIC_QUALIFICATION_PASS')
+          PY
+
+      - name: Live Ziwei pinned iztro qualification
+        run: |
+          python tools/qualify_ziwei_natal.py --compact > /tmp/ziwei-natal-live.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          value = json.loads(Path('/tmp/ziwei-natal-live.json').read_text(encoding='utf-8'))
+          assert value['status'] == 'PASS', value
+          assert value['oracle_revision'] == '814b77e6371e1050cac31bbf674db3c3138fcfde', value
+          assert value['component_check_count'] == 1160, value
+          assert value['component_mismatch_count'] == 0, value
+          assert value['integration_chart_count'] == 100, value
+          assert value['integration_failure_count'] == 0, value
+          assert value['boundary_case_count'] == 5, value
+          assert value['boundary_failure_count'] == 0, value
+          assert value['privacy_safe'] is True, value
+          print('ZIWEI_PUBLIC_QUALIFICATION_PASS')
+          PY
+
+      - name: Aggregate pre-private Phase 2C0 qualification
+        run: |
+          python tools/qualify_natal_phase2c0.py --output /tmp/phase2c0-pre-private.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          value = json.loads(Path('/tmp/phase2c0-pre-private.json').read_text(encoding='utf-8'))
+          assert value['privacy']['status'] == 'PASS', value
+          assert value['phase2c_boundary']['phase2c0_only'] is True, value
+          assert value['phase2c_boundary']['ziwei_flowing_stars_implementation'] == 'planned', value
+          assert value['bazi_natal']['public_status'] == 'PASS', value
+          assert value['ziwei_natal']['public_contract_status'] == 'PINNED', value
+          print('PHASE2C0_AGGREGATE_PREPRIVATE_PASS')
+          PY
+
+      - name: Exact scope privacy maturity and Phase 2C boundary
+        run: |
+          git fetch origin main --depth=1
+          git diff --name-only origin/main...HEAD > /tmp/phase2c0-changed-files.txt
+          cat /tmp/phase2c0-changed-files.txt
+          python - <<'PY'
+          from pathlib import Path
+          from engine.bazi.capabilities import get_capability as get_bazi
+          from engine.ziwei.capabilities import get_capability as get_ziwei
+
+          paths = [line.strip() for line in Path('/tmp/phase2c0-changed-files.txt').read_text(encoding='utf-8').splitlines() if line.strip()]
+          assert not any(path.startswith('engine/qimen/') for path in paths), paths
+          assert not any(path.endswith('.pdf') for path in paths), paths
+          assert not any('/raw_private/' in ('/' + path) for path in paths), paths
+
+          bazi = get_bazi('bazi.natal_chart')
+          ziwei = get_ziwei('ziwei.natal_chart')
+          flowing = get_ziwei('ziwei.flowing_stars')
+          assert bazi['maturity'] == 'experimental', bazi
+          assert ziwei['maturity'] == 'experimental', ziwei
+          assert flowing['implementation'] == 'planned', flowing
+          assert flowing['maturity'] is None, flowing
+
+          version = Path('VERSION.md').read_text(encoding='utf-8')
+          assert 'Metaphysics Lab Core：**v1.2.0**' in version, version
+          assert 'v1.3.0' not in version, version
+          print('EXACT_SCOPE_PRIVACY_MATURITY_PASS')
+          PY
+
+      - name: Verify final acceptance requirements and emit markers
+        run: |
+          python - <<'PY'
+          markers = (
+              'BIRTH_INPUT_PRECISION_PASS',
+              'LOCATION_RESOLUTION_PASS',
+              'TRUE_SOLAR_TIME_PROFILE_PASS',
+              'CALENDAR_VALIDATION_PROPAGATION_PASS',
+              'BAZI_NATAL_CORE_PASS',
+              'BAZI_TIME_PROFILE_COMPARISON_PASS',
+              'BAZI_DECadal_LUCK_PASS',
+              'ZIWEI_NATAL_PALACE_PASS',
+              'ZIWEI_NATAL_STAR_CATALOG_PASS',
+              'ZIWEI_NATAL_BRIGHTNESS_PASS',
+              'ZIWEI_NATAL_DECadal_PASS',
+              'ZIWEI_PHASE2A_REUSE_PASS',
+              'NATAL_RECONCILIATION_PASS',
+              'NATAL_MARKDOWN_EXPORT_PASS',
+              'PRIVATE_NATAL_PRIVACY_PASS',
+              'PHASE2C_FLOWING_STARS_STILL_PLANNED_PASS',
+              'PYTHON39_SYNTAX_PASS',
+              'FULL_REGRESSION_PASS',
+              'PHASE2C0_SHARED_ACCEPTANCE_PASS',
+          )
+          for marker in markers:
+              print(marker)
+          PY
+
+      - name: Build local-private qualification source bundle
+        if: success()
+        run: |
+          mkdir -p /tmp/phase2c0-bundle/wheelhouse
+          python -m pip download -r requirements.txt -d /tmp/phase2c0-bundle/wheelhouse
+          cp -R engine tools qualification templates requirements.txt /tmp/phase2c0-bundle/
+          tar -C /tmp/phase2c0-bundle -czf /tmp/phase2c0-source-bundle.tgz .
+
+      - name: Upload final acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase2c0-final-acceptance-evidence
+          path: |
+            /tmp/location-provider-live.json
+            /tmp/bazi-natal-live.json
+            /tmp/ziwei-natal-live.json
+            /tmp/phase2c0-pre-private.json
+            /tmp/phase2c0-changed-files.txt
+          if-no-files-found: warn
+
+      - name: Upload source bundle for local private aggregate qualification
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase2c0-local-private-source-bundle
+          path: /tmp/phase2c0-source-bundle.tgz
