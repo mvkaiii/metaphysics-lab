@@ -14,7 +14,6 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from engine.natal.capabilities import get_capability as get_natal_capability
-from engine.ziwei.capabilities import get_capability as get_ziwei_capability
 
 
 FORBIDDEN_KEYS = frozenset((
@@ -45,6 +44,16 @@ _BAZI_PUBLIC = Path("qualification/bazi/natal/public-lunar-python-1.4.8.json")
 _BAZI_PRIVATE = Path("qualification/bazi/natal/private-summary.json")
 _ZIWEI_PUBLIC = Path("qualification/ziwei/natal/public-iztro-814b77e6.json")
 _ZIWEI_PRIVATE = Path("qualification/ziwei/natal/private-astralium-summary.json")
+
+# Phase 2C0 summary is a historical qualification snapshot. Later Phase 2C
+# activation must not rewrite the boundary that was true when Phase 2C0 closed.
+_PHASE2C0_FLOWING_STARS_BOUNDARY = {
+    "ziwei_flowing_stars_implementation": "planned",
+    "ziwei_flowing_stars_maturity": None,
+    "ziwei_flowing_stars_routing": "on_demand",
+    "ziwei_flowing_stars_rule_version": None,
+    "phase2c0_only": True,
+}
 
 
 def find_forbidden_keys(value: Any, prefix: str = "") -> Tuple[str, ...]:
@@ -150,8 +159,6 @@ def build_phase2c0_summary(private_summary_path: Optional[Path] = None) -> Dict[
     if not isinstance(boundary_matrix, list):
         raise RuntimeError("ziwei boundary_matrix must be a list")
 
-    flowing = get_ziwei_capability("ziwei.flowing_stars")
-
     summary = {
         "schema_version": "1.0",
         "classification": "phase2c0_qualification_summary",
@@ -209,13 +216,7 @@ def build_phase2c0_summary(private_summary_path: Optional[Path] = None) -> Dict[
             "forbidden_key_count": 0,
             "private_runtime_aggregate": _safe_private_runtime_aggregate(private_summary_path),
         },
-        "phase2c_boundary": {
-            "ziwei_flowing_stars_implementation": flowing["implementation"],
-            "ziwei_flowing_stars_maturity": flowing["maturity"],
-            "ziwei_flowing_stars_routing": flowing["routing"],
-            "ziwei_flowing_stars_rule_version": flowing["rule_version"],
-            "phase2c0_only": True,
-        },
+        "phase2c_boundary": dict(_PHASE2C0_FLOWING_STARS_BOUNDARY),
     }
 
     forbidden = find_forbidden_keys(summary)

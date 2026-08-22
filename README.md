@@ -4,7 +4,7 @@ Metaphysics Lab 是一套以「可重現、可驗證、可追溯、以決策為�
 
 目前正式版本：**v1.2.0｜2026-08-21**。
 
-目前工作樹另包含 **Unreleased Phase 2B** 與 **Unreleased Phase 2C0｜Natal Chart Foundation**；這些 Unreleased 能力不改寫 `VERSION.md` 的正式 release identity。
+目前工作樹另包含 **Unreleased Phase 2B**、**Unreleased Phase 2C0｜Natal Chart Foundation** 與 **Unreleased Phase 2C Ziwei Flowing Stars**；這些 Unreleased 能力不改寫 `VERSION.md` 的正式 release identity。
 
 ## 第一次使用
 
@@ -35,6 +35,26 @@ Metaphysics Lab 是一套以「可重現、可驗證、可追溯、以決策為�
 
 ---
 
+## Unreleased Phase 2C Ziwei Flowing Stars
+
+Phase 2C Ziwei Flowing Stars capability：
+
+```text
+ziwei.flowing_stars = implemented / experimental / on_demand / 1.0-exp
+profile = ziwei-flowing-stars-common-v1
+classification = Project 推導盤面
+```
+
+支援 `decadal / yearly / monthly / daily / hourly` 五種 scope。核心流曜固定10顆：天魁、天鉞、文昌、文曲、祿存、擎羊、陀羅、天馬、紅鸞、天喜；`yearly` 額外加入年解。
+
+月／日／時重用 Phase 2B resolved source；大限直接重用既有 `ZiweiDecadalPeriod.stem_branch`；流年使用 lunar-year neutral source。不得重算上游干支或套另一套 boundary policy。
+
+Public qualification：pinned iztro 2.6.0 revision `814b77e6371e1050cac31bbf674db3c3138fcfde`，600/600 source cases、6120 placements、0 unexpected mismatch。Astralium flowing-stars private qualification = **PENDING**。
+
+本階段不包含歲前十二神、將前十二神、博士十二神、長生十二神、小限流曜、流曜亮度、scoring 或 AI interpretation，也不升 Stable。
+
+---
+
 ## Unreleased Phase 2C0｜Natal Chart Foundation
 
 Phase 2C0 讓使用者可以直接用出生基本資料建立 Project 原生本命盤，也可匯入已知四柱或 Astralium structured chart 做 external cross-check。
@@ -47,7 +67,7 @@ Phase 2C0 讓使用者可以直接用出生基本資料建立 Project 原生本�
 
 若缺欄位，只追問缺少內容；若時間是「大概晚上7、8點」，不得自行取中點，應保留候選或降級。
 
-### Phase 2C0 capability matrix
+### Phase 2C0 capability matrix（歷史快照）
 
 | Capability | Implementation | Maturity | Routing |
 |---|---|---|---|
@@ -124,7 +144,7 @@ Astralium fine-cycle             PENDING
 
 `leap_twelfth_month_second_half` 只有 synthetic internal coverage，為 **not externally qualified**。
 
-`ziwei.flowing_stars`／紫微流曜仍 planned / on_demand；Phase 2C0 不包含 moving stars。
+在 Phase 2B／Phase 2C0 歷史快照中，`ziwei.flowing_stars` 仍為 planned / on_demand；目前狀態請以 Phase 2C 區段為準。
 
 ---
 

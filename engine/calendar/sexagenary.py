@@ -44,6 +44,18 @@ def lunar_year_stem(lunar_year: int) -> str:
     return GAN[(lunar_year - 4) % 10]
 
 
+def lunar_year_branch(lunar_year: int) -> str:
+    if not isinstance(lunar_year, int) or isinstance(lunar_year, bool):
+        raise ValueError("lunar_year must be int")
+    return ZHI[(lunar_year - 4) % 12]
+
+
+def is_valid_sexagenary_pair(stem: str, branch: str) -> bool:
+    if stem not in GAN or branch not in ZHI:
+        return False
+    return GAN.index(stem) % 2 == ZHI.index(branch) % 2
+
+
 def five_tiger_month(year_stem: str, effective_month_ordinal: int) -> tuple[str, str]:
     if year_stem not in FIRST_MONTH_STEM:
         raise ValueError("invalid heavenly stem")

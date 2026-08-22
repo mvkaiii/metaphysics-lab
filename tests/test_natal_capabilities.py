@@ -11,7 +11,7 @@ from engine.ziwei.capabilities import get_capability as get_ziwei_capability
 
 
 class NatalCapabilityRegistryTests(unittest.TestCase):
-    def test_phase2c0_state_matrix_is_explicit(self):
+    def test_state_matrix_is_explicit_after_phase2c_activation(self):
         expected = {
             "birth.input_resolution": ("implemented", "experimental", "on_demand", "1.0-exp"),
             "birth.location_resolution": ("implemented", "experimental", "on_demand", "1.0-exp"),
@@ -20,7 +20,7 @@ class NatalCapabilityRegistryTests(unittest.TestCase):
             "ziwei.natal_chart": ("implemented", "experimental", "on_demand", "1.0-exp"),
             "natal.reconciliation": ("implemented", "stable", "on_demand", "1.0"),
             "natal.markdown_export": ("implemented", "stable", "on_demand", "1.0"),
-            "ziwei.flowing_stars": ("planned", None, "on_demand", None),
+            "ziwei.flowing_stars": ("implemented", "experimental", "on_demand", "1.0-exp"),
         }
         getters = {
             "birth": get_birth_capability,
@@ -59,12 +59,12 @@ class NatalCapabilityRegistryTests(unittest.TestCase):
         export = get_natal_capability("natal.markdown_export")
         self.assertEqual(export["dependencies"], ("natal.reconciliation",))
 
-    def test_phase2c_flowing_stars_boundary_is_not_promoted(self):
+    def test_phase2c_flowing_stars_is_experimental_not_default(self):
         cap = get_ziwei_capability("ziwei.flowing_stars")
-        self.assertEqual(cap["implementation"], "planned")
-        self.assertIsNone(cap["maturity"])
+        self.assertEqual(cap["implementation"], "implemented")
+        self.assertEqual(cap["maturity"], "experimental")
         self.assertEqual(cap["routing"], "on_demand")
-        self.assertIsNone(cap["rule_version"])
+        self.assertEqual(cap["rule_version"], "1.0-exp")
 
 
 if __name__ == "__main__":
