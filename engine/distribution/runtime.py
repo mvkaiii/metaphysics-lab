@@ -75,6 +75,26 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
             from .forecast import resolve_forecast_context
 
             return _ok(action, resolve_forecast_context({} if payload is None else payload))
+        if action in (
+            "export_case_markdown",
+            "validate_case",
+            "migrate_case",
+            "update_case_record",
+        ):
+            from .case_pack import (
+                export_case_markdown,
+                migrate_case,
+                update_case_record,
+                validate_case,
+            )
+
+            handler = {
+                "export_case_markdown": export_case_markdown,
+                "validate_case": validate_case,
+                "migrate_case": migrate_case,
+                "update_case_record": update_case_record,
+            }[action]
+            return _ok(action, handler({} if payload is None else payload))
     except DistributionError as exc:
         return _error(action, exc.code, str(exc), exc.details)
 
