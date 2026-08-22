@@ -1,0 +1,54 @@
+name: verify-v1.3.0-published-release
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    env:
+      TARGET_SHA: f7e48ebea8c841194b71b8c0f2c2168550763322
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: f7e48ebea8c841194b71b8c0f2c2168550763322
+          fetch-depth: 0
+
+      - name: Verify tag and release metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag_sha="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/v1.3.0" --jq '.object.sha')"
+          test "$tag_sha" = "$TARGET_SHA"
+          gh release view v1.3.0 --json name,tagName,isDraft,isPrerelease --jq '.' > /tmp/release.json
+          test "$(jq -r '.name' /tmp/release.json)" = 'Metaphysics Lab v1.3.0'
+          test "$(jq -r '.tagName' /tmp/release.json)" = 'v1.3.0'
+          test "$(jq -r '.isDraft' /tmp/release.json)" = 'false'
+          test "$(jq -r '.isPrerelease' /tmp/release.json)" = 'false'
+
+      - name: Verify exact asset set
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t assets < <(gh release view v1.3.0 --json assets --jq '.assets[].name' | sort)
+          expected=(METAPHYSICS_CORE.md PROJECT_INSTRUCTIONS.md metaphysics_lab.py)
+          test "${assets[*]}" = "${expected[*]}"
+
+      - name: Download and compare assets byte-for-byte
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/v130-assets
+          gh release download v1.3.0 --dir /tmp/v130-assets
+          cmp dist/ai/metaphysics_lab.py /tmp/v130-assets/metaphysics_lab.py
+          cmp dist/ai/METAPHYSICS_CORE.md /tmp/v130-assets/METAPHYSICS_CORE.md
+          cmp dist/ai/PROJECT_INSTRUCTIONS.md /tmp/v130-assets/PROJECT_INSTRUCTIONS.md
+          sha256sum /tmp/v130-assets/*
+
+      - name: Show release URL
+        shell: bash
+        run: gh release view v1.3.0 --json url --jq '.url'
