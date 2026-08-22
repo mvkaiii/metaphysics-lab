@@ -1,4 +1,4 @@
-name: ai-dist-task6-red
+name: ai-dist-task6-green
 
 on:
   pull_request:
@@ -18,5 +18,14 @@ jobs:
         run: python -m pip install -r requirements.txt
       - name: Verify generated distribution is current
         run: python tools/build_ai_distribution.py --check
-      - name: Run Task 6 bundle parity contracts
-        run: python -m unittest tests.test_ai_distribution_bundle -v
+      - name: Run Task 1-6 distribution and bundle regressions
+        run: |
+          python -m unittest \
+            tests.test_distribution_runtime_info \
+            tests.test_distribution_natal \
+            tests.test_distribution_forecast \
+            tests.test_distribution_case_pack \
+            tests.test_ai_distribution_build \
+            tests.test_ai_distribution_bundle -v
+      - name: Compile runtime, builder and generated bundle
+        run: python -m compileall -q engine tools dist/ai/metaphysics_lab.py
