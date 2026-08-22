@@ -31,7 +31,7 @@ jobs:
         run: python -m compileall -q tools/build_ai_distribution.py dist/ai/metaphysics_lab.py
       - name: Commit generated artifacts to feature branch
         run: |
-          if git diff --quiet -- dist/ai; then
+          if [ -z "$(git status --porcelain -- dist/ai)" ]; then
             echo 'dist/ai already current'
             exit 0
           fi
