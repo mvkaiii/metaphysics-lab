@@ -47,7 +47,7 @@ Private Case Markdown
 
 > **Python 算盤，AI 讀盤。**
 >
-> **核心 Markdown 定義 AI 怎麼工作；Python runtime 定義目前能算什麼。**
+> **核心 Markdown 定義 AI 怎麼工作；Python runtime 定義目前能算什麼、怎麼算。**
 >
 > **系統升級通常只替換 `metaphysics_lab.py`；私人 Case 更新只替換實際有變更的 Markdown。**
 
@@ -130,9 +130,9 @@ output_classification
 external_dependency_status
 ```
 
-核心 Markdown 不再硬寫會快速過期的 capability status。
+核心 Markdown 不再硬寫會快速過期的 capability status、rule profile 或演算法細節。
 
-AI 必須以目前 `metaphysics_lab.py` 回報的 capability manifest 為 runtime truth，不得依舊 Prompt 記憶自行假定能力。
+AI 必須以目前 `metaphysics_lab.py` 回報的 capability manifest 為 runtime truth，不得依舊 Prompt 記憶自行假定能力，也不得因讀過開發版規則文件而繞過 runtime 手算。
 
 ### 2.4 Project Contract 與 Runtime Version 分離
 
@@ -220,22 +220,37 @@ Canonical source：由 repo 的核心提示詞來源 build / copy 產生，不�
 - pinned oracle revision。
 - module path。
 - 特定 runtime 的星曜清單或 scope support。
+- 會隨 runtime 迭代的排盤算法細節。
 
-以上動態資訊由 runtime manifest 負責。
+以上動態資訊由 runtime manifest 與 runtime calculation 負責。
 
 ### 3.2 `METAPHYSICS_CORE.md`
 
-用途：AI 執行工作時閱讀的固定核心知識與操作規範。
+用途：AI 執行工作時閱讀的**穩定工作契約與分析治理規範**。
 
 它是 build artifact，不是 repo 內唯一 canonical source。
 
-建議由以下模組化來源組合：
+正式只組合相對穩定來源，例如：
 
 ```text
 AI 工作流程
 命理分析作業規範
-命理推導計算規則
-必要正式 rule contract
+資料證據層級與來源分類
+問事盲判／事件校準流程
+Case Markdown 更新規則
+高風險與禁止事項
+```
+
+**不再把完整 `命理推導計算規則.md` 打包進一般使用者 Release Core。**
+
+`命理推導計算規則.md` 繼續作為 repo 的工程／研究／qualification 文件；對一般 AI Project，deterministic algorithm truth 由當前 `metaphysics_lab.py` 負責。AI 可讀 runtime 的 rule version / profile / provenance，但不得自行重算 runtime 已負責的算法。
+
+這個邊界確保正常 runtime 升級時：
+
+```text
+metaphysics_lab.py 更新
+METAPHYSICS_CORE.md 不必更新
+PROJECT_INSTRUCTIONS.md 不必更新
 ```
 
 build 時每一段保留來源標記，例如：
@@ -244,7 +259,7 @@ build 時每一段保留來源標記，例如：
 <!-- source: core/命理分析作業規範.md -->
 ```
 
-不得將 README、release history、CHANGELOG、qualification raw evidence 合併進去。
+不得將 README、release history、CHANGELOG、qualification raw evidence 或快速變動的 capability matrix 合併進去。
 
 ### 3.3 README / GitHub Release Notes
 
@@ -475,14 +490,18 @@ AI 必須明確說明「目前環境沒有實際執行證據」，並提供一�
 
 ```text
 case_schema_version
+project_contract_version
 record_type
 subject_id
 created_at
 last_updated_at
-generated_by_runtime
+last_modified_by
+runtime_version_if_applicable
 source_classification
 mutation_policy
 ```
+
+其中 `last_modified_by` 可為 runtime / AI workflow / user import；不是每份檔案都假裝由 Python 產生。`runtime_version_if_applicable` 在純事件紀錄沒有 runtime 參與時可標示 `not_applicable`。
 
 `subject_id` 應為 Case 內穩定匿名識別，不要求真實姓名。
 
@@ -686,7 +705,7 @@ ZIP 只有使用者明確要求完整備份／export 時才產生。
 ```text
 case_schema_version: 1.0
 project_contract_version: 1.0
-generated_by_runtime: 1.x
+runtime_version_if_applicable: 1.x
 ```
 
 新版 runtime 開啟舊 Case：
@@ -733,7 +752,20 @@ modular engine output == bundled metaphysics_lab.py output
 - maturity / routing / rule version 不漂移。
 - unavailable external dependency 正確回報，而不是 capability silently disappear。
 
-### 11.3 Case Markdown golden tests
+### 11.3 Stable Contract test
+
+一般 runtime capability／演算法升級時，應能只替換 `metaphysics_lab.py`。
+
+測試必須防止 build process 因 capability matrix、rule profile 或演算法細節變更而無故改寫：
+
+```text
+PROJECT_INSTRUCTIONS.md
+METAPHYSICS_CORE.md
+```
+
+只有 Project Contract source 本身變更時，才允許固定核心 MD digest 改變。
+
+### 11.4 Case Markdown golden tests
 
 固定 input + 固定 generated timestamp：
 
@@ -747,7 +779,7 @@ byte-identical Markdown
 - metadata header 完整。
 - privacy-sensitive raw payload 不被意外寫入不該存在的檔案。
 
-### 11.4 Incremental mutation tests
+### 11.5 Incremental mutation tests
 
 例如新增一筆 verified event：
 
@@ -755,7 +787,7 @@ byte-identical Markdown
 - `01/02/03/04` 不應無故改變。
 - blind forecast 不被覆寫。
 
-### 11.5 Mobile release asset test
+### 11.6 Mobile release asset test
 
 GitHub Release 必須能獨立取得：
 
@@ -767,7 +799,7 @@ PROJECT_INSTRUCTIONS.md
 
 不得要求使用者解壓縮才能開始。
 
-### 11.6 Existing regression
+### 11.7 Existing regression
 
 本階段是 distribution / orchestration architecture，不得降低既有命理 capability regression。
 
@@ -805,6 +837,7 @@ Project Contract 初版可標 `1.0`，但不代表 Metaphysics Lab Core runtime 
 - 為了 single-file 而重寫所有 canonical engine modules。
 - 未審查 license 就 vendor 第三方 dependency。
 - 強迫手機使用者下載 ZIP。
+- 將快速變動的演算法規則複製進固定 AI Core，造成每次 runtime 升級都要重傳 MD。
 
 ---
 
@@ -829,7 +862,7 @@ GitHub Release
 日後正常升級：
 
 ```text
-新的 runtime capability
+新的 runtime capability / algorithm
 → 換 metaphysics_lab.py
 → 固定核心 MD 原則不動
 → 私人 Case 原則不重建
