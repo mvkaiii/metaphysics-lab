@@ -1,0 +1,29 @@
+name: Phase 2C Task 7 GREEN
+
+on:
+  pull_request:
+    branches:
+      - feature/ziwei-flowing-stars-v1
+  workflow_dispatch:
+
+jobs:
+  green:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+      - name: Run public qualification and regressions
+        run: |
+          python tools/qualify_ziwei_phase2c.py --public
+          python -m unittest tests.test_ziwei_phase2c_qualification tests.test_ziwei_flowing_stars -v
+          python - <<'PY'
+          import ast
+          from pathlib import Path
+          for path in list(Path('engine').rglob('*.py')) + list(Path('tools').glob('*.py')):
+              ast.parse(path.read_text(encoding='utf-8'), feature_version=(3, 9))
+          print('PHASE2C_TASK7_PYTHON39_PASS')
+          PY
