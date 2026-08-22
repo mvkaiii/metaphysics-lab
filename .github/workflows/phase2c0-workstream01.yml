@@ -1,0 +1,44 @@
+name: Phase 2C0 Workstream 01 Acceptance
+
+on:
+  pull_request:
+    branches:
+      - design/natal-chart-foundation
+
+jobs:
+  accept:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run deterministic Birth Foundation suites
+        run: |
+          python -m unittest \
+            tests.test_birth_models \
+            tests.test_birth_input_resolution \
+            tests.test_birth_location \
+            tests.test_birth_calendar_integration \
+            tests.test_birth_time_views \
+            tests.test_birth_location_qualification -v
+          python -m unittest discover -s tests -p 'test_calendar*.py' -v
+      - name: Python 3.9 birth syntax gate
+        run: |
+          python - <<'PY'
+          import ast
+          from pathlib import Path
+          paths = list(Path('engine/birth').rglob('*.py')) + list(Path('tests').glob('test_birth*.py'))
+          for path in paths:
+              ast.parse(path.read_text(encoding='utf-8'), feature_version=(3, 9))
+          print('PYTHON39_BIRTH_PASS')
+          PY
+      - name: Live public location-provider qualification
+        run: |
+          set +e
+          python tools/qualify_birth_location_provider.py --output /tmp/location-provider-summary.json
+          code=$?
+          cat /tmp/location-provider-summary.json
+          exit $code
