@@ -2,7 +2,7 @@ import unittest
 
 from engine.birth.reconciliation import ConflictSeverity, ReconciliationStatus
 from engine.natal.models import ExternalNatalView, NatalSource, ProjectNatalView, SourcedValue
-from engine.natal.reconciliation import compare_scalar, reconcile_natal
+from engine.natal.reconciliation import compare_scalar, reconcile_natal, select_resolved_source
 
 
 class NatalReconciliationTests(unittest.TestCase):
@@ -153,6 +153,54 @@ class NatalReconciliationTests(unittest.TestCase):
         self.assertEqual(by_path["ziwei.body_palace"].status, "NOT_COMPARABLE")
         self.assertEqual(by_path["ziwei.ming_palace"].selected_source, "external")
         self.assertEqual(by_path["ziwei.body_palace"].selected_source, "project")
+
+    def test_experimental_authority_prefers_external_on_blocking_and_caution_conflicts(self):
+        external = self.sourced("巳", self.external_source)
+        project = self.sourced("午", self.project_source)
+        blocking = select_resolved_source("CONFLICT", "BLOCKING", external, project, "experimental")
+        caution = select_resolved_source("CONFLICT", "CAUTION", external, project, "experimental")
+        self.assertEqual(blocking, ("external", "巳", "project_engine_experimental"))
+        self.assertEqual(caution, ("external", "巳", "project_engine_experimental"))
+
+    def test_project_only_selects_project_even_while_experimental(self):
+        project = self.sourced("午", self.project_source)
+        selected = select_resolved_source("NOT_COMPARABLE", "INFO", None, project, "experimental")
+        self.assertEqual(selected, ("project", "午", "external_missing"))
+
+    def test_stable_policy_prefers_project_without_erasing_blocking_conflict(self):
+        external = ExternalNatalView(
+            birth={}, bazi={}, ziwei={"ming_palace": "巳"}, source=self.external_source
+        )
+        project = ProjectNatalView(
+            birth={}, time_basis={}, bazi={}, ziwei={"ming_palace": "午"}, source=self.project_source
+        )
+        resolved = reconcile_natal(external, project, project_maturity="stable")
+        field = {item.path: item for item in resolved.fields}["ziwei.ming_palace"]
+        self.assertEqual(field.status, "CONFLICT")
+        self.assertEqual(field.severity, "BLOCKING")
+        self.assertEqual(field.selected_source, "project")
+        self.assertEqual(field.selected_value, "午")
+        self.assertEqual(field.reason, "blocking_conflict_requires_diagnosis")
+        self.assertNotEqual(field.reason, "matched")
+
+    def test_stable_match_may_select_project_as_default(self):
+        external = self.sourced("巳", self.external_source)
+        project = self.sourced("巳", self.project_source)
+        selected = select_resolved_source("MATCH", "INFO", external, project, "stable")
+        self.assertEqual(selected, ("project", "巳", "matched"))
+
+    def test_reconciliation_never_mutates_external_or_project_raw_views(self):
+        external = ExternalNatalView(
+            birth={}, bazi={}, ziwei={"ming_palace": "巳"}, source=self.external_source
+        )
+        project = ProjectNatalView(
+            birth={}, time_basis={}, bazi={}, ziwei={"ming_palace": "午"}, source=self.project_source
+        )
+        before_external = external.to_dict()
+        before_project = project.to_dict()
+        reconcile_natal(external, project, project_maturity="experimental")
+        self.assertEqual(external.to_dict(), before_external)
+        self.assertEqual(project.to_dict(), before_project)
 
 
 if __name__ == "__main__":
