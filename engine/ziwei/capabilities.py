@@ -32,6 +32,11 @@ _CAPABILITIES = {
         "maturity": "stable", "routing": "on_demand", "rule_version": "1.0",
         "module": "engine.ziwei.flying", "dependencies": ("ziwei.transformations",),
     },
+    "ziwei.natal_chart": {
+        "id": "ziwei.natal_chart", "implementation": "implemented",
+        "maturity": "experimental", "routing": "on_demand", "rule_version": "1.0-exp",
+        "module": "engine.ziwei.natal", "dependencies": ("ziwei.transformations", "ziwei.flying"),
+    },
     "ziwei.flow_month_stem": {
         "id": "ziwei.flow_month_stem", "implementation": "implemented",
         "maturity": "experimental", "routing": "on_demand", "rule_version": "1.0-exp",
