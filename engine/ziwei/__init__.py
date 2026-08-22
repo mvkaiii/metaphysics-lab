@@ -9,6 +9,7 @@ from .month import (
 )
 from .transformations import get_transformation_set
 from .flying import build_natal_flying_graph, fly_transformations
+from .natal import build_ziwei_natal
 
 __all__ = [
     "PALACE_NAMES",
@@ -25,4 +26,5 @@ __all__ = [
     "get_transformation_set",
     "build_natal_flying_graph",
     "fly_transformations",
+    "build_ziwei_natal",
 ]
