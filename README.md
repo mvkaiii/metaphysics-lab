@@ -1,185 +1,114 @@
 # Metaphysics Lab
 
-Metaphysics Lab 是一套以「可重現、可驗證、可追溯、以決策為導向」為核心的命理分析框架。
+Metaphysics Lab 是一套把**可重現的命盤計算**與**AI 命理解讀**分開的命理分析系統。
 
-目前正式版本：**v1.2.0｜2026-08-21**。
+核心原則很簡單：**Python 算盤，AI 讀盤。** 使用者不需要理解 repo 結構，也不需要自己挑八字／紫微模組。
 
-目前工作樹另包含 **Unreleased Phase 2B**、**Unreleased Phase 2C0｜Natal Chart Foundation** 與 **Unreleased Phase 2C Ziwei Flowing Stars**；這些 Unreleased 能力不改寫 `VERSION.md` 的正式 release identity。
+目前正式 release identity 仍為 **v1.2.0｜2026-08-21**。AI Distribution Pack 是目前工作樹的 Unreleased 發行方式，不改寫 `VERSION.md`、Git tag 或既有正式 release。
 
-## 第一次使用
+## 第一次使用｜最短流程
+
+你只需要三個發行檔：
+
+```text
+metaphysics_lab.py
+METAPHYSICS_CORE.md
+PROJECT_INSTRUCTIONS.md
+```
+
+在 ChatGPT Project 或 Claude Project：
+
+1. 上傳 `metaphysics_lab.py`。
+2. 上傳 `METAPHYSICS_CORE.md`。
+3. 打開 Project Instructions，把 `PROJECT_INSTRUCTIONS.md` 的內容完整貼進去；這份檔案不是第三個知識檔上傳。
+4. 完整命盤／流年／決策分析建議選 **High reasoning**。Medium 可用於一般分析與設定；Instant 不建議作為完整命理解讀的預設。
+5. 對 AI 說：**「開始建立我的命理專案。」**
+
+完成後，AI 應自行確認需要的出生資料、呼叫 deterministic runtime、區分盤面事實與命理推論，並產生私人 Case Markdown Pack。你不需要知道內部 Phase 名稱或 capability 檔案位置。
+
+詳細步驟：
 
 - [快速開始](docs/快速開始.md)
-- [安裝到 ChatGPT Project](docs/安裝到ChatGPT-Project.md)
-- [命盤資料準備指南](docs/命盤資料準備指南.md)
-- [Astralium 資料取得指南](docs/Astralium資料取得指南.md)
+- [安裝到 ChatGPT / Claude Project](docs/安裝到ChatGPT-Project.md)
 - [更新與版本同步](docs/更新與版本同步.md)
-- [資料治理](docs/資料治理.md)
+- [命盤資料準備指南](docs/命盤資料準備指南.md)
+
+## 如果 AI 環境不能執行 Python
+
+AI 必須明確說明**無法執行 Python**，不得假裝已跑過命盤計算。此時用同一個單檔 runtime 在本機執行 request：
+
+```bash
+python metaphysics_lab.py request --input request.json --pretty
+```
+
+把 JSON 結果交回 AI 後再繼續解讀。一般使用者不需要改 Python 原始碼。
+
+## 第一次建立 Case 會得到什麼
+
+系統的私人 Case 固定為九份 Markdown：
+
+```text
+00_專案索引.md
+01_命盤核心摘要.md
+02_命盤資料校驗紀錄.md
+03_八字結構化資料包.md
+04_紫微基礎資料包.md
+05_驗證事件紀錄.md
+06_流年追蹤紀錄.md
+07_問事追蹤紀錄.md
+08_重大決策紀錄.md
+```
+
+這些是**你的私人資料**，不是共用程式。AI 建立後，下載並放回自己的 Project 即可。之後一般更新採增量方式：例如新增已驗證事件只更新 `05_驗證事件紀錄.md`；第一版盲判不得事後覆寫。
+
+## 三個發行檔各自負責什麼
+
+| 檔案 | 責任 | 使用者要做的事 |
+|---|---|---|
+| `metaphysics_lab.py` | deterministic 計算、驗證、Case export；不做自由命理解讀 | 上傳；runtime 更新時替換 |
+| `METAPHYSICS_CORE.md` | AI 工作流程與分析治理的固定核心 | 上傳；Project Contract 更新時才替換 |
+| `PROJECT_INSTRUCTIONS.md` | AI 的最高層角色、證據層級、禁令與問事流程 | 複製內容到 Project Instructions |
+
+私人 Case MD 只保存個案資料與追蹤紀錄，不保存程式邏輯。
+
+## 能力狀態以 runtime 為準
+
+固定 Markdown 不複製動態 capability snapshot。要知道目前 runtime 真正支援什麼，讓 AI 呼叫：
+
+```text
+runtime_info
+```
+
+`runtime_info` 會回傳 implementation、maturity、routing、版本與 dependency 狀態。這可避免 README 與實際程式因版本演進而互相矛盾。
+
+## 分析治理
+
+Metaphysics Lab 固定區分八種資料：
+
+1. 原始盤面事實
+2. 已校驗資料
+3. Project 原生盤面
+4. Project 推導盤面
+5. 已驗證事件
+6. 命理推論
+7. 研究假說
+8. 當次現實背景
+
+未來趨勢／流年／決策採**先盲判、再事件校準**。第一階段不先讀已驗證事件來製造預測感；第二階段才用事件校準落地形式與信心。
+
+`Precision must be earned by input`：出生資料不足只能追問、保留候選或降低時間精度，不得自行猜值。
+
+## 隱私
+
+共用 repo 不應提交真實命主 raw birth input、完整住址、私人 Astralium raw chart、PDF、截圖或私人事件。Case Pack 留在使用者自己的 Project／本機。
+
+## 開發者與歷史資料
+
+一般使用者不需要閱讀開發 Phase。若要追蹤正式版本、Unreleased capability 演進、qualification 與架構：
+
+- [VERSION.md](VERSION.md)：正式 release identity
+- [CHANGELOG.md](CHANGELOG.md)：Release / Unreleased 歷史
 - [架構說明](docs/架構說明.md)
-- [版本狀態](VERSION.md)
-- [變更紀錄](CHANGELOG.md)
+- [資料治理](docs/資料治理.md)
 
----
-
-## 核心原則
-
-- 命盤提供模型。
-- Project 原生盤面提供可重現的本命基礎。
-- Project 推導盤面提供時間層級。
-- 事件提供證據。
-- 現實背景決定策略。
-- 問事先盲判，再校準。
-- `Precision must be earned by input`：輸入不足只能追問、保留候選或降級；不得自行補值。
-- 八種資料類型必須分開：原始盤面事實、已校驗資料、Project 原生盤面、Project 推導盤面、已驗證事件、命理推論、研究假說、當次現實背景。
-- 系統核心與私人個案資料必須分開保存。
-- capability implementation / maturity / routing 必須分開管理。
-
----
-
-## Unreleased Phase 2C Ziwei Flowing Stars
-
-Phase 2C Ziwei Flowing Stars capability：
-
-```text
-ziwei.flowing_stars = implemented / experimental / on_demand / 1.0-exp
-profile = ziwei-flowing-stars-common-v1
-classification = Project 推導盤面
-```
-
-支援 `decadal / yearly / monthly / daily / hourly` 五種 scope。核心流曜固定10顆：天魁、天鉞、文昌、文曲、祿存、擎羊、陀羅、天馬、紅鸞、天喜；`yearly` 額外加入年解。
-
-月／日／時重用 Phase 2B resolved source；大限直接重用既有 `ZiweiDecadalPeriod.stem_branch`；流年使用 lunar-year neutral source。不得重算上游干支或套另一套 boundary policy。
-
-Public qualification：pinned iztro 2.6.0 revision `814b77e6371e1050cac31bbf674db3c3138fcfde`，600/600 source cases、6120 placements、0 unexpected mismatch。Astralium flowing-stars private qualification = **PENDING**。
-
-本階段不包含歲前十二神、將前十二神、博士十二神、長生十二神、小限流曜、流曜亮度、scoring 或 AI interpretation，也不升 Stable。
-
----
-
-## Unreleased Phase 2C0｜Natal Chart Foundation
-
-Phase 2C0 讓使用者可以直接用出生基本資料建立 Project 原生本命盤，也可匯入已知四柱或 Astralium structured chart 做 external cross-check。
-
-完整 Mode A 最低輸入：性別、Gregorian 出生日期、出生時間、出生地。
-
-例如：
-
-> 男，1984年3月13日19:20，台北市出生
-
-若缺欄位，只追問缺少內容；若時間是「大概晚上7、8點」，不得自行取中點，應保留候選或降級。
-
-### Phase 2C0 capability matrix（歷史快照）
-
-| Capability | Implementation | Maturity | Routing |
-|---|---|---|---|
-| `birth.input_resolution` | implemented | experimental | on_demand |
-| `birth.location_resolution` | implemented | experimental | on_demand |
-| `birth.true_solar_time` | implemented | experimental | on_demand |
-| `bazi.natal_chart` | implemented | **Experimental** | on_demand |
-| `ziwei.natal_chart` | implemented | **Experimental** | on_demand |
-| `natal.reconciliation` | implemented | stable | on_demand |
-| `natal.markdown_export` | implemented | stable | on_demand |
-| `ziwei.flowing_stars` | planned | — | on_demand |
-
-Bazi / Ziwei Natal 目前可以執行但仍為 Experimental，沒有獨立 promotion 決策前不得升 Stable。
-
-### External / Project / Resolved
-
-本命資料固定保留：
-
-```text
-External / Project / Resolved
-MATCH / EQUIVALENT / CONFLICT / NOT_COMPARABLE
-```
-
-External / Project raw views 不互相覆寫。Experimental Project 與 Astralium 等 external source 發生實質衝突時，Resolved 預設採 external，但 CONFLICT 狀態仍保留。
-
-Astralium 為可選 external qualification source，不是 runtime dependency。
-
-### Time basis
-
-Phase 2C0 保留 `reported_civil_time`、`normalized_civil_time`、`bazi_effective_time`、`ziwei_effective_time`。Calendar Resolver 不負責真太陽時；八字與紫微使用獨立 time profile。
-
----
-
-## v1.2.0 正式能力基線
-
-| Capability | Implementation | Maturity | Routing / Role |
-|---|---|---|---|
-| 八字時間推導（流年／流月／流日／流時） | implemented | stable | default |
-| 紫微流月定位 | implemented | stable | default |
-| 紫微流日定位 | implemented | experimental | on_demand |
-| 紫微流時定位 | implemented | experimental | on_demand |
-| Calendar Resolver v1 | implemented | stable infrastructure | neutral |
-| Ziwei Transformation Core | implemented | stable | on_demand |
-| Ziwei Flying Core | implemented | stable | on_demand |
-
-Calendar Resolver 接受 structured local civil datetime + IANA timezone；civil date 在 00:00 換日，23:00 已屬子時，但 Resolver 不套八字或紫微命理日界。
-
----
-
-## Unreleased Phase 2B｜Ziwei Fine Cycle
-
-Fine Cycle 固定 profile：
-
-```text
-ziwei-fine-cycle-lunar-late-zi-v1
-late_zi_forward-v1
-```
-
-flow month/day/hour stem、transformations、flying 為：
-
-```text
-implemented / experimental / on_demand
-```
-
-Calendar Resolver 維持 **neutral**；23:00 紫微 effective-day 前進只由 fine-cycle profile 套用。
-
-Qualification：
-
-```text
-pinned lunar-lite 1d104fff...   18/18 PASS
-pinned iztro 814b77e6...        integration PASS
-Astralium fine-cycle             PENDING
-```
-
-`leap_twelfth_month_second_half` 只有 synthetic internal coverage，為 **not externally qualified**。
-
-在 Phase 2B／Phase 2C0 歷史快照中，`ziwei.flowing_stars` 仍為 planned / on_demand；目前狀態請以 Phase 2C 區段為準。
-
----
-
-## 資料分類
-
-### 原始盤面事實
-
-第三方／原始來源直接提供的資料，例如 Astralium、原始 PDF 或 imported structured chart。
-
-### 已校驗資料
-
-經來源比對與規則確認後的穩定資料。
-
-### Project 原生盤面
-
-由出生資料經 Metaphysics Lab deterministic Natal Engine 建立的本命八字／紫微。
-
-### Project 推導盤面
-
-由本命／運限／目標時間經固定算法建立的流年、流月、流日、流時、四化／飛化等衍生資料。
-
-### 命理推論
-
-對盤面的解讀，不是盤面事實。
-
----
-
-## Privacy / Qualification
-
-共用 repo 不提交真實命主 raw birth input、full address、raw Astralium chart、PDF 或私人事件資料。
-
-Qualification 只保存 public/synthetic cases、opaque case ids、aggregate counts、digests、versions 與 status。Infrastructure outage 必須與 algorithm failure 分開報告。
-
----
-
-## 專案方向
-
-Metaphysics Lab 的目標不是讓 AI 自由「算命」，而是把命盤建立、時間算法、來源、maturity、qualification、事件校準與策略輸出拆成可重現的工程流程。
+目前既有 Unreleased 工作包含 Natal Foundation、Ziwei Fine Cycle、Ziwei Flowing Stars 與 AI Distribution Pack；其 implementation / maturity / routing 以 runtime metadata 與 CHANGELOG 的對應歷史紀錄為準，不以舊文件快照覆蓋現況。
