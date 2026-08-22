@@ -38,6 +38,9 @@
 
 - 新增 Phase 2C0 aggregate qualification summary；只允許 aggregate counts、digests、versions、statuses。
 - raw private birth input、full address、raw chart、external raw payload 不進 repo。
+- 已以一個授權 private natal case 完成本機 aggregate qualification：Bazi 為 **PASS**（6 direct matches、3 explicit profile differences、0 unexpected mismatch）；Ziwei Astralium natal 為 **PASS**（129 matches、1 equivalent、0 unexpected mismatch）。
+- private qualification 只提交 aggregate counts / digests；raw source 仍留在共用 repo 外。
+- 單一 private case 不構成 promotion 依據；`bazi.natal_chart` / `ziwei.natal_chart` 仍為 Experimental，`promotion_allowed = false`。
 - Phase 2C0 final acceptance 仍由 Task 10 gate 決定；在正式 gate 前不宣稱 release PASS。
 - `ziwei.flowing_stars` 仍為 **planned / on_demand**；Phase 2C0 不包含 moving stars。
 
@@ -108,6 +111,3 @@ Ziwei Flying Core = implemented / stable / on_demand
 - 十天干四化 core。
 - 本命十二宮宮干飛化。
 - 生年、大限、流年四化／飛化。
-- layer composition / conflict validation。
-
-正式 v1.2.0 release identity 維持不變；後續 Unreleased Phase 2B / Phase 2C0 不提前改 VERSION、tag 或 GitHub Release。
