@@ -95,8 +95,8 @@ class BaziNatalChart:
     pillars: Tuple[Pillar, ...]
     day_master: str
     pillar_details: Tuple[PillarDetail, ...]
-    element_counts: Mapping[str, int]
-    decadal_direction: str
+    element_counts: Optional[Mapping[str, int]]
+    decadal_direction: Optional[str]
     decadal_start: Optional[datetime]
     decadal_periods: Tuple[BaziDecadalPeriod, ...]
     validation: Mapping[str, object]
@@ -106,23 +106,23 @@ class BaziNatalChart:
         _require_aware(self.effective_datetime, "effective_datetime")
         if len(self.pillars) != 4:
             raise ValueError("Bazi natal chart requires exactly four pillars")
-        if len(self.pillar_details) != 4:
-            raise ValueError("Bazi natal chart requires exactly four pillar details")
+        if len(self.pillar_details) not in (0, 4):
+            raise ValueError("pillar_details must be pending or contain exactly four details")
         if self.day_master not in GAN:
             raise ValueError("invalid day master: %s" % self.day_master)
         if self.pillars[2].stem != self.day_master:
             raise ValueError("day master must equal the day pillar stem")
-        if set(self.element_counts) != _ELEMENTS:
-            raise ValueError("element_counts must contain exactly 木火土金水")
-        if any(
-            not isinstance(value, int) or value < 0
-            for value in self.element_counts.values()
-        ):
-            raise ValueError("element_counts values must be non-negative integers")
-        if self.decadal_direction not in ("forward", "reverse"):
-            raise ValueError("decadal_direction must be forward or reverse")
+        if self.pillar_details and tuple(detail.pillar for detail in self.pillar_details) != self.pillars:
+            raise ValueError("pillar_details must align with pillars")
+        if self.element_counts is not None:
+            if set(self.element_counts) != _ELEMENTS:
+                raise ValueError("element_counts must contain exactly 木火土金水")
+            if any(not isinstance(value, int) or value < 0 for value in self.element_counts.values()):
+                raise ValueError("element_counts values must be non-negative integers")
+            object.__setattr__(self, "element_counts", MappingProxyType(dict(self.element_counts)))
+        if self.decadal_direction is not None and self.decadal_direction not in ("forward", "reverse"):
+            raise ValueError("decadal_direction must be pending, forward, or reverse")
         if self.decadal_start is not None:
             _require_aware(self.decadal_start, "decadal_start")
-        object.__setattr__(self, "element_counts", MappingProxyType(dict(self.element_counts)))
         object.__setattr__(self, "validation", MappingProxyType(dict(self.validation)))
         object.__setattr__(self, "provenance", MappingProxyType(dict(self.provenance)))
