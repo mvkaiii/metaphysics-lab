@@ -1,0 +1,22 @@
+name: Phase 2C Task 1 GREEN
+
+on:
+  pull_request:
+    branches:
+      - feature/ziwei-flowing-stars-v1
+  workflow_dispatch:
+
+jobs:
+  green:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+      - name: Run Task 1 and Calendar regression
+        run: |
+          python -m unittest tests.test_calendar_sexagenary_phase2c -v
+          python -m unittest discover -s tests -p 'test_calendar*.py' -v
