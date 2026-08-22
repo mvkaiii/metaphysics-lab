@@ -1,0 +1,41 @@
+name: ai-dist-design-premerge
+
+on:
+  pull_request:
+
+jobs:
+  acceptance:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ac2435be9ad1cbea5c85583b3803b7111a992e84
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - name: Install pinned runtime dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run focused AI Distribution suite
+        run: >-
+          python -m unittest
+          tests.test_ai_contract_docs
+          tests.test_distribution_runtime_info
+          tests.test_distribution_natal
+          tests.test_distribution_forecast
+          tests.test_distribution_case_pack
+          tests.test_ai_distribution_build
+          tests.test_ai_distribution_bundle
+          tests.test_ai_distribution_docs
+          tests.test_ai_distribution_acceptance -v
+      - name: Verify deterministic distribution build
+        run: python tools/build_ai_distribution.py --check
+      - name: Run full repository regression
+        run: python -m unittest discover -s tests -p 'test_*.py'
+      - name: Compile Python 3.9 runtime
+        run: >-
+          python -m compileall -q
+          engine/distribution
+          engine/natal/orchestration.py
+          tools/build_ai_distribution.py
+          dist/ai/metaphysics_lab.py
