@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 import subprocess
+import sys
 import unittest
 
 from engine.ziwei.capabilities import get_capability
@@ -116,6 +117,18 @@ class ZiweiPhase2CAcceptanceTests(unittest.TestCase):
         changed = tuple(line.strip() for line in result.stdout.splitlines() if line.strip())
         qimen = tuple(path for path in changed if "qimen" in path.lower() or "奇門" in path)
         self.assertEqual(qimen, ())
+
+    def test_public_qualifier_emits_private_pending_marker(self):
+        result = subprocess.run(
+            [sys.executable, "tools/qualify_ziwei_phase2c.py", "--public"],
+            cwd=ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self.assertIn("IZTRO_FLOWING_STARS_600_600_PASS", result.stdout)
+        self.assertIn("IZTRO_FLOWING_STARS_0_UNEXPECTED_MISMATCH", result.stdout)
+        self.assertIn("PHASE2C_PRIVATE_FLOWING_STARS_PENDING_OK", result.stdout)
 
 
 if __name__ == "__main__":
