@@ -1,0 +1,25 @@
+name: Phase 2C Task 8 GREEN
+
+on:
+  pull_request:
+    branches:
+      - feature/ziwei-flowing-stars-v1
+
+jobs:
+  green:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run Task 8 docs contract and docs regression
+        run: |
+          python -m unittest tests.test_ziwei_phase2c_docs -v
+          python -m unittest discover -s tests -p '*docs*.py' -v
+          python - <<'PY'
+          from pathlib import Path
+          text = Path('VERSION.md').read_text(encoding='utf-8')
+          assert 'Metaphysics Lab Core：**v1.2.0**' in text
+          print('PHASE2C_TASK8_VERSION_V120_PASS')
+          PY
