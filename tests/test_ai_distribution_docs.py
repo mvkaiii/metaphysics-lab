@@ -30,10 +30,13 @@ class AIDistributionDocsTests(unittest.TestCase):
         head = self.readme[:5000]
         for name in USER_ARTIFACTS:
             self.assertIn(name, head)
+        self.assertIn("Latest Release", head)
+        self.assertIn("Assets", head)
         self.assertIn("上傳", head)
         self.assertIn("Project Instructions", head)
         self.assertIn(STARTUP, head)
         self.assertIn("High", head)
+        self.assertNotIn("解壓 ZIP", head)
 
     def test_quick_start_is_ai_first_and_no_repo_module_install(self):
         for name in USER_ARTIFACTS:
@@ -71,12 +74,14 @@ class AIDistributionDocsTests(unittest.TestCase):
         self.assertNotIn("ziwei.flowing_stars` 仍 planned", self.update)
         self.assertNotIn("ziwei.flowing_stars       planned", self.update)
 
-    def test_changelog_has_ai_distribution_pack_unreleased_entry(self):
-        head = self.changelog[:5000]
+    def test_changelog_has_formal_v1_3_0_ai_distribution_entry(self):
+        head = self.changelog[:7000]
+        self.assertIn("## v1.3.0｜2026-08-23", head)
         self.assertIn("AI Distribution Pack", head)
         self.assertIn("metaphysics_lab.py", head)
         self.assertIn("九份", head)
-        self.assertIn("VERSION.md", head)
+        self.assertIn("GitHub Release", head)
+        self.assertNotIn("## Unreleased｜AI Distribution Pack", head)
 
 
 if __name__ == "__main__":
