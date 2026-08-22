@@ -1,0 +1,60 @@
+name: Phase 2C Task 7 Generate Fixture
+
+on:
+  pull_request:
+    branches:
+      - feature/ziwei-flowing-stars-v1
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout formal feature tree
+        uses: actions/checkout@v4
+        with:
+          ref: feature/ziwei-flowing-stars-v1
+          fetch-depth: 0
+      - name: Install Yarn v1
+        run: npm install --global yarn@1.22.22
+      - name: Clone pinned iztro
+        run: |
+          rm -rf /tmp/iztro-phase2c
+          git clone https://github.com/SylarLong/iztro.git /tmp/iztro-phase2c
+          git -C /tmp/iztro-phase2c checkout 814b77e6371e1050cac31bbf674db3c3138fcfde
+          test "$(git -C /tmp/iztro-phase2c rev-parse HEAD)" = "814b77e6371e1050cac31bbf674db3c3138fcfde"
+      - name: Install and build pinned iztro
+        working-directory: /tmp/iztro-phase2c
+        run: |
+          yarn install --frozen-lockfile
+          yarn build
+      - name: Generate public fixture
+        run: |
+          mkdir -p qualification/ziwei/phase2c
+          node qualification/ziwei/phase2c/generate_iztro_vectors.mjs /tmp/iztro-phase2c > qualification/ziwei/phase2c/public-iztro-flowing-star-vectors.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path('qualification/ziwei/phase2c/public-iztro-flowing-star-vectors.json')
+          data = json.loads(path.read_text(encoding='utf-8'))
+          assert data['oracle']['package_version'] == '2.6.0'
+          assert data['oracle']['revision'] == '814b77e6371e1050cac31bbf674db3c3138fcfde'
+          assert data['source_case_count'] == 600
+          assert data['placement_check_count'] == 6120
+          assert len(data['golden_anchors']) == 2
+          print('IZTRO_FIXTURE_GENERATED_600_6120')
+          PY
+      - name: Commit fixture to formal feature branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add qualification/ziwei/phase2c/public-iztro-flowing-star-vectors.json
+          if git diff --cached --quiet; then
+            echo 'Fixture unchanged'
+          else
+            git commit -m 'test: add pinned iztro Phase 2C vectors'
+            git push origin HEAD:feature/ziwei-flowing-stars-v1
+          fi
