@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Tuple
 
 from engine.birth.reconciliation import ConflictSeverity, ReconciliationStatus
 
@@ -22,6 +22,7 @@ _BLOCKING_EXACT = frozenset((
     "ziwei.five_element_bureau",
     "bazi.decadal_direction",
 ))
+_ALLOWED_MATURITIES = frozenset(("experimental", "stable"))
 
 
 def _invalid(message: str, details: Optional[Dict[str, Any]] = None) -> NatalFoundationError:
@@ -143,6 +144,70 @@ def compare_scalar(
     )
 
 
+def select_resolved_source(
+    status: str,
+    severity: str,
+    external: Optional[SourcedValue[Any]],
+    project: Optional[SourcedValue[Any]],
+    project_maturity: str,
+) -> Tuple[str, Any, str]:
+    """Select the resolved authority without changing comparison status.
+
+    Raw external/project values remain untouched. Experimental Project charts
+    defer to an available external source on conflicts. Stable Project charts
+    may become the default resolved source, but a conflict remains a conflict.
+    """
+
+    allowed_statuses = frozenset(item.value for item in ReconciliationStatus)
+    allowed_severities = frozenset(item.value for item in ConflictSeverity)
+    if status not in allowed_statuses:
+        raise _invalid("unknown reconciliation status", {"status": status})
+    if severity not in allowed_severities:
+        raise _invalid("unknown conflict severity", {"severity": severity})
+    if project_maturity not in _ALLOWED_MATURITIES:
+        raise _invalid("unknown project maturity", {"project_maturity": project_maturity})
+    if external is not None and not isinstance(external, SourcedValue):
+        raise _invalid("external must be SourcedValue or None")
+    if project is not None and not isinstance(project, SourcedValue):
+        raise _invalid("project must be SourcedValue or None")
+
+    if status == ReconciliationStatus.NOT_COMPARABLE.value:
+        if external is None and project is None:
+            return "none", None, "both_missing"
+        if external is None and project is not None:
+            return "project", project.value, "external_missing"
+        if project is None and external is not None:
+            return "external", external.value, "project_missing"
+        raise _invalid("NOT_COMPARABLE cannot contain both source values")
+
+    if external is None or project is None:
+        raise _invalid(
+            "%s requires both source values" % status,
+            {"status": status, "has_external": external is not None, "has_project": project is not None},
+        )
+
+    if status == ReconciliationStatus.MATCH.value:
+        if external.value != project.value:
+            raise _invalid("MATCH requires equal source values")
+        if project_maturity == "stable":
+            return "project", project.value, "matched"
+        return "external", external.value, "matched"
+
+    if status == ReconciliationStatus.EQUIVALENT.value:
+        if project_maturity == "stable":
+            return "project", project.value, "materially_equivalent"
+        return "external", external.value, "materially_equivalent"
+
+    if status == ReconciliationStatus.CONFLICT.value:
+        if project_maturity == "experimental":
+            return "external", external.value, "project_engine_experimental"
+        if severity == ConflictSeverity.BLOCKING.value:
+            return "project", project.value, "blocking_conflict_requires_diagnosis"
+        return "project", project.value, "stable_project_default_conflict_preserved"
+
+    raise _invalid("unhandled reconciliation status", {"status": status})
+
+
 def _flatten_generic(prefix: str, value: Any, target: Dict[str, Any]) -> None:
     if isinstance(value, Mapping):
         for key in sorted(value.keys(), key=str):
@@ -218,6 +283,26 @@ def _project_fields(view: ProjectNatalView) -> Dict[str, SourcedValue[Any]]:
     return {path: SourcedValue(value, view.source) for path, value in raw.items()}
 
 
+def _apply_authority(field: ResolvedField, project_maturity: str) -> ResolvedField:
+    selected_source, selected_value, reason = select_resolved_source(
+        field.status,
+        field.severity,
+        field.external_value,
+        field.project_value,
+        project_maturity,
+    )
+    return ResolvedField(
+        path=field.path,
+        status=field.status,
+        severity=field.severity,
+        selected_source=selected_source,
+        selected_value=selected_value,
+        external_value=field.external_value,
+        project_value=field.project_value,
+        reason=reason,
+    )
+
+
 def reconcile_natal(
     external: Optional[ExternalNatalView],
     project: Optional[ProjectNatalView],
@@ -228,14 +313,17 @@ def reconcile_natal(
         raise _invalid("external must be ExternalNatalView or None")
     if project is not None and not isinstance(project, ProjectNatalView):
         raise _invalid("project must be ProjectNatalView or None")
-    if not isinstance(project_maturity, str) or not project_maturity.strip():
-        raise _invalid("project_maturity must be a non-empty string")
+    if project_maturity not in _ALLOWED_MATURITIES:
+        raise _invalid("unknown project maturity", {"project_maturity": project_maturity})
 
     external_fields = {} if external is None else _external_fields(external)
     project_fields = {} if project is None else _project_fields(project)
     paths = sorted(set(external_fields) | set(project_fields))
     fields = tuple(
-        compare_scalar(path, external_fields.get(path), project_fields.get(path))
+        _apply_authority(
+            compare_scalar(path, external_fields.get(path), project_fields.get(path)),
+            project_maturity,
+        )
         for path in paths
     )
     return ResolvedNatalView(fields)
