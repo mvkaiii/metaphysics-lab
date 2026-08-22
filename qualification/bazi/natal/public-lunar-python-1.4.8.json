@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "classification": "public_bazi_natal_qualification",
+  "reference_engine": "lunar-python",
+  "reference_version": "1.4.8",
+  "reference_source_revision": "000c8a3",
+  "project_profile": "bazi-natal-project-v1",
+  "project_rule_version": "1.0-exp",
+  "status": "PENDING_EXECUTION",
+  "case_count": 0,
+  "matched_field_count": 0,
+  "profile_difference_count": 0,
+  "unexpected_mismatch_count": 0,
+  "cases": []
+}
