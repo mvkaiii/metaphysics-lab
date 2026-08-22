@@ -12,7 +12,7 @@ _REQUIRED_STATES = {
     "ziwei.flow_day_stem": "implemented/experimental/on_demand",
     "ziwei.flow_hour_stem": "implemented/experimental/on_demand",
     "ziwei.natal_chart": "implemented/experimental/on_demand",
-    "ziwei.flowing_stars": "planned/none/on_demand",
+    "ziwei.flowing_stars": "implemented/experimental/on_demand",
 }
 
 
