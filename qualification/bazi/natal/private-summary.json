@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "classification": "private_bazi_natal_qualification_summary",
+  "status": "PENDING",
+  "source_digest": null,
+  "case_count": 0,
+  "matched_field_count": 0,
+  "profile_difference_count": 0,
+  "unexpected_mismatch_count": 0,
+  "reason": "No private natal-chart qualification source has been supplied to Phase 2C0 yet."
+}
