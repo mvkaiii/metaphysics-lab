@@ -13,3 +13,5 @@ class ZiweiNatalProfile:
     star_catalog: str = "ziwei-core-stars-v1"
     brightness_profile: str = "ziwei-brightness-common-v1"
     decadal_profile: str = "ziwei-decadal-common-v1"
+    leap_month_policy: str = "iztro-fix-leap-15-16-v1"
+    late_zi_day_policy: str = "iztro-forward-v1"
