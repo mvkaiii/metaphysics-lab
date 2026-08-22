@@ -2,7 +2,8 @@ import json
 import unittest
 from pathlib import Path
 
-from tools.qualify_birth_location_provider import PUBLIC_CASES, build_summary
+from engine.birth.models import GeocodeCandidate
+from tools.qualify_birth_location_provider import PUBLIC_CASES, build_summary, qualify
 
 
 SUMMARY_PATH = Path("qualification/birth/location-provider-summary.json")
@@ -17,6 +18,27 @@ def walk_keys(value):
     elif isinstance(value, list):
         for item in value:
             yield from walk_keys(item)
+
+
+class PublicFixtureProvider:
+    name = "fixture"
+    version = "1"
+
+    def geocode(self, query):
+        unique = {
+            "台北市, 台灣": GeocodeCandidate("Taipei, Taiwan", 25.0375, 121.5637, "tw", "taipei"),
+            "高雄市, 台灣": GeocodeCandidate("Kaohsiung, Taiwan", 22.6203, 120.3120, "tw", "kaohsiung"),
+            "Tokyo, Japan": GeocodeCandidate("Tokyo, Japan", 35.6769, 139.7639, "jp", "tokyo"),
+            "New York, NY, USA": GeocodeCandidate("New York, USA", 40.7127, -74.0060, "us", "new-york"),
+        }
+        if query in unique:
+            return (unique[query],)
+        if query == "London, UK":
+            return (
+                GeocodeCandidate("Greater London, United Kingdom", 51.5074, -0.1278, "gb", "greater-london"),
+                GeocodeCandidate("City of London, United Kingdom", 51.5156, -0.0920, "gb", "city-of-london"),
+            )
+        return ()
 
 
 class BirthLocationQualificationTests(unittest.TestCase):
@@ -62,6 +84,16 @@ class BirthLocationQualificationTests(unittest.TestCase):
         self.assertEqual(summary["results"][0]["latitude"], 25.0375)
         self.assertEqual(summary["results"][0]["longitude"], 121.5637)
         self.assertTrue(FORBIDDEN_KEYS.isdisjoint(set(walk_keys(summary))))
+
+    def test_truthful_london_ambiguity_is_a_supported_live_qualification_outcome(self):
+        summary, complete_pass, infrastructure_failure = qualify(PublicFixtureProvider())
+        self.assertFalse(infrastructure_failure)
+        self.assertTrue(complete_pass)
+        self.assertEqual(summary["pass_count"], 5)
+        london = next(item for item in summary["results"] if item["query"] == "London, UK")
+        self.assertEqual(london["status"], "PASS")
+        self.assertEqual(london["error_code"], "ambiguous_birth_place")
+        self.assertEqual(len(london["candidates"]), 2)
 
 
 if __name__ == "__main__":
