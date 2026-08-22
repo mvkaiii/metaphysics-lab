@@ -4,8 +4,14 @@ import unittest
 
 
 class DistributionRuntimeInfoTests(unittest.TestCase):
+    def _find_spec_or_none(self, name):
+        try:
+            return importlib.util.find_spec(name)
+        except ModuleNotFoundError:
+            return None
+
     def _runtime(self):
-        spec = importlib.util.find_spec("engine.distribution.runtime")
+        spec = self._find_spec_or_none("engine.distribution.runtime")
         self.assertIsNotNone(spec, "engine.distribution.runtime must exist")
         return importlib.import_module("engine.distribution.runtime")
 
@@ -47,7 +53,7 @@ class DistributionRuntimeInfoTests(unittest.TestCase):
             self.assertIn("required_for", value)
 
     def test_dependency_status_can_report_missing_optional_location_packages(self):
-        spec = importlib.util.find_spec("engine.distribution.dependencies")
+        spec = self._find_spec_or_none("engine.distribution.dependencies")
         self.assertIsNotNone(spec, "engine.distribution.dependencies must exist")
         dependencies = importlib.import_module("engine.distribution.dependencies")
 
