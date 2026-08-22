@@ -1,0 +1,30 @@
+name: ai-dist-task2-green
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  green:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - name: Install pinned runtime dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run Task 2 natal tests
+        run: python -m unittest tests.test_distribution_natal -v
+      - name: Run birth and calendar regressions
+        run: >-
+          python -m unittest
+          tests.test_birth_input_resolution
+          tests.test_birth_location
+          tests.test_birth_calendar_integration
+          tests.test_bazi_natal
+          tests.test_natal_external_import
+          tests.test_natal_reconciliation
+          -v
+      - name: Run natal test family
+        run: python -m unittest discover -s tests -p 'test_natal*.py' -v
