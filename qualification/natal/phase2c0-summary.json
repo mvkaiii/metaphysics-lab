@@ -1,0 +1,75 @@
+{
+  "bazi_natal": {
+    "case_count": 13,
+    "matched_field_count": 54,
+    "private_case_count": 0,
+    "private_source_digest": "sha256:bb75004b6501f3b8cfa1c094b4fe9a9f6a7e71a31db140481ab960b79bcd8838",
+    "private_status": "PENDING",
+    "profile_difference_count": 23,
+    "public_source_digest": "sha256:d33255725913ad895593d2ee020a46a26da916c6e92696b1c0091c7690c2c982",
+    "public_status": "PASS",
+    "reference": "lunar-python@1.4.8",
+    "reference_revision": "000c8a3",
+    "unexpected_mismatch_count": 0
+  },
+  "birth_location_time": {
+    "fail_count": 0,
+    "pass_count": 0,
+    "provider": "nominatim@2.5.0",
+    "public_status": "PENDING_LIVE_QUALIFICATION",
+    "query_count": 5,
+    "source_digest": "sha256:f53ff4b54aa9b28c1352430b152355c40157bb662186fc0fdd3bac7d652c6057"
+  },
+  "classification": "phase2c0_qualification_summary",
+  "markdown_export": {
+    "implementation": "implemented",
+    "maturity": "stable",
+    "routing": "on_demand",
+    "rule_version": "1.0"
+  },
+  "phase2c_boundary": {
+    "phase2c0_only": true,
+    "ziwei_flowing_stars_implementation": "planned",
+    "ziwei_flowing_stars_maturity": null,
+    "ziwei_flowing_stars_routing": "on_demand",
+    "ziwei_flowing_stars_rule_version": null
+  },
+  "privacy": {
+    "forbidden_key_count": 0,
+    "private_runtime_aggregate": {
+      "case_count": 0,
+      "conflict_count": 0,
+      "match_count": 0,
+      "promotion_allowed": false,
+      "source_digest": null,
+      "status": "NOT_SUPPLIED"
+    },
+    "status": "PASS"
+  },
+  "reconciliation": {
+    "implementation": "implemented",
+    "maturity": "stable",
+    "routing": "on_demand",
+    "rule_version": "1.0"
+  },
+  "regression": {
+    "final_gate_task": 10,
+    "phase2c0_acceptance_pass": false,
+    "status": "PENDING_FINAL_ACCEPTANCE"
+  },
+  "schema_version": "1.0",
+  "status": "PENDING_FINAL_ACCEPTANCE",
+  "ziwei_natal": {
+    "boundary_expected_case_count": 5,
+    "component_expected_check_count": 1160,
+    "integration_expected_chart_count": 100,
+    "oracle_revision": "814b77e6371e1050cac31bbf674db3c3138fcfde",
+    "private_case_count": 0,
+    "private_promotion_allowed": false,
+    "private_source_digest": "sha256:e6f7138f453b018a67a506a730bec77b9395fc19648485d309d2e34999285986",
+    "private_status": "PENDING",
+    "public_contract_status": "PINNED",
+    "public_source_digest": "sha256:350db072df6d33d1bae6591c934cc2f92be05a11447cfc9ece19db631fee3ab7",
+    "reference": "iztro@2.6.0"
+  }
+}
