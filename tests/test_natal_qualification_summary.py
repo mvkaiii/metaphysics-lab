@@ -50,7 +50,9 @@ class NatalQualificationSummaryTests(unittest.TestCase):
         self.assertEqual(bazi["case_count"], 13)
         self.assertEqual(bazi["unexpected_mismatch_count"], 0)
         self.assertEqual(bazi["profile_difference_count"], 23)
-        self.assertEqual(bazi["private_status"], "PENDING")
+        self.assertEqual(bazi["private_status"], "PASS")
+        self.assertEqual(bazi["private_case_count"], 1)
+        self.assertRegex(bazi["private_source_digest"], r"^sha256:[0-9a-f]{64}$")
 
         ziwei = summary["ziwei_natal"]
         self.assertEqual(ziwei["public_contract_status"], "PINNED")
@@ -59,7 +61,10 @@ class NatalQualificationSummaryTests(unittest.TestCase):
         self.assertEqual(ziwei["component_expected_check_count"], 1160)
         self.assertEqual(ziwei["integration_expected_chart_count"], 100)
         self.assertEqual(ziwei["boundary_expected_case_count"], 5)
-        self.assertEqual(ziwei["private_status"], "PENDING")
+        self.assertEqual(ziwei["private_status"], "PASS")
+        self.assertEqual(ziwei["private_case_count"], 1)
+        self.assertFalse(ziwei["private_promotion_allowed"])
+        self.assertRegex(ziwei["private_source_digest"], r"^sha256:[0-9a-f]{64}$")
 
     def test_cross_system_capabilities_and_phase2c_boundary_are_exact(self):
         summary = build_phase2c0_summary()
