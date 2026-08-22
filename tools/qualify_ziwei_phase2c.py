@@ -16,6 +16,7 @@ from engine.ziwei.flowing_stars import FLOWING_STAR_PROFILE_ID, place_flowing_st
 
 
 DEFAULT_PUBLIC_FIXTURE = ROOT / "qualification" / "ziwei" / "phase2c" / "public-iztro-flowing-star-vectors.json"
+DEFAULT_PRIVATE_SUMMARY = ROOT / "qualification" / "ziwei" / "phase2c" / "private-astralium-summary.json"
 EXPECTED_ORACLE_VERSION = "2.6.0"
 EXPECTED_ORACLE_REVISION = "814b77e6371e1050cac31bbf674db3c3138fcfde"
 EXPECTED_CASE_COUNT = 600
@@ -110,6 +111,18 @@ def qualify_public(path: Path = DEFAULT_PUBLIC_FIXTURE) -> Dict[str, Any]:
     }
 
 
+def private_pending_ok(path: Path = DEFAULT_PRIVATE_SUMMARY) -> bool:
+    data = _load_json(Path(path))
+    return (
+        data.get("source") == "Astralium flowing-stars"
+        and data.get("status") == "PENDING"
+        and data.get("case_count") == 0
+        and data.get("unexpected_mismatch_count") == 0
+        and data.get("promotion_allowed") is False
+        and data.get("raw_private_data_committed") is False
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Qualify Phase 2C Ziwei flowing-star placements")
     parser.add_argument("--public", action="store_true", help="run the pinned public iztro qualification")
@@ -120,12 +133,15 @@ def main() -> int:
         parser.error("only --public is currently supported; Astralium private qualification remains PENDING")
 
     report = qualify_public(args.fixture)
+    pending_ok = private_pending_ok()
     print(json.dumps(report, ensure_ascii=False, indent=2))
     if report["source_case_count"] == EXPECTED_CASE_COUNT and report["status"] == "PASS":
         print("IZTRO_FLOWING_STARS_600_600_PASS")
     if report["unexpected_mismatch_count"] == 0:
         print("IZTRO_FLOWING_STARS_0_UNEXPECTED_MISMATCH")
-    return 0 if report["status"] == "PASS" else 1
+    if pending_ok:
+        print("PHASE2C_PRIVATE_FLOWING_STARS_PENDING_OK")
+    return 0 if report["status"] == "PASS" and pending_ok else 1
 
 
 if __name__ == "__main__":
