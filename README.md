@@ -4,9 +4,11 @@ Metaphysics Lab 是一套把**可重現的命盤計算**與**AI 命理解讀**�
 
 核心原則很簡單：**Python 算盤，AI 讀盤。** 使用者不需要理解 repo 結構，也不需要自己挑八字／紫微模組。
 
-目前正式 release identity 仍為 **v1.2.0｜2026-08-21**。AI Distribution Pack 是目前工作樹的 Unreleased 發行方式，不改寫 `VERSION.md`、Git tag 或既有正式 release。
+目前正式 release identity 為 **v1.3.0｜2026-08-23**。AI Distribution Pack 已是正式發行方式；命理 capability 的 implementation / maturity / routing 仍以 `runtime_info` 為權威來源，這次 release 不自動把 Experimental 能力升 Stable。
 
 ## 第一次使用｜最短流程
+
+手機或一般使用者請直接打開 GitHub **Latest Release → Assets**，逐檔下載，不需要下載或解壓 ZIP。
 
 你只需要三個發行檔：
 
@@ -104,11 +106,11 @@ Metaphysics Lab 固定區分八種資料：
 
 ## 開發者與歷史資料
 
-一般使用者不需要閱讀開發 Phase。若要追蹤正式版本、Unreleased capability 演進、qualification 與架構：
+一般使用者不需要閱讀開發 Phase。若要追蹤正式版本、qualification 與架構：
 
 - [VERSION.md](VERSION.md)：正式 release identity
-- [CHANGELOG.md](CHANGELOG.md)：Release / Unreleased 歷史
+- [CHANGELOG.md](CHANGELOG.md)：Release / development 歷史
 - [架構說明](docs/架構說明.md)
 - [資料治理](docs/資料治理.md)
 
-目前既有 Unreleased 工作包含 Natal Foundation、Ziwei Fine Cycle、Ziwei Flowing Stars 與 AI Distribution Pack；其 implementation / maturity / routing 以 runtime metadata 與 CHANGELOG 的對應歷史紀錄為準，不以舊文件快照覆蓋現況。
+v1.3.0 已正式收斂 Natal Foundation、Ziwei Fine Cycle、Ziwei Flowing Stars 與 AI Distribution Pack。這些 capability 的 implementation / maturity / routing 仍以 runtime metadata 為準；歷史 qualification 與設計演進請看 `CHANGELOG.md`。
