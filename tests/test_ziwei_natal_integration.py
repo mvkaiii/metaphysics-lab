@@ -8,6 +8,7 @@ from engine.birth.models import Sex
 from engine.ziwei.errors import ZiweiPhase2AError
 from engine.ziwei.models import ChartIdentity, StarLocationIndex
 from engine.ziwei.natal import build_ziwei_natal
+from engine.ziwei.natal_stars import place_major_stars
 from engine.ziwei.natal_time import ZiweiBirthBasis
 from engine.ziwei.star_catalog import MAJOR_STARS
 from engine.ziwei.transformation_profiles import PROFILE
@@ -39,6 +40,23 @@ class ZiweiNatalIntegrationTests(unittest.TestCase):
                 "rule_version": "1.0-exp",
                 "effective_time_basis": "true_solar",
             },
+        )
+
+    def _synthetic_basis(self, *, lunar_month, lunar_day, is_leap, hour, hour_branch):
+        tz = ZoneInfo("Asia/Taipei")
+        dt = datetime(1984, 8, 1, hour, 30, tzinfo=tz)
+        return ZiweiBirthBasis(
+            reported_datetime=dt,
+            normalized_datetime=dt,
+            true_solar_datetime=dt,
+            effective_datetime=dt,
+            effective_hour_branch=hour_branch,
+            lunar_year=1984,
+            lunar_month=lunar_month,
+            lunar_day=lunar_day,
+            is_leap_month=is_leap,
+            validation={"calendar_status": "validated", "qualification_status": "qualified_candidate"},
+            provenance={"classification": "Project 原生盤面", "effective_time_basis": "true_solar"},
         )
 
     def test_end_to_end_builder_materializes_complete_v1_core(self):
@@ -79,6 +97,33 @@ class ZiweiNatalIntegrationTests(unittest.TestCase):
         second = build_ziwei_natal(self._basis(), Sex.MALE)
         self.assertEqual(first, second)
         self.assertEqual(first.chart_identity, second.chart_identity)
+
+    def test_pinned_fix_leap_policy_splits_after_day_fifteen(self):
+        day15 = build_ziwei_natal(
+            self._synthetic_basis(lunar_month=6, lunar_day=15, is_leap=True, hour=11, hour_branch="午"),
+            Sex.MALE,
+        )
+        day16 = build_ziwei_natal(
+            self._synthetic_basis(lunar_month=6, lunar_day=16, is_leap=True, hour=11, hour_branch="午"),
+            Sex.MALE,
+        )
+        ming15 = next(record for record in day15.palaces if record.name == "命宮")
+        ming16 = next(record for record in day16.palaces if record.name == "命宮")
+        self.assertEqual(ming15.branch, "丑")
+        self.assertEqual(ming16.branch, "寅")
+        self.assertEqual(day15.provenance["structural_lunar_month"], 6)
+        self.assertEqual(day16.provenance["structural_lunar_month"], 7)
+
+    def test_pinned_late_zi_keeps_leap_month_but_forwards_major_star_day(self):
+        basis = self._synthetic_basis(lunar_month=6, lunar_day=16, is_leap=True, hour=23, hour_branch="子")
+        chart = build_ziwei_natal(basis, Sex.MALE)
+        ming = next(record for record in chart.palaces if record.name == "命宮")
+        self.assertEqual(ming.branch, "未")
+        self.assertEqual(chart.provenance["structural_lunar_month"], 6)
+        self.assertEqual(chart.provenance["major_star_lunar_day"], 17)
+        expected = dict(place_major_stars(17, chart.five_element_bureau))
+        actual = {record.star: record.branch for record in chart.stars if record.star in MAJOR_STARS}
+        self.assertEqual(actual, expected)
 
     def test_chart_identity_mismatch_from_phase2a_adapter_fails_closed(self):
         original = __import__("engine.ziwei.natal", fromlist=["build_star_location_index"]).build_star_location_index
