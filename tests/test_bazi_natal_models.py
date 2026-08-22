@@ -37,6 +37,32 @@ class BaziNatalModelTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             HiddenStem("癸", 0)
 
+    def test_chart_allows_pending_downstream_facts_without_fake_values(self):
+        dt = datetime(1984, 3, 13, 19, 20, tzinfo=ZoneInfo("Asia/Taipei"))
+        pillars = (
+            Pillar("甲", "子"),
+            Pillar("丁", "卯"),
+            Pillar("丙", "午"),
+            Pillar("戊", "戌"),
+        )
+        chart = BaziNatalChart(
+            profile=BaziNatalProfile(),
+            effective_datetime=dt,
+            pillars=pillars,
+            day_master="丙",
+            pillar_details=(),
+            element_counts=None,
+            decadal_direction=None,
+            decadal_start=None,
+            decadal_periods=(),
+            validation={"status": "candidate"},
+            provenance={"classification": "Project 原生盤面"},
+        )
+        self.assertEqual(chart.pillar_details, ())
+        self.assertIsNone(chart.element_counts)
+        self.assertIsNone(chart.decadal_direction)
+        self.assertEqual(chart.decadal_periods, ())
+
     def test_chart_rejects_negative_or_incomplete_element_counts(self):
         dt = datetime(1984, 3, 13, 19, 20, tzinfo=ZoneInfo("Asia/Taipei"))
         pillars = (
