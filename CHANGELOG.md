@@ -111,3 +111,6 @@ Ziwei Flying Core = implemented / stable / on_demand
 - 十天干四化 core。
 - 本命十二宮宮干飛化。
 - 生年、大限、流年四化／飛化。
+- layer composition / conflict validation。
+
+正式 v1.2.0 release identity 維持不變；後續 Unreleased Phase 2B / Phase 2C0 不提前改 VERSION、tag 或 GitHub Release。
