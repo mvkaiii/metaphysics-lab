@@ -1,0 +1,115 @@
+name: Phase 2C0 Workstream 03 Acceptance
+
+on:
+  pull_request:
+    branches:
+      - design/natal-chart-foundation
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+      - name: Run Ziwei natal focused tests
+        run: python -m unittest discover -s tests -p 'test_ziwei_natal*.py' -v
+      - name: Generate live public qualification evidence
+        run: |
+          python tools/qualify_ziwei_natal.py --compact > /tmp/ziwei-natal-public.json
+          cat /tmp/ziwei-natal-public.json
+      - name: Verify qualification counts, authorities, privacy, and maturity
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from engine.ziwei.capabilities import get_capability, should_run_by_default
+
+          live = json.loads(Path('/tmp/ziwei-natal-public.json').read_text(encoding='utf-8'))
+          private = json.loads(Path('qualification/ziwei/natal/private-astralium-summary.json').read_text(encoding='utf-8'))
+          expected_revision = '814b77e6371e1050cac31bbf674db3c3138fcfde'
+
+          assert live['status'] == 'PASS', live
+          assert live['oracle_revision'] == expected_revision, live
+          assert live['component_check_count'] == 1160, live
+          assert live['component_mismatch_count'] == 0, live
+          assert live['integration_chart_count'] == 100, live
+          assert live['integration_failure_count'] == 0, live
+          assert live['boundary_case_count'] == 5, live
+          assert live['boundary_failure_count'] == 0, live
+          assert live['privacy_safe'] is True, live
+          assert live['field_authorities']['true_solar_adjustment'] == 'project_formula_frozen'
+          assert live['field_authorities']['lunar_birth'] == 'calendar_resolver_validated'
+          assert live['field_authorities']['private_astralium'] == 'PENDING'
+
+          forbidden = {'birth_datetime', 'reported_datetime', 'full_address', 'latitude', 'longitude', 'chart_payload', 'raw_chart', 'raw_payload'}
+          def walk_keys(value):
+              if isinstance(value, dict):
+                  for key, item in value.items():
+                      yield key
+                      yield from walk_keys(item)
+              elif isinstance(value, list):
+                  for item in value:
+                      yield from walk_keys(item)
+          assert forbidden.isdisjoint(set(walk_keys(live)))
+          assert forbidden.isdisjoint(set(walk_keys(private)))
+          assert private['status'] == 'PASS'
+          assert private['case_count'] == 1
+          assert private['aggregate_field_conflicts']['unexpected_mismatch_count'] == 0
+          assert private['aggregate_field_matches']['palace_structure_match_count'] == 12
+          assert private['aggregate_field_matches']['star_position_match_count'] == 26
+          assert private['aggregate_field_matches']['brightness_match_count'] == 20
+          assert private['aggregate_field_matches']['birth_transformation_match_count'] == 4
+          assert private['aggregate_field_matches']['natal_flying_match_count'] == 48
+          assert private['aggregate_field_matches']['decadal_cycle_match_count'] == 12
+          assert private['promotion_allowed'] is False
+          assert private['contains_raw_birth_data'] is False
+          assert private['contains_raw_chart_payload'] is False
+
+          cap = get_capability('ziwei.natal_chart')
+          assert cap['implementation'] == 'implemented'
+          assert cap['maturity'] == 'experimental'
+          assert cap['routing'] == 'on_demand'
+          assert not should_run_by_default('ziwei.natal_chart')
+          flowing = get_capability('ziwei.flowing_stars')
+          assert flowing['implementation'] == 'planned'
+          print('ZIWEI_NATAL_QUALIFICATION_ACCEPTANCE_PASS')
+          PY
+      - name: Python 3.9 syntax gate
+        run: |
+          python - <<'PY'
+          import ast
+          from pathlib import Path
+
+          paths = [
+              Path('engine/ziwei/natal_profiles.py'),
+              Path('engine/ziwei/natal_models.py'),
+              Path('engine/ziwei/natal_time.py'),
+              Path('engine/ziwei/natal_palaces.py'),
+              Path('engine/ziwei/star_catalog.py'),
+              Path('engine/ziwei/natal_stars.py'),
+              Path('engine/ziwei/brightness_profiles.py'),
+              Path('engine/ziwei/natal_decadal.py'),
+              Path('engine/ziwei/natal.py'),
+              Path('tools/qualify_ziwei_natal.py'),
+          ] + list(Path('tests').glob('test_ziwei_natal*.py'))
+          for path in paths:
+              ast.parse(path.read_text(encoding='utf-8'), feature_version=(3, 9))
+          print('PYTHON39_ZIWEI_NATAL_PASS')
+          PY
+      - name: Run Ziwei Phase 2A/2B and cross-domain regression
+        run: |
+          python -m unittest discover -s tests -p 'test_ziwei*.py' -v
+          python -m unittest discover -s tests -p 'test_calendar*.py' -v
+          python -m unittest discover -s tests -p 'test_bazi*.py' -v
+          python -m unittest discover -s tests -p 'test_birth*.py' -v
+      - name: Upload live qualification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ziwei-natal-public-qualification
+          path: /tmp/ziwei-natal-public.json
