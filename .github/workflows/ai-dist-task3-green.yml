@@ -1,0 +1,29 @@
+name: ai-dist-task3-green
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  green:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - name: Install pinned runtime dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run Task 3 forecast tests
+        run: python -m unittest tests.test_distribution_forecast -v
+      - name: Run Ziwei fine-cycle regressions
+        run: python -m unittest discover -s tests -p 'test_ziwei_fine_cycle*.py' -v
+      - name: Run Ziwei flowing-star regressions
+        run: python -m unittest discover -s tests -p 'test_ziwei_flowing_star*.py' -v
+      - name: Run transformation and flying regressions
+        run: >-
+          python -m unittest
+          tests.test_ziwei_transformations
+          tests.test_ziwei_flying
+          tests.test_ziwei_composition
+          -v
