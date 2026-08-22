@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: 0410cfd22cc7ea04d7e4783f29a7ca7957dae07d
+          ref: 29088a4b5041b5c2dead251698cb1d7e049afcab
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
@@ -26,7 +26,10 @@ jobs:
           tests.test_ai_distribution_docs
           tests.test_ziwei_phase2b_docs
           tests.test_ziwei_phase2c_docs
-          tests.test_rule_source_reconciliation -v
+          tests.test_rule_source_reconciliation
+          tests.test_phase2c0_docs
+          tests.test_ziwei_phase2c_acceptance
+          tests.test_ziwei_phase2c_rule_source -v
       - name: Verify deterministic distribution build
         run: python tools/build_ai_distribution.py --check
       - name: Run full repository regression
@@ -36,5 +39,6 @@ jobs:
           python -m compileall -q
           engine/distribution
           engine/natal/orchestration.py
+          tools/check_phase2c_rule_source.py
           tools/build_ai_distribution.py
           dist/ai/metaphysics_lab.py
