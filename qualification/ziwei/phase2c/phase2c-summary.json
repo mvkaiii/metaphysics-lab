@@ -1,0 +1,31 @@
+{
+  "approved_design_revision": "be0745af16d4d40cb7e3bd90c1667ee2dc5a2cd0",
+  "capability_states": {
+    "ziwei.flow_day_stem": "implemented/experimental/on_demand/1.0-exp",
+    "ziwei.flow_hour_stem": "implemented/experimental/on_demand/1.0-exp",
+    "ziwei.flow_month_stem": "implemented/experimental/on_demand/1.0-exp",
+    "ziwei.flowing_stars": "implemented/experimental/on_demand/1.0-exp",
+    "ziwei.flying": "implemented/stable/on_demand/1.0",
+    "ziwei.natal_chart": "implemented/experimental/on_demand/1.0-exp",
+    "ziwei.transformations": "implemented/stable/on_demand/1.0"
+  },
+  "private_qualification": {
+    "case_count": 0,
+    "promotion_allowed": false,
+    "status": "PENDING",
+    "summary_digest_sha256": "0adb0e848044d4189616cc3e535001b299c6da6044478f278ae39ee985178cb8",
+    "unexpected_mismatch_count": 0
+  },
+  "profile_id": "ziwei-flowing-stars-common-v1",
+  "public_qualification": {
+    "fixture_digest_sha256": "33c70f02f084a000cc7746eacbd314b202dc4c0df22f39593536802d92b5bce8",
+    "oracle_revision": "814b77e6371e1050cac31bbf674db3c3138fcfde",
+    "oracle_version": "2.6.0",
+    "placement_check_count": 6120,
+    "source_case_count": 600,
+    "status": "PASS",
+    "unexpected_mismatch_count": 0
+  },
+  "release_version": "v1.2.0",
+  "rule_version": "1.0-exp"
+}
