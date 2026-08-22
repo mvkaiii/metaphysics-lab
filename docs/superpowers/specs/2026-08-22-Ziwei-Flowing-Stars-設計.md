@@ -41,13 +41,13 @@ Optional Materialized View
 >
 > 星曜位置的 canonical truth 是十二地支位置，不先綁定本命宮名或運限宮名。
 >
-> 四化／飛化與流曜使用相同 layer identity 語意，但資料模型彼此獨立，不修改 Stable Phase 2A core 的責任。
+> 四化／飛化與流曜重用相同 layer identity 型別與 chart/scope/reference 語意，但各自保有自己的 rule profile；資料模型彼此獨立，不修改 Stable Phase 2A core 的責任。
 >
 > Phase 2B 已解析的流月／流日／流時干支直接重用，不再重算。
 >
-> pinned iztro 只作 qualification oracle，不成為 Python runtime dependency。
+> pinned iztro 只作 qualification oracle，不成為 Python runtime dependency，也不成為 Project output 的 source classification。
 >
-> v1 先 `implemented / experimental / on_demand / 1.0-exp`，不得因單一 private case 或 public oracle PASS 自動升 Stable。
+> v1 先 `implemented / experimental / on_demand / 1.0-exp`，不得因單一 private case或 public oracle PASS 自動升 Stable。
 
 ---
 
@@ -121,17 +121,27 @@ Phase 2C 新增獨立：
 FlowingStarLayer
 ```
 
-兩者可以共享同一組：
+FlowingStarLayer **重用既有 `LayerIdentity` 型別**，但不與四化 layer 共用同一個 identity object，也不以完整 dataclass equality 作 join，因為兩個 capability 的 `rule_profile` 不同。
+
+兩層必須對齊的 cycle join key 固定為：
 
 ```text
-LayerIdentity
 chart_id
 scope
 reference
-rule_profile
 ```
 
-但 FlowingStarLayer 不塞進 `CycleTransformationLayer` 欄位，也不要求 Phase 2A Stable model 改成「四化 + 流曜大雜燴」。
+各自 identity 的 `rule_profile` 則分別屬於 transformation profile 與 flowing-star profile。
+
+因此：
+
+```text
+CycleTransformationLayer.identity.rule_profile != FlowingStarLayer.identity.rule_profile
+```
+
+可以是正常狀態，只要 `chart_id + scope + reference` 一致。
+
+FlowingStarLayer 不塞進 `CycleTransformationLayer` 欄位，也不要求 Phase 2A Stable model 改成「四化 + 流曜大雜燴」。
 
 ### 3.3 canonical location 一律使用地支
 
@@ -179,6 +189,7 @@ qualification target 取自：
 - 不 shell out 呼叫 iztro。
 - 不從網路即時取得 oracle 結果。
 - public vectors / pinned oracle runner 只在 qualification workflow 使用。
+- Project rule profile 採中性名稱，不以第三方名稱冒充資料來源。
 
 ---
 
@@ -260,13 +271,13 @@ hourly
 第一版固定：
 
 ```text
-profile_id = ziwei-flowing-stars-iztro-common-v1
+profile_id = ziwei-flowing-stars-common-v1
 rule_version = 1.0-exp
 canonical_location = earthly_branch
-oracle_target = iztro-2.6.0-814b77e6
+qualification_target = iztro-2.6.0-814b77e6
 ```
 
-profile 名稱寫出 qualification target，但 Project 輸出仍分類為 `Project 推導盤面`，不得冒充 iztro direct output。
+`qualification_target` 只說明 public oracle；Project 輸出分類仍為 `Project 推導盤面`，source_name 仍為 Metaphysics Lab，不得冒充 iztro direct output。
 
 ### 5.2 FlowingStarSource
 
@@ -285,7 +296,18 @@ FlowingStarSource
 └─ provenance
 ```
 
-此 model 是 Phase 2C core 唯一接受的「時間來源」。
+此 model 是 Phase 2C layer builder 唯一接受的「時間來源」。
+
+FlowingStarSource 必須驗證：
+
+1. stem 是十天干。
+2. branch 是十二地支。
+3. stem + branch 是合法六十甲子配對，而不是只有兩個字各自合法。
+4. scope 合法。
+5. reference 非空且與 adapter 來源一致。
+6. chart_identity 明確，不從 global state 猜命盤。
+
+Pure placement helper 可以為了 table/oracle exhaustive test 接受「各自合法的 stem + branch」；但正式 FlowingStarLayer 一律只能從 validated `FlowingStarSource` 建立。
 
 Pure core 不接受散落的：
 
@@ -333,11 +355,12 @@ FlowingStarLayer
 1. `identity.chart_id == source.chart_identity.chart_id`。
 2. `identity.scope == source.scope`。
 3. `identity.reference == source.reference`。
-4. 每個 `base_star` 在同一 layer 只能出現一次。
-5. 非 yearly 必須正好 10 顆；yearly 必須正好 11 顆。
-6. 每個 `target_branch` 必須是十二地支之一。
-7. 不允許 unknown category。
-8. source validation 若屬 blocking 狀態，不得 materialize 成 available layer。
+4. `identity.rule_profile == layer.profile_id`。
+5. 每個 `base_star` 在同一 layer 只能出現一次。
+6. 非 yearly 必須正好 10 顆；yearly 必須正好 11 顆。
+7. 每個 `target_branch` 必須是十二地支之一。
+8. 不允許 unknown category。
+9. source validation 若屬 blocking 狀態，不得 materialize 成 available layer。
 
 ### 5.5 FlowingStarMaterializedRecord
 
@@ -413,6 +436,8 @@ Pure core 不依賴此 view 才能成立。
 ```
 
 此處輸入的是「該動態 scope 的 earthly branch」，不是出生年支。
+
+若既有 helper 參數名稱仍叫 `year_branch`，Phase 2C 只重用其純規則結果，不讓命名誤導資料 provenance；implementation plan 可用薄 wrapper 表達「cycle_branch」。
 
 ### 6.5 流昌／流曲：按該 scope 天干
 
@@ -524,6 +549,19 @@ Source adapter 負責「取得可靠干支」；Pure core 不負責。
 
 所有 adapter 必須產生同一型別 `FlowingStarSource`，並保留來源 maturity / validation / provenance。
 
+所有正式 adapter 都必須顯式取得 `ChartIdentity`；`ResolvedCycleStem` 本身沒有命主 identity，因此不得從 module global state、最近一次排盤或 singleton 猜 chart。
+
+概念介面：
+
+```text
+from_decadal(chart_identity, decadal_period, ...)
+from_yearly_calendar(chart_identity, calendar_context, ...)
+from_resolved_cycle_stem(chart_identity, resolved_cycle_stem, ...)
+from_explicit_structured_source(chart_identity, scope, reference, stem, branch, provenance, ...)
+```
+
+最後一個只供已結構化、已驗證的 external/imported cycle source；它不是 raw text parser。
+
 Precision Gate：
 
 > Precision must be earned by input.
@@ -532,7 +570,7 @@ Precision Gate：
 
 ### 7.2 Decadal adapter
 
-來源：Phase 2C0 `ZiweiDecadalPeriod`。
+Project-native 來源：Phase 2C0 `ZiweiDecadalPeriod`。
 
 使用：
 
@@ -543,7 +581,7 @@ Precision Gate：
 - `palace`
 - `direction`
 
-其中 `stem_branch` 的第一字為天干、第二字為地支。
+其中 `stem_branch` 的第一字為天干、第二字為地支，並必須通過合法六十甲子 pair validation。
 
 不得重新用出生年、性別再推一次大限干支。
 
@@ -555,11 +593,11 @@ decadal index + age range + stem_branch
 
 並在 layer identity 中與 source 完全一致。
 
-若使用 external natal chart，只有 external decadal source 已結構化、可驗證且含完整干支時才能建立 Project-derived flowing-star layer；不能從缺失資料猜大限。
+若使用 external natal chart，只有 external decadal source 已結構化、可驗證且含完整合法干支時，才可由 `from_explicit_structured_source()` 建立 Project-derived flowing-star layer；不能從缺失資料猜大限，也不把 external source 轉寫成 Project-native natal fact。
 
 ### 7.3 Yearly adapter
 
-Phase 2C v1 的 iztro-compatible yearly source 採：
+Phase 2C v1 的 common/iztro-qualified yearly source 採：
 
 ```text
 lunar year stem + lunar year branch
@@ -578,7 +616,7 @@ lunar_year_branch(lunar_year)
 
 helper 放在 Calendar neutral layer，不放在 Bazi，也不讓 `flowing_stars.py` 自己硬編年份 `%` 公式。
 
-Yearly adapter 最低輸入為可用的 `CalendarContext`，使用：
+Yearly adapter 最低輸入為可用的 `CalendarContext` + explicit `ChartIdentity`，使用：
 
 - `context.lunar.year`
 - calendar validation
@@ -592,9 +630,11 @@ lunar-year:2026
 
 若未來新增 `exact/立春` profile，必須是新 profile/version，不覆寫 v1。
 
+Public iztro runner 每次執行 qualification 前必須明確 reset / set `horoscopeDivide = normal` 等本設計依賴的 default config，不能繼承前一個 test case 的 mutable global config。
+
 ### 7.4 Monthly adapter
 
-直接接受 Phase 2B `ResolvedCycleStem(scope="monthly")`。
+接受 explicit `ChartIdentity` + Phase 2B `ResolvedCycleStem(scope="monthly")`。
 
 不得重算：
 
@@ -606,7 +646,7 @@ FlowingStarSource.reference 必須沿用 `ResolvedCycleStem.reference`。
 
 ### 7.5 Daily adapter
 
-直接接受 Phase 2B `ResolvedCycleStem(scope="daily")`。
+接受 explicit `ChartIdentity` + Phase 2B `ResolvedCycleStem(scope="daily")`。
 
 不得重算：
 
@@ -618,7 +658,7 @@ reference 必須沿用 Phase 2B day reference。
 
 ### 7.6 Hourly adapter
 
-直接接受 Phase 2B `ResolvedCycleStem(scope="hourly")`。
+接受 explicit `ChartIdentity` + Phase 2B `ResolvedCycleStem(scope="hourly")`。
 
 不得重算：
 
@@ -653,7 +693,7 @@ Phase 2C 不擴張 Calendar Resolver validated range。
 
 ## 八、Layer Identity 與 Composition
 
-### 8.1 與四化／飛化共享 identity 語意
+### 8.1 與四化／飛化共享 cycle join key，不共享完整 identity equality
 
 若同一 target scope/reference 已有：
 
@@ -667,7 +707,7 @@ Phase 2C 的：
 FlowingStarLayer
 ```
 
-應使用相同：
+兩者 join 只比較固定 key：
 
 ```text
 chart_id
@@ -675,7 +715,9 @@ scope
 reference
 ```
 
-rule profile 可各自屬於 transformation profile 與 flowing-star profile；join 時比較 scope/reference/chart，而不是要求兩個不同 capability 使用相同 rule profile string。
+兩個 layer 各自使用自己的 `rule_profile`；不得把完整 `LayerIdentity` equality 當 join 條件。
+
+實作可使用 tuple 或小型 immutable `CycleJoinKey` view；若新增 model，不能改掉既有 `LayerIdentity` equality 語意。
 
 ### 8.2 不把 FlowingStarLayer 塞進 `ZiweiLayerStack.cycles`
 
@@ -782,6 +824,7 @@ cycle_reference_mismatch
 chart_basis_mismatch
 invalid_flowing_star_stem
 invalid_flowing_star_branch
+invalid_flowing_star_stem_branch_pair
 calendar_boundary_conflict
 calendar_out_of_validated_range
 decadal_source_not_resolved
@@ -818,6 +861,17 @@ request = monthly
 
 若 caller 嘗試把「2026-08-22 流日」的四化 layer 與「2026-08-23 流日」的 flowing-star layer 疊在一起，必須拒絕。
 
+### 11.4 sexagenary pair mismatch
+
+Pure placement oracle 可以測所有 10×12 stem/branch component combinations；但正式 source 若為：
+
+```text
+甲丑
+乙子
+```
+
+等不屬於六十甲子的配對，必須 `invalid_flowing_star_stem_branch_pair`，不能因兩個字個別合法就接受。
+
 ---
 
 ## 十二、Capability Lifecycle
@@ -847,19 +901,21 @@ hourly  → ziwei.flow_hour_stem
 
 因此 registry 的普通 `dependencies` 不應錯誤填成「三個 fine-cycle capability 全部必須存在才能算任何流曜」。
 
-若 registry 需要表達此資訊，Phase 2C 可新增非破壞性 metadata：
+Phase 2C 採非破壞性 metadata：
 
 ```text
 conditional_dependencies = {
-  decadal: (...),
-  yearly: (...),
+  decadal: (resolved_decadal_source,),
+  yearly: (validated_lunar_year_source,),
   monthly: (ziwei.flow_month_stem,),
   daily: (ziwei.flow_day_stem,),
   hourly: (ziwei.flow_hour_stem,),
 }
 ```
 
-`can_execute()` 的既有語意保持「implementation == implemented」，真正執行時再由 source adapter fail closed。
+這些是 capability metadata，不把前兩個 symbolic prerequisite 假裝成可直接 `can_execute()` 的 capability ID。
+
+既有 `dependencies` 保持空 tuple；`can_execute()` 的既有語意保持「implementation == implemented」，真正執行時由 source adapter fail closed。
 
 ### 12.2 不做 maturity cascade
 
@@ -878,13 +934,13 @@ Phase 2C PASS 不代表：
 
 ### 13.1 Pure core exhaustive oracle matrix
 
-對 pinned iztro `getHoroscopeStar()` 做完整 source matrix：
+pinned iztro `getHoroscopeStar()` 將 stem 與 branch 視為兩個獨立合法 component；為完整驗證 placement table，Pure core qualification 穷舉：
 
 ```text
 10 heavenly stems
 × 12 earthly branches
 × 5 scopes
-= 600 combinations
+= 600 component combinations
 ```
 
 每組 exact compare：
@@ -898,21 +954,36 @@ Phase 2C PASS 不代表：
 預期：
 
 ```text
-decadal 120 source pairs × 10 stars
-yearly  120 source pairs × 11 stars
-monthly 120 source pairs × 10 stars
-daily   120 source pairs × 10 stars
-hourly  120 source pairs × 10 stars
+decadal 120 component pairs × 10 stars
+yearly  120 component pairs × 11 stars
+monthly 120 component pairs × 10 stars
+daily   120 component pairs × 10 stars
+hourly  120 component pairs × 10 stars
 ```
 
 PASS 條件：
 
 ```text
-600/600 source combinations PASS
+600/600 pure-core combinations PASS
 0 unexpected mismatch
 ```
 
-### 13.2 Upstream pinned vectors
+這個 600 matrix **不是**在宣稱 120 組 stem/branch 都是合法六十甲子；它只窮舉純函式兩個 component 的規則域。
+
+### 13.2 Valid source matrix
+
+正式 `FlowingStarSource` 只接受六十甲子合法 pair。
+
+另外必須測：
+
+```text
+60 valid sexagenary pairs × 5 scopes = 300 valid sources
+60 invalid parity pairs × 5 scopes = 300 rejected sources
+```
+
+合法來源全部可建立；非法 pair 全部以 `invalid_flowing_star_stem_branch_pair` fail closed。
+
+### 13.3 Upstream pinned vectors
 
 另外保留 pinned iztro upstream tests 中具代表性的 golden vectors，例如：
 
@@ -923,7 +994,7 @@ getHoroscopeStar("癸", "卯", "yearly")
 
 目的是讓 qualification runner 自身也有 regression anchor，避免 600-case converter 寫錯卻彼此自洽。
 
-### 13.3 Adapter qualification
+### 13.4 Adapter qualification
 
 至少覆蓋：
 
@@ -939,8 +1010,9 @@ getHoroscopeStar("癸", "卯", "yearly")
 10. scope mismatch。
 11. reference mismatch。
 12. chart mismatch。
+13. external structured source valid/invalid pair。
 
-### 13.4 Property / invariant tests
+### 13.5 Property / invariant tests
 
 至少：
 
@@ -1041,7 +1113,7 @@ engine/ziwei/flowing_star_view.py
 預期小幅修改：
 
 ```text
-engine/calendar/sexagenary.py        # neutral lunar_year_branch helper
+engine/calendar/sexagenary.py        # neutral lunar_year_branch + legal pair helper
 engine/ziwei/capabilities.py
 engine/ziwei/__init__.py             # public exports if needed
 ```
@@ -1074,6 +1146,8 @@ Bazi engine
 Calendar civil-date policy
 ```
 
+可以重用 Natal deterministic placement helper，但不得為了 Phase 2C 改變既有 Natal output。
+
 ---
 
 ## 十八、Testing / Acceptance Gates
@@ -1095,6 +1169,7 @@ PHASE2C_RULE_SOURCE_RECONCILIATION_PASS
 ### Gate B｜Models / pure core
 
 - immutable model validation。
+- legal sexagenary pair validation。
 - 10/11 star catalog invariants。
 - deterministic ordering。
 - invalid stem/branch/scope fail closed。
@@ -1102,6 +1177,7 @@ PHASE2C_RULE_SOURCE_RECONCILIATION_PASS
 ### Gate C｜Source adapters
 
 - decadal/yearly/monthly/daily/hourly 全部來源契約。
+- explicit chart identity。
 - precision gate。
 - boundary propagation。
 - scope/reference/chart mismatch。
@@ -1110,7 +1186,8 @@ PHASE2C_RULE_SOURCE_RECONCILIATION_PASS
 
 - branch → natal palace。
 - optional scope palace。
-- same identity join。
+- same `chart_id + scope + reference` join key。
+- rule_profile 可不同但不能破壞 join。
 - mismatch fail closed。
 - Stable Phase 2A model regression unchanged。
 
@@ -1119,6 +1196,8 @@ PHASE2C_RULE_SOURCE_RECONCILIATION_PASS
 ```text
 IZTRO_FLOWING_STARS_600_600_PASS
 IZTRO_FLOWING_STARS_0_UNEXPECTED_MISMATCH
+FLOWING_STAR_VALID_SOURCE_300_300_PASS
+FLOWING_STAR_INVALID_SOURCE_300_300_REJECTED
 ```
 
 ### Gate F｜Existing regression
@@ -1219,13 +1298,14 @@ Phase 2C v1 只有在下列全部成立時才算完成：
 3. Phase 2B monthly/daily/hourly source 被重用，不重算。
 4. Decadal 使用 2C0 decadal stem_branch，不重算。
 5. Yearly 使用明示 lunar-year profile，不混用 Bazi 立春口徑。
-6. FlowingStarLayer 與 Stable transformation/flying layer 可按 chart/scope/reference 安全 join，但資料模型分離。
-7. pinned iztro 600/600 source combinations 全部 match，0 unexpected mismatch。
-8. boundary / mismatch / insufficient precision 全部 fail closed。
-9. private Astralium 流曜若未提供，誠實維持 PENDING。
-10. capability 只升到 implemented / experimental / on_demand，不提前 Stable。
-11. full repo regression、Python 3.9、privacy/scope gates 全 PASS。
-12. final formal feature tree 不含 temporary validation workflows。
+6. FlowingStarLayer 與 Stable transformation/flying layer 可按 `chart_id + scope + reference` 安全 join，但資料模型與 rule profile 分離。
+7. pinned iztro 600/600 pure-core combinations 全部 match，0 unexpected mismatch。
+8. 正式 FlowingStarSource 只接受60合法六十甲子 pair，非法 pair 全部 fail closed。
+9. boundary / mismatch / insufficient precision 全部 fail closed。
+10. private Astralium 流曜若未提供，誠實維持 PENDING。
+11. capability 只升到 implemented / experimental / on_demand，不提前 Stable。
+12. full repo regression、Python 3.9、privacy/scope gates 全 PASS。
+13. final formal feature tree 不含 temporary validation workflows。
 
 Phase 2C 的定位因此是：
 
