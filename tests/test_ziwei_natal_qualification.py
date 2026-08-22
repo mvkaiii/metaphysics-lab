@@ -4,7 +4,7 @@ import sys
 import unittest
 from pathlib import Path
 
-from engine.ziwei.capabilities import get_capability
+from engine.ziwei.capabilities import get_capability, should_run_by_default
 from tools.qualify_ziwei_natal import qualify_public
 
 
@@ -75,8 +75,8 @@ class ZiweiNatalQualificationTests(unittest.TestCase):
     def test_capability_remains_experimental_after_public_pass(self):
         cap = get_capability("ziwei.natal_chart")
         self.assertEqual(cap["maturity"], "experimental")
-        self.assertEqual(cap["execution_mode"], "on_demand")
-        self.assertFalse(cap["default_enabled"])
+        self.assertEqual(cap["routing"], "on_demand")
+        self.assertFalse(should_run_by_default("ziwei.natal_chart"))
 
     def test_direct_cli_invocation_can_import_project_engine(self):
         proc = subprocess.run(
