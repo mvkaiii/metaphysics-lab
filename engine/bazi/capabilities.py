@@ -9,7 +9,7 @@ _CAPABILITIES = {
         "routing": "on_demand",
         "rule_version": "1.0-exp",
         "module": "engine.bazi.natal",
-        "dependencies": ("birth.input_resolution", "calendar.resolve"),
+        "dependencies": ("birth.input_resolution", "birth.location_resolution", "calendar.resolve"),
     },
 }
 
