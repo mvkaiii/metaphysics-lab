@@ -1,0 +1,22 @@
+name: ai-dist-task6-red
+
+on:
+  pull_request:
+
+jobs:
+  parity:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/ai-distribution-pack-v1
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - name: Install pinned runtime dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Verify generated distribution is current
+        run: python tools/build_ai_distribution.py --check
+      - name: Run Task 6 bundle parity contracts
+        run: python -m unittest tests.test_ai_distribution_bundle -v
