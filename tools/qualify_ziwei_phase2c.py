@@ -4,12 +4,17 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import sys
 from typing import Any, Dict, Iterable, List, Mapping, Tuple
+
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from engine.ziwei.flowing_stars import FLOWING_STAR_PROFILE_ID, place_flowing_stars_for_pair
 
 
-ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PUBLIC_FIXTURE = ROOT / "qualification" / "ziwei" / "phase2c" / "public-iztro-flowing-star-vectors.json"
 EXPECTED_ORACLE_VERSION = "2.6.0"
 EXPECTED_ORACLE_REVISION = "814b77e6371e1050cac31bbf674db3c3138fcfde"
