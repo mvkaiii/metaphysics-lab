@@ -1,6 +1,6 @@
 # 安裝到 ChatGPT Project
 
-本文件說明如何把 Metaphysics Lab v1.2.0 的共用核心安裝到新的 ChatGPT Project，並與私人命盤資料分開管理。
+本文件說明如何把 Metaphysics Lab 正式核心與 **Unreleased Phase 2C0｜Natal Chart Foundation** 安裝到 ChatGPT Project，同時把共用程式與私人 Case 分開管理。
 
 核心原則：
 
@@ -10,32 +10,33 @@ GitHub 更新不應直接覆蓋命主私人資料。
 
 ---
 
-## 一、設定 Project Instructions
+## 一、Project Instructions
 
-開啟：
+把：
 
 ```text
 core/核心提示詞.md
 ```
 
-把內容同步到 ChatGPT Project 的 Instructions／專案指示。
+同步到 ChatGPT Project Instructions。
 
-這份提示詞負責：
+核心提示詞負責：
 
 - 資料讀取順序
 - 問事先盲判、後事件校準
 - 八字／紫微／奇門分工
-- 七種資料類型區分
-- 高風險領域邊界
-- 輸出格式與信心標示
+- **八種資料類型**，包含 Project 原生盤面
+- Input Resolution / Precision Gate
+- External / Project / Resolved
+- 高風險領域與信心邊界
 
-若核心提示詞更新，Project Instructions 也要同步更新。
+若提示詞更新，Project Instructions 也要同步。
 
 ---
 
 ## 二、基礎規則
 
-一般 Project 至少加入：
+至少加入：
 
 ```text
 core/命理分析作業規範.md
@@ -43,263 +44,170 @@ core/命理推導計算規則.md
 core/紫微流月推導規則.md
 ```
 
-用途：
-
-- `命理分析作業規範.md`：最高層分析流程與資料治理。
-- `命理推導計算規則.md`：八字流年／流月／流日／流時固定算法與邊界。
-- `紫微流月推導規則.md`：紫微斗君、流月命宮、十二宮與月份邊界。
-
----
-
-## 三、Compatibility wrapper 與正式 package
-
-相容入口：
-
-```text
-engine/project_bazi_calendar.py
-engine/project_ziwei_month.py
-engine/project_ziwei_day.py
-engine/project_ziwei_hour.py
-```
-
-這些檔案保留既有呼叫路徑，但不是完全獨立的單檔引擎。
-
-若只是讓 AI 閱讀正式入口，可以把 wrapper 當作索引；若環境要實際執行，必須同步對應 package modules。
-
----
-
-## 四、八字執行環境
-
-同步：
-
-```text
-engine/bazi/__init__.py
-engine/bazi/calendar.py
-engine/project_bazi_calendar.py
-```
-
-八字時間推導可建立流年、流月、流日、流時與天干十神；計算結果屬於 Project 推導盤面。
-
-八字 23:00 early-Zi 規則仍由八字引擎負責，不由 Calendar Resolver 代替。
-
----
-
-## 五、紫微流月／流日／流時定位
-
-共用：
-
-```text
-engine/ziwei/__init__.py
-engine/ziwei/common.py
-engine/ziwei/capabilities.py
-```
-
-流月：
-
-```text
-core/紫微流月推導規則.md
-engine/project_ziwei_month.py
-engine/ziwei/month.py
-```
-
-流日：
+需要流日／流時時再加入：
 
 ```text
 core/紫微流日推導規則.md
-engine/project_ziwei_day.py
-engine/ziwei/day.py
-```
-
-流時：
-
-```text
 core/紫微流時推導規則.md
-engine/project_ziwei_hour.py
-engine/ziwei/hour.py
 ```
 
-v1.2.0 狀態：
-
-```text
-紫微流月 = implemented / stable / default
-紫微流日 = implemented / experimental / on_demand
-紫微流時 = implemented / experimental / on_demand
-```
-
-流日／流時 palace modules 本身只做宮位定位；Unreleased Phase 2B 的 fine-cycle stem／四化／飛化由獨立 modules 提供。Experimental 能力可執行，但分析時必須降權。
+固定原則：**Precision must be earned by input.** 輸入不足只能追問、保留候選或降級；不得自行補值。
 
 ---
 
-## 六、Calendar Resolver v1
+## 三、Phase 2C0 Natal Foundation modules
 
-若要從 structured civil datetime + IANA timezone 建立 `CalendarContext`，同步：
-
-```text
-requirements.txt
-engine/calendar/__init__.py
-engine/calendar/precision.py
-engine/calendar/models.py
-engine/calendar/timezone.py
-engine/calendar/lunar.py
-engine/calendar/resolver.py
-engine/ziwei/calendar_adapter.py
-```
-
-並安裝：
-
-```bash
-pip install -r requirements.txt
-```
-
-v1.2.0 exact runtime dependencies：
-
-```text
-lunar-python==1.4.8
-tzdata==2026.3
-```
-
-Resolver 只接受 structured local civil datetime、IANA timezone 與可選 `utc_offset_hint`。
-
-Resolver 不負責：
-
-- 自然語言日期解析
-- timezone 猜測
-- 真太陽時
-- 八字換日 policy
-- 紫微 23:00 命理日界 school policy
-
-23:00 已屬子時，但 civil date 只在 00:00 換日。
-
----
-
-## 七、Ziwei Transformation & Flying Core v1
-
-若要在 Python 環境執行十干四化、本命宮干飛化、生年／大限／流年四化飛化與 Composition，至少同步：
-
-```text
-engine/ziwei/errors.py
-engine/ziwei/models.py
-engine/ziwei/basis.py
-engine/ziwei/transformation_profiles.py
-engine/ziwei/transformations.py
-engine/ziwei/flying.py
-engine/ziwei/composition.py
-```
-
-並保持同版：
-
-```text
-engine/ziwei/__init__.py
-engine/ziwei/common.py
-engine/ziwei/capabilities.py
-```
-
-v1.2.0 狀態：
-
-```text
-Ziwei Transformation Core = implemented / stable / on_demand
-Ziwei Flying Core = implemented / stable / on_demand
-```
-
-已支援：
-
-- 十天干四化
-- 本命十二宮宮干飛化
-- 生年四化
-- 大限四化／飛化
-- 流年四化／飛化
-- layer no-overwrite / fail-closed conflict handling
-
-v1.2.0 release baseline 當時尚未支援流月／流日／流時細運四化與飛化。Unreleased Phase 2B 已完成 Fine Cycle Stem Resolver 與獨立 public qualification；能力仍是 Experimental / On-demand。流曜仍 planned。
-
----
-
-## 七點五、Unreleased Phase 2B fine-cycle modules
-
-若要執行目前 Phase 2B 工作樹的紫微流月／流日／流時天干、四化與飛化，再同步：
-
-```text
-engine/calendar/sexagenary.py
-engine/ziwei/fine_cycle_stems.py
-engine/ziwei/fine_cycle.py
-```
-
-profile = `ziwei-fine-cycle-lunar-late-zi-v1`；day boundary = `late_zi_forward-v1`；capability = `implemented / experimental / on_demand / 1.0-exp`。Calendar Resolver 不執行 23:00 紫微換日；該 policy 只由 **fine-cycle profile** 套用。
-
-Public qualification：pinned `lunar-lite` `1d104fff...` **18/18 PASS**；pinned `iztro` `814b77e6...` **integration PASS**；Astralium fine-cycle = **PENDING**。流曜仍 planned / on_demand。
-
-## 八、建議的完整 Python 環境
-
-若目標不是只讓 AI 閱讀，而是要真正執行 v1.2.0 已有能力，建議至少同步：
+若環境要真正執行 Project 原生本命盤，至少同步同版：
 
 ```text
 requirements.txt
 
-engine/bazi/__init__.py
-engine/bazi/calendar.py
+engine/birth/
+engine/calendar/
+engine/bazi/
+engine/ziwei/
+engine/natal/
+
+templates/natal/
+```
+
+其中：
+
+- `engine/birth/`：輸入、地點、時間 views。
+- `engine/calendar/`：neutral civil/calendar infrastructure。
+- `engine/bazi/natal.py`：Project Bazi Natal。
+- `engine/ziwei/natal.py`：Project Ziwei Natal。
+- `engine/natal/`：External import、Normalized Natal Model、reconciliation、authority、orchestration、Markdown export。
+
+Phase 2C0 capability：
+
+```text
+birth.input_resolution    = implemented / experimental / on_demand / 1.0-exp
+birth.location_resolution = implemented / experimental / on_demand / 1.0-exp
+birth.true_solar_time     = implemented / experimental / on_demand / 1.0-exp
+bazi.natal_chart          = implemented / experimental / on_demand / 1.0-exp
+ziwei.natal_chart         = implemented / experimental / on_demand / 1.0-exp
+natal.reconciliation      = implemented / stable / on_demand / 1.0
+natal.markdown_export     = implemented / stable / on_demand / 1.0
+ziwei.flowing_stars       = planned / on_demand
+```
+
+Bazi / Ziwei Natal 目前仍是 **Experimental**，不要因 orchestration 可用就升 Stable。
+
+---
+
+## 四、使用者最小輸入
+
+完整 Mode A：
+
+- 性別
+- Gregorian 出生日期
+- 出生時間
+- 出生地
+
+例如：
+
+> 男，1984年3月13日19:20，台北市出生
+
+如果使用者說：
+
+> 1990年5月6日，高雄出生
+
+只追問缺少的性別與出生時間。
+
+如果使用者說：
+
+> 大概晚上7、8點
+
+不得猜中點；保留候選。候選跨越改盤邊界時追問，未跨 material boundary 時可在現有精度下繼續。
+
+---
+
+## 五、Location / Calendar / time views
+
+使用者不必手動輸入經緯度或 timezone。Location Resolver 解析 birthplace name；Calendar Resolver 接受 structured civil datetime + IANA timezone。
+
+**Calendar Resolver 不負責真太陽時。**
+
+Phase 2C0 至少保留：
+
+```text
+reported_civil_time
+normalized_civil_time
+bazi_effective_time
+ziwei_effective_time
+```
+
+八字與紫微使用獨立 time profile。Ziwei Natal ordinary UX 使用 Project default true-solar profile；原始 civil time 不會被覆蓋。
+
+---
+
+## 六、External / Project / Resolved
+
+有 Astralium 或其他 structured external chart 時，不要把它覆蓋 Project 自算結果。
+
+固定三層：
+
+```text
+External / Project / Resolved
+```
+
+固定 status：
+
+```text
+MATCH / EQUIVALENT / CONFLICT / NOT_COMPARABLE
+```
+
+Astralium 為可選 external qualification source，不是 runtime dependency。Experimental Project 與 external 發生實質衝突時，Resolved 預設採 external；原 conflict 仍保留。
+
+---
+
+## 七、既有八字／Calendar／Ziwei modules
+
+Compatibility wrapper：
+
+```text
 engine/project_bazi_calendar.py
-
-engine/calendar/__init__.py
-engine/calendar/precision.py
-engine/calendar/models.py
-engine/calendar/timezone.py
-engine/calendar/lunar.py
-engine/calendar/resolver.py
-engine/calendar/sexagenary.py
-
-engine/ziwei/__init__.py
-engine/ziwei/common.py
-engine/ziwei/capabilities.py
-engine/ziwei/month.py
-engine/ziwei/day.py
-engine/ziwei/hour.py
-engine/ziwei/calendar_adapter.py
-engine/ziwei/errors.py
-engine/ziwei/models.py
-engine/ziwei/basis.py
-engine/ziwei/transformation_profiles.py
-engine/ziwei/transformations.py
-engine/ziwei/flying.py
-engine/ziwei/composition.py
-engine/ziwei/fine_cycle_stems.py
-engine/ziwei/fine_cycle.py
-
 engine/project_ziwei_month.py
 engine/project_ziwei_day.py
 engine/project_ziwei_hour.py
 ```
 
-wrapper、package 與 requirements 應保持同版。
+wrapper 不是獨立單檔引擎；要實際執行仍需同版 package modules。
+
+Calendar Resolver：structured local civil datetime + IANA timezone → `CalendarContext`。civil date 在 00:00 換日；23:00 已屬子時但 Resolver 不套命理日界。
 
 ---
 
-## 九、Capability 語意
+## 八、Ziwei Transformation / Flying / Fine Cycle
+
+Ziwei Transformation Core 與 Flying Core 已 Stable / On-demand。
+
+Unreleased Phase 2B Fine Cycle：
 
 ```text
-implementation = planned / implemented
-maturity       = experimental / stable
-routing        = default / on_demand
+profile      = ziwei-fine-cycle-lunar-late-zi-v1
+day_boundary = late_zi_forward-v1
+stem / transformations / flying = implemented / experimental / on_demand
 ```
 
-v1.2.0 正式 release baseline 與目前 Unreleased Phase 2B 必須分開看。Phase 2B 工作樹新增：
+Calendar Resolver 保持 neutral；23:00 紫微 effective-day 前進只由 fine-cycle profile 套用。
+
+Qualification：
 
 ```text
-flow_month/day/hour_stem = implemented / experimental / on_demand / 1.0-exp
-flow_month/day/hour_transformations = implemented / experimental / on_demand / 1.0-exp
-flow_month/day/hour_flying = implemented / experimental / on_demand / 1.0-exp
-Ziwei Transformation Core = implemented / stable / on_demand / 1.0
-Ziwei Flying Core = implemented / stable / on_demand / 1.0
-流曜 = planned / on_demand
-Cross-System Validation = planned
+pinned lunar-lite 1d104fff...   18/18 PASS
+pinned iztro 814b77e6...        integration PASS
+Astralium fine-cycle             PENDING
 ```
 
-`implemented` 代表程式能力存在；`on_demand` 代表一般問事不預設跑；`planned` 代表尚不能執行。
+`leap_twelfth_month_second_half` 為 synthetic internal coverage，not externally qualified。`ziwei.flowing_stars`／流曜仍 planned / on_demand。
 
 ---
 
-## 十、建立私人 Case
+## 九、私人 Case
 
-從 `templates/` 複製空白模板，建立自己的：
+從 templates 建立自己的：
 
 ```text
 命盤核心摘要.md
@@ -310,79 +218,18 @@ Cross-System Validation = planned
 重大決策紀錄.md
 ```
 
-優先順序：
+私人出生資料、原始八字／紫微資料、Astralium raw chart、PDF、截圖不要提交回共用 repo。
 
-1. 出生資料與正式命盤來源
-2. 命盤資料校驗
-3. 命盤核心摘要
-4. 已確認的重要事件
-5. 再累積流年、問事與重大決策追蹤
-
-私人資料不要提交回共用 repo。
+第一次啟動先做命盤建立／校驗，確認 source classification、External / Project / Resolved、時間 profile 與 BLOCKING conflict，再進未來預測。
 
 ---
 
-## 十一、第一次啟動 Project
+## 十、Python 執行與驗證
 
-先做命盤建立／校驗，不要直接跳到未來預測。
+把 `.py` 放進 Project 代表保存正式算法來源，不代表每個 ChatGPT 對話都會自動執行 Python。
 
-建議確認：
+只有真的有執行證據時，才可宣稱「程式已計算」「測試已通過」。
 
-- 是否成功讀到 `命理分析作業規範.md`
-- 出生年月日時與出生地是否正確
-- 八字四柱、日主、大運是否一致
-- 紫微十二宮、大限、流年是否可讀
-- 不同來源是否有時間口徑差異
-- 哪些欄位是原始來源，哪些是 Project 推導
-- capability registry 是否能區分 Stable / Experimental / Planned 與 Default / On-demand
-
-完成後再建立 `命盤核心摘要.md`。
-
----
-
-## 十二、Python 檔案放進 Project 代表什麼
-
-把 `.py` 放進 Project，代表保存正式算法來源。
-
-**不代表每一個 ChatGPT 對話都會自動執行 Python。**
-
-若當次環境能執行 Python，可依正式程式計算；若無法執行，AI 只能閱讀規則與程式內容，不得假裝已執行。
-
-回答若宣稱「程式已計算」「測試已通過」，必須真的有執行證據。
-
----
-
-## 十三、驗證資料
-
-若 Project 檔案空間允許，可加入對應測試案例作知識參考；Python 單元測試主要供開發與回歸使用，不是一般問事的必要檔案。
-
-v1.2.0 Phase 2A qualification 與 main regression 基線請看：
-
-- `VERSION.md`
-- `CHANGELOG.md`
-- `qualification/ziwei/phase2a/`
-
----
-
-## 十四、更新時不要覆蓋私人資料
-
-日後更新 Metaphysics Lab 時，只同步共用核心：
-
-- `core/`
-- `engine/`
-- `requirements.txt`
-- 必要的 `tests/`
-- Project Instructions
-
-不要用 GitHub 版本覆蓋自己的：
-
-- 命盤核心摘要
-- 命盤資料校驗紀錄
-- 驗證事件紀錄
-- 流年追蹤紀錄
-- 問事追蹤紀錄
-- 重大決策紀錄
-- 原始八字／紫微資料
-- 個人命盤 PDF／截圖
+Phase 2C0 qualification summary 只能保存 aggregate counts、digest、versions、status；私人 raw payload 不進 repo。
 
 完整升級流程請看 [更新與版本同步](更新與版本同步.md)。
