@@ -1,0 +1,29 @@
+name: Phase 2C Task 5 GREEN
+
+on:
+  pull_request:
+    branches:
+      - feature/ziwei-flowing-stars-v1
+  workflow_dispatch:
+
+jobs:
+  green:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+      - name: Run Task 5 and Ziwei regression
+        run: |
+          python -m unittest tests.test_ziwei_flowing_star_view -v
+          python -m unittest discover -s tests -p 'test_ziwei*.py' -v
+          python - <<'PY'
+          import ast
+          from pathlib import Path
+          for path in Path('engine').rglob('*.py'):
+              ast.parse(path.read_text(encoding='utf-8'), feature_version=(3, 9))
+          print('PHASE2C_TASK5_PYTHON39_PASS')
+          PY
