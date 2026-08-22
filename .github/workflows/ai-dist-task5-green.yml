@@ -19,6 +19,8 @@ jobs:
           python-version: '3.9'
       - name: Install pinned runtime dependencies
         run: python -m pip install -r requirements.txt
+      - name: Diagnose direct builder CLI
+        run: python tools/build_ai_distribution.py --output-dir /tmp/ai-dist-task5-diagnostic
       - name: Run Task 5 build tests
         run: python -m unittest tests.test_ai_distribution_build -v
       - name: Generate committed distribution candidates
