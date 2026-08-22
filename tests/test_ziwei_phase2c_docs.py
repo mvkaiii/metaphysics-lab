@@ -80,10 +80,11 @@ class ZiweiPhase2CDocsTests(unittest.TestCase):
         self.assertNotIn("ziwei-flowing-stars-common-v1", text)
         self.assertNotIn("600/600", text)
 
-    def test_changelog_records_unreleased_phase2c_without_promotion(self):
+    def test_changelog_records_phase2c_in_v130_without_promotion(self):
         text = _read("CHANGELOG.md")
         for needle in (
-            "## Unreleased｜Phase 2C Ziwei Flowing Stars",
+            "## v1.3.0｜2026-08-23",
+            "### Phase 2C｜Ziwei Flowing Stars",
             "ziwei-flowing-stars-common-v1",
             "implemented / experimental / on_demand",
             "Project 推導盤面",
@@ -93,13 +94,16 @@ class ZiweiPhase2CDocsTests(unittest.TestCase):
             "將前十二神",
         ):
             self.assertIn(needle, text)
+        self.assertNotIn("## Unreleased｜Phase 2C Ziwei Flowing Stars", text)
         self.assertNotIn("ziwei.flowing_stars = implemented / stable", text)
 
-    def test_release_identity_remains_v120(self):
+    def test_release_identity_is_v130_without_flowing_star_promotion(self):
         text = _read("VERSION.md")
-        self.assertIn("Metaphysics Lab Core：**v1.2.0**", text)
-        self.assertNotIn("Phase 2C Ziwei Flowing Stars", text)
-        self.assertNotIn("AI Distribution Pack", text)
+        self.assertIn("Metaphysics Lab Core：**v1.3.0**", text)
+        self.assertIn("Ziwei Flowing Stars：v1.0-exp", text)
+        self.assertIn("`ziwei.flowing_stars` | implemented | experimental | on_demand", text)
+        self.assertIn("Astralium flowing-stars            PENDING", text)
+        self.assertNotIn("`ziwei.flowing_stars` | implemented | stable", text)
 
 
 if __name__ == "__main__":

@@ -95,9 +95,13 @@ class ZiweiPhase2CAcceptanceTests(unittest.TestCase):
         for capability_id, state in expected.items():
             self.assertEqual(summary_states[capability_id], "/".join(state))
 
-    def test_release_identity_is_unchanged(self):
+    def test_current_release_is_v130_while_phase2c_qualification_snapshot_keeps_origin(self):
         text = (ROOT / "VERSION.md").read_text(encoding="utf-8")
-        self.assertIn("Metaphysics Lab Core：**v1.2.0**", text)
+        self.assertIn("Metaphysics Lab Core：**v1.3.0**", text)
+        self.assertIn("Ziwei Flowing Stars：v1.0-exp", text)
+        # The qualification summary is historical evidence produced before the
+        # formal v1.3.0 release. Do not rewrite provenance just to match the
+        # current release label.
         self.assertEqual(_load(SUMMARY)["release_version"], "v1.2.0")
 
     def test_summary_and_private_evidence_are_privacy_safe(self):

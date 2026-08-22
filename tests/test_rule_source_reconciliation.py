@@ -89,7 +89,7 @@ class RuleSourceReconciliationTests(unittest.TestCase):
         self.assertIn("metaphysics_lab.py", current_guidance)
         self.assertIn("High reasoning", current_guidance)
 
-    def test_release_baseline_and_unreleased_runtime_are_explicitly_distinct(self):
+    def test_release_baseline_and_runtime_contract_are_explicitly_distinct(self):
         sync = (ROOT / "docs/更新與版本同步.md").read_text(encoding="utf-8")
         changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
         version = (ROOT / "VERSION.md").read_text(encoding="utf-8")
@@ -98,11 +98,14 @@ class RuleSourceReconciliationTests(unittest.TestCase):
         self.assertIn("Runtime", sync)
         self.assertIn("Case Schema", sync)
         self.assertIn("只替換 `metaphysics_lab.py`", sync)
-        self.assertIn("## Unreleased｜Phase 2B", changelog)
-        self.assertIn("## Unreleased｜Phase 2C Ziwei Flowing Stars", changelog)
-        self.assertIn("Metaphysics Lab Core：**v1.2.0**", version)
-        self.assertNotIn("Unreleased｜Phase 2B", version)
-        self.assertNotIn("AI Distribution Pack", version)
+        self.assertIn("## v1.3.0｜2026-08-23", changelog)
+        self.assertIn("### Phase 2B｜Ziwei Fine Cycle Stem Resolver v1", changelog)
+        self.assertIn("### Phase 2C｜Ziwei Flowing Stars", changelog)
+        self.assertIn("Metaphysics Lab Core：**v1.3.0**", version)
+        self.assertIn("AI Distribution Pack", version)
+        self.assertIn("runtime_info", version)
+        self.assertNotIn("## Unreleased｜Phase 2B", changelog)
+        self.assertNotIn("## Unreleased｜Phase 2C Ziwei Flowing Stars", changelog)
 
     def test_user_docs_do_not_overclaim_dynamic_capability_state(self):
         docs = self._combined(USER_DOCS)

@@ -1,8 +1,15 @@
 # 變更紀錄
 
-## Unreleased｜AI Distribution Pack
+## v1.3.0｜2026-08-23
 
-- 新增 AI-first 發行形式：一般使用者只需要 `metaphysics_lab.py`、`METAPHYSICS_CORE.md` 與 `PROJECT_INSTRUCTIONS.md`；前兩者加入 Project，後者貼入 Project Instructions。
+v1.3.0 正式收斂 v1.2.0 之後已完成並進入 `main` 的 Natal Foundation、Ziwei Fine Cycle、Ziwei Flowing Stars 與 AI Distribution Pack。
+
+本次正式 release **不因發版而自動提升 capability maturity**：原本 Experimental / On-demand 的能力維持原狀；當前 implementation / maturity / routing 仍以 `runtime_info` 為權威來源。
+
+### AI Distribution Pack
+
+- 正式提供 AI-first / mobile-first 發行形式：一般使用者只需要 `metaphysics_lab.py`、`METAPHYSICS_CORE.md` 與 `PROJECT_INSTRUCTIONS.md`；前兩者加入 Project，後者貼入 Project Instructions。
+- GitHub Release 以三個獨立 assets 為主要手機下載方式；ZIP 僅是 GitHub 自動 source archive，不是一般使用者主流程。
 - 新增 deterministic single-file `dist/ai/metaphysics_lab.py`；模組化 source 維持 repo 內可測試／可 qualification，build output 不 vendor 第三方 package source。
 - 新增 `runtime_info`、portable natal / reconciliation、deterministic forecast context 與 Case export 等 structured runtime actions；Python 負責計算，AI 負責解讀。
 - pre-resolved location path 可在沒有 location network packages 的環境使用；無可靠地點來源時 fail closed，不猜地點。
@@ -12,9 +19,9 @@
 - `runtime-info` 不需展開完整 engine；缺少核心 dependency 的計算 action 回 machine-readable error，不輸出 traceback。
 - 使用者文件改為 mobile-first / AI-first：推薦 High reasoning，並提供 AI host 無法執行 Python 時的同一單檔 local CLI fallback。
 - 一般 Runtime 更新預設只替換 `metaphysics_lab.py`；Project Contract 或 Case Schema 只有在明確 migration 通知時才同步。
-- 本段為 Unreleased；`VERSION.md`、Git tag、GitHub Release 與 v1.2.0 release identity 不變，也沒有任何 capability 因本次發行包而升 Stable。
+- AI Distribution Runtime 版本仍為 `1.0-exp`；本次正式 GitHub Release 不把它或任何 experimental metaphysics capability 自動升 Stable。
 
-## Unreleased｜Phase 2C Ziwei Flowing Stars
+### Phase 2C｜Ziwei Flowing Stars
 
 - 新增 `ziwei.flowing_stars` = implemented / experimental / on_demand / 1.0-exp；profile `ziwei-flowing-stars-common-v1`。
 - 流曜屬 `Project 推導盤面`，canonical location 固定為 Earthly Branch。
@@ -24,11 +31,10 @@
 - pinned iztro 2.6.0 revision `814b77e6371e1050cac31bbf674db3c3138fcfde` qualification：600/600 source cases、6120 placements、0 unexpected mismatch。
 - Astralium flowing-stars private qualification 維持 `PENDING`；沒有沿用 Natal private PASS，沒有 promotion。
 - 明確排除歲前十二神、將前十二神、博士十二神、長生十二神、小限流曜、流曜亮度、scoring、AI interpretation。
-- 本段為 Unreleased；`VERSION.md`、Git tag、GitHub Release 與 v1.2.0 release identity 不變。
 
-## Unreleased｜Phase 2C0 Natal Chart Foundation
+### Phase 2C0｜Natal Chart Foundation
 
-### Birth / Location / Time foundation
+#### Birth / Location / Time foundation
 
 - 新增 structured birth input resolution 與 Precision Gate；原則為 **Precision must be earned by input**。
 - 完整 Mode A 最低輸入：性別、Gregorian 出生日期、出生時間、出生地。
@@ -38,7 +44,7 @@
 - 保存 `reported_civil_time`、`normalized_civil_time`、`bazi_effective_time`、`ziwei_effective_time`。
 - 真太陽時 profile 固定記錄「經度校正＋均時差」，八字與紫微 profile 獨立。
 
-### Project 原生本命盤
+#### Project 原生本命盤
 
 - 新增八種資料類型中的 **Project 原生盤面**，與原始盤面事實、Project 推導盤面、命理推論分開。
 - `bazi.natal_chart` = implemented / **Experimental** / on_demand / 1.0-exp。
@@ -46,7 +52,7 @@
 - Known Four Pillars 只建立 Bazi imported/external natal view，不反推完整 Ziwei natal。
 - Astralium 為可選 external qualification source，不是 runtime dependency。
 
-### Normalized Natal / reconciliation
+#### Normalized Natal / reconciliation
 
 - 新增 External / Project / Resolved 三層資料模型；raw views 永久分開，不互相覆寫。
 - 固定 field status：`MATCH / EQUIVALENT / CONFLICT / NOT_COMPARABLE`。
@@ -54,25 +60,22 @@
 - `natal.reconciliation` = implemented / stable / on_demand / 1.0。
 - Experimental authority 發生實質 external conflict 時，Resolved 預設採 external；衝突狀態仍保留。
 
-### Markdown / orchestration
+#### Markdown / orchestration
 
 - 新增 deterministic canonical Markdown exporter，只輸出 structured facts，不重算命盤、不猜 missing fields、不自動加入命理解讀。
 - `natal.markdown_export` = implemented / stable / on_demand / 1.0。
 - 新增 Mode A / B / C orchestration：Birth Data、Known Four Pillars、External + Project cross-check。
 
-### Qualification / privacy
+#### Qualification / privacy
 
 - 新增 Phase 2C0 aggregate qualification summary；只允許 aggregate counts、digests、versions、statuses。
 - raw private birth input、full address、raw chart、external raw payload 不進 repo。
 - 已以一個授權 private natal case 完成本機 aggregate qualification：Bazi 為 **PASS**（6 direct matches、3 explicit profile differences、0 unexpected mismatch）；Ziwei Astralium natal 為 **PASS**（129 matches、1 equivalent、0 unexpected mismatch）。
 - private qualification 只提交 aggregate counts / digests；raw source 仍留在共用 repo 外。
 - 單一 private case 不構成 promotion 依據；`bazi.natal_chart` / `ziwei.natal_chart` 仍為 Experimental，`promotion_allowed = false`。
-- Phase 2C0 final acceptance 仍由 Task 10 gate 決定；在正式 gate 前不宣稱 release PASS。
-- `ziwei.flowing_stars` 仍為 **planned / on_demand**；Phase 2C0 不包含 moving stars。
+- Phase 2C0 當時沒有包含 moving stars；v1.3.0 由後續 Phase 2C 正式納入 `ziwei.flowing_stars` 的 implemented / experimental / on_demand 狀態。
 
-## Unreleased｜Phase 2B
-
-### Ziwei Fine Cycle Stem Resolver v1
+### Phase 2B｜Ziwei Fine Cycle Stem Resolver v1
 
 - 新增 `engine/calendar/sexagenary.py` 中立干支 helper。
 - 新增 `engine/ziwei/fine_cycle_stems.py`，固定 profile `ziwei-fine-cycle-lunar-late-zi-v1` / `1.0-exp`。
@@ -81,9 +84,9 @@
 - 紫微流時使用 effective Ziwei day stem 起五鼠遁，hour branch 直接採 CalendarContext。
 - 新增 `engine/ziwei/fine_cycle.py`，將 resolved stem 接入既有 Transformation / Flying Core。
 - flow month/day/hour stem、transformations、flying = `implemented / experimental / on_demand / 1.0-exp`。
-- Stable Transformation / Flying Core 與既有 palace maturity 不變；流曜仍 planned。
+- Stable Transformation / Flying Core 與既有 palace maturity 不變。
 
-### Phase 2B qualification
+#### Phase 2B qualification
 
 ```text
 pinned lunar-lite 1d104fff...   18/18 PASS
@@ -93,7 +96,17 @@ Astralium fine-cycle             PENDING
 
 - `leap_twelfth_month_second_half` 只有 synthetic internal coverage，為 not externally qualified。
 - repo 不提交 Astralium raw private chart；只保存 aggregate PENDING state。
-- 本段為 Unreleased 開發紀錄；`VERSION.md` 與 v1.2.0 release identity 不變。
+
+### v1.3.0 release acceptance
+
+```text
+Focused AI Distribution   56/56 PASS
+Deterministic build check       PASS
+Full repository           488/488 PASS
+Python 3.9 compileall            PASS
+```
+
+Release tag / GitHub Release 必須指向 release 文件 merge 後、重新驗證成功的 exact `main` commit。
 
 ## v1.2.0｜2026-08-21
 
@@ -138,5 +151,3 @@ Ziwei Flying Core = implemented / stable / on_demand
 - 本命十二宮宮干飛化。
 - 生年、大限、流年四化／飛化。
 - layer composition / conflict validation。
-
-正式 v1.2.0 release identity 維持不變；後續 Unreleased Phase 2B / Phase 2C0 不提前改 VERSION、tag 或 GitHub Release。
