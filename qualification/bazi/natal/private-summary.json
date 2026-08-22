@@ -1,11 +1,15 @@
 {
   "schema_version": "1.0",
   "classification": "private_bazi_natal_qualification_summary",
-  "status": "PENDING",
-  "source_digest": null,
-  "case_count": 0,
-  "matched_field_count": 0,
-  "profile_difference_count": 0,
+  "status": "PASS",
+  "source_digest": "sha256:467db49baaec2419fd77dc39b28397cf32dcee5564188d27f7620d90c1add3fe",
+  "case_count": 1,
+  "matched_field_count": 6,
+  "profile_difference_count": 3,
+  "equivalent_field_count": 0,
   "unexpected_mismatch_count": 0,
-  "reason": "No private natal-chart qualification source has been supplied to Phase 2C0 yet."
+  "promotion_allowed": false,
+  "contains_raw_birth_data": false,
+  "contains_raw_chart_payload": false,
+  "qualification_scope": "authorized private aggregate only; raw source remains outside shared repository"
 }
