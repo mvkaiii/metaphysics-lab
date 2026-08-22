@@ -1,5 +1,17 @@
 # 變更紀錄
 
+## Unreleased｜Phase 2C Ziwei Flowing Stars
+
+- 新增 `ziwei.flowing_stars` = implemented / experimental / on_demand / 1.0-exp；profile `ziwei-flowing-stars-common-v1`。
+- 流曜屬 `Project 推導盤面`，canonical location 固定為 Earthly Branch。
+- 支援 decadal／yearly／monthly／daily／hourly 五種 scope；月日時重用 Phase 2B `ResolvedCycleStem`，大限重用 `ZiweiDecadalPeriod.stem_branch`，流年採 lunar-year neutral source，不重算上游 boundary policy。
+- 核心10顆為天魁、天鉞、文昌、文曲、祿存、擎羊、陀羅、天馬、紅鸞、天喜；yearly 額外加入年解。
+- `FlowingStarLayer` 與 Stable transformation/flying layer 分離，join key 為 `chart_id + scope + reference`。
+- pinned iztro 2.6.0 revision `814b77e6371e1050cac31bbf674db3c3138fcfde` qualification：600/600 source cases、6120 placements、0 unexpected mismatch。
+- Astralium flowing-stars private qualification 維持 `PENDING`；沒有沿用 Natal private PASS，沒有 promotion。
+- 明確排除歲前十二神、將前十二神、博士十二神、長生十二神、小限流曜、流曜亮度、scoring、AI interpretation。
+- 本段為 Unreleased；`VERSION.md`、Git tag、GitHub Release 與 v1.2.0 release identity 不變。
+
 ## Unreleased｜Phase 2C0 Natal Chart Foundation
 
 ### Birth / Location / Time foundation
