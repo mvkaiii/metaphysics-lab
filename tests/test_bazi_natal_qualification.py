@@ -55,7 +55,11 @@ class BaziNatalQualificationTests(unittest.TestCase):
         self.assertEqual(report["reference_version"], "1.4.8")
         self.assertEqual(report["project_profile"], "bazi-natal-project-v1")
         self.assertEqual(report["project_rule_version"], "1.0-exp")
-        self.assertEqual(report["unexpected_mismatch_count"], 0)
+        self.assertEqual(
+            report["unexpected_mismatch_count"],
+            0,
+            json.dumps(report, ensure_ascii=False, indent=2),
+        )
         by_id = {case["case_id"]: case for case in report["cases"]}
         for case_id in REQUIRED_CASE_IDS - {"time_profile_equivalent", "time_profile_hour_conflict"}:
             self.assertIn(case_id, by_id)
