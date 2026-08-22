@@ -1,15 +1,47 @@
 {
   "schema_version": "1.0",
-  "classification": "public_bazi_natal_qualification",
+  "classification": "public_bazi_natal_qualification_summary",
   "reference_engine": "lunar-python",
   "reference_version": "1.4.8",
   "reference_source_revision": "000c8a3",
   "project_profile": "bazi-natal-project-v1",
   "project_rule_version": "1.0-exp",
-  "status": "PENDING_EXECUTION",
-  "case_count": 0,
-  "matched_field_count": 0,
-  "profile_difference_count": 0,
+  "status": "PASS",
+  "case_count": 13,
+  "matched_field_count": 54,
+  "profile_difference_count": 23,
   "unexpected_mismatch_count": 0,
-  "cases": []
+  "hidden_stem_table": {
+    "matched_branch_count": 11,
+    "profile_difference_count": 1,
+    "unexpected_mismatch_count": 0
+  },
+  "case_ids": [
+    "normal_daytime",
+    "late_zi_2259",
+    "late_zi_2300",
+    "late_zi_2359",
+    "midnight_0000",
+    "before_lichun",
+    "after_lichun",
+    "before_jingzhe",
+    "after_jingzhe",
+    "male_direction",
+    "female_direction",
+    "time_profile_equivalent",
+    "time_profile_hour_conflict"
+  ],
+  "known_profile_differences": [
+    "ten_gods.presentation_and_day_master_label",
+    "decadal_start_age.interval_quantization",
+    "hidden_stems.si_order"
+  ],
+  "live_report_sha256": "d86fdaf9206fc6049736756890ba4134c9c5bdf773c0c5ce224a0a748c0240d0",
+  "evidence_artifact": {
+    "workflow_run_id": 32544637162,
+    "artifact_id": 9468108253,
+    "artifact_name": "bazi-natal-public-qualification",
+    "artifact_digest": "sha256:b20c146f9ddd971df6ac5ed781b7bb601c571db2477611afae8b5c46222b37b7",
+    "head_sha": "26ad845df3be121999d1977036789ac3109eb867"
+  }
 }
