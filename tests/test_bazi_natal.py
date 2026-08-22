@@ -1,8 +1,8 @@
 import unittest
 from dataclasses import replace
 
-from engine.bazi.calendar import bazi_pillars
-from engine.bazi.natal import BaziNatalError, build_bazi_natal
+from engine.bazi.calendar import bazi_pillars, ten_god
+from engine.bazi.natal import BaziNatalError, build_bazi_natal, hidden_stems
 from engine.bazi.natal_models import BaziNatalProfile
 from engine.birth.models import ResolvedBirthPlace, Sex
 from engine.birth.time_views import build_birth_time_views
@@ -43,6 +43,46 @@ class BaziNatalBuilderTests(unittest.TestCase):
             self.assertEqual(chart.day_master, chart.pillars[2].stem)
             self.assertEqual(chart.effective_datetime, views.normalized_civil.local_datetime)
             self.assertEqual(chart.provenance["classification"], "Project 原生盤面")
+
+    def test_all_twelve_hidden_stem_tables_are_exact_and_ordered(self):
+        expected = {
+            "子": ("癸",),
+            "丑": ("己", "癸", "辛"),
+            "寅": ("甲", "丙", "戊"),
+            "卯": ("乙",),
+            "辰": ("戊", "乙", "癸"),
+            "巳": ("丙", "戊", "庚"),
+            "午": ("丁", "己"),
+            "未": ("己", "丁", "乙"),
+            "申": ("庚", "壬", "戊"),
+            "酉": ("辛",),
+            "戌": ("戊", "辛", "丁"),
+            "亥": ("壬", "甲"),
+        }
+        self.assertEqual({branch: hidden_stems(branch) for branch in expected}, expected)
+
+    def test_pillar_details_ten_gods_and_visible_element_counts_are_raw_facts(self):
+        context, views = context_and_views("1984-03-13T19:20:00")
+        chart = build_bazi_natal(context, views, Sex.MALE)
+        self.assertEqual(len(chart.pillar_details), 4)
+        for detail in chart.pillar_details:
+            self.assertEqual(detail.stem_ten_god, ten_god(chart.day_master, detail.pillar.stem))
+            self.assertEqual(
+                tuple(hidden.stem for hidden in detail.hidden_stems),
+                hidden_stems(detail.pillar.branch),
+            )
+            self.assertEqual(
+                detail.hidden_ten_gods,
+                tuple(ten_god(chart.day_master, hidden.stem) for hidden in detail.hidden_stems),
+            )
+            self.assertEqual(
+                tuple(hidden.weight_rank for hidden in detail.hidden_stems),
+                tuple(range(1, len(detail.hidden_stems) + 1)),
+            )
+        self.assertEqual(set(chart.element_counts), {"木", "火", "土", "金", "水"})
+        self.assertEqual(sum(chart.element_counts.values()), 8)
+        self.assertEqual(chart.provenance["element_count_basis"], "visible_stems_plus_branch_primary_elements")
+        self.assertNotIn("strength", chart.provenance)
 
     def test_unsupported_time_profile_fails_closed(self):
         context, views = context_and_views("1984-03-13T19:20:00")
