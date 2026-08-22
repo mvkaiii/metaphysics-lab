@@ -27,6 +27,8 @@ class ZiweiNatalModelTests(unittest.TestCase):
         self.assertEqual(profile.star_catalog, "ziwei-core-stars-v1")
         self.assertEqual(profile.brightness_profile, "ziwei-brightness-common-v1")
         self.assertEqual(profile.decadal_profile, "ziwei-decadal-common-v1")
+        self.assertEqual(profile.leap_month_policy, "iztro-fix-leap-15-16-v1")
+        self.assertEqual(profile.late_zi_day_policy, "iztro-forward-v1")
         with self.assertRaises(FrozenInstanceError):
             profile.rule_version = "changed"
 
