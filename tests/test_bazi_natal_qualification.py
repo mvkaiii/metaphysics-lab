@@ -111,15 +111,32 @@ class BaziNatalQualificationTests(unittest.TestCase):
         self.assertEqual(report["profile_difference_count"], 1)
         self.assertEqual(report["unexpected_mismatch_count"], 1)
 
-    def test_committed_public_and_private_evidence_are_privacy_safe(self):
-        for path in (PUBLIC_REPORT, PRIVATE_SUMMARY):
-            payload = json.loads(path.read_text(encoding="utf-8"))
-            self.assertTrue(FORBIDDEN_KEYS.isdisjoint(set(walk_keys(payload))))
+    def test_committed_public_summary_is_complete_and_privacy_safe(self):
         public = json.loads(PUBLIC_REPORT.read_text(encoding="utf-8"))
-        private = json.loads(PRIVATE_SUMMARY.read_text(encoding="utf-8"))
+        self.assertEqual(public["classification"], "public_bazi_natal_qualification_summary")
+        self.assertEqual(public["reference_engine"], "lunar-python")
         self.assertEqual(public["reference_version"], "1.4.8")
+        self.assertEqual(public["project_profile"], "bazi-natal-project-v1")
+        self.assertEqual(public["project_rule_version"], "1.0-exp")
+        self.assertEqual(public["status"], "PASS")
+        self.assertEqual(public["case_count"], 13)
+        self.assertEqual(public["matched_field_count"], 54)
+        self.assertEqual(public["profile_difference_count"], 23)
+        self.assertEqual(public["unexpected_mismatch_count"], 0)
+        self.assertEqual(set(public["case_ids"]), REQUIRED_CASE_IDS)
+        self.assertEqual(public["hidden_stem_table"]["matched_branch_count"], 11)
+        self.assertEqual(public["hidden_stem_table"]["profile_difference_count"], 1)
+        self.assertEqual(public["hidden_stem_table"]["unexpected_mismatch_count"], 0)
+        digest = public["live_report_sha256"]
+        self.assertEqual(len(digest), 64)
+        self.assertTrue(all(char in "0123456789abcdef" for char in digest))
+        self.assertTrue(FORBIDDEN_KEYS.isdisjoint(set(walk_keys(public))))
+
+    def test_private_evidence_remains_pending_without_private_source_and_is_privacy_safe(self):
+        private = json.loads(PRIVATE_SUMMARY.read_text(encoding="utf-8"))
         self.assertEqual(private["classification"], "private_bazi_natal_qualification_summary")
-        self.assertIn(private["status"], ("PENDING", "PASS", "FAIL"))
+        self.assertEqual(private["status"], "PENDING")
+        self.assertTrue(FORBIDDEN_KEYS.isdisjoint(set(walk_keys(private))))
 
 
 if __name__ == "__main__":
