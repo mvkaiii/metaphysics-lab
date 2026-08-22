@@ -1,6 +1,8 @@
 from pathlib import Path
 import unittest
 
+from engine.distribution.runtime import dispatch
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -27,17 +29,32 @@ class ZiweiPhase2CDocsTests(unittest.TestCase):
             self.assertIn(needle, text)
         self.assertIn("不得重新推", text)
 
-    def test_core_prompt_requires_precision_and_resolved_source(self):
+    def test_core_prompt_requires_precision_resolved_source_and_runtime_manifest(self):
         text = _read("core/核心提示詞.md")
         for needle in (
-            "Phase 2C Ziwei Flowing Stars",
-            "ziwei-flowing-stars-common-v1",
-            "implemented / experimental / on_demand",
+            "Precision must be earned by input",
+            "External / Project / Resolved",
             "Project 推導盤面",
-            "輸入精度",
-            "已解析來源",
+            "runtime_info",
+            "runtime manifest",
         ):
             self.assertIn(needle, text)
+        self.assertNotIn("Phase 2C Ziwei Flowing Stars", text)
+        self.assertNotIn("ziwei-flowing-stars-common-v1", text)
+        self.assertNotIn("600 source cases", text)
+
+    def test_runtime_locks_flowing_star_capability_maturity_and_scope(self):
+        result = dispatch("runtime_info", {})
+        self.assertTrue(result["ok"], result)
+        cap = result["data"]["capabilities"]["ziwei.flowing_stars"]
+        self.assertEqual(cap["implementation"], "implemented")
+        self.assertEqual(cap["maturity"], "experimental")
+        self.assertEqual(cap["routing"], "on_demand")
+        self.assertEqual(cap["rule_version"], "1.0-exp")
+        self.assertEqual(cap["module"], "engine.ziwei.flowing_stars")
+        self.assertEqual(cap["conditional_dependencies"]["monthly"], ["ziwei.flow_month_stem"])
+        self.assertEqual(cap["conditional_dependencies"]["daily"], ["ziwei.flow_day_stem"])
+        self.assertEqual(cap["conditional_dependencies"]["hourly"], ["ziwei.flow_hour_stem"])
 
     def test_architecture_keeps_flowing_stars_independent(self):
         text = _read("docs/架構說明.md")
@@ -50,19 +67,18 @@ class ZiweiPhase2CDocsTests(unittest.TestCase):
         ):
             self.assertIn(needle, text)
 
-    def test_readme_locks_capability_maturity_privacy_and_scope(self):
+    def test_readme_delegates_dynamic_phase2c_state_and_keeps_privacy_boundary(self):
         text = _read("README.md")
         for needle in (
-            "Phase 2C Ziwei Flowing Stars",
-            "ziwei.flowing_stars",
-            "implemented / experimental / on_demand",
+            "runtime_info",
             "Project 推導盤面",
-            "Astralium flowing-stars",
-            "PENDING",
-            "歲前十二神",
-            "將前十二神",
+            "CHANGELOG.md",
+            "私人 Astralium raw chart",
         ):
             self.assertIn(needle, text)
+        self.assertNotIn("Phase 2C Ziwei Flowing Stars", text)
+        self.assertNotIn("ziwei-flowing-stars-common-v1", text)
+        self.assertNotIn("600/600", text)
 
     def test_changelog_records_unreleased_phase2c_without_promotion(self):
         text = _read("CHANGELOG.md")
@@ -77,11 +93,13 @@ class ZiweiPhase2CDocsTests(unittest.TestCase):
             "將前十二神",
         ):
             self.assertIn(needle, text)
+        self.assertNotIn("ziwei.flowing_stars = implemented / stable", text)
 
     def test_release_identity_remains_v120(self):
         text = _read("VERSION.md")
         self.assertIn("Metaphysics Lab Core：**v1.2.0**", text)
         self.assertNotIn("Phase 2C Ziwei Flowing Stars", text)
+        self.assertNotIn("AI Distribution Pack", text)
 
 
 if __name__ == "__main__":

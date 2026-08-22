@@ -1,0 +1,81 @@
+import re
+import unittest
+from pathlib import Path
+
+from engine.distribution.runtime import dispatch
+from tools import build_ai_distribution
+
+
+ROOT = Path(__file__).resolve().parents[1]
+DIST = ROOT / "dist" / "ai"
+EXPECTED_ARTIFACTS = {
+    "metaphysics_lab.py",
+    "METAPHYSICS_CORE.md",
+    "PROJECT_INSTRUCTIONS.md",
+}
+
+
+class AIDistributionAcceptanceTests(unittest.TestCase):
+    def test_distribution_has_exactly_three_public_artifacts(self):
+        files = {path.name for path in DIST.iterdir() if path.is_file()}
+        self.assertEqual(files, EXPECTED_ARTIFACTS)
+        self.assertFalse(any(path.suffix.lower() in {".pdf", ".png", ".jpg", ".jpeg", ".webp"} for path in DIST.iterdir()))
+
+    def test_committed_artifacts_equal_deterministic_rebuild(self):
+        expected = build_ai_distribution.render_distribution(ROOT)
+        self.assertEqual(set(expected), EXPECTED_ARTIFACTS)
+        for name, content in expected.items():
+            self.assertEqual((DIST / name).read_bytes(), content, name)
+
+    def test_generated_bundle_has_contract_versions_and_source_digest(self):
+        text = (DIST / "metaphysics_lab.py").read_text(encoding="utf-8")
+        self.assertIn("GENERATED FILE - DO NOT EDIT", text)
+        self.assertRegex(text, r'SOURCE_DIGEST = [\'\"][0-9a-f]{64}[\'\"]')
+        self.assertIn('PROJECT_CONTRACT_VERSION = "1.0"', text.replace("'", '"'))
+        self.assertIn('RUNTIME_SCHEMA_VERSION = "1.0"', text.replace("'", '"'))
+        self.assertIn('CASE_SCHEMA_VERSION = "1.0"', text.replace("'", '"'))
+        self.assertIn('DISTRIBUTION_RUNTIME_VERSION = "1.0-exp"', text.replace("'", '"'))
+        self.assertNotIn("tests/", text)
+        self.assertNotIn("qualification/", text)
+        self.assertNotIn("/mnt/data/", text)
+
+    def test_fixed_markdown_has_no_dynamic_capability_snapshot(self):
+        fixed = (
+            (DIST / "METAPHYSICS_CORE.md").read_text(encoding="utf-8")
+            + (DIST / "PROJECT_INSTRUCTIONS.md").read_text(encoding="utf-8")
+        )
+        for forbidden in (
+            "600/600",
+            "814b77e6",
+            "ziwei.flowing_stars =",
+            "Phase 2C Ziwei Flowing Stars",
+        ):
+            self.assertNotIn(forbidden, fixed)
+        self.assertIn("runtime_info", fixed)
+
+    def test_runtime_capabilities_remain_unpromoted(self):
+        result = dispatch("runtime_info", {})
+        self.assertTrue(result["ok"], result)
+        caps = result["data"]["capabilities"]
+        self.assertEqual(caps["ziwei.flowing_stars"]["maturity"], "experimental")
+        self.assertEqual(caps["ziwei.flowing_stars"]["routing"], "on_demand")
+        self.assertEqual(caps["bazi.natal_chart"]["maturity"], "experimental")
+        self.assertEqual(caps["ziwei.natal_chart"]["maturity"], "experimental")
+
+    def test_formal_release_identity_is_still_v1_2_0(self):
+        text = (ROOT / "VERSION.md").read_text(encoding="utf-8")
+        self.assertIn("Metaphysics Lab Core：**v1.2.0**", text)
+        self.assertIn("發布日期：**2026-08-21**", text)
+        self.assertNotIn("AI Distribution Pack", text)
+        self.assertNotRegex(text, r"最新正式發布[\s\S]{0,100}v1\.3\.0")
+
+    def test_distribution_contains_no_private_case_payload_files(self):
+        self.assertEqual({path.name for path in DIST.iterdir()}, EXPECTED_ARTIFACTS)
+        bundle = (DIST / "metaphysics_lab.py").read_text(encoding="utf-8")
+        self.assertNotIn("raw Astralium chart payload", bundle)
+        self.assertNotIn("private qualification evidence payload", bundle)
+        self.assertNotIn("免費八字命盤_Kai.pdf", bundle)
+
+
+if __name__ == "__main__":
+    unittest.main()
