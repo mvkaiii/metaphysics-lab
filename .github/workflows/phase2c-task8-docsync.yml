@@ -1,0 +1,101 @@
+name: Phase 2C Task 8 Docs Sync
+
+on:
+  pull_request:
+    branches:
+      - feature/ziwei-flowing-stars-v1
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout formal feature tree
+        uses: actions/checkout@v4
+        with:
+          ref: feature/ziwei-flowing-stars-v1
+          fetch-depth: 0
+      - name: Apply approved Task 8 documentation patch
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def read(path):
+              return Path(path).read_text(encoding='utf-8')
+
+          def write(path, text):
+              Path(path).write_text(text, encoding='utf-8')
+
+          rules_path = 'core/命理推導計算規則.md'
+          rules = read(rules_path)
+          if 'Phase 2C Ziwei Flowing Stars' not in rules:
+              rules += '''\n\n---\n\n# 九、Phase 2C Ziwei Flowing Stars\n\n正式 capability：\n\n```text\nziwei.flowing_stars = implemented / experimental / on_demand / 1.0-exp\nprofile = ziwei-flowing-stars-common-v1\nclassification = Project 推導盤面\n```\n\nCanonical location 只使用地支 `target_branch`；宮名只在 materialized view 出現。`FlowingStarLayer` 與既有 `CycleTransformationLayer` 分離。\n\n五種 scope source adapter 固定為：\n\n- `decadal`：直接使用 `ZiweiDecadalPeriod.stem_branch`，不得重新推大限干支。\n- `yearly`：使用 lunar-year neutral stem/branch，不套八字立春年界。\n- `monthly`：直接重用 Phase 2B `ResolvedCycleStem`，不得重新推流月干支或 boundary policy。\n- `daily`：直接重用 Phase 2B `ResolvedCycleStem`，不得重新推流日干支或 boundary policy。\n- `hourly`：直接重用 Phase 2B `ResolvedCycleStem`，不得重新推流時干支或 boundary policy。\n\n核心星曜固定為天魁、天鉞、文昌、文曲、祿存、擎羊、陀羅、天馬、紅鸞、天喜；`yearly` 另加年解。non-yearly 固定10顆，yearly 固定11顆。\n\nPhase 2C v1 不包含歲前十二神、將前十二神、博士十二神、長生十二神、小限流曜、流曜亮度、scoring 或 AI interpretation。\n\nPublic qualification 使用 pinned `SylarLong/iztro 2.6.0` revision `814b77e6371e1050cac31bbf674db3c3138fcfde`，600 source cases／6120 placements／0 unexpected mismatch。Astralium flowing-stars private qualification 維持 `PENDING`，不得拿 Natal private PASS 代替。\n'''
+          write(rules_path, rules)
+
+          prompt_path = 'core/核心提示詞.md'
+          prompt = read(prompt_path)
+          prompt = prompt.replace(
+              '`ziwei.flowing_stars` 仍為 planned / on_demand，不得自行宣稱已實作。',
+              '`ziwei.flowing_stars` 已為 implemented / experimental / on_demand；不得自行升 Stable 或改為 default。',
+          )
+          prompt = prompt.replace(
+              '- 把 `ziwei.flowing_stars` 說成已實作',
+              '- 把 `ziwei.flowing_stars` 說成 Stable／default，或超出已正式支援的 Phase 2C scope',
+          )
+          if 'Phase 2C Ziwei Flowing Stars' not in prompt:
+              marker = '\n---\n\n# 八、奇門遁甲\n'
+              section = '''\n---\n\n# 七之一、Phase 2C Ziwei Flowing Stars\n\n`ziwei.flowing_stars` = implemented / experimental / on_demand / 1.0-exp，profile `ziwei-flowing-stars-common-v1`，輸出分類為 **Project 推導盤面**。\n\n只有在輸入精度足夠，而且對應 scope 已有**已解析來源**時才可呼叫流曜；不得為了得到流曜自行補日期、干支、boundary policy 或大限干支。月／日／時只重用 Phase 2B resolved source，大限只重用既有 decadal stem_branch，流年使用 lunar-year neutral source。\n\n流曜只作 Experimental 輔助證據，不得單獨支撐高度確信。核心範圍只含天魁、天鉞、文昌、文曲、祿存、擎羊、陀羅、天馬、紅鸞、天喜，流年另加年解；不得自行擴充歲前十二神、將前十二神、博士十二神、長生十二神、小限流曜、亮度、scoring 或 AI interpretation。\n\nAstralium flowing-stars private qualification 目前為 `PENDING`。\n'''
+              if marker in prompt:
+                  prompt = prompt.replace(marker, section + marker, 1)
+              else:
+                  prompt += section
+          write(prompt_path, prompt)
+
+          arch_path = 'docs/架構說明.md'
+          arch = read(arch_path)
+          if 'Phase 2C Ziwei Flowing Stars' not in arch:
+              arch += '''\n\n---\n\n# 十一、Phase 2C Ziwei Flowing Stars\n\nPhase 2C 採 **Pure Placement Core + Scope Source Adapters + Independent FlowingStarLayer + Optional Materialized View**。profile 固定 `ziwei-flowing-stars-common-v1`。\n\n```text\nResolved scope source\n  │\n  ├─ decadal  <- ZiweiDecadalPeriod.stem_branch\n  ├─ yearly   <- lunar-year neutral stem/branch\n  └─ monthly / daily / hourly <- Phase 2B ResolvedCycleStem\n  │\nPure placement core\n  │\nFlowingStarLayer --------------------┐\n                                     ├─ dynamic join / view\nCycleTransformationLayer ------------┘\n```\n\n`FlowingStarLayer` 與 Stable `CycleTransformationLayer`／Flying Core 語意分離，不修改 `engine/ziwei/transformations.py`、`engine/ziwei/flying.py` 或既有 layer semantics。兩個動態 layer 的 join key 固定為：\n\n```text\nchart_id + scope + reference\n```\n\n`rule_profile` 不要求相同。Canonical flowing-star location 只保存 Earthly Branch；宮名只在 materialized view 解析。輸出 classification 為 `Project 推導盤面`，maturity 固定 Experimental。\n\nPublic iztro qualification 已達600/600 source cases、6120 placements、0 unexpected mismatch；Astralium flowing-stars private qualification 仍為 `PENDING`。\n'''
+          write(arch_path, arch)
+
+          readme_path = 'README.md'
+          readme = read(readme_path)
+          readme = readme.replace(
+              '目前工作樹另包含 **Unreleased Phase 2B** 與 **Unreleased Phase 2C0｜Natal Chart Foundation**；這些 Unreleased 能力不改寫 `VERSION.md` 的正式 release identity。',
+              '目前工作樹另包含 **Unreleased Phase 2B**、**Unreleased Phase 2C0｜Natal Chart Foundation** 與 **Unreleased Phase 2C Ziwei Flowing Stars**；這些 Unreleased 能力不改寫 `VERSION.md` 的正式 release identity。',
+          )
+          readme = readme.replace('### Phase 2C0 capability matrix', '### Phase 2C0 capability matrix（歷史快照）')
+          readme = readme.replace(
+              '`ziwei.flowing_stars`／紫微流曜仍 planned / on_demand；Phase 2C0 不包含 moving stars。',
+              '在 Phase 2B／Phase 2C0 歷史快照中，`ziwei.flowing_stars` 仍為 planned / on_demand；目前狀態請以 Phase 2C 區段為準。',
+          )
+          if '## Unreleased Phase 2C Ziwei Flowing Stars' not in readme:
+              marker = '\n---\n\n## Unreleased Phase 2C0｜Natal Chart Foundation\n'
+              section = '''\n---\n\n## Unreleased Phase 2C Ziwei Flowing Stars\n\nPhase 2C Ziwei Flowing Stars capability：\n\n```text\nziwei.flowing_stars = implemented / experimental / on_demand / 1.0-exp\nprofile = ziwei-flowing-stars-common-v1\nclassification = Project 推導盤面\n```\n\n支援 `decadal / yearly / monthly / daily / hourly` 五種 scope。核心流曜固定10顆：天魁、天鉞、文昌、文曲、祿存、擎羊、陀羅、天馬、紅鸞、天喜；`yearly` 額外加入年解。\n\n月／日／時重用 Phase 2B resolved source；大限直接重用既有 `ZiweiDecadalPeriod.stem_branch`；流年使用 lunar-year neutral source。不得重算上游干支或套另一套 boundary policy。\n\nPublic qualification：pinned iztro 2.6.0 revision `814b77e6371e1050cac31bbf674db3c3138fcfde`，600/600 source cases、6120 placements、0 unexpected mismatch。Astralium flowing-stars private qualification = **PENDING**。\n\n本階段不包含歲前十二神、將前十二神、博士十二神、長生十二神、小限流曜、流曜亮度、scoring 或 AI interpretation，也不升 Stable。\n'''
+              if marker in readme:
+                  readme = readme.replace(marker, section + marker, 1)
+              else:
+                  readme += section
+          write(readme_path, readme)
+
+          changelog_path = 'CHANGELOG.md'
+          changelog = read(changelog_path)
+          if '## Unreleased｜Phase 2C Ziwei Flowing Stars' not in changelog:
+              section = '''## Unreleased｜Phase 2C Ziwei Flowing Stars\n\n- 新增 `ziwei.flowing_stars` = implemented / experimental / on_demand / 1.0-exp；profile `ziwei-flowing-stars-common-v1`。\n- 流曜屬 `Project 推導盤面`，canonical location 固定為 Earthly Branch。\n- 支援 decadal／yearly／monthly／daily／hourly 五種 scope；月日時重用 Phase 2B `ResolvedCycleStem`，大限重用 `ZiweiDecadalPeriod.stem_branch`，流年採 lunar-year neutral source，不重算上游 boundary policy。\n- 核心10顆為天魁、天鉞、文昌、文曲、祿存、擎羊、陀羅、天馬、紅鸞、天喜；yearly 額外加入年解。\n- `FlowingStarLayer` 與 Stable transformation/flying layer 分離，join key 為 `chart_id + scope + reference`。\n- pinned iztro 2.6.0 revision `814b77e6371e1050cac31bbf674db3c3138fcfde` qualification：600/600 source cases、6120 placements、0 unexpected mismatch。\n- Astralium flowing-stars private qualification 維持 `PENDING`；沒有沿用 Natal private PASS，沒有 promotion。\n- 明確排除歲前十二神、將前十二神、博士十二神、長生十二神、小限流曜、流曜亮度、scoring、AI interpretation。\n- 本段為 Unreleased；`VERSION.md`、Git tag、GitHub Release 與 v1.2.0 release identity 不變。\n\n'''
+              changelog = changelog.replace('# 變更紀錄\n\n', '# 變更紀錄\n\n' + section, 1)
+          write(changelog_path, changelog)
+          PY
+      - name: Verify Task 8 docs contract before commit
+        run: python -m unittest tests.test_ziwei_phase2c_docs -v
+      - name: Commit docs to formal feature branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add core/命理推導計算規則.md core/核心提示詞.md docs/架構說明.md README.md CHANGELOG.md
+          if git diff --cached --quiet; then
+            echo 'Docs unchanged'
+          else
+            git commit -m 'docs: document Phase 2C flowing stars'
+            git push origin HEAD:feature/ziwei-flowing-stars-v1
+          fi
