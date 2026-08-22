@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0",
+  "classification": "public_ziwei_natal_aux_star_vectors",
+  "oracle": {
+    "engine": "iztro",
+    "version": "2.6.0",
+    "revision": "814b77e6371e1050cac31bbf674db3c3138fcfde",
+    "rule_contract_sha256": "8f1c5f8434366ce87858959d6287e3184e6e37ac86caa89233cb1d2771c9abc3",
+    "sources": [
+      "src/star/location.ts:getZuoYouIndex,getChangQuIndex,getKuiYueIndex,getLuYangTuoMaIndex,getHuoLingIndex",
+      "src/star/minorStar.ts:getMinorStar"
+    ]
+  },
+  "palace_index_order": "寅卯辰巳午未申酉戌亥子丑",
+  "hour_branch_order": "子丑寅卯辰巳午未申酉戌亥",
+  "coverage": {
+    "lunar_months": 12,
+    "hour_branches": 12,
+    "year_stems": 10,
+    "year_branches": 12,
+    "fire_bell_year_branch_hour_cases": 144
+  },
+  "left_right": [
+    {"month":1,"left":"辰","right":"戌"},{"month":2,"left":"巳","right":"酉"},{"month":3,"left":"午","right":"申"},{"month":4,"left":"未","right":"未"},{"month":5,"left":"申","right":"午"},{"month":6,"left":"酉","right":"巳"},{"month":7,"left":"戌","right":"辰"},{"month":8,"left":"亥","right":"卯"},{"month":9,"left":"子","right":"寅"},{"month":10,"left":"丑","right":"丑"},{"month":11,"left":"寅","right":"子"},{"month":12,"left":"卯","right":"亥"}
+  ],
+  "chang_qu": [
+    {"hour":"子","chang":"戌","qu":"辰"},{"hour":"丑","chang":"酉","qu":"巳"},{"hour":"寅","chang":"申","qu":"午"},{"hour":"卯","chang":"未","qu":"未"},{"hour":"辰","chang":"午","qu":"申"},{"hour":"巳","chang":"巳","qu":"酉"},{"hour":"午","chang":"辰","qu":"戌"},{"hour":"未","chang":"卯","qu":"亥"},{"hour":"申","chang":"寅","qu":"子"},{"hour":"酉","chang":"丑","qu":"丑"},{"hour":"戌","chang":"子","qu":"寅"},{"hour":"亥","chang":"亥","qu":"卯"}
+  ],
+  "kui_yue": [
+    {"stem":"甲","kui":"丑","yue":"未"},{"stem":"乙","kui":"子","yue":"申"},{"stem":"丙","kui":"亥","yue":"酉"},{"stem":"丁","kui":"亥","yue":"酉"},{"stem":"戊","kui":"丑","yue":"未"},{"stem":"己","kui":"子","yue":"申"},{"stem":"庚","kui":"丑","yue":"未"},{"stem":"辛","kui":"午","yue":"寅"},{"stem":"壬","kui":"卯","yue":"巳"},{"stem":"癸","kui":"卯","yue":"巳"}
+  ],
+  "lu_yang_tuo": [
+    {"stem":"甲","lu":"寅","yang":"卯","tuo":"丑"},{"stem":"乙","lu":"卯","yang":"辰","tuo":"寅"},{"stem":"丙","lu":"巳","yang":"午","tuo":"辰"},{"stem":"丁","lu":"午","yang":"未","tuo":"巳"},{"stem":"戊","lu":"巳","yang":"午","tuo":"辰"},{"stem":"己","lu":"午","yang":"未","tuo":"巳"},{"stem":"庚","lu":"申","yang":"酉","tuo":"未"},{"stem":"辛","lu":"酉","yang":"戌","tuo":"申"},{"stem":"壬","lu":"亥","yang":"子","tuo":"戌"},{"stem":"癸","lu":"子","yang":"丑","tuo":"亥"}
+  ],
+  "tianma": [
+    {"branch":"子","ma":"寅"},{"branch":"丑","ma":"亥"},{"branch":"寅","ma":"申"},{"branch":"卯","ma":"巳"},{"branch":"辰","ma":"寅"},{"branch":"巳","ma":"亥"},{"branch":"午","ma":"申"},{"branch":"未","ma":"巳"},{"branch":"申","ma":"寅"},{"branch":"酉","ma":"亥"},{"branch":"戌","ma":"申"},{"branch":"亥","ma":"巳"}
+  ],
+  "fire_bell": [
+    {"year_branch":"子","fire":"寅卯辰巳午未申酉戌亥子丑","bell":"戌亥子丑寅卯辰巳午未申酉"},
+    {"year_branch":"丑","fire":"卯辰巳午未申酉戌亥子丑寅","bell":"戌亥子丑寅卯辰巳午未申酉"},
+    {"year_branch":"寅","fire":"丑寅卯辰巳午未申酉戌亥子","bell":"卯辰巳午未申酉戌亥子丑寅"},
+    {"year_branch":"卯","fire":"酉戌亥子丑寅卯辰巳午未申","bell":"戌亥子丑寅卯辰巳午未申酉"},
+    {"year_branch":"辰","fire":"寅卯辰巳午未申酉戌亥子丑","bell":"戌亥子丑寅卯辰巳午未申酉"},
+    {"year_branch":"巳","fire":"卯辰巳午未申酉戌亥子丑寅","bell":"戌亥子丑寅卯辰巳午未申酉"},
+    {"year_branch":"午","fire":"丑寅卯辰巳午未申酉戌亥子","bell":"卯辰巳午未申酉戌亥子丑寅"},
+    {"year_branch":"未","fire":"酉戌亥子丑寅卯辰巳午未申","bell":"戌亥子丑寅卯辰巳午未申酉"},
+    {"year_branch":"申","fire":"寅卯辰巳午未申酉戌亥子丑","bell":"戌亥子丑寅卯辰巳午未申酉"},
+    {"year_branch":"酉","fire":"卯辰巳午未申酉戌亥子丑寅","bell":"戌亥子丑寅卯辰巳午未申酉"},
+    {"year_branch":"戌","fire":"丑寅卯辰巳午未申酉戌亥子","bell":"卯辰巳午未申酉戌亥子丑寅"},
+    {"year_branch":"亥","fire":"酉戌亥子丑寅卯辰巳午未申","bell":"戌亥子丑寅卯辰巳午未申酉"}
+  ]
+}
