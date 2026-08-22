@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from engine.bazi.calendar import GAN, ZHI
 
@@ -12,7 +12,7 @@ from .models import ExternalNatalView, NatalSource
 _PILLAR_NAMES = ("year", "month", "day", "hour")
 
 
-def _schema_error(message: str, details: Dict[str, Any] | None = None) -> NatalFoundationError:
+def _schema_error(message: str, details: Optional[Dict[str, Any]] = None) -> NatalFoundationError:
     return NatalFoundationError("invalid_natal_schema", message, details or {})
 
 
