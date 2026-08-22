@@ -32,7 +32,7 @@ REQUIRED_FIELDS = {
     "decadal_start_age",
     "decadal_pillar_sequence",
 }
-ALLOWED_FIELD_STATUSES = {"MATCH", "CONFLICT/profile_difference"}
+ALLOWED_FIELD_STATUSES = {"MATCH", "CONFLICT/profile_difference", "MISMATCH"}
 
 
 def walk_keys(value):
@@ -55,6 +55,7 @@ class BaziNatalQualificationTests(unittest.TestCase):
         self.assertEqual(report["reference_version"], "1.4.8")
         self.assertEqual(report["project_profile"], "bazi-natal-project-v1")
         self.assertEqual(report["project_rule_version"], "1.0-exp")
+        self.assertEqual(report["unexpected_mismatch_count"], 0)
         by_id = {case["case_id"]: case for case in report["cases"]}
         for case_id in REQUIRED_CASE_IDS - {"time_profile_equivalent", "time_profile_hour_conflict"}:
             self.assertIn(case_id, by_id)
@@ -80,13 +81,14 @@ class BaziNatalQualificationTests(unittest.TestCase):
                     "fields": {
                         "four_pillars": {"status": "MATCH"},
                         "decadal_start_age": {"status": "CONFLICT/profile_difference"},
+                        "hidden_stems": {"status": "MISMATCH"},
                     },
                 }
             ]
         )
         self.assertEqual(report["matched_field_count"], 1)
         self.assertEqual(report["profile_difference_count"], 1)
-        self.assertEqual(report["unexpected_mismatch_count"], 0)
+        self.assertEqual(report["unexpected_mismatch_count"], 1)
 
     def test_committed_public_and_private_evidence_are_privacy_safe(self):
         for path in (PUBLIC_REPORT, PRIVATE_SUMMARY):
