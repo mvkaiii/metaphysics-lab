@@ -7,4 +7,6 @@ DISTRIBUTION_RUNTIME_VERSION = "1.0-exp"
 
 SUPPORTED_ACTIONS = (
     "runtime_info",
+    "build_natal",
+    "reconcile_natal",
 )
