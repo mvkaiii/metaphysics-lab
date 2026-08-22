@@ -2,7 +2,12 @@ import json
 import unittest
 from pathlib import Path
 
-from tools.qualify_bazi_natal import PUBLIC_CASE_IDS, build_public_report, qualify_public_cases
+from tools.qualify_bazi_natal import (
+    PUBLIC_CASE_IDS,
+    build_public_report,
+    hidden_stem_table_qualification,
+    qualify_public_cases,
+)
 
 
 PUBLIC_REPORT = Path("qualification/bazi/natal/public-lunar-python-1.4.8.json")
@@ -48,6 +53,18 @@ def walk_keys(value):
 class BaziNatalQualificationTests(unittest.TestCase):
     def test_public_matrix_covers_required_boundaries_and_profiles(self):
         self.assertTrue(REQUIRED_CASE_IDS.issubset(set(PUBLIC_CASE_IDS)))
+
+    def test_hidden_stem_reference_table_has_only_one_known_order_difference(self):
+        comparison = hidden_stem_table_qualification()
+        self.assertEqual(comparison["unexpected_mismatch_count"], 0)
+        self.assertEqual(comparison["profile_difference_count"], 1)
+        by_branch = {item["branch"]: item for item in comparison["branches"]}
+        self.assertEqual(by_branch["巳"]["status"], "CONFLICT/profile_difference")
+        self.assertEqual(by_branch["巳"]["project"], ["丙", "戊", "庚"])
+        self.assertEqual(by_branch["巳"]["reference"], ["丙", "庚", "戊"])
+        for branch, item in by_branch.items():
+            if branch != "巳":
+                self.assertEqual(item["status"], "MATCH")
 
     def test_live_public_qualification_has_explicit_status_for_every_required_field(self):
         report = qualify_public_cases()
