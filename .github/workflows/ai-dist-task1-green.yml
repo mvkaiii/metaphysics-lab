@@ -1,0 +1,18 @@
+name: ai-dist-task1-green
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  green:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - name: Run Task 1 runtime-info tests
+        run: python -m unittest tests.test_distribution_runtime_info -v
+      - name: Run capability registry regressions
+        run: python -m unittest discover -s tests -p 'test_*capabilities.py' -v
