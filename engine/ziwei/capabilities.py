@@ -83,9 +83,16 @@ _CAPABILITIES = {
         "module": "engine.ziwei.fine_cycle", "dependencies": ("ziwei.flow_hour_transformations", "ziwei.flying"),
     },
     "ziwei.flowing_stars": {
-        "id": "ziwei.flowing_stars", "implementation": "planned",
-        "maturity": None, "routing": "on_demand", "rule_version": None,
-        "module": "engine.ziwei.stars", "dependencies": (),
+        "id": "ziwei.flowing_stars", "implementation": "implemented",
+        "maturity": "experimental", "routing": "on_demand", "rule_version": "1.0-exp",
+        "module": "engine.ziwei.flowing_stars", "dependencies": (),
+        "conditional_dependencies": {
+            "decadal": ("ziwei.natal_chart",),
+            "yearly": (),
+            "monthly": ("ziwei.flow_month_stem",),
+            "daily": ("ziwei.flow_day_stem",),
+            "hourly": ("ziwei.flow_hour_stem",),
+        },
     },
 }
 
