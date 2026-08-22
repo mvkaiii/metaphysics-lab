@@ -35,6 +35,15 @@ APPROVED_STARS = {
     "天喜",
     "年解",
 }
+SUMMARY_TOP_LEVEL_KEYS = {
+    "profile_id",
+    "rule_version",
+    "public_qualification",
+    "private_qualification",
+    "capability_states",
+    "release_version",
+    "approved_design_revision",
+}
 
 
 def _load(path):
@@ -54,15 +63,16 @@ def _walk(value):
 class ZiweiPhase2CAcceptanceTests(unittest.TestCase):
     def test_summary_records_public_and_private_evidence(self):
         summary = _load(SUMMARY)
+        self.assertEqual(set(summary), SUMMARY_TOP_LEVEL_KEYS)
         public = summary["public_qualification"]
         private = summary["private_qualification"]
         self.assertEqual(public["source_case_count"], 600)
         self.assertEqual(public["placement_check_count"], 6120)
         self.assertEqual(public["unexpected_mismatch_count"], 0)
         self.assertEqual(public["status"], "PASS")
-        self.assertEqual(private["source"], "Astralium flowing-stars")
         self.assertEqual(private["status"], "PENDING")
         self.assertEqual(private["case_count"], 0)
+        self.assertEqual(private["unexpected_mismatch_count"], 0)
         self.assertFalse(private["promotion_allowed"])
 
     def test_capability_states_do_not_cascade(self):
@@ -81,9 +91,14 @@ class ZiweiPhase2CAcceptanceTests(unittest.TestCase):
                 actual = (cap["implementation"], cap["maturity"], cap["routing"], cap["rule_version"])
                 self.assertEqual(actual, state)
 
+        summary_states = _load(SUMMARY)["capability_states"]
+        for capability_id, state in expected.items():
+            self.assertEqual(summary_states[capability_id], "/".join(state))
+
     def test_release_identity_is_unchanged(self):
         text = (ROOT / "VERSION.md").read_text(encoding="utf-8")
         self.assertIn("Metaphysics Lab Core：**v1.2.0**", text)
+        self.assertEqual(_load(SUMMARY)["release_version"], "v1.2.0")
 
     def test_summary_and_private_evidence_are_privacy_safe(self):
         for path in (SUMMARY, PRIVATE_SUMMARY):
