@@ -7,7 +7,7 @@ import sys
 from datetime import datetime, timedelta
 from importlib.metadata import version as package_version
 from pathlib import Path
-from typing import Iterable, Mapping, Optional, Sequence, Tuple
+from typing import Mapping, Optional, Sequence, Tuple
 from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -15,9 +15,10 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from lunar_python import Solar
+from lunar_python.util import LunarUtil
 
 from engine.bazi.calendar import solar_term_time
-from engine.bazi.natal import build_bazi_natal, compare_bazi_time_views
+from engine.bazi.natal import build_bazi_natal, compare_bazi_time_views, hidden_stems
 from engine.birth.models import ResolvedBirthPlace, Sex
 from engine.birth.time_views import BirthTimeViews, TimeView, build_birth_time_views
 from engine.calendar import resolve_calendar
@@ -31,6 +32,13 @@ PROJECT_RULE_VERSION = "1.0-exp"
 TIMEZONE_NAME = "Asia/Taipei"
 _TZ = ZoneInfo(TIMEZONE_NAME)
 _TROPICAL_YEAR_DAYS = 365.2425
+_BRANCHES = ("子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥")
+_KNOWN_HIDDEN_STEM_ORDER_DIFFERENCE = {
+    "branch": "巳",
+    "project": ["丙", "戊", "庚"],
+    "reference": ["丙", "庚", "戊"],
+    "reason": "Project v1 fixes 巳 hidden-stem rank as 丙戊庚; lunar-python 1.4.8 exposes the same stems as 丙庚戊",
+}
 
 PUBLIC_CASE_IDS = (
     "normal_daytime",
@@ -81,6 +89,75 @@ def _field(
     if reason is not None:
         result["reason"] = reason
     return result
+
+
+def _is_known_hidden_stem_order_difference(project_value: object, reference_value: object) -> bool:
+    if not isinstance(project_value, list) or not isinstance(reference_value, list):
+        return False
+    if len(project_value) != len(reference_value):
+        return False
+    saw_difference = False
+    for project_item, reference_item in zip(project_value, reference_value):
+        if project_item == reference_item:
+            continue
+        if (
+            project_item == _KNOWN_HIDDEN_STEM_ORDER_DIFFERENCE["project"]
+            and reference_item == _KNOWN_HIDDEN_STEM_ORDER_DIFFERENCE["reference"]
+        ):
+            saw_difference = True
+            continue
+        return False
+    return saw_difference
+
+
+def _hidden_stem_field(project_value: list, reference_value: list) -> dict:
+    if project_value == reference_value:
+        return _field(project_value, reference_value)
+    if _is_known_hidden_stem_order_difference(project_value, reference_value):
+        return _field(
+            project_value,
+            reference_value,
+            expected_profile_difference=True,
+            reason=_KNOWN_HIDDEN_STEM_ORDER_DIFFERENCE["reason"],
+        )
+    return _field(project_value, reference_value)
+
+
+def hidden_stem_table_qualification() -> dict:
+    branches = []
+    matched = 0
+    profile_differences = 0
+    unexpected = 0
+    for branch in _BRANCHES:
+        project_value = list(hidden_stems(branch))
+        reference_value = list(LunarUtil.ZHI_HIDE_GAN[branch])
+        if project_value == reference_value:
+            status = "MATCH"
+            matched += 1
+        elif (
+            branch == _KNOWN_HIDDEN_STEM_ORDER_DIFFERENCE["branch"]
+            and project_value == _KNOWN_HIDDEN_STEM_ORDER_DIFFERENCE["project"]
+            and reference_value == _KNOWN_HIDDEN_STEM_ORDER_DIFFERENCE["reference"]
+        ):
+            status = "CONFLICT/profile_difference"
+            profile_differences += 1
+        else:
+            status = "MISMATCH"
+            unexpected += 1
+        branches.append(
+            {
+                "branch": branch,
+                "status": status,
+                "project": project_value,
+                "reference": reference_value,
+            }
+        )
+    return {
+        "matched_branch_count": matched,
+        "profile_difference_count": profile_differences,
+        "unexpected_mismatch_count": unexpected,
+        "branches": branches,
+    }
 
 
 def _project_ten_gods(chart) -> dict:
@@ -168,6 +245,7 @@ def _qualify_reference_case(case_id: str, value: datetime, sex: Sex) -> dict:
         [hidden.stem for hidden in detail.hidden_stems]
         for detail in chart.pillar_details
     ]
+    reference_hidden = _reference_hidden_stems(eight_char)
     project_sequence = [period.pillar.text for period in chart.decadal_periods]
     reference_direction = "forward" if yun.isForward() else "reverse"
     project_start_age = float(chart.provenance["decadal_start_age_years"])
@@ -176,12 +254,12 @@ def _qualify_reference_case(case_id: str, value: datetime, sex: Sex) -> dict:
     fields = {
         "four_pillars": _field(project_pillars, reference_pillars),
         "day_master": _field(chart.day_master, eight_char.getDayGan()),
-        "hidden_stems": _field(project_hidden, _reference_hidden_stems(eight_char)),
+        "hidden_stems": _hidden_stem_field(project_hidden, reference_hidden),
         "ten_gods": _field(
             _project_ten_gods(chart),
             _reference_ten_gods(eight_char),
             expected_profile_difference=True,
-            reason="lunar-python labels the visible day stem as 日主 while Project stores its relation as 比肩",
+            reason="lunar-python labels the visible day stem as 日主 while Project stores its relation as 比肩; Traditional/Simplified Chinese labels are presentation differences",
         ),
         "decadal_direction": _field(chart.decadal_direction, reference_direction),
         "decadal_start_age": _field(
@@ -295,6 +373,7 @@ def build_public_report(cases: Sequence[Mapping[str, object]]) -> dict:
         "profile_difference_count": profile_differences,
         "unexpected_mismatch_count": unexpected,
         "status": "PASS" if unexpected == 0 else "FAIL",
+        "hidden_stem_table": hidden_stem_table_qualification(),
         "cases": list(cases),
     }
 
@@ -306,6 +385,9 @@ def qualify_public_cases() -> dict:
             "pinned lunar-python mismatch: expected %s, got %s"
             % (REFERENCE_VERSION, actual_version)
         )
+    hidden_table = hidden_stem_table_qualification()
+    if hidden_table["unexpected_mismatch_count"]:
+        raise RuntimeError("unexpected hidden-stem reference table mismatch")
     cases = [
         _qualify_reference_case(case_id, value, sex)
         for case_id, value, sex in _public_reference_vectors()
