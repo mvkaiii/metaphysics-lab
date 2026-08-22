@@ -1,0 +1,40 @@
+name: ai-dist-task5-green
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  green:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/ai-distribution-pack-v1
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - name: Install pinned runtime dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run Task 5 build tests
+        run: python -m unittest tests.test_ai_distribution_build -v
+      - name: Generate committed distribution candidates
+        run: python tools/build_ai_distribution.py
+      - name: Check deterministic build
+        run: python tools/build_ai_distribution.py --check
+      - name: Compile builder and generated runtime
+        run: python -m compileall -q tools/build_ai_distribution.py dist/ai/metaphysics_lab.py
+      - name: Commit generated artifacts to feature branch
+        run: |
+          if git diff --quiet -- dist/ai; then
+            echo 'dist/ai already current'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add dist/ai
+          git commit -m 'build: generate mobile-first AI distribution assets'
+          git push origin HEAD:feature/ai-distribution-pack-v1
