@@ -2,15 +2,16 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Mapping, Optional, Tuple
 
 from engine.birth.models import Sex
 from engine.birth.time_views import BirthTimeViews
 from engine.calendar.models import CalendarContext
 
-from .calendar import STEM_INFO, bazi_pillars, ten_god
+from .calendar import GAN, JIE, STEM_INFO, ZHI, bazi_pillars, solar_term_time, ten_god
 from .natal_models import (
+    BaziDecadalPeriod,
     BaziNatalChart,
     BaziNatalProfile,
     HiddenStem,
@@ -39,6 +40,9 @@ _BRANCH_PRIMARY_ELEMENT = {
     "申": "金", "酉": "金", "戌": "土", "亥": "水",
 }
 _COMPONENT_NAMES = ("year", "month", "day", "hour")
+_SEXAGENARY_CYCLE = tuple(GAN[index % 10] + ZHI[index % 12] for index in range(60))
+_TROPICAL_YEAR_DAYS = 365.2425
+_INTERVAL_DAYS_PER_LUCK_YEAR = 3.0
 
 
 @dataclass(frozen=True)
@@ -102,6 +106,108 @@ def compare_bazi_time_views(time_views: BirthTimeViews) -> BaziTimeComparison:
         severity="BLOCKING",
         error_code="bazi_time_profile_conflict",
     )
+
+
+def decadal_direction(year_stem: str, sex: Sex) -> str:
+    if year_stem not in STEM_INFO:
+        raise BaziNatalError(
+            "invalid_bazi_year_stem",
+            "Da Yun direction requires one of the ten heavenly stems",
+            {"year_stem": year_stem},
+        )
+    is_yang = STEM_INFO[year_stem][1]
+    if (sex == Sex.MALE and is_yang) or (sex == Sex.FEMALE and not is_yang):
+        return "forward"
+    return "reverse"
+
+
+def _require_aware_birth_datetime(value: datetime) -> None:
+    if value.tzinfo is None or value.utcoffset() is None:
+        raise BaziNatalError(
+            "naive_bazi_birth_datetime",
+            "Da Yun calculations require a timezone-aware birth datetime",
+        )
+
+
+def _decadal_jie_interval(birth_dt: datetime, direction: str) -> timedelta:
+    _require_aware_birth_datetime(birth_dt)
+    if direction not in ("forward", "reverse"):
+        raise BaziNatalError(
+            "invalid_decadal_direction",
+            "Da Yun direction must be forward or reverse",
+            {"direction": direction},
+        )
+    boundaries = []
+    for year in (birth_dt.year - 1, birth_dt.year, birth_dt.year + 1):
+        for term, *_ in JIE:
+            boundaries.append(solar_term_time(year, term, birth_dt.tzinfo))
+    boundaries.sort()
+    if direction == "forward":
+        candidates = [boundary for boundary in boundaries if boundary > birth_dt]
+        if not candidates:
+            raise BaziNatalError("jie_boundary_not_found", "next Jie boundary was not found")
+        return candidates[0] - birth_dt
+    candidates = [boundary for boundary in boundaries if boundary < birth_dt]
+    if not candidates:
+        raise BaziNatalError("jie_boundary_not_found", "previous Jie boundary was not found")
+    return birth_dt - candidates[-1]
+
+
+def decadal_start_delta(birth_dt: datetime, direction: str) -> timedelta:
+    interval = _decadal_jie_interval(birth_dt, direction)
+    start_age_years = interval.total_seconds() / (_INTERVAL_DAYS_PER_LUCK_YEAR * 86400.0)
+    return timedelta(days=start_age_years * _TROPICAL_YEAR_DAYS)
+
+
+def _sexagenary_index(pillar: Pillar) -> int:
+    try:
+        return _SEXAGENARY_CYCLE.index(pillar.text)
+    except ValueError as exc:
+        raise BaziNatalError(
+            "invalid_sexagenary_pillar",
+            "pillar is not a valid member of the sixty Jiazi cycle",
+            {"pillar": pillar.text},
+        ) from exc
+
+
+def build_decadal_periods(
+    month_pillar: Pillar,
+    birth_dt: datetime,
+    direction: str,
+    count: int = 10,
+) -> Tuple[BaziDecadalPeriod, ...]:
+    if not isinstance(count, int) or count < 1:
+        raise BaziNatalError(
+            "invalid_decadal_period_count",
+            "Da Yun period count must be a positive integer",
+            {"count": count},
+        )
+    start_delta = decadal_start_delta(birth_dt, direction)
+    start_age_years = start_delta.total_seconds() / (_TROPICAL_YEAR_DAYS * 86400.0)
+    month_index = _sexagenary_index(month_pillar)
+    step = 1 if direction == "forward" else -1
+    periods = []
+    for index in range(1, count + 1):
+        period_start_age = start_age_years + (index - 1) * 10.0
+        period_end_age = start_age_years + index * 10.0
+        period_start = birth_dt + start_delta + timedelta(
+            days=(index - 1) * 10.0 * _TROPICAL_YEAR_DAYS
+        )
+        period_end = birth_dt + start_delta + timedelta(
+            days=index * 10.0 * _TROPICAL_YEAR_DAYS
+        )
+        text = _SEXAGENARY_CYCLE[(month_index + step * index) % 60]
+        periods.append(
+            BaziDecadalPeriod(
+                index=index,
+                pillar=Pillar(text[0], text[1]),
+                start_age_years=period_start_age,
+                end_age_years=period_end_age,
+                start_datetime=period_start,
+                end_datetime=period_end,
+            )
+        )
+    return tuple(periods)
 
 
 def select_bazi_effective_datetime(
@@ -190,6 +296,12 @@ def build_bazi_natal(
     pillars = tuple(_pillar(value) for value in bazi_pillars(effective))
     day_master = pillars[2].stem
     details = tuple(_pillar_detail(day_master, pillar) for pillar in pillars)
+    direction = decadal_direction(pillars[0].stem, sex)
+    jie_interval = _decadal_jie_interval(effective, direction)
+    start_age_years = jie_interval.total_seconds() / (_INTERVAL_DAYS_PER_LUCK_YEAR * 86400.0)
+    start_delta = timedelta(days=start_age_years * _TROPICAL_YEAR_DAYS)
+    periods = build_decadal_periods(pillars[1], effective, direction, count=10)
+    decadal_start = effective + start_delta
     return BaziNatalChart(
         profile=profile,
         effective_datetime=effective,
@@ -197,9 +309,9 @@ def build_bazi_natal(
         day_master=day_master,
         pillar_details=details,
         element_counts=_visible_element_counts(pillars),
-        decadal_direction=None,
-        decadal_start=None,
-        decadal_periods=(),
+        decadal_direction=direction,
+        decadal_start=decadal_start,
+        decadal_periods=periods,
         validation=validation,
         provenance={
             "classification": "Project 原生盤面",
@@ -210,6 +322,9 @@ def build_bazi_natal(
             "sex": sex.value,
             "element_count_basis": "visible_stems_plus_branch_primary_elements",
             "hidden_stem_basis": "fixed_branch_hidden_stems_v1",
-            "pending_sections": ("decadal_luck",),
+            "decadal_profile": profile.decadal_rule,
+            "decadal_jie_interval_seconds": jie_interval.total_seconds(),
+            "decadal_start_age_years": start_age_years,
+            "pending_sections": (),
         },
     )
