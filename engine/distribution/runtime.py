@@ -71,6 +71,10 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
             from .natal import reconcile_natal
 
             return _ok(action, reconcile_natal({} if payload is None else payload))
+        if action == "resolve_forecast_context":
+            from .forecast import resolve_forecast_context
+
+            return _ok(action, resolve_forecast_context({} if payload is None else payload))
     except DistributionError as exc:
         return _error(action, exc.code, str(exc), exc.details)
 
