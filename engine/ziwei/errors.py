@@ -20,3 +20,10 @@ class ZiweiFineCycleError(ValueError):
         self.code = code
         self.details = dict(details or {})
         super().__init__(message)
+
+
+class ZiweiFlowingStarError(ValueError):
+    def __init__(self, code, message, details=None):
+        self.code = code
+        self.details = dict(details or {})
+        super().__init__(message)
