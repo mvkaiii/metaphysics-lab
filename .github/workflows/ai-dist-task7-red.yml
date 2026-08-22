@@ -1,0 +1,17 @@
+name: ai-dist-task7-red
+
+on:
+  pull_request:
+
+jobs:
+  docs:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/ai-distribution-pack-v1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - name: Run Task 7 docs contracts
+        run: python -m unittest tests.test_ai_distribution_docs -v
