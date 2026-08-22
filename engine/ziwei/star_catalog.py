@@ -31,6 +31,13 @@ _AUXILIARY_CATEGORIES = MappingProxyType({
     "天馬": "tianma",
 })
 
+# Pinned iztro does not define brightness for these stars, or defines a partial
+# row with intentional blanks (擎羊/陀羅). None is therefore legal only for
+# this explicit metadata set; it is never a generic fallback for unknown data.
+_BRIGHTNESS_OPTIONAL = frozenset((
+    "左輔", "右弼", "天魁", "天鉞", "祿存", "天馬", "擎羊", "陀羅",
+))
+
 STAR_CATALOG = frozenset(MAJOR_STARS + AUXILIARY_STARS)
 
 
@@ -40,3 +47,9 @@ def category_for(star: str) -> str:
     if star in _AUXILIARY_CATEGORIES:
         return _AUXILIARY_CATEGORIES[star]
     raise ValueError("star is not present in ziwei-core-stars-v1: %s" % star)
+
+
+def brightness_optional_for(star: str) -> bool:
+    if star not in STAR_CATALOG:
+        raise ValueError("star is not present in ziwei-core-stars-v1: %s" % star)
+    return star in _BRIGHTNESS_OPTIONAL
