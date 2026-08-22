@@ -10,4 +10,8 @@ SUPPORTED_ACTIONS = (
     "build_natal",
     "reconcile_natal",
     "resolve_forecast_context",
+    "export_case_markdown",
+    "validate_case",
+    "migrate_case",
+    "update_case_record",
 )
