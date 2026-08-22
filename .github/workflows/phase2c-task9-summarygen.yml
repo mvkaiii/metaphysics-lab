@@ -1,0 +1,107 @@
+name: Phase 2C Task 9 Summary Generation
+
+on:
+  pull_request:
+    branches:
+      - feature/ziwei-flowing-stars-v1
+
+permissions:
+  contents: write
+
+jobs:
+  summary:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout formal feature tree
+        uses: actions/checkout@v4
+        with:
+          ref: feature/ziwei-flowing-stars-v1
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+      - name: Build deterministic privacy-safe summary
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          from engine.ziwei.capabilities import get_capability
+          from engine.ziwei.flowing_stars import FLOWING_STAR_PROFILE_ID
+          from tools.qualify_ziwei_phase2c import qualify_public, private_pending_ok
+
+          root = Path('.')
+          public_path = root / 'qualification/ziwei/phase2c/public-iztro-flowing-star-vectors.json'
+          private_path = root / 'qualification/ziwei/phase2c/private-astralium-summary.json'
+          output_path = root / 'qualification/ziwei/phase2c/phase2c-summary.json'
+
+          public = qualify_public(public_path)
+          private = json.loads(private_path.read_text(encoding='utf-8'))
+          assert public['status'] == 'PASS'
+          assert public['source_case_count'] == 600
+          assert public['placement_check_count'] == 6120
+          assert public['unexpected_mismatch_count'] == 0
+          assert private_pending_ok(private_path)
+
+          capability_ids = (
+              'ziwei.flowing_stars',
+              'ziwei.transformations',
+              'ziwei.flying',
+              'ziwei.flow_month_stem',
+              'ziwei.flow_day_stem',
+              'ziwei.flow_hour_stem',
+              'ziwei.natal_chart',
+          )
+          states = {}
+          for capability_id in capability_ids:
+              cap = get_capability(capability_id)
+              states[capability_id] = '/'.join(
+                  (cap['implementation'], cap['maturity'], cap['routing'], cap['rule_version'])
+              )
+
+          version_text = Path('VERSION.md').read_text(encoding='utf-8')
+          assert 'Metaphysics Lab Core：**v1.2.0**' in version_text
+
+          summary = {
+              'profile_id': FLOWING_STAR_PROFILE_ID,
+              'rule_version': get_capability('ziwei.flowing_stars')['rule_version'],
+              'public_qualification': {
+                  'oracle_version': public['oracle_version'],
+                  'oracle_revision': public['oracle_revision'],
+                  'status': public['status'],
+                  'source_case_count': public['source_case_count'],
+                  'placement_check_count': public['placement_check_count'],
+                  'unexpected_mismatch_count': public['unexpected_mismatch_count'],
+                  'fixture_digest_sha256': hashlib.sha256(public_path.read_bytes()).hexdigest(),
+              },
+              'private_qualification': {
+                  'status': private['status'],
+                  'case_count': private['case_count'],
+                  'unexpected_mismatch_count': private['unexpected_mismatch_count'],
+                  'promotion_allowed': private['promotion_allowed'],
+                  'summary_digest_sha256': hashlib.sha256(private_path.read_bytes()).hexdigest(),
+              },
+              'capability_states': states,
+              'release_version': 'v1.2.0',
+              'approved_design_revision': 'be0745af16d4d40cb7e3bd90c1667ee2dc5a2cd0',
+          }
+          output_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+          print('PHASE2C_SUMMARY_GENERATED')
+          print('PHASE2C_FIXTURE_SHA256=' + summary['public_qualification']['fixture_digest_sha256'])
+          PY
+      - name: Verify acceptance contract before commit
+        run: python -m unittest tests.test_ziwei_phase2c_acceptance -v
+      - name: Commit summary to formal feature branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add qualification/ziwei/phase2c/phase2c-summary.json
+          if git diff --cached --quiet; then
+            echo 'Summary unchanged'
+          else
+            git commit -m 'test: add Phase 2C aggregate acceptance summary'
+            git push origin HEAD:feature/ziwei-flowing-stars-v1
+          fi
