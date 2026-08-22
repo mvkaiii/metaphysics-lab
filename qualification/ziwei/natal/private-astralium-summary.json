@@ -1,0 +1,37 @@
+{
+  "schema_version": "1.0",
+  "classification": "private_ziwei_natal_qualification_summary",
+  "source_system": "Astralium",
+  "status": "PASS",
+  "case_count": 1,
+  "aggregate_field_matches": {
+    "total_match_count": 129,
+    "total_equivalent_count": 1,
+    "core_scalar_match_count": 7,
+    "core_scalar_equivalent_count": 1,
+    "core_scalar_conflict_count": 0,
+    "palace_structure_match_count": 12,
+    "palace_structure_conflict_count": 0,
+    "star_position_match_count": 26,
+    "star_position_conflict_count": 0,
+    "brightness_match_count": 20,
+    "brightness_conflict_count": 0,
+    "brightness_not_comparable_count": 6,
+    "missing_external_selected_star_count": 0,
+    "birth_transformation_match_count": 4,
+    "birth_transformation_conflict_count": 0,
+    "natal_flying_match_count": 48,
+    "natal_flying_symmetric_difference_count": 0,
+    "decadal_cycle_match_count": 12,
+    "decadal_cycle_conflict_count": 0
+  },
+  "aggregate_field_conflicts": {
+    "unexpected_mismatch_count": 0
+  },
+  "aggregate_digest": "sha256:f66efb62be8bbd8fe62f94c28ced84642f8e9e139b2cb79355cf69f647ffedf2",
+  "source_digest": "sha256:467db49baaec2419fd77dc39b28397cf32dcee5564188d27f7620d90c1add3fe",
+  "contains_raw_birth_data": false,
+  "contains_raw_chart_payload": false,
+  "promotion_allowed": false,
+  "qualification_scope": "authorized private aggregate only; raw source remains outside shared repository"
+}

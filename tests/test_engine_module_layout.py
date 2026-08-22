@@ -2,6 +2,7 @@ import unittest
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+import engine.birth as birth_package
 from engine.project_bazi_calendar import bazi_pillars as legacy_bazi_pillars
 from engine.project_ziwei_month import project_derived_ziwei_month as legacy_ziwei_month
 from engine.bazi.calendar import bazi_pillars as modular_bazi_pillars
@@ -10,6 +11,10 @@ from engine.ziwei.month import project_derived_ziwei_month as modular_ziwei_mont
 
 
 class EngineModuleLayoutTests(unittest.TestCase):
+    def test_birth_package_exports_capability_access(self):
+        cap = birth_package.get_capability("birth.input_resolution")
+        self.assertEqual(cap["id"], "birth.input_resolution")
+
     def test_bazi_modular_path_matches_legacy_path(self):
         dt = datetime(2026, 8, 20, 17, 12, tzinfo=ZoneInfo("Asia/Taipei"))
         self.assertEqual(modular_bazi_pillars(dt), legacy_bazi_pillars(dt))
