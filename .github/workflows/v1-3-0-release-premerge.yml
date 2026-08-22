@@ -1,0 +1,40 @@
+name: v1.3.0-release-premerge
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  acceptance:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 8ce4d571321c2b0c73fafbc37dfa3f5b8a3f0df8
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - name: Install pinned runtime dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run release-focused tests
+        run: >-
+          python -m unittest
+          tests.test_ai_distribution_acceptance
+          tests.test_ai_distribution_docs
+          tests.test_ziwei_phase2b_docs
+          tests.test_ziwei_phase2c_docs
+          tests.test_rule_source_reconciliation -v
+      - name: Verify deterministic distribution build
+        run: python tools/build_ai_distribution.py --check
+      - name: Run full repository regression
+        run: python -m unittest discover -s tests -p 'test_*.py'
+      - name: Compile Python 3.9 runtime
+        run: >-
+          python -m compileall -q
+          engine/distribution
+          engine/natal/orchestration.py
+          tools/build_ai_distribution.py
+          dist/ai/metaphysics_lab.py
