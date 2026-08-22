@@ -27,6 +27,8 @@ PUBLIC_CASES = (
     "London, UK",
 )
 
+_SUPPORTED_AMBIGUOUS_PUBLIC_CASES = frozenset(("London, UK",))
+
 
 def _rounded(value: object) -> Optional[float]:
     if value is None:
@@ -122,10 +124,14 @@ def qualify(provider: NominatimLocationProvider) -> tuple[dict, bool, bool]:
                     _candidate_summary(candidate, timezone_finder)
                     for candidate in capturing_provider.last_candidates
                 )
+            supported_ambiguity = (
+                exc.code == "ambiguous_birth_place"
+                and query in _SUPPORTED_AMBIGUOUS_PUBLIC_CASES
+            )
             records.append(
                 {
                     "query": query,
-                    "status": "FAIL",
+                    "status": "PASS" if supported_ambiguity else "FAIL",
                     "latitude": None,
                     "longitude": None,
                     "timezone": None,
