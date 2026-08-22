@@ -12,6 +12,7 @@ from .constants import (
     SUPPORTED_ACTIONS,
 )
 from .dependencies import inspect_external_dependencies
+from .errors import DistributionError
 from .manifest import load_capabilities
 
 
@@ -60,6 +61,18 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
 
     if action == "runtime_info":
         return _ok(action, runtime_info())
+
+    try:
+        if action == "build_natal":
+            from .natal import build_natal
+
+            return _ok(action, build_natal({} if payload is None else payload))
+        if action == "reconcile_natal":
+            from .natal import reconcile_natal
+
+            return _ok(action, reconcile_natal({} if payload is None else payload))
+    except DistributionError as exc:
+        return _error(action, exc.code, str(exc), exc.details)
 
     return _error(
         action,
