@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Mapping, Optional, Tuple
 
@@ -37,6 +38,17 @@ _BRANCH_PRIMARY_ELEMENT = {
     "辰": "土", "巳": "火", "午": "火", "未": "土",
     "申": "金", "酉": "金", "戌": "土", "亥": "水",
 }
+_COMPONENT_NAMES = ("year", "month", "day", "hour")
+
+
+@dataclass(frozen=True)
+class BaziTimeComparison:
+    status: str
+    default_pillars: Tuple[str, ...]
+    true_solar_pillars: Tuple[str, ...]
+    affected_components: Tuple[str, ...]
+    severity: str
+    error_code: Optional[str] = None
 
 
 class BaziNatalError(ValueError):
@@ -60,6 +72,36 @@ def hidden_stems(branch: str) -> Tuple[str, ...]:
             "unknown earthly branch for hidden stems",
             {"branch": branch},
         ) from exc
+
+
+def compare_bazi_time_views(time_views: BirthTimeViews) -> BaziTimeComparison:
+    default_pillars = tuple(bazi_pillars(time_views.normalized_civil.local_datetime))
+    true_solar_pillars = tuple(bazi_pillars(time_views.true_solar.local_datetime))
+    affected = tuple(
+        component
+        for component, default, solar in zip(
+            _COMPONENT_NAMES,
+            default_pillars,
+            true_solar_pillars,
+        )
+        if default != solar
+    )
+    if not affected:
+        return BaziTimeComparison(
+            status="EQUIVALENT",
+            default_pillars=default_pillars,
+            true_solar_pillars=true_solar_pillars,
+            affected_components=(),
+            severity="INFO",
+        )
+    return BaziTimeComparison(
+        status="CONFLICT",
+        default_pillars=default_pillars,
+        true_solar_pillars=true_solar_pillars,
+        affected_components=affected,
+        severity="BLOCKING",
+        error_code="bazi_time_profile_conflict",
+    )
 
 
 def select_bazi_effective_datetime(
