@@ -1,0 +1,83 @@
+name: Phase 2C Main Pre-Merge Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+      - name: Lock main base and validation-only diff from design
+        run: |
+          git fetch origin main design/ziwei-flowing-stars
+          MAIN_SHA="$(git rev-parse origin/main)"
+          DESIGN_SHA="$(git rev-parse origin/design/ziwei-flowing-stars)"
+          echo "PHASE2C_MAIN_SHA=$MAIN_SHA"
+          echo "PHASE2C_DESIGN_SHA=$DESIGN_SHA"
+          test "$MAIN_SHA" = "bb08ded1d8ed9b026bcd3d8719f00515da6054c3"
+          test "$DESIGN_SHA" = "7fcc845b7f75f9b071411747fb96aecac5e4be38"
+          git diff --name-only origin/design/ziwei-flowing-stars...HEAD > /tmp/changed.txt
+          printf '%s\n' '.github/workflows/phase2c-main-premerge.yml' > /tmp/expected.txt
+          diff -u /tmp/expected.txt /tmp/changed.txt
+          echo PHASE2C_MAIN_PREMERGE_DIFF_PASS
+      - name: Focused Phase 2C suite
+        run: |
+          python -m unittest \
+            tests.test_ziwei_phase2c_rule_source \
+            tests.test_calendar_sexagenary_phase2c \
+            tests.test_ziwei_flowing_star_models \
+            tests.test_ziwei_flowing_star_sources \
+            tests.test_ziwei_flowing_stars \
+            tests.test_ziwei_flowing_star_view \
+            tests.test_ziwei_phase2c_capabilities \
+            tests.test_ziwei_phase2c_qualification \
+            tests.test_ziwei_phase2c_docs \
+            tests.test_ziwei_phase2c_acceptance -v
+          echo PHASE2C_MAIN_PREMERGE_FOCUSED_PASS
+      - name: Full repository regression
+        run: |
+          python -m unittest discover -s tests -p 'test*.py'
+          echo PHASE2C_MAIN_PREMERGE_FULL_REPO_PASS
+      - name: Qualification and privacy markers
+        run: |
+          python tools/qualify_ziwei_phase2c.py --public | tee /tmp/phase2c-qualification.log
+          grep -Fx 'IZTRO_FLOWING_STARS_600_600_PASS' /tmp/phase2c-qualification.log
+          grep -Fx 'IZTRO_FLOWING_STARS_0_UNEXPECTED_MISMATCH' /tmp/phase2c-qualification.log
+          grep -Fx 'PHASE2C_PRIVATE_FLOWING_STARS_PENDING_OK' /tmp/phase2c-qualification.log
+          echo PHASE2C_MAIN_PREMERGE_QUALIFICATION_PASS
+
+  python39:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - name: Python 3.9 syntax gate
+        run: |
+          python --version
+          python - <<'PY'
+          import sys
+          assert sys.version_info[:2] == (3, 9), sys.version
+          PY
+          python -m compileall -q engine tools tests
+          echo PHASE2C_MAIN_PREMERGE_PYTHON39_PASS
+
+  pass:
+    needs: [verify, python39]
+    runs-on: ubuntu-24.04
+    steps:
+      - run: echo PHASE2C_MAIN_PREMERGE_PASS
