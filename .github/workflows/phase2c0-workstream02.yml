@@ -40,9 +40,10 @@ jobs:
               ast.parse(path.read_text(encoding='utf-8'), feature_version=(3, 9))
           print('PYTHON39_BAZI_NATAL_PASS')
           PY
-      - name: Verify committed evidence matches live output and privacy contract
+      - name: Verify committed evidence summary matches live output and privacy contract
         run: |
           python - <<'PY'
+          import hashlib
           import json
           from pathlib import Path
 
@@ -57,17 +58,36 @@ jobs:
                   for item in value:
                       yield from walk_keys(item)
 
-          live = json.loads(Path('/tmp/bazi-natal-public.json').read_text(encoding='utf-8'))
-          committed = json.loads(Path('qualification/bazi/natal/public-lunar-python-1.4.8.json').read_text(encoding='utf-8'))
+          live_path = Path('/tmp/bazi-natal-public.json')
+          live = json.loads(live_path.read_text(encoding='utf-8'))
+          summary = json.loads(Path('qualification/bazi/natal/public-lunar-python-1.4.8.json').read_text(encoding='utf-8'))
           private = json.loads(Path('qualification/bazi/natal/private-summary.json').read_text(encoding='utf-8'))
+          live_sha256 = hashlib.sha256(live_path.read_bytes()).hexdigest()
 
           assert live['status'] == 'PASS', live
           assert live['unexpected_mismatch_count'] == 0, live
-          assert committed == live, 'committed public qualification evidence is stale or incomplete'
-          assert forbidden.isdisjoint(set(walk_keys(committed)))
+          assert summary['classification'] == 'public_bazi_natal_qualification_summary'
+          for key in (
+              'reference_engine',
+              'reference_version',
+              'reference_source_revision',
+              'project_profile',
+              'project_rule_version',
+              'status',
+              'case_count',
+              'matched_field_count',
+              'profile_difference_count',
+              'unexpected_mismatch_count',
+          ):
+              assert summary[key] == live[key], (key, summary[key], live[key])
+          assert summary['case_ids'] == [case['case_id'] for case in live['cases']]
+          for key in ('matched_branch_count', 'profile_difference_count', 'unexpected_mismatch_count'):
+              assert summary['hidden_stem_table'][key] == live['hidden_stem_table'][key]
+          assert summary['live_report_sha256'] == live_sha256, (summary['live_report_sha256'], live_sha256)
+          assert forbidden.isdisjoint(set(walk_keys(summary)))
           assert forbidden.isdisjoint(set(walk_keys(private)))
           assert private['classification'] == 'private_bazi_natal_qualification_summary'
-          assert private['status'] in {'PENDING', 'PASS', 'FAIL'}
+          assert private['status'] == 'PENDING'
           print('BAZI_NATAL_EVIDENCE_ACCEPTANCE_PASS')
           PY
       - name: Upload live qualification evidence
