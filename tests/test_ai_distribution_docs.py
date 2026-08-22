@@ -36,7 +36,7 @@ class AIDistributionDocsTests(unittest.TestCase):
         self.assertIn("Project Instructions", head)
         self.assertIn(STARTUP, head)
         self.assertIn("High", head)
-        self.assertNotIn("解壓 ZIP", head)
+        self.assertIn("不需要下載或解壓 ZIP", head)
 
     def test_quick_start_is_ai_first_and_no_repo_module_install(self):
         for name in USER_ARTIFACTS:
