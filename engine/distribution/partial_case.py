@@ -8,6 +8,7 @@ variant, and blocked conclusions explicit.
 from __future__ import annotations
 
 import json
+import re
 from typing import Mapping
 
 from engine.natal.candidates import classify_candidate_facts
@@ -42,6 +43,19 @@ _KNOWN_FACT_FIELDS = frozenset((
     "reported_birth_time",
     "reported_birth_time_range",
 ))
+_TEXT_KNOWN_FACT_FIELDS = frozenset((
+    "sex", "birth_date", "birth_place", "resolved_place_label", "timezone",
+))
+_TIME_TEXT_PATTERN = re.compile(r"^(?:[01]\d|2[0-3]):[0-5]\d$")
+
+
+def _valid_time_text(value: object) -> bool:
+    return isinstance(value, str) and bool(_TIME_TEXT_PATTERN.fullmatch(value))
+
+
+def _time_minutes(value: str) -> int:
+    hour, minute = value.split(":", 1)
+    return int(hour) * 60 + int(minute)
 
 
 def _mapping(value: object, field: str) -> Mapping[str, object]:
@@ -71,8 +85,8 @@ def _validate_envelope(value: object) -> dict:
         )
     candidate_count = raw.get("candidate_count")
     candidates = raw.get("candidates")
-    if not isinstance(candidate_count, int) or candidate_count < 1 or not isinstance(candidates, list) or len(candidates) != candidate_count:
-        raise DistributionError("invalid_candidate_envelope", "candidate_count must match the candidate list")
+    if type(candidate_count) is not int or candidate_count < 1 or not isinstance(candidates, list) or len(candidates) != candidate_count:
+        raise DistributionError("invalid_candidate_envelope", "candidate_count must be a true integer matching the candidate list")
     for field in (
         "known_facts", "invariant_bazi_facts", "variant_bazi_facts",
         "invariant_ziwei_facts", "variant_ziwei_facts", "provenance",
@@ -87,32 +101,71 @@ def _validate_envelope(value: object) -> dict:
             "known_facts contains candidate-dependent or unsupported fields",
             {"unexpected_known_facts": unexpected_known},
         )
-    if known.get("reported_birth_time") not in (None, ""):
+    for field in _TEXT_KNOWN_FACT_FIELDS:
+        if field in known:
+            item = known[field]
+            if not isinstance(item, str) or not item.strip():
+                raise DistributionError(
+                    "invalid_candidate_envelope",
+                    "known_facts text fields must contain non-empty text",
+                    {"field": field},
+                )
+    reported_time = known.get("reported_birth_time")
+    if reported_time is not None and not _valid_time_text(reported_time):
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "reported_birth_time must be valid HH:MM text or null",
+            {"reported_birth_time": reported_time},
+        )
+    if reported_time is not None:
         raise DistributionError(
             "invalid_candidate_envelope",
             "partial Case cannot claim one exact reported birth time",
-            {"reported_birth_time": known.get("reported_birth_time")},
+            {"reported_birth_time": reported_time},
         )
     reported_range = known.get("reported_birth_time_range")
-    if precision == "unknown_time" and reported_range not in (None, ""):
+    if reported_range is not None:
+        if not isinstance(reported_range, (list, tuple)) or len(reported_range) != 2 or any(
+            not _valid_time_text(item) for item in reported_range
+        ):
+            raise DistributionError(
+                "invalid_candidate_envelope",
+                "reported_birth_time_range must be two valid HH:MM values or null",
+            )
+        if _time_minutes(reported_range[1]) < _time_minutes(reported_range[0]):
+            raise DistributionError(
+                "invalid_candidate_envelope",
+                "reported_birth_time_range cannot cross the civil-date boundary in v1",
+            )
+    if precision == "unknown_time" and reported_range is not None:
         raise DistributionError(
             "invalid_candidate_envelope",
             "unknown_time candidate envelope cannot claim a reported birth-time range",
         )
-    if precision == "bounded":
-        if not isinstance(reported_range, (list, tuple)) or len(reported_range) != 2 or any(
-            not isinstance(item, str) or not item.strip() for item in reported_range
-        ):
-            raise DistributionError(
-                "invalid_candidate_envelope",
-                "bounded candidate envelope requires a two-value reported birth-time range",
-            )
+    if precision == "bounded" and reported_range is None:
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "bounded candidate envelope requires a two-value reported birth-time range",
+        )
     for field in ("allowed_analysis", "blocked_analysis", "boundary_ambiguities"):
         if not isinstance(raw.get(field), list):
             raise DistributionError("invalid_candidate_envelope", "%s must be a list" % field, {"field": field})
+    allowed = raw["allowed_analysis"]
     blocked = raw["blocked_analysis"]
-    if any(not isinstance(item, str) for item in blocked):
-        raise DistributionError("invalid_candidate_envelope", "blocked_analysis must contain string scope identifiers")
+    for field, scopes in (("allowed_analysis", allowed), ("blocked_analysis", blocked)):
+        if any(not isinstance(item, str) or not item.strip() or item != item.strip() for item in scopes):
+            raise DistributionError(
+                "invalid_candidate_envelope",
+                "%s must contain canonical non-empty string scope identifiers" % field,
+                {"field": field},
+            )
+    overlap = sorted(set(allowed) & set(blocked))
+    if overlap:
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "allowed_analysis and blocked_analysis must be mutually exclusive",
+            {"overlapping_analysis": overlap},
+        )
     missing_blocks = sorted(_REQUIRED_PARTIAL_BLOCKS - set(blocked))
     if missing_blocks:
         raise DistributionError(
