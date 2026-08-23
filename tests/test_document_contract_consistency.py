@@ -26,6 +26,7 @@ class DocumentationContractConsistencyTests(unittest.TestCase):
             "Metaphysics Lab v1.1 已能自行建立",
             "Project 紫微流月目前只包含",
             "目前不自行建立：\n\n- 紫微流日\n- 紫微流時",
+            "Kai__7F3A2C__01_命盤核心摘要.md",
         )
         for path in CANONICAL_DOCS:
             text = path.read_text(encoding="utf-8")
@@ -45,30 +46,32 @@ class DocumentationContractConsistencyTests(unittest.TestCase):
             self.assertIn("已驗證事件", text, relative)
 
     def test_user_facing_docs_delegate_dynamic_capability_truth_to_runtime_info(self):
-        for relative in (
-            "docs/命盤資料準備指南.md",
-            "docs/Astralium資料取得指南.md",
-        ):
+        for relative in ("docs/命盤資料準備指南.md", "docs/Astralium資料取得指南.md"):
             text = (ROOT / relative).read_text(encoding="utf-8")
             self.assertIn("runtime_info", text, relative)
             self.assertNotIn("目前只包含", text, relative)
 
-    def test_birth_time_guidance_matches_current_runtime_boundary(self):
+    def test_birth_time_guidance_supports_partial_candidate_case_without_fake_precision(self):
         text = (ROOT / "docs" / "命盤資料準備指南.md").read_text(encoding="utf-8")
-        self.assertIn("目前 runtime", text)
         self.assertIn("缺少出生時間", text)
-        self.assertIn("不能建立單一完整 Project 本命", text)
+        self.assertIn("natal.candidate_envelope", text)
+        self.assertIn("partial", text)
         self.assertIn("不得自行補一個時辰", text)
+        self.assertIn("唯一", text)
 
-    def test_progressive_case_names_are_used_in_user_facing_case_guidance(self):
-        for relative in (
-            "docs/命盤資料準備指南.md",
-            "docs/Astralium資料取得指南.md",
-        ):
+    def test_project_workflow_resolves_subject_before_case_files(self):
+        for relative in ("core/AI工作流程.md", "core/PROJECT_INSTRUCTIONS.md"):
             text = (ROOT / relative).read_text(encoding="utf-8")
-            self.assertIn("00_專案索引.md", text, relative)
-            self.assertIn("01_命盤核心摘要.md", text, relative)
-            self.assertIn("02_命盤資料校驗紀錄.md", text, relative)
+            self.assertIn("命主索引.md", text, relative)
+            self.assertIn("subject_id", text, relative)
+            self.assertIn("subject_display_name", text, relative)
+
+    def test_user_facing_case_guidance_uses_subject_aware_filename_contract(self):
+        for relative in ("docs/命盤資料準備指南.md", "docs/快速開始.md"):
+            text = (ROOT / relative).read_text(encoding="utf-8")
+            self.assertIn("命主索引.md", text, relative)
+            self.assertIn("Kai_7F3A2C_01_命盤核心摘要.md", text, relative)
+            self.assertIn("<filename_label>_<SUBJECT_SHORT_ID>_<slot>_<canonical_title>.md", text, relative)
 
     def test_future_guidance_does_not_skip_historical_calibration_gate(self):
         text = (ROOT / "docs" / "命盤資料準備指南.md").read_text(encoding="utf-8")
