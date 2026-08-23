@@ -11,7 +11,8 @@ from zoneinfo import ZoneInfo
 from engine.bazi.calendar import solar_term_time
 from engine.historical.selection_integrity import verify_selection_result
 
-from .case_pack import BASE_CASE_FILES, set_case_calibration_status, update_case_record
+from .case_identity import parse_case_filename
+from .case_pack import BASE_CASE_FILES, CASE_FILES, set_case_calibration_status, update_case_record
 from .errors import DistributionError
 
 
@@ -44,14 +45,61 @@ def canonical_digest(value: object) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
+def _canonical_case_sources(sources) -> Tuple[list, list]:
+    if not isinstance(sources, (list, tuple)):
+        raise DistributionError("blind_source_violation", "source_files_used must be a list of Case files")
+    canonical = []
+    actual = []
+    for source in sources:
+        if not isinstance(source, str):
+            raise DistributionError("blind_source_violation", "source_files_used entries must be text")
+        try:
+            parsed = parse_case_filename(source, CASE_FILES)
+        except ValueError as exc:
+            raise DistributionError(
+                "blind_source_violation",
+                "first-stage source is not a canonical Case file",
+                {"source": source},
+            ) from exc
+        canonical.append(parsed["canonical_filename"])
+        actual.append(source)
+    return canonical, actual
+
+
+def _actual_case_filename(case_files: Mapping[str, object], canonical: str) -> str:
+    matches = []
+    for filename in case_files:
+        if not isinstance(filename, str):
+            continue
+        try:
+            parsed = parse_case_filename(filename, CASE_FILES)
+        except ValueError:
+            continue
+        if parsed["canonical_filename"] == canonical:
+            matches.append(filename)
+    if len(matches) != 1:
+        raise DistributionError(
+            "case_file_set_mismatch",
+            "Case must contain exactly one requested canonical slot",
+            {"canonical_filename": canonical, "matches": matches},
+        )
+    return matches[0]
+
+
 def lock_blind_forecast(payload: Mapping[str, object]) -> dict:
     payload = _mapping(payload, "payload")
-    sources = payload.get("source_files_used")
-    if not isinstance(sources, (list, tuple)) or set(sources) != set(BASE_CASE_FILES):
+    canonical_sources, actual_sources = _canonical_case_sources(payload.get("source_files_used"))
+    if len(canonical_sources) != len(BASE_CASE_FILES) or set(canonical_sources) != set(BASE_CASE_FILES):
         raise DistributionError(
             "blind_source_violation",
-            "first-stage blind forecast must be locked from exactly the Base Case files 00-04",
-            {"required_sources": list(BASE_CASE_FILES), "actual_sources": list(sources or [])},
+            "first-stage blind forecast must be locked from exactly the Base Case slots 00-04",
+            {"required_sources": list(BASE_CASE_FILES), "actual_sources": actual_sources, "canonical_sources": canonical_sources},
+        )
+    if len(set(canonical_sources)) != len(BASE_CASE_FILES):
+        raise DistributionError(
+            "blind_source_violation",
+            "first-stage blind forecast cannot use duplicate Base Case slots",
+            {"canonical_sources": canonical_sources},
         )
     locked = {
         "blind_forecast_id": _text(payload.get("blind_forecast_id"), "blind_forecast_id"),
@@ -59,8 +107,9 @@ def lock_blind_forecast(payload: Mapping[str, object]) -> dict:
         "question_type": _text(payload.get("question_type"), "question_type"),
         "question_reference": _text(payload.get("question_reference"), "question_reference"),
         "locked_at": _text(payload.get("locked_at"), "locked_at"),
-        "source_files_used": list(BASE_CASE_FILES),
-        "forbidden_sources_read": ["05_驗證事件紀錄.md", "06_流年追蹤紀錄.md", "07_問事追蹤紀錄.md", "08_重大決策紀錄.md"],
+        "source_files_used": actual_sources,
+        "source_slots_used": list(BASE_CASE_FILES),
+        "forbidden_source_slots": list(CASE_FILES[5:]),
         "blind_forecast_payload": _jsonable(_mapping(payload.get("blind_forecast_payload"), "blind_forecast_payload")),
     }
     return {"locked_payload": locked, "payload_digest": canonical_digest(locked)}
@@ -113,10 +162,7 @@ def lock_historical_calibration(payload: Mapping[str, object]) -> dict:
     try:
         selection_digest = verify_selection_result(selector)
     except ValueError as exc:
-        raise DistributionError(
-            "selector_integrity_mismatch",
-            str(exc),
-        ) from exc
+        raise DistributionError("selector_integrity_mismatch", str(exc)) from exc
     canonical = payload.get("canonical_test_points")
     if not isinstance(canonical, (list, tuple)) or len(canonical) != 5:
         raise DistributionError("invalid_calibration_point", "canonical_test_points must contain exactly five points")
@@ -210,11 +256,6 @@ def _flow_label_for_date(actual: date, timezone: object) -> Tuple[Optional[int],
         if actual == boundary.date():
             return None, True
         return (actual.year if actual > boundary.date() else actual.year - 1), False
-
-    # No IANA timezone provenance: do not guess a location. January and
-    # March-December are unambiguous relative to the Li-Chun month; February
-    # is intentionally left unscorable because the exact boundary cannot be
-    # reproduced safely without timezone provenance.
     if actual.month == 1:
         return actual.year - 1, False
     if actual.month >= 3:
@@ -227,7 +268,6 @@ def _timing_evaluation(point: Mapping[str, object], response: Mapping[str, objec
     reference = int(point["reference_year"])
     if state == "cannot_recall":
         return {"timing_status": "unscorable", "offset_flow_years": None, "boundary_ambiguity": False}
-
     actual = _actual_date(response.get("actual_date"))
     if actual is not None:
         start = datetime.fromisoformat(str(point["period_start"]))
@@ -239,12 +279,7 @@ def _timing_evaluation(point: Mapping[str, object], response: Mapping[str, objec
         label, ambiguous = _flow_label_for_date(actual, timezone)
         if ambiguous or label is None:
             return {"timing_status": "unscorable_or_ambiguous", "offset_flow_years": None, "boundary_ambiguity": True}
-        return {
-            "timing_status": "shifted" if label != reference else "exact_flow_year",
-            "offset_flow_years": label - reference,
-            "boundary_ambiguity": False,
-        }
-
+        return {"timing_status": "shifted" if label != reference else "exact_flow_year", "offset_flow_years": label - reference, "boundary_ambiguity": False}
     actual_year = response.get("actual_year")
     actual_month = response.get("actual_month")
     if actual_year is not None:
@@ -257,24 +292,14 @@ def _timing_evaluation(point: Mapping[str, object], response: Mapping[str, objec
         if actual_month == 2:
             return {"timing_status": "unscorable_or_ambiguous", "offset_flow_years": None, "boundary_ambiguity": True}
         label = actual_year - 1 if actual_month == 1 else actual_year
-        return {
-            "timing_status": "shifted" if label != reference else "exact_flow_year",
-            "offset_flow_years": label - reference,
-            "boundary_ambiguity": False,
-        }
-
+        return {"timing_status": "shifted" if label != reference else "exact_flow_year", "offset_flow_years": label - reference, "boundary_ambiguity": False}
     if state in ("matched", "partial"):
         return {"timing_status": "exact_flow_year", "offset_flow_years": 0, "boundary_ambiguity": False}
     return {"timing_status": "missed", "offset_flow_years": None, "boundary_ambiguity": False}
 
 
 def _dimension_status(state: str) -> str:
-    return {
-        "matched": "matched",
-        "partial": "partial",
-        "not_matched": "missed",
-        "cannot_recall": "unscorable",
-    }[state]
+    return {"matched": "matched", "partial": "partial", "not_matched": "missed", "cannot_recall": "unscorable"}[state]
 
 
 def finalize_historical_calibration(payload: Mapping[str, object]) -> dict:
@@ -286,12 +311,8 @@ def finalize_historical_calibration(payload: Mapping[str, object]) -> dict:
     responses = payload.get("responses", [])
     if not isinstance(responses, (list, tuple)):
         raise DistributionError("invalid_calibration_response", "responses must be a list")
-
     points = list(locked.get("canonical_test_points", [])) + list(locked.get("supplemental_blind_points", []))
-    point_map = {
-        int(point["reference_year"]): point
-        for point in points if isinstance(point, Mapping) and isinstance(point.get("reference_year"), int)
-    }
+    point_map = {int(point["reference_year"]): point for point in points if isinstance(point, Mapping) and isinstance(point.get("reference_year"), int)}
     records = []
     blind_scorable = 0
     seen_references = set()
@@ -301,11 +322,7 @@ def finalize_historical_calibration(payload: Mapping[str, object]) -> dict:
         if not isinstance(reference, int) or reference not in point_map:
             raise DistributionError("invalid_calibration_response", "response reference_year is not in locked test points")
         if reference in seen_references:
-            raise DistributionError(
-                "duplicate_calibration_response",
-                "each locked historical test point may be answered only once",
-                {"reference_year": reference},
-            )
+            raise DistributionError("duplicate_calibration_response", "each locked historical test point may be answered only once", {"reference_year": reference})
         seen_references.add(reference)
         state = response.get("verification_state")
         if state not in _VERIFICATION_STATES:
@@ -320,20 +337,14 @@ def finalize_historical_calibration(payload: Mapping[str, object]) -> dict:
             "calibration_id": locked["calibration_id"],
             "origin": point.get("origin", "canonical"),
             "blind_prediction": {
-                "classification": "命理推論",
-                "predicted_flow_year": reference,
-                "period_start": point.get("period_start"),
-                "period_end": point.get("period_end"),
-                "role": point.get("role"),
-                "primary_domains": list(point.get("primary_domains", [])),
-                "event_family": list(point.get("event_family", [])),
-                "hypothesis": point.get("interpretation_text"),
+                "classification": "命理推論", "predicted_flow_year": reference,
+                "period_start": point.get("period_start"), "period_end": point.get("period_end"),
+                "role": point.get("role"), "primary_domains": list(point.get("primary_domains", [])),
+                "event_family": list(point.get("event_family", [])), "hypothesis": point.get("interpretation_text"),
                 "blindness_status": point.get("blindness_status"),
             },
             "evaluation": {
-                "classification": "已校驗資料",
-                "verification_state": state,
-                **timing,
+                "classification": "已校驗資料", "verification_state": state, **timing,
                 "domain_status": response.get("domain_status", _dimension_status(state)),
                 "event_form_status": response.get("event_form_status", _dimension_status(state)),
             },
@@ -341,24 +352,15 @@ def finalize_historical_calibration(payload: Mapping[str, object]) -> dict:
         actual_event = response.get("actual_event")
         if state != "cannot_recall" and actual_event is not None:
             record["user_confirmed_actual"] = {
-                "classification": "已驗證事件",
-                "actual_date": response.get("actual_date"),
-                "actual_year": response.get("actual_year"),
-                "actual_month": response.get("actual_month"),
+                "classification": "已驗證事件", "actual_date": response.get("actual_date"),
+                "actual_year": response.get("actual_year"), "actual_month": response.get("actual_month"),
                 "actual_event": str(actual_event),
             }
         if point.get("role") == "control" and locked.get("control_quality") == "relative_low":
             record["evaluation"]["control_evaluation_scope"] = "relative_low_only"
         records.append(record)
-
     status = "basic" if blind_scorable >= 3 else "uncalibrated"
-    result = {
-        "calibration_id": locked.get("calibration_id"),
-        "records": records,
-        "blind_scorable_count": blind_scorable,
-        "historical_calibration_status": status,
-    }
-
+    result = {"calibration_id": locked.get("calibration_id"), "records": records, "blind_scorable_count": blind_scorable, "historical_calibration_status": status}
     case_files = payload.get("case_files")
     if case_files is not None:
         if not isinstance(case_files, Mapping):
@@ -369,18 +371,12 @@ def finalize_historical_calibration(payload: Mapping[str, object]) -> dict:
         changed_files = {}
         for record in records:
             update = update_case_record({
-                "case_files": current,
-                "filename": "05_驗證事件紀錄.md",
-                "operation": "append",
-                "updated_at": updated_at,
-                "last_modified_by": modified_by,
-                "entry": record,
+                "case_files": current, "filename": "05_驗證事件紀錄.md", "operation": "append",
+                "updated_at": updated_at, "last_modified_by": modified_by, "entry": record,
             })
             current.update(update["changed_files"])
             changed_files.update(update["changed_files"])
-        current_index = current["00_專案索引.md"]
-        changed_files["00_專案索引.md"] = set_case_calibration_status(
-            current_index, status, updated_at, modified_by
-        )
+        index_actual = _actual_case_filename(current, "00_專案索引.md")
+        changed_files[index_actual] = set_case_calibration_status(current[index_actual], status, updated_at, modified_by)
         result["changed_files"] = changed_files
     return result
