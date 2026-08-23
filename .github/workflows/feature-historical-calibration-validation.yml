@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 jobs:
-  focused-tests:
+  validation:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,7 +30,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
-      - name: Historical selector and progressive Case tests
+      - name: Historical selector and progressive Case focused tests
         run: |
           python -m unittest \
             tests.test_historical_activation_relations \
@@ -40,6 +40,23 @@ jobs:
             tests.test_distribution_case_pack \
             tests.test_distribution_runtime_info -v
 
+      - name: Rebuild AI distribution
+        run: |
+          python tools/build_ai_distribution.py
+          python tools/build_ai_distribution.py --check
+
+      - name: Full repository regression
+        run: |
+          python -m unittest discover -s tests -p 'test_*.py' -v
+
       - name: Python 3.9 compile check
         run: |
-          python -m compileall engine tests
+          python -m compileall engine tests tools
+
+      - name: Upload generated distribution
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: progressive-case-ai-distribution
+          path: dist/ai/
+          if-no-files-found: error
