@@ -26,7 +26,7 @@ ENVELOPE = {
         "reported_birth_time_range": None,
     },
     "invariant_bazi_facts": {"day_master": "丙", "pillars": {"year": "甲子", "month": "丁卯", "day": "丙辰"}},
-    "variant_bazi_facts": {"pillars": {"candidate-01": {"hour": "甲子"}, "candidate-02": {"hour": "乙丑"}}},
+    "variant_bazi_facts": {"pillars": {"hour": {"candidate-01": "甲子", "candidate-02": "乙丑"}}},
     "invariant_ziwei_facts": {"life_master": "祿存"},
     "variant_ziwei_facts": {"ming_palace": {"candidate-01": "辰", "candidate-02": "巳"}},
     "candidates": [
@@ -35,7 +35,12 @@ ENVELOPE = {
     ],
     "boundary_ambiguities": [],
     "allowed_analysis": ["invariant_natal_structure", "candidate_comparison"],
-    "blocked_analysis": ["unique_birth_time_claim", "unique_ziwei_natal_conclusion", "single_chart_personalized_forecast"],
+    "blocked_analysis": [
+        "unique_birth_time_claim",
+        "unique_hour_pillar_conclusion",
+        "unique_ziwei_natal_conclusion",
+        "single_chart_personalized_forecast",
+    ],
     "provenance": {"classification": "Project 原生盤面候選集合", "midpoint_used": False, "default_time_used": False},
 }
 
@@ -82,6 +87,13 @@ class PartialCaseTests(unittest.TestCase):
     def test_partial_case_keeps_unique_chart_forecast_blocked(self):
         files = self.export()["data"]["files"]
         self.assertIn("single_chart_personalized_forecast", files["Kai_7F3A2C_00_專案索引.md"])
+
+    def test_partial_case_rejects_envelope_that_omits_mandatory_unique_chart_blocks(self):
+        tampered = dict(ENVELOPE)
+        tampered["blocked_analysis"] = []
+        result = self.export(candidate_envelope=tampered)
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["error"]["code"], "invalid_candidate_envelope")
 
 
 if __name__ == "__main__":
