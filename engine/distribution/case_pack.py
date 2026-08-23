@@ -87,6 +87,7 @@ _LEGACY_SUBJECT_PATTERN = re.compile(r"^[A-Za-z0-9._-]+$")
 _OPAQUE_SUBJECT_PATTERN = re.compile(r"^subj_[0-9a-f]{12,}$")
 _SHORT_ID_PATTERN = re.compile(r"^[0-9A-F]{6,}$")
 _CALIBRATION_STATES = frozenset(("uncalibrated", "basic", "calibrated"))
+_RESERVED_INTERNAL_RECORD_TYPES = frozenset(("historical_calibration_lock",))
 
 
 def _mapping(value: object, field_name: str) -> Mapping[str, Any]:
@@ -617,7 +618,7 @@ def _resolve_requested_canonical(filename: str) -> str:
         raise DistributionError("case_file_set_mismatch", str(exc), {"filename": filename}) from exc
 
 
-def update_case_record(payload: Mapping[str, object]) -> dict:
+def _update_case_record(payload: Mapping[str, object], *, allow_reserved_internal: bool = False) -> dict:
     payload = _mapping(payload, "payload")
     files, actual_by_canonical, _ = _case_files(payload.get("case_files"))
     validation = validate_case({"case_files": payload.get("case_files")})
@@ -632,6 +633,12 @@ def update_case_record(payload: Mapping[str, object]) -> dict:
     if operation != "append":
         raise DistributionError("unsupported_case_mutation", "unsupported Case mutation operation", {"operation": operation})
     entry = _mapping(payload.get("entry"), "entry")
+    if entry.get("record_type") in _RESERVED_INTERNAL_RECORD_TYPES and not allow_reserved_internal:
+        raise DistributionError(
+            "immutable_case_record",
+            "reserved internal Case record types cannot be appended through the public mutation API",
+            {"filename": requested_filename, "record_type": entry.get("record_type")},
+        )
     if canonical == "05_驗證事件紀錄.md":
         _validate_05_entry(entry)
     updated_at = _timestamp(payload.get("updated_at"), "updated_at")
@@ -665,3 +672,13 @@ def update_case_record(payload: Mapping[str, object]) -> dict:
     updated_body = _append_record(body, _render_entry(entry))
     changed[actual_target] = _rewrite_case_file(metadata, updated_body) if existing else _render_case_file(canonical, metadata, updated_body)
     return {"subject_id": validation["subject_id"], "changed_files": changed}
+
+
+def update_case_record(payload: Mapping[str, object]) -> dict:
+    """Public progressive Case mutation entry point; reserved authority records are blocked."""
+    return _update_case_record(payload, allow_reserved_internal=False)
+
+
+def _append_internal_case_record(payload: Mapping[str, object]) -> dict:
+    """Internal-only append path for runtime-owned immutable authority records."""
+    return _update_case_record(payload, allow_reserved_internal=True)

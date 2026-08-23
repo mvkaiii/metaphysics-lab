@@ -1,8 +1,10 @@
 """Case-backed authority for immutable historical calibration locks.
 
-The public SHA-256 digest remains a deterministic content checksum. Trust comes from
-retrieving the original lock record from the subject's persisted Case, not from a
-digest supplied in the same finalize request.
+The public SHA-256 digest remains a deterministic content checksum. The trust anchor
+is host-retrieved persisted Case state: finalize reloads the original lock instead of
+trusting request-supplied lock material, and public Case mutation cannot create this
+reserved record type. This does not cryptographically authenticate a persistence layer
+that an attacker can rewrite outside the runtime's mutation boundary.
 """
 
 from __future__ import annotations
@@ -10,7 +12,7 @@ from __future__ import annotations
 from typing import Mapping
 
 from .case_identity import parse_case_filename
-from .case_pack import CASE_FILES, _record_entries, parse_front_matter, update_case_record, validate_case
+from .case_pack import CASE_FILES, _append_internal_case_record, _record_entries, parse_front_matter, validate_case
 from .errors import DistributionError
 
 
@@ -66,7 +68,7 @@ def persist_historical_lock(
         "payload_digest": payload_digest,
         "immutable": True,
     }
-    update = update_case_record({
+    update = _append_internal_case_record({
         "case_files": case_files,
         "filename": _LOCK_SLOT,
         "operation": "append",
@@ -114,6 +116,19 @@ def load_historical_lock(case_files: Mapping[str, object], lock_record_id: str) 
         raise DistributionError(
             "immutable_calibration_violation",
             "historical lock authority record is malformed",
+            {"lock_record_id": lock_record_id},
+        )
+    calibration_id = locked.get("calibration_id")
+    if not isinstance(calibration_id, str) or not calibration_id or lock_record_id != "historical-lock-%s" % calibration_id:
+        raise DistributionError(
+            "immutable_calibration_violation",
+            "historical lock record_id is not bound to locked calibration_id",
+            {"lock_record_id": lock_record_id},
+        )
+    if locked.get("subject_id") != record.get("subject_id"):
+        raise DistributionError(
+            "immutable_calibration_violation",
+            "historical locked payload subject does not match authority record subject",
             {"lock_record_id": lock_record_id},
         )
     return {
