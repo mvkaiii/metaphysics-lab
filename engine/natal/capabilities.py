@@ -2,6 +2,15 @@
 from __future__ import annotations
 
 _CAPABILITIES = {
+    "natal.candidate_envelope": {
+        "id": "natal.candidate_envelope",
+        "implementation": "implemented",
+        "maturity": "experimental",
+        "routing": "on_demand",
+        "rule_version": "1.0-exp",
+        "module": "engine.natal.candidates",
+        "dependencies": ("birth.input_resolution", "bazi.natal_chart", "ziwei.natal_chart"),
+    },
     "natal.reconciliation": {
         "id": "natal.reconciliation",
         "implementation": "implemented",
