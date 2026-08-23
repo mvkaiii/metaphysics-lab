@@ -229,11 +229,31 @@ def rename_subject(payload: Mapping[str, object]) -> dict:
             current["filename_label"] = normalize_filename_label(new_display)
             updated_identity = current
         updated_subjects.append(current)
-    updated_registry = {
-        "registry_schema_version": _REGISTRY_SCHEMA_VERSION,
-        "subjects": updated_subjects,
-    }
-    return {
+    updated_registry = {"registry_schema_version": _REGISTRY_SCHEMA_VERSION, "subjects": updated_subjects}
+    result = {
         "identity": updated_identity,
         "registry_markdown": render_subject_registry(updated_registry),
     }
+    case_files = payload.get("case_files")
+    if case_files is not None:
+        from .case_pack import rename_case_subject_files
+
+        renamed = rename_case_subject_files(
+            case_files,
+            new_display,
+            str(payload.get("updated_at", "")),
+            str(payload.get("last_modified_by", "ai")),
+        )
+        if renamed["subject_id"] != subject_id:
+            raise DistributionError(
+                "subject_registry_mismatch",
+                "registry subject and Case subject do not match during rename",
+                {"registry_subject_id": subject_id, "case_subject_id": renamed["subject_id"]},
+            )
+        result.update({
+            "case_subject": renamed["subject"],
+            "changed_files": renamed["changed_files"],
+            "renamed_files": renamed["renamed_files"],
+            "removed_filenames": renamed["removed_filenames"],
+        })
+    return result
