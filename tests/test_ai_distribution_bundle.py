@@ -127,6 +127,11 @@ class AIDistributionBundleTests(unittest.TestCase):
         self.assertTrue(bundled["ok"], bundled)
         self.assertEqual(len(bundled["data"]["high_years"]), 4)
         self.assertIn("control_year", bundled["data"])
+        support = bundled["data"]["ziwei_support"]
+        self.assertEqual(support["status"], "available")
+        self.assertEqual(support["role"], "support_only")
+        self.assertFalse(support["ranking_authority"])
+        self.assertEqual(len(support["years"]), 5)
 
     def test_request_cli_reads_json_stdin_and_returns_one_json_object(self):
         completed, result = self.bundled_request("runtime_info", {})
