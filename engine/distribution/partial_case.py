@@ -8,7 +8,6 @@ variant, and blocked conclusions explicit.
 from __future__ import annotations
 
 import json
-from datetime import datetime
 from typing import Mapping
 
 from .case_pack import (
@@ -23,6 +22,14 @@ from .case_pack import (
     canonical_case_filename,
 )
 from .errors import DistributionError
+
+
+_REQUIRED_PARTIAL_BLOCKS = frozenset((
+    "unique_birth_time_claim",
+    "unique_hour_pillar_conclusion",
+    "unique_ziwei_natal_conclusion",
+    "single_chart_personalized_forecast",
+))
 
 
 def _mapping(value: object, field: str) -> Mapping[str, object]:
@@ -63,6 +70,16 @@ def _validate_envelope(value: object) -> dict:
     for field in ("allowed_analysis", "blocked_analysis", "boundary_ambiguities"):
         if not isinstance(raw.get(field), list):
             raise DistributionError("invalid_candidate_envelope", "%s must be a list" % field, {"field": field})
+    blocked = raw["blocked_analysis"]
+    if any(not isinstance(item, str) for item in blocked):
+        raise DistributionError("invalid_candidate_envelope", "blocked_analysis must contain string scope identifiers")
+    missing_blocks = sorted(_REQUIRED_PARTIAL_BLOCKS - set(blocked))
+    if missing_blocks:
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "partial Case candidate envelope must keep unique-chart scopes blocked",
+            {"missing_blocked_analysis": missing_blocks},
+        )
     if raw["provenance"].get("midpoint_used") is not False or raw["provenance"].get("default_time_used") is not False:
         raise DistributionError("invalid_candidate_envelope", "partial Case cannot accept midpoint/default-time candidate provenance")
     return raw
