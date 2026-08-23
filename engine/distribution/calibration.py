@@ -50,6 +50,8 @@ def _canonical_case_sources(sources) -> Tuple[list, list]:
         raise DistributionError("blind_source_violation", "source_files_used must be a list of Case files")
     canonical = []
     actual = []
+    subject_short_ids = set()
+    legacy_count = 0
     for source in sources:
         if not isinstance(source, str):
             raise DistributionError("blind_source_violation", "source_files_used entries must be text")
@@ -63,6 +65,22 @@ def _canonical_case_sources(sources) -> Tuple[list, list]:
             ) from exc
         canonical.append(parsed["canonical_filename"])
         actual.append(source)
+        if parsed["legacy"]:
+            legacy_count += 1
+        else:
+            subject_short_ids.add(parsed["subject_short_id"])
+    if legacy_count and subject_short_ids:
+        raise DistributionError(
+            "blind_source_violation",
+            "first-stage blind forecast cannot mix legacy and subject-aware Case filenames",
+            {"actual_sources": actual},
+        )
+    if len(subject_short_ids) > 1:
+        raise DistributionError(
+            "blind_source_violation",
+            "first-stage blind forecast sources must belong to one subject",
+            {"subject_short_ids": sorted(subject_short_ids), "actual_sources": actual},
+        )
     return canonical, actual
 
 
@@ -252,7 +270,7 @@ def _actual_date(value: object) -> Optional[date]:
 def _flow_label_for_date(actual: date, timezone: object) -> Tuple[Optional[int], bool]:
     if isinstance(timezone, str) and timezone:
         zone = ZoneInfo(timezone)
-        boundary = solar_term_time(actual.year, "立春", zone)
+        boundary = solar_term_time(actual.year, "立月", zone)
         if actual == boundary.date():
             return None, True
         return (actual.year if actual > boundary.date() else actual.year - 1), False
