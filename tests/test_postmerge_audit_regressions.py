@@ -43,14 +43,22 @@ def _subject_aware_base5(subject_id: str, short_id: str, display_name: str = "Ka
     return files
 
 
-def _partial_export(envelope: dict) -> dict:
+def _partial_export(envelope: dict, **identity_overrides) -> dict:
+    identity = dict(IDENTITY)
+    identity.update(identity_overrides)
     payload = {
         "candidate_envelope": envelope,
-        **IDENTITY,
+        **identity,
         "generated_at": _CREATED_AT,
         "last_modified_by": "test",
     }
     return dispatch("export_case_markdown", payload)
+
+
+def _apply_changed(files, result):
+    updated = dict(files)
+    updated.update(result["data"]["changed_files"])
+    return updated
 
 
 class PostmergeAuditRegressionTests(unittest.TestCase):
@@ -87,6 +95,74 @@ class PostmergeAuditRegressionTests(unittest.TestCase):
         result = _partial_export(tampered)
         self.assertFalse(result["ok"])
         self.assertEqual(result["error"]["code"], "invalid_candidate_envelope")
+
+    def test_same_record_id_same_payload_retry_is_noop(self):
+        files = _subject_aware_base5("subj_7f3a2c91d4e8", "7F3A2C")
+        entry = {"record_id": "evt-001", "status": "verified", "summary": "same event"}
+        first = dispatch("update_case_record", {
+            "case_files": files,
+            "filename": "05_驗證事件紀錄.md",
+            "operation": "append",
+            "updated_at": _CREATED_AT,
+            "last_modified_by": "test",
+            "entry": entry,
+        })
+        self.assertTrue(first["ok"], first)
+        updated = _apply_changed(files, first)
+        second = dispatch("update_case_record", {
+            "case_files": updated,
+            "filename": "05_驗證事件紀錄.md",
+            "operation": "append",
+            "updated_at": "2026-08-23T18:01:00+08:00",
+            "last_modified_by": "test",
+            "entry": entry,
+        })
+        self.assertTrue(second["ok"], second)
+        self.assertEqual(second["data"]["changed_files"], {})
+
+    def test_same_record_id_different_payload_is_rejected(self):
+        files = _subject_aware_base5("subj_7f3a2c91d4e8", "7F3A2C")
+        first = dispatch("update_case_record", {
+            "case_files": files,
+            "filename": "05_驗證事件紀錄.md",
+            "operation": "append",
+            "updated_at": _CREATED_AT,
+            "last_modified_by": "test",
+            "entry": {"record_id": "evt-001", "status": "verified", "summary": "first"},
+        })
+        self.assertTrue(first["ok"], first)
+        updated = _apply_changed(files, first)
+        second = dispatch("update_case_record", {
+            "case_files": updated,
+            "filename": "05_驗證事件紀錄.md",
+            "operation": "append",
+            "updated_at": "2026-08-23T18:01:00+08:00",
+            "last_modified_by": "test",
+            "entry": {"record_id": "evt-001", "status": "verified", "summary": "changed"},
+        })
+        self.assertFalse(second["ok"])
+        self.assertEqual(second["error"]["code"], "duplicate_record_id")
+
+    def test_registry_rejects_filename_label_not_derived_from_display_name(self):
+        registry = """---
+registry_schema_version: 1.0
+---
+# 命主索引
+
+<!-- subjects:start -->
+```json
+{"subjects":[{"subject_id":"subj_7f3a2c91d4e8","subject_short_id":"7F3A2C","subject_display_name":"Kai","filename_label":"Other","status":"active"}]}
+```
+<!-- subjects:end -->
+"""
+        result = dispatch("subject.registry_validate", {"registry_markdown": registry})
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["error"]["code"], "subject_registry_mismatch")
+
+    def test_case_export_rejects_filename_label_not_derived_from_display_name(self):
+        result = _partial_export(copy.deepcopy(ENVELOPE), filename_label="Other")
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["error"]["code"], "subject_identity_mismatch")
 
 
 if __name__ == "__main__":
