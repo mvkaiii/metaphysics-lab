@@ -73,6 +73,59 @@ class DocumentationContractConsistencyTests(unittest.TestCase):
             self.assertIn("Kai_7F3A2C_01_命盤核心摘要.md", text, relative)
             self.assertIn("<filename_label>_<SUBJECT_SHORT_ID>_<slot>_<canonical_title>.md", text, relative)
 
+    def test_current_authority_case_docs_distinguish_canonical_slots_from_persisted_filenames(self):
+        for relative in (
+            "README.md",
+            "docs/安裝到ChatGPT-Project.md",
+            "docs/更新與版本同步.md",
+            "docs/架構說明.md",
+            "docs/資料治理.md",
+        ):
+            text = (ROOT / relative).read_text(encoding="utf-8")
+            self.assertIn("<filename_label>_<SUBJECT_SHORT_ID>_<slot>_<canonical_title>.md", text, relative)
+            self.assertIn("Kai_7F3A2C_01_命盤核心摘要.md", text, relative)
+            self.assertIn("canonical slot", text, relative)
+
+    def test_update_contract_keeps_legacy_readable_without_forced_destructive_rename(self):
+        text = (ROOT / "docs" / "更新與版本同步.md").read_text(encoding="utf-8")
+        self.assertIn("Legacy Case 1.0", text)
+        self.assertIn("bare filename", text)
+        self.assertIn("不強制", text)
+        self.assertIn("destructive rename", text)
+        self.assertIn("Base5", text)
+        self.assertIn("Progressive4", text)
+
+    def test_architecture_documents_subject_registry_and_candidate_envelope_boundaries(self):
+        text = (ROOT / "docs" / "架構說明.md").read_text(encoding="utf-8")
+        for phrase in (
+            "Subject Registry",
+            "subject_id",
+            "Candidate Envelope",
+            "material state",
+            "invariant",
+            "candidate-dependent",
+            "blocked scopes",
+            "不使用 midpoint",
+            "不用多數決",
+        ):
+            self.assertIn(phrase, text)
+
+    def test_data_governance_minimizes_subject_registry_payload(self):
+        text = (ROOT / "docs" / "資料治理.md").read_text(encoding="utf-8")
+        self.assertIn("命主索引.md", text)
+        self.assertIn("discovery/display metadata", text)
+        self.assertIn("不保存出生資料", text)
+        self.assertIn("不保存人生事件", text)
+        self.assertIn("subject_id", text)
+
+    def test_install_guide_explains_partial_candidate_case_and_subject_resolution(self):
+        text = (ROOT / "docs" / "安裝到ChatGPT-Project.md").read_text(encoding="utf-8")
+        self.assertIn("命主索引.md", text)
+        self.assertIn("natal.candidate_envelope", text)
+        self.assertIn("Candidate Envelope", text)
+        self.assertIn("partial", text)
+        self.assertIn("subject_id", text)
+
     def test_future_guidance_does_not_skip_historical_calibration_gate(self):
         text = (ROOT / "docs" / "命盤資料準備指南.md").read_text(encoding="utf-8")
         self.assertIn("Historical Blind Calibration", text)
