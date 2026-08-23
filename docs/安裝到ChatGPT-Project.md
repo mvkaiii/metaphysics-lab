@@ -24,7 +24,7 @@ ChatGPT Project 與 Claude Project 的介面名稱可能不同，但概念相同
 
 ## 建議模型／推理設定
 
-Metaphysics Lab 的完整分析包含多步 deterministic 資料、八字／紫微交叉、證據層級與盲判／事件校準，因此建議：
+Metaphysics Lab 的完整分析包含多步 deterministic 資料、八字／紫微交叉、證據層級、Historical Blind Calibration 與未來問事雙階段流程，因此建議：
 
 - **High reasoning：完整本命、流年、多人合盤、重大決策的預設。**
 - Medium：一般分析、Case 維護、較單純問題。
@@ -59,7 +59,9 @@ AI 應依 `PROJECT_INSTRUCTIONS.md` 與 `METAPHYSICS_CORE.md` 自動進入初始
 - 本命建立與 reconciliation
 - 八字／紫微可重現計算
 - forecast context
-- Case Markdown export / validation / migration
+- Historical Activation Selector
+- Historical Calibration lock / finalize 所需的 deterministic 資料治理
+- Case Markdown export / validation / migration / progressive materialization
 
 它不負責自由文字的命理解讀，也不替使用者做人生決策。
 
@@ -70,8 +72,9 @@ AI 應依 `PROJECT_INSTRUCTIONS.md` 與 `METAPHYSICS_CORE.md` 自動進入初始
 - task classification
 - 證據／資料層級
 - 先盲判、再事件校準
+- Historical Blind Calibration
 - Input Precision Gate
-- Case 建立與更新規則
+- Progressive Case 建立與更新規則
 - runtime 不可執行時的 fallback
 
 ### `PROJECT_INSTRUCTIONS.md`
@@ -87,9 +90,9 @@ AI 應依 `PROJECT_INSTRUCTIONS.md` 與 `METAPHYSICS_CORE.md` 自動進入初始
 
 它的內容要放在 Project Instructions，不是當成一般知識檔讓 AI 自己猜何時讀。
 
-## 建立 Case
+## 建立 Case：第一次只建立 00～04
 
-第一次本命資料完成後，AI 應產生九份私人檔案：
+第一次本命資料完成後，AI 應先產生五份 Base Case：
 
 ```text
 00_專案索引.md
@@ -97,15 +100,51 @@ AI 應依 `PROJECT_INSTRUCTIONS.md` 與 `METAPHYSICS_CORE.md` 自動進入初始
 02_命盤資料校驗紀錄.md
 03_八字結構化資料包.md
 04_紫微基礎資料包.md
-05_驗證事件紀錄.md
-06_流年追蹤紀錄.md
-07_問事追蹤紀錄.md
-08_重大決策紀錄.md
 ```
 
-把這九份加入自己的 Project。它們是私人 Case，不會被共用 runtime 更新自動覆蓋。
+把這五份加入自己的 Project。它們是私人 Case，不會被共用 runtime 更新自動覆蓋。
 
-AI 後續應採增量更新。例如新增一筆已驗證事件，只替換 `05_驗證事件紀錄.md`；不是每次重建九份。
+其餘 record type 不先建立空檔，而是在第一次真正有內容時 materialize：
+
+```text
+05_驗證事件紀錄.md    ← Historical Blind Calibration 完成或首次新增已確認事件
+06_流年追蹤紀錄.md    ← 首次永久保存流年／年度預測
+07_問事追蹤紀錄.md    ← 首次永久保存一般問事
+08_重大決策紀錄.md    ← 首次永久保存重大決策
+```
+
+所以 00～08 是完整 Case record type 集合，不代表第一次初始化就一定有九個實體檔案。
+
+## Historical Blind Calibration
+
+Historical Calibration 的年份不能由 AI 自己挑。
+
+若需要校準，runtime 會以目前 Case 的 deterministic 八字基礎執行 `historical.activation_selector`：
+
+1. 取最近 10 個已完整結束的 Bazi flow-year periods，以立春為界。
+2. 對 10 年全部依固定 Tier 1 / Tier 2 / Tier 3 relation profile 計算 structural activation。
+3. 使用 deterministic rank vector 排序。
+4. canonical selection 固定取真正 Top 4 high + Bottom 1 control。
+5. AI 只能解讀這 5 年，不能因聊天內容、已知事件或想讓答案更漂亮而換年。
+
+AI 會先給出明確的「年份＋事件領域／事件形式」盲讀，再請使用者逐題回答：符合／部分符合／不符合／想不起來。若實際事情發生在別的年份，直接告訴 AI 正確年份與事件；原始盲讀不得被改寫。
+
+`05_驗證事件紀錄.md` 只在使用者確認實際事件後首次建立，並區分：
+
+- 原始歷史盲讀：命理推論
+- 使用者確認實際事件：已驗證事件
+- timing / domain / event-form 評價：已校驗資料
+
+## 第一次問未來時
+
+若 Case 尚未完成 Historical Calibration，而使用者第一次問流年／未來趨勢／行動決策，AI 必須先：
+
+1. 只讀 00～04 與必要現實條件。
+2. 完成該問題的 Stage 1 盲判並鎖定。
+3. 才執行 Historical Blind Calibration。
+4. 建立 05 後進入 Stage 2 事件校準。
+
+這個順序是為了避免先知道歷史答案後污染第一版未來盲判。
 
 ## 有 Astralium／第三方命盤時
 
@@ -150,4 +189,4 @@ python metaphysics_lab.py request --input - --pretty
 
 ## 隱私
 
-出生資料、Case Markdown、私人事件、raw third-party chart、PDF 與截圖不要提交回共用 GitHub repo。共用發行檔本身不得包含私人 Case 資料。
+出生資料、Case Markdown、Historical Calibration 回答、私人事件、raw third-party chart、PDF 與截圖不要提交回共用 GitHub repo。共用發行檔本身不得包含私人 Case 資料。
