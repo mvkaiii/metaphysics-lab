@@ -74,7 +74,7 @@ def point(year, role="high_activation"):
     }
 
 
-def lock(selector=None):
+def lock(selector=None, supplemental=None):
     selector = selector_result() if selector is None else selector
     years = [row["label_year"] for row in selector["high_years"]]
     points = [point(year) for year in years]
@@ -84,7 +84,7 @@ def lock(selector=None):
         "subject_id": "case-integrity",
         "selector_result": selector,
         "canonical_test_points": points,
-        "supplemental_blind_points": [],
+        "supplemental_blind_points": [] if supplemental is None else supplemental,
         "locked_at": "2026-08-23T10:56:00+08:00",
     })
 
@@ -121,6 +121,18 @@ class HistoricalCalibrationIntegrityTests(unittest.TestCase):
                 "payload_digest": locked["payload_digest"],
                 "responses": [duplicate, duplicate, duplicate],
             })
+
+    def test_lock_rejects_supplemental_point_outside_ranked_ten_year_window(self):
+        with self.assertRaises(ValueError):
+            lock(supplemental=[point(2015)])
+
+    def test_lock_rejects_supplemental_point_that_duplicates_canonical_year(self):
+        with self.assertRaises(ValueError):
+            lock(supplemental=[point(2025)])
+
+    def test_lock_rejects_duplicate_supplemental_years(self):
+        with self.assertRaises(ValueError):
+            lock(supplemental=[point(2020), point(2020)])
 
 
 if __name__ == "__main__":
