@@ -11,6 +11,7 @@ SUPPORTED_ACTIONS = (
     "subject.registry_validate",
     "subject.rename",
     "build_natal",
+    "natal.candidate_envelope",
     "reconcile_natal",
     "resolve_forecast_context",
     "prepare_historical_calibration",
