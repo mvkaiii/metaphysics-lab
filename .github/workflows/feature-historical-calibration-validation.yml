@@ -53,6 +53,7 @@ jobs:
             tests.test_distribution_case_pack \
             tests.test_distribution_partial_case \
             tests.test_postmerge_audit_regressions \
+            tests.test_second_round_adversarial_regressions \
             tests.test_distribution_runtime_info -v
 
       - name: Rebuild AI distribution
