@@ -1,3 +1,4 @@
+# generated-only persistence trigger
 name: Persist Second Round Generated Distribution
 
 on:
