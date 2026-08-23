@@ -1,5 +1,4 @@
 import unittest
-from datetime import time
 
 from engine.natal.candidates import classify_candidate_facts, partition_material_states
 
@@ -25,9 +24,38 @@ class NatalCandidateEnvelopeCoreTests(unittest.TestCase):
         ]
         result = classify_candidate_facts(candidates)
         self.assertEqual(result["invariant_bazi_facts"]["day_master"], "丙")
-        self.assertIn("pillars", result["variant_bazi_facts"])
+        self.assertEqual(result["invariant_bazi_facts"]["pillars"]["day"], "丙辰")
+        self.assertEqual(result["variant_bazi_facts"]["pillars"]["hour"], {"c1": "甲子", "c2": "乙丑"})
         self.assertEqual(result["invariant_ziwei_facts"]["life_master"], "祿存")
-        self.assertIn("ming_palace", result["variant_ziwei_facts"])
+        self.assertEqual(result["variant_ziwei_facts"]["ming_palace"], {"c1": "辰", "c2": "巳"})
+
+    def test_nested_paths_can_split_invariant_and_variant_siblings(self):
+        candidates = [
+            {
+                "candidate_id": "c1",
+                "bazi": {"pillars": {"year": "甲子", "month": "丁卯", "day": "丙午", "hour": "戊戌"}},
+                "ziwei": {"palaces": {"ming": {"branch": "巳", "stem": "己"}, "body": {"branch": "丑"}}},
+            },
+            {
+                "candidate_id": "c2",
+                "bazi": {"pillars": {"year": "甲子", "month": "丁卯", "day": "丙午", "hour": "己亥"}},
+                "ziwei": {"palaces": {"ming": {"branch": "午", "stem": "庚"}, "body": {"branch": "丑"}}},
+            },
+        ]
+        result = classify_candidate_facts(candidates)
+        self.assertEqual(
+            result["invariant_bazi_facts"]["pillars"],
+            {"day": "丙午", "month": "丁卯", "year": "甲子"},
+        )
+        self.assertEqual(
+            result["variant_bazi_facts"]["pillars"]["hour"],
+            {"c1": "戊戌", "c2": "己亥"},
+        )
+        self.assertEqual(result["invariant_ziwei_facts"]["palaces"]["body"]["branch"], "丑")
+        self.assertEqual(
+            result["variant_ziwei_facts"]["palaces"]["ming"]["branch"],
+            {"c1": "巳", "c2": "午"},
+        )
 
     def test_no_majority_rule_promotes_variant(self):
         candidates = [
