@@ -65,6 +65,7 @@ def authoritative_finalize(locked, payload):
         "lock_record_id": locked["lock_record_id"],
         "locked_payload": locked["locked_payload"],
         "payload_digest": locked["payload_digest"],
+        "updated_at": locked["locked_payload"].get("locked_at", WHEN),
         "last_modified_by": "test",
     }
     request.update(payload)
