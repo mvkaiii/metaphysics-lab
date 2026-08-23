@@ -12,7 +12,7 @@ from engine.bazi.calendar import solar_term_time
 from engine.historical.selection_integrity import verify_selection_result
 
 from .case_identity import parse_case_filename
-from .case_pack import BASE_CASE_FILES, CASE_FILES, set_case_calibration_status, update_case_record
+from .case_pack import BASE_CASE_FILES, CASE_FILES, set_case_calibration_status, update_case_record, validate_case
 from .errors import DistributionError
 
 
@@ -45,7 +45,7 @@ def canonical_digest(value: object) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
-def _canonical_case_sources(sources, subject_id=None) -> Tuple[list, list]:
+def _canonical_case_sources(sources, subject_id=None, source_case_files=None) -> Tuple[list, list]:
     if not isinstance(sources, (list, tuple)):
         raise DistributionError("blind_source_violation", "source_files_used must be a list of Case files")
     canonical = []
@@ -82,15 +82,25 @@ def _canonical_case_sources(sources, subject_id=None) -> Tuple[list, list]:
             {"subject_short_ids": sorted(subject_short_ids), "actual_sources": actual},
         )
     if subject_short_ids:
-        resolved_subject = str(subject_id or "")
-        subject_hex = resolved_subject[5:] if resolved_subject.startswith("subj_") else ""
-        is_hex = len(subject_hex) >= 12 and all(ch in "0123456789abcdef" for ch in subject_hex.lower())
-        short_id = next(iter(subject_short_ids))
-        if not is_hex or not subject_hex.upper().startswith(short_id):
+        if not isinstance(source_case_files, Mapping):
             raise DistributionError(
                 "blind_source_violation",
-                "subject-aware blind sources must match payload subject_id",
-                {"subject_id": resolved_subject, "subject_short_id": short_id, "actual_sources": actual},
+                "subject-aware blind sources require the selected Base Case file contents for full identity validation",
+                {"actual_sources": actual},
+            )
+        if set(source_case_files) != set(actual):
+            raise DistributionError(
+                "blind_source_violation",
+                "source_case_files must contain exactly the selected blind Base Case files",
+                {"actual_sources": actual, "provided_sources": sorted(str(key) for key in source_case_files)},
+            )
+        validation = validate_case({"case_files": source_case_files})
+        resolved_subject = str(subject_id or "")
+        if validation.get("subject_id") != resolved_subject:
+            raise DistributionError(
+                "blind_source_violation",
+                "subject-aware blind sources must match the full payload subject_id",
+                {"subject_id": resolved_subject, "source_subject_id": validation.get("subject_id"), "actual_sources": actual},
             )
     return canonical, actual
 
@@ -118,7 +128,9 @@ def _actual_case_filename(case_files: Mapping[str, object], canonical: str) -> s
 def lock_blind_forecast(payload: Mapping[str, object]) -> dict:
     payload = _mapping(payload, "payload")
     subject_id = _text(payload.get("subject_id"), "subject_id")
-    canonical_sources, actual_sources = _canonical_case_sources(payload.get("source_files_used"), subject_id)
+    canonical_sources, actual_sources = _canonical_case_sources(
+        payload.get("source_files_used"), subject_id, payload.get("source_case_files")
+    )
     if len(canonical_sources) != len(BASE_CASE_FILES) or set(canonical_sources) != set(BASE_CASE_FILES):
         raise DistributionError(
             "blind_source_violation",
