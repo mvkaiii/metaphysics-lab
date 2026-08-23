@@ -33,6 +33,16 @@ _REQUIRED_PARTIAL_BLOCKS = frozenset((
     "single_chart_personalized_forecast",
 ))
 
+_KNOWN_FACT_FIELDS = frozenset((
+    "sex",
+    "birth_date",
+    "birth_place",
+    "resolved_place_label",
+    "timezone",
+    "reported_birth_time",
+    "reported_birth_time_range",
+))
+
 
 def _mapping(value: object, field: str) -> Mapping[str, object]:
     if not isinstance(value, Mapping):
@@ -69,6 +79,34 @@ def _validate_envelope(value: object) -> dict:
     ):
         if not isinstance(raw.get(field), Mapping):
             raise DistributionError("invalid_candidate_envelope", "%s must be a mapping" % field, {"field": field})
+    known = raw["known_facts"]
+    unexpected_known = sorted(set(known) - _KNOWN_FACT_FIELDS)
+    if unexpected_known:
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "known_facts contains candidate-dependent or unsupported fields",
+            {"unexpected_known_facts": unexpected_known},
+        )
+    if known.get("reported_birth_time") not in (None, ""):
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "partial Case cannot claim one exact reported birth time",
+            {"reported_birth_time": known.get("reported_birth_time")},
+        )
+    reported_range = known.get("reported_birth_time_range")
+    if precision == "unknown_time" and reported_range not in (None, ""):
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "unknown_time candidate envelope cannot claim a reported birth-time range",
+        )
+    if precision == "bounded":
+        if not isinstance(reported_range, (list, tuple)) or len(reported_range) != 2 or any(
+            not isinstance(item, str) or not item.strip() for item in reported_range
+        ):
+            raise DistributionError(
+                "invalid_candidate_envelope",
+                "bounded candidate envelope requires a two-value reported birth-time range",
+            )
     for field in ("allowed_analysis", "blocked_analysis", "boundary_ambiguities"):
         if not isinstance(raw.get(field), list):
             raise DistributionError("invalid_candidate_envelope", "%s must be a list" % field, {"field": field})
