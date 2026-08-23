@@ -1,7 +1,7 @@
 # Subject Identity Registry + Unknown Birth Time Candidate Envelope｜設計規格
 
 日期：2026-08-23  
-狀態：Design approved in chat; written spec pending user review  
+狀態：Approved for implementation  
 適用分支：`feature/progressive-case-historical-calibration`
 
 ---
@@ -131,9 +131,9 @@ Registry 只保存 identity / display / Case discovery metadata，不保存完�
 Rename 是顯示層變更：
 
 ```text
-小明__7F3A2C__01_命盤核心摘要.md
+小明_7F3A2C_01_命盤核心摘要.md
 →
-Eric__7F3A2C__01_命盤核心摘要.md
+Eric_7F3A2C_01_命盤核心摘要.md
 ```
 
 `subject_id` 不變。
@@ -154,21 +154,21 @@ Rename 必須一次更新：
 新 Case canonical filename：
 
 ```text
-<filename_label>__<SUBJECT_SHORT_ID>__<slot>_<canonical_title>.md
+<filename_label>_<SUBJECT_SHORT_ID>_<slot>_<canonical_title>.md
 ```
 
 例如：
 
 ```text
-Kai__7F3A2C__00_專案索引.md
-Kai__7F3A2C__01_命盤核心摘要.md
-Kai__7F3A2C__02_命盤資料校驗紀錄.md
-Kai__7F3A2C__03_八字結構化資料包.md
-Kai__7F3A2C__04_紫微基礎資料包.md
-Kai__7F3A2C__05_驗證事件紀錄.md
-Kai__7F3A2C__06_流年追蹤紀錄.md
-Kai__7F3A2C__07_問事追蹤紀錄.md
-Kai__7F3A2C__08_重大決策紀錄.md
+Kai_7F3A2C_00_專案索引.md
+Kai_7F3A2C_01_命盤核心摘要.md
+Kai_7F3A2C_02_命盤資料校驗紀錄.md
+Kai_7F3A2C_03_八字結構化資料包.md
+Kai_7F3A2C_04_紫微基礎資料包.md
+Kai_7F3A2C_05_驗證事件紀錄.md
+Kai_7F3A2C_06_流年追蹤紀錄.md
+Kai_7F3A2C_07_問事追蹤紀錄.md
+Kai_7F3A2C_08_重大決策紀錄.md
 ```
 
 ### 5.1 filename label normalization
@@ -197,8 +197,10 @@ Amy / Marketing → Amy-Marketing
 Runtime 不再用完整 filename 直接判定 record type，而是 parse：
 
 ```text
-<label>__<short_id>__<slot>_<canonical_title>.md
+<label>_<short_id>_<slot>_<canonical_title>.md
 ```
+
+由於 `filename_label` 可能含單底線，parser 必須從右側的 `<short_id>_<slot>_<canonical_title>` canonical suffix 解析，不得用簡單 `split("_")` 假設 label 內沒有底線。
 
 並驗證：
 
