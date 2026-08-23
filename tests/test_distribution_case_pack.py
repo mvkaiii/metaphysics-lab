@@ -128,6 +128,8 @@ class DistributionCasePackTests(unittest.TestCase):
         second = self.append(files, "05_驗證事件紀錄.md", {"record_id": "evt-002", "status": "verified", "summary": "第二件事"}, "2026-08-23T02:00:00+08:00")
         self.assertTrue(second["ok"], second)
         self.assertEqual(list(second["data"]["changed_files"]), [actual("05_驗證事件紀錄.md")])
+        text = second["data"]["changed_files"][actual("05_驗證事件紀錄.md")]
+        self.assertEqual(text.count("<!-- Metaphysics Lab Case Template"), 1)
 
     def test_first_tracking_records_materialize_06_07_08_on_demand(self):
         samples = {
