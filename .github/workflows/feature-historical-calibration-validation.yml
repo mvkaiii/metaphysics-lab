@@ -41,6 +41,10 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
+      - name: Apply stabilization patch helper
+        if: github.ref == 'refs/heads/fix/postmerge-audit-161-165' || github.head_ref == 'fix/postmerge-audit-161-165'
+        run: python tools/apply_postmerge_stabilization.py
+
       - name: Historical selector and progressive Case focused tests
         run: |
           python -m unittest \
@@ -64,6 +68,22 @@ jobs:
       - name: Python 3.9 compile check
         run: |
           python -m compileall engine tests tools
+
+      - name: Persist stabilization source changes
+        if: github.ref == 'refs/heads/fix/postmerge-audit-161-165' || github.head_ref == 'fix/postmerge-audit-161-165'
+        run: |
+          if git diff --quiet -- engine dist/ai; then
+            echo "Stabilization source already committed"
+            rm -f .stabilization-commit-message
+            exit 0
+          fi
+          message="$(cat .stabilization-commit-message)"
+          rm -f .stabilization-commit-message
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add engine dist/ai
+          git commit -m "$message"
+          git push origin HEAD:fix/postmerge-audit-161-165
 
       - name: Persist generated distribution on feature branch
         if: github.ref == 'refs/heads/feature/progressive-case-historical-calibration' || github.head_ref == 'feature/progressive-case-historical-calibration'
