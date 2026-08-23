@@ -310,6 +310,11 @@ def _render_case_file(canonical: str, metadata: Mapping[str, object], body: str)
     return render_front_matter(metadata) + template.format(body=body.rstrip()).rstrip() + "\n"
 
 
+def _rewrite_case_file(metadata: Mapping[str, object], body: str) -> str:
+    """Rewrite an already-rendered Case without nesting the canonical template again."""
+    return render_front_matter(metadata) + body.rstrip() + "\n"
+
+
 def _manifest_expected_line(canonical: str, actual: str, present: bool) -> str:
     labels = {"00": "專案索引", "01": "命盤核心摘要", "02": "命盤資料校驗紀錄", "03": "八字結構化資料包", "04": "紫微基礎資料包", "05": "驗證事件紀錄", "06": "流年追蹤紀錄", "07": "問事追蹤紀錄", "08": "重大決策紀錄"}
     return "- %s %s %s｜`%s`" % ("✓" if present else "○", canonical[:2], labels[canonical[:2]], actual)
@@ -471,7 +476,7 @@ def migrate_case(payload: Mapping[str, object]) -> dict:
         if canonical == "00_專案索引.md":
             body = _replace_manifest_lines(body, identity, CASE_FILES)
         actual = canonical_case_filename(identity, canonical)
-        changed[actual] = _render_case_file(canonical, metadata, body)
+        changed[actual] = _rewrite_case_file(metadata, body)
         renamed[actual_by_canonical[canonical]] = actual
     return {
         "status": "compatible", "migration": "legacy_1_0_to_subject_aware_1_1", "changed_files": changed,
@@ -511,7 +516,7 @@ def rename_case_subject_files(case_files: Mapping[str, object], new_subject_disp
             body = body.replace("- 命主：%s" % old_identity["subject_display_name"], "- 命主：%s" % new_identity["subject_display_name"], 1)
         new_actual = canonical_case_filename(new_identity, canonical)
         old_actual = actual_by_canonical[canonical]
-        changed[new_actual] = _render_case_file(canonical, metadata, body)
+        changed[new_actual] = _rewrite_case_file(metadata, body)
         renamed[old_actual] = new_actual
     return {
         "subject_id": new_identity["subject_id"], "subject": new_identity, "changed_files": changed,
@@ -601,7 +606,8 @@ def update_case_record(payload: Mapping[str, object]) -> dict:
     updated_at = _timestamp(payload.get("updated_at"), "updated_at")
     modified_by = _text(payload.get("last_modified_by", "ai"), "last_modified_by")
     changed = {}
-    if canonical in files:
+    existing = canonical in files
+    if existing:
         metadata, body = parse_front_matter(files[canonical])
         actual_target = actual_by_canonical[canonical]
     else:
@@ -615,5 +621,6 @@ def update_case_record(payload: Mapping[str, object]) -> dict:
         index_actual = actual_by_canonical["00_專案索引.md"]
         changed[index_actual] = _set_index_materialized(files["00_專案索引.md"], canonical, actual_target, updated_at, modified_by)
     metadata["last_updated_at"], metadata["last_modified_by"] = updated_at, modified_by
-    changed[actual_target] = _render_case_file(canonical, metadata, _append_record(body, _render_entry(entry)))
+    updated_body = _append_record(body, _render_entry(entry))
+    changed[actual_target] = _rewrite_case_file(metadata, updated_body) if existing else _render_case_file(canonical, metadata, updated_body)
     return {"subject_id": validation["subject_id"], "changed_files": changed}
