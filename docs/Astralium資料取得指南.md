@@ -1,156 +1,192 @@
 # Astralium 資料取得指南
 
-本文件說明如何把 Astralium 當作 Metaphysics Lab 的原始命盤資料來源之一。
+本文件說明如何把 Astralium 當作 Metaphysics Lab 的結構化 external chart 來源之一，以及它與 Project deterministic chart 的資料邊界。
 
 Astralium 官方網站：
 
 https://getastralium.com/
 
-截至 2026-08-20，Astralium 官方說明其定位為 AI 術數排盤資料平台：先排盤，再產生可複製給 ChatGPT／Claude 的結構化資料包。官方目前提供八字、紫微斗數與其他術數系統，基礎排盤與 AI 資料包可直接試用。
+截至 2026-08-20，Astralium 官方說明其定位為 AI 術數排盤資料平台，可先排盤，再產生可交給 ChatGPT／Claude 的結構化資料包。
 
-Metaphysics Lab 不隸屬 Astralium，也不把 Astralium 視為唯一可用來源；它只是目前相當適合提供「可直接交給 AI 讀取的結構化原始盤面」的來源之一。
+Metaphysics Lab 不隸屬 Astralium，也不把 Astralium 視為唯一或必要來源。它是可選的第三方 external source；實際能否由 Project 自行建立某個 deterministic capability，一律以當次 `runtime_info` 為準。
 
 ---
 
-## 一、為什麼建議使用結構化排盤資料
+## 一、為什麼建議保存結構化原始資料
 
-直接把生日交給 AI，會把「排盤」與「解讀」混在同一個步驟。
-
-Metaphysics Lab 的設計是把它們拆開：
+Metaphysics Lab 的設計把來源資料、Project 計算與 AI 解讀分開：
 
 ```text
-排盤來源
-→ 原始盤面事實
-→ 資料校驗
-→ Project 固定算法推導
-→ 命理解讀
-→ 事件校準
+第三方排盤來源
+↓
+External raw view／原始盤面事實
+↓
+Project 依出生資料獨立建立 deterministic natal（若 required inputs 完整）
+↓
+External / Project reconciliation
+↓
+Resolved view
+↓
+需要時建立 Project 推導盤面
+↓
+AI 命理解讀
+↓
+Historical Blind Calibration／事件校準
 ```
 
-因此建議先用正式排盤引擎產生資料，再交給 ChatGPT Project 分析。
+這樣做的重點不是「一定要第三方先排盤」，而是任何來源都要保留 provenance，不讓原始資料、Project 計算與 AI 推論混成一層。
 
 ---
 
-## 二、建立八字資料
+## 二、建立八字 external data
 
-進入 Astralium 後，選擇八字系統並輸入正確出生資料。
-
-至少確認：
+若使用 Astralium 八字資料包，至少確認並保存來源實際提供的：
 
 - 性別
 - 西元出生年月日
 - 出生時間
 - 出生地
-- 時區或系統採用的時間口徑
-
-排盤完成後，優先保存／複製完整 AI 結構化資料包，不要只截取一小段解讀。
-
-建議資料包至少能讓 Project 讀到：
-
+- 時區、真太陽時、子時換日或其他時間口徑
 - 四柱
 - 日主
 - 藏干
 - 十神
 - 大運
-- 流年
-- 來源提供的時間設定與其他盤面欄位
+- 來源提供的流年資料
+- 排盤系統版本／產出日期（若可取得）
 
-如果 Astralium 提供格局、身強弱、喜用、神煞或互動資訊，也可以保留，但要維持來源原貌，不要先人工改寫成自己的結論。
+若資料包另外提供格局、身強弱、喜用、神煞或干支互動，也可以保留，但要維持來源原貌，不要先人工改寫成自己的結論。
+
+如果來源只提供部分欄位，就只匯入那些欄位。不得因為「通常八字應該還有某欄」而自行補值。
+
+### 不知道出生時間時
+
+不要為了讓 Astralium 或 Project 能排出完整盤而隨便填一個時辰。
+
+若使用者已有來源明確的四柱或部分八字資料，可以把實際提供內容保存為 External view；但已知四柱不等於已知唯一 civil 出生時間，也不能用來自動重建完整 Ziwei natal。
+
+目前 Project natal required inputs 與可執行狀態請看 `runtime_info`。若缺少出生時間而 runtime 回報 missing field，就保留未知，不假裝已建立完整 Project 本命。
 
 ---
 
-## 三、建立紫微資料
+## 三、建立紫微 external data
 
-若要完整使用 Metaphysics Lab 的八字＋紫微框架，也建議另外建立紫微斗數資料包。
-
-優先保存：
+若要使用第三方紫微資料，優先保存來源實際提供的：
 
 - 十二宮
 - 各宮星曜
 - 命宮
 - 身宮
 - 生年四化
-- 自化／飛化（若資料包有提供）
+- 自化／飛化（若來源有提供）
 - 大限
 - 小限
 - 流年命宮
-- 流年四化／飛化（若資料包有提供）
+- 流年四化／飛化（若來源有提供）
+- 排盤系統與時間口徑
 
-不要因為 Metaphysics Lab 已有紫微流月引擎，就省略紫微原始資料包。
+不要因為 Project runtime 可能具備某些紫微 natal、流月、流日、流時、四化、飛化或流曜能力，就省略 external source 的原始資料；兩者的角色不同。
 
-Metaphysics Lab 的紫微流月只負責 Project 推導的月份定位，仍然需要正式紫微本命、大限與流年資料作為分析基礎。
+同樣地，也不要在本文件把「目前能算哪些紫微細層」寫死。需要建立某一時間層時，先讀 `runtime_info`，只使用當次 runtime 宣告可用且 required inputs 已滿足的 capability。
 
 ---
 
-## 四、資料包如何放進私人 Project
+## 四、把 Astralium 原始資料放進私人 Project
 
-建議把 Astralium 產出的資料存成獨立文字／Markdown 檔，例如：
+建議把 Astralium 原始資料另存成清楚標示來源的文字／Markdown，例如：
 
 ```text
 八字_原始資料_Astralium.md
 紫微_原始資料_Astralium.md
 ```
 
-如果保留 PDF 或截圖，也可以一起放在私人 Project，但結構化文字通常更方便 AI 精確讀取與搜尋。
-
-檔案開頭建議補：
+檔案開頭可保留：
 
 ```text
 來源：Astralium
 網址：https://getastralium.com/
 產出日期：YYYY-MM-DD
 命主：私人標籤
+時間口徑：來源實際設定
 ```
 
-不要把真實命主的資料提交到 Metaphysics Lab GitHub 公開／共用核心。
+PDF 或截圖也可以保留，但結構化文字通常更方便做欄位級 comparison。
+
+不要把真實命主的出生資料、Astralium raw chart 或人生事件提交到 Metaphysics Lab 公開／共用 GitHub repo。
 
 ---
 
-## 五、第一次匯入後先做校驗
+## 五、第一次匯入後先做 natal reconciliation
 
-不要拿到資料包後立刻問「今年會發生什麼」。
+不要拿到資料包後直接把它視為 Project 自己算出的結果。
 
-先要求 Project 做命盤校驗，至少確認：
+若 required inputs 完整且 runtime 能建立 Project natal，應保留：
 
-1. 出生時間與出生地是否正確。
-2. 八字四柱是否能一致讀出。
-3. 日主與大運是否清楚。
-4. 紫微命宮、身宮、大限與流年資料是否可讀。
-5. 是否有真太陽時、子時換日或其他時間口徑差異。
-6. 不同來源若有差異，先寫入 `命盤資料校驗紀錄.md`。
+```text
+External / Project / Resolved
+```
 
-校驗完成後，再建立 `命盤核心摘要.md`。
+至少核對：
 
----
+1. 出生資料與時間口徑是否一致。
+2. 八字四柱、日主與大運是否可比較。
+3. 紫微命宮、身宮、十二宮、大限等可比較欄位是否一致。
+4. 真太陽時、子時換日或其他 time profile 是否造成 material difference。
+5. 不可比較的欄位是否明確標記 NOT_COMPARABLE，而不是猜值。
+6. comparison 結果是否保留 MATCH / EQUIVALENT / CONFLICT / NOT_COMPARABLE 與 severity。
 
-## 六、Astralium 與 Metaphysics Lab 的資料邊界
+建立私人 Case 後，校驗資料寫入：
 
-Astralium 直接提供的內容：
+```text
+00_專案索引.md
+01_命盤核心摘要.md
+02_命盤資料校驗紀錄.md
+03_八字結構化資料包.md
+04_紫微基礎資料包.md
+```
 
-> 原始盤面事實
-
-Metaphysics Lab 依固定 Python／規則計算的內容，例如八字細部時間層與紫微流月：
-
-> Project 推導盤面
-
-AI 對這些盤面做出的事件或策略解讀：
-
-> 命理推論
-
-三者不得混稱。
-
-例如：
-
-- Astralium 沒有提供紫微流月，不代表 Metaphysics Lab 的紫微流月是 Astralium 結果。
-- Metaphysics Lab 可以依自己的正式規則建立 Project 紫微流月，但回答必須標示為 Project 推導。
+新 Case 第一次只 materialize 00～04；05～08 依後續實際使用情境建立，不預先建立空檔。
 
 ---
 
-## 七、不是一定要用 Astralium
+## 六、Astralium 與 Metaphysics Lab 的八種資料層級
 
-如果使用其他排盤網站、命理軟體、命理師提供的 PDF 或結構化資料，也可以使用 Metaphysics Lab。
+分析時固定區分：
 
-但至少要保留：
+1. **原始盤面事實**：Astralium 或其他第三方直接提供的欄位。
+2. **已校驗資料**：External / Project reconciliation、Historical Calibration evaluation 等校驗結果。
+3. **Project 原生盤面**：Project 由出生資料經固定 Natal Engine 建立的本命 deterministic facts。
+4. **Project 推導盤面**：Project 由本命／運限／目標時間固定推導出的時間層與 Historical Activation selection。
+5. **已驗證事件**：使用者確認真正發生過的事情。
+6. **命理推論**：AI 對盤面做出的趨勢、事件與策略解讀。
+7. **研究假說**：尚未正式納入已校驗 deterministic contract 的研究性想法。
+8. **當次現實背景**：使用者當次提供的真實工作、財務、家庭與決策條件。
+
+Astralium raw chart 不會因為進入 Project 就變成 Project 原生盤面；Project 自算的 natal 也不會因為與 Astralium 一致就變成 Astralium 直接輸出。
+
+---
+
+## 七、Historical Blind Calibration 與驗證事件
+
+新使用者建立 Base Case 後，可以先做本命分析。
+
+第一次進入個人化未來趨勢、流年或重大決策，而 `00_專案索引.md` 顯示 Historical Calibration 尚未完成時，依目前 Project Contract 先鎖定該問題的 Stage 1，再做 Historical Blind Calibration。
+
+校準完成後才首次需要 materialize `05_驗證事件紀錄.md`。其中：
+
+- `blind_prediction`＝命理推論
+- `user_confirmed_actual`＝已驗證事件
+- `evaluation`＝已校驗資料
+
+不得把已知事件反寫成原本就預測到，也不得為了讓 external chart 看起來更準而修改原始盤面。
+
+---
+
+## 八、不是一定要用 Astralium
+
+其他排盤網站、命理軟體、命理師提供的 PDF 或結構化資料也可以作為 external source。
+
+至少保留：
 
 - 資料來源
 - 出生資料
@@ -158,12 +194,12 @@ AI 對這些盤面做出的事件或策略解讀：
 - 產出日期／版本（若有）
 - 原始盤面內容
 
-來源不同時，先校驗，不要把不同系統的欄位直接混在一起。
+來源不同時先做 comparison，不要把不同來源的欄位直接拼成一張不存在的「綜合原始盤」。
 
 ---
 
-## 八、隱私提醒
+## 九、隱私提醒
 
-出生年月日時、出生地與人生事件屬於私人 Case 資料。
+出生年月日時、出生地、external raw chart、Historical Calibration 回答與人生事件都屬私人 Case 資料。
 
-GitHub repo 只保存規則、引擎、測試與空白模板；實際命主的 Astralium 資料包應留在私人 ChatGPT Project 或其他受控環境中。
+GitHub repo 只保存共用規則、runtime、測試、qualification 與非私人模板；實際命主資料應留在私人 ChatGPT Project 或其他受控環境中。
