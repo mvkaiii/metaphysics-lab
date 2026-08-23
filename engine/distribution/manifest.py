@@ -10,6 +10,7 @@ from typing import Any, Dict, Mapping
 _REGISTRY_FILES = (
     "birth/capabilities.py",
     "bazi/capabilities.py",
+    "historical/capabilities.py",
     "natal/capabilities.py",
     "ziwei/capabilities.py",
 )
