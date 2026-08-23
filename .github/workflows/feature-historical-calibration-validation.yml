@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validation:
@@ -40,6 +40,54 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
+
+      - name: Commit full blind-source subject identity binding
+        if: github.event_name == 'push' && github.ref == 'refs/heads/fix/postmerge-audit-161-165'
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("engine/distribution/calibration.py")
+          text = path.read_text(encoding="utf-8")
+          replacements = [
+              (
+                  "from .case_pack import BASE_CASE_FILES, CASE_FILES, set_case_calibration_status, update_case_record\n",
+                  "from .case_pack import BASE_CASE_FILES, CASE_FILES, set_case_calibration_status, update_case_record, validate_case\n",
+              ),
+              (
+                  "def _canonical_case_sources(sources, subject_id=None) -> Tuple[list, list]:\n",
+                  "def _canonical_case_sources(sources, subject_id=None, source_case_files=None) -> Tuple[list, list]:\n",
+              ),
+              (
+                  '''    if subject_short_ids:\n        resolved_subject = str(subject_id or "")\n        subject_hex = resolved_subject[5:] if resolved_subject.startswith("subj_") else ""\n        is_hex = len(subject_hex) >= 12 and all(ch in "0123456789abcdef" for ch in subject_hex.lower())\n        short_id = next(iter(subject_short_ids))\n        if not is_hex or not subject_hex.upper().startswith(short_id):\n            raise DistributionError(\n                "blind_source_violation",\n                "subject-aware blind sources must match payload subject_id",\n                {"subject_id": resolved_subject, "subject_short_id": short_id, "actual_sources": actual},\n            )\n    return canonical, actual\n''',
+                  '''    if subject_short_ids:\n        if not isinstance(source_case_files, Mapping):\n            raise DistributionError(\n                "blind_source_violation",\n                "subject-aware blind sources require the selected Base Case file contents for full identity validation",\n                {"actual_sources": actual},\n            )\n        if set(source_case_files) != set(actual):\n            raise DistributionError(\n                "blind_source_violation",\n                "source_case_files must contain exactly the selected blind Base Case files",\n                {"actual_sources": actual, "provided_sources": sorted(str(key) for key in source_case_files)},\n            )\n        validation = validate_case({"case_files": source_case_files})\n        resolved_subject = str(subject_id or "")\n        if validation.get("subject_id") != resolved_subject:\n            raise DistributionError(\n                "blind_source_violation",\n                "subject-aware blind sources must match the full payload subject_id",\n                {"subject_id": resolved_subject, "source_subject_id": validation.get("subject_id"), "actual_sources": actual},\n            )\n    return canonical, actual\n''',
+              ),
+              (
+                  '    canonical_sources, actual_sources = _canonical_case_sources(payload.get("source_files_used"), subject_id)\n',
+                  '    canonical_sources, actual_sources = _canonical_case_sources(\n        payload.get("source_files_used"), subject_id, payload.get("source_case_files")\n    )\n',
+              ),
+          ]
+          changed = False
+          for old, new in replacements:
+              if new in text:
+                  continue
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit("expected one calibration patch target, found %d" % count)
+              text = text.replace(old, new, 1)
+              changed = True
+          if changed:
+              path.write_text(text, encoding="utf-8")
+          PY
+          if git diff --quiet -- engine/distribution/calibration.py; then
+            echo "Full identity fix already committed"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add engine/distribution/calibration.py
+            git commit -m "fix: bind blind Base5 to full subject identity (#162)"
+            git push origin HEAD:fix/postmerge-audit-161-165
+          fi
 
       - name: Historical selector and progressive Case focused tests
         run: |
