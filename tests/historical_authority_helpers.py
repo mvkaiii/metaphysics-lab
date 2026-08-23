@@ -24,7 +24,14 @@ def base_case_files():
         "subject_short_id": SHORT_ID,
         "filename_label": DISPLAY_NAME,
     }
-    manifest = ["# %s｜Metaphysics Lab Case｜專案索引" % DISPLAY_NAME, "", "## Case Files", ""]
+    manifest = [
+        "# %s｜Metaphysics Lab Case｜專案索引" % DISPLAY_NAME,
+        "",
+        "Historical Calibration: `uncalibrated`",
+        "",
+        "## Case Files",
+        "",
+    ]
     for canonical in CASE_FILES:
         actual = canonical_case_filename(identity, canonical)
         manifest.append(_manifest_expected_line(canonical, actual, canonical in BASE_CASE_FILES))
