@@ -190,8 +190,18 @@ def _classify_tree(candidates, key: str):
 
 
 def classify_candidate_facts(candidates) -> dict:
-    if not candidates:
+    if not isinstance(candidates, (list, tuple)) or not candidates:
         raise ValueError("candidate list must not be empty")
+    candidate_ids = set()
+    for candidate in candidates:
+        if not isinstance(candidate, Mapping):
+            raise ValueError("candidate entries must be mappings")
+        candidate_id = candidate.get("candidate_id")
+        if not isinstance(candidate_id, str) or not candidate_id.strip():
+            raise ValueError("candidate_id must be non-empty text")
+        if candidate_id in candidate_ids:
+            raise ValueError("candidate_id values must be unique")
+        candidate_ids.add(candidate_id)
     invariant_bazi, variant_bazi = _classify_tree(candidates, "bazi")
     invariant_ziwei, variant_ziwei = _classify_tree(candidates, "ziwei")
     return {
