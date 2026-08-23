@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import date, datetime
-from typing import Mapping
+from typing import Mapping, Optional, Tuple
 from zoneinfo import ZoneInfo
 
 from engine.bazi.calendar import solar_term_time
@@ -65,7 +65,7 @@ def lock_blind_forecast(payload: Mapping[str, object]) -> dict:
     return {"locked_payload": locked, "payload_digest": canonical_digest(locked)}
 
 
-def _selector_point_map(selector: Mapping[str, object]) -> tuple[list[int], dict[int, Mapping[str, object]]]:
+def _selector_point_map(selector: Mapping[str, object]) -> Tuple[list, dict]:
     high = selector.get("high_years")
     control = selector.get("control_year")
     if not isinstance(high, (list, tuple)) or len(high) != 4 or not isinstance(control, Mapping):
@@ -165,7 +165,7 @@ def lock_historical_calibration(payload: Mapping[str, object]) -> dict:
     }
 
 
-def _actual_date(value: object) -> date | None:
+def _actual_date(value: object) -> Optional[date]:
     if value is None:
         return None
     if not isinstance(value, str):
@@ -176,15 +176,23 @@ def _actual_date(value: object) -> date | None:
         raise DistributionError("invalid_calibration_response", "actual_date must be YYYY-MM-DD text") from exc
 
 
-def _flow_label_for_date(actual: date, timezone: object) -> tuple[int | None, bool]:
+def _flow_label_for_date(actual: date, timezone: object) -> Tuple[Optional[int], bool]:
     if isinstance(timezone, str) and timezone:
         zone = ZoneInfo(timezone)
-    else:
-        zone = ZoneInfo("Asia/Taipei")
-    boundary = solar_term_time(actual.year, "立春", zone)
-    if actual == boundary.date():
-        return None, True
-    return (actual.year if actual > boundary.date() else actual.year - 1), False
+        boundary = solar_term_time(actual.year, "立春", zone)
+        if actual == boundary.date():
+            return None, True
+        return (actual.year if actual > boundary.date() else actual.year - 1), False
+
+    # No IANA timezone provenance: do not guess a location. January and
+    # March-December are unambiguous relative to the Li-Chun month; February
+    # is intentionally left unscorable because the exact boundary cannot be
+    # reproduced safely without timezone provenance.
+    if actual.month == 1:
+        return actual.year - 1, False
+    if actual.month >= 3:
+        return actual.year, False
+    return None, True
 
 
 def _timing_evaluation(point: Mapping[str, object], response: Mapping[str, object], timezone: object) -> dict:
