@@ -530,6 +530,32 @@ def _render_entry(entry: Mapping[str, object]) -> str:
     return "### %s\n\n```json\n%s\n```" % (record_id, payload)
 
 
+def _record_entries(body: str) -> dict:
+    start, end = body.find(_RECORDS_START), body.find(_RECORDS_END)
+    if start < 0 or end < 0 or end <= start:
+        raise DistributionError("invalid_case_markdown", "tracking Case file is missing record boundary markers")
+    content_start = start + len(_RECORDS_START)
+    current = body[content_start:end].strip()
+    if current == _EMPTY_RECORDS or not current:
+        return {}
+    records = {}
+    for chunk in re.split(r"\n\n(?=### )", current):
+        first_line, marker, rest = chunk.partition("\n\n```json\n")
+        if not marker or not first_line.startswith("### ") or not rest.endswith("\n```"):
+            raise DistributionError("invalid_case_markdown", "tracking record block is malformed")
+        record_id = first_line[4:].strip()
+        try:
+            parsed = json.loads(rest[:-4])
+        except (TypeError, ValueError) as exc:
+            raise DistributionError("invalid_case_markdown", "tracking record JSON cannot be parsed") from exc
+        if not isinstance(parsed, Mapping) or parsed.get("record_id") != record_id:
+            raise DistributionError("invalid_case_markdown", "tracking record heading does not match payload record_id")
+        if record_id in records:
+            raise DistributionError("invalid_case_markdown", "tracking file contains duplicate record_id", {"record_id": record_id})
+        records[record_id] = dict(parsed)
+    return records
+
+
 def _append_record(body: str, entry_text: str) -> str:
     start, end = body.find(_RECORDS_START), body.find(_RECORDS_END)
     if start < 0 or end < 0 or end <= start:
@@ -620,6 +646,16 @@ def update_case_record(payload: Mapping[str, object]) -> dict:
         body = _tracking_body({"05_驗證事件紀錄.md": "驗證事件紀錄", "06_流年追蹤紀錄.md": "流年追蹤紀錄", "07_問事追蹤紀錄.md": "問事追蹤紀錄", "08_重大決策紀錄.md": "重大決策紀錄"}[canonical], identity["subject_display_name"])
         index_actual = actual_by_canonical["00_專案索引.md"]
         changed[index_actual] = _set_index_materialized(files["00_專案索引.md"], canonical, actual_target, updated_at, modified_by)
+    record_id = _text(entry.get("record_id"), "entry.record_id")
+    existing_records = _record_entries(body)
+    if record_id in existing_records:
+        if existing_records[record_id] == dict(entry):
+            return {"subject_id": validation["subject_id"], "changed_files": {}}
+        raise DistributionError(
+            "duplicate_record_id",
+            "record_id already exists in this Case slot with different content",
+            {"filename": requested_filename, "record_id": record_id},
+        )
     metadata["last_updated_at"], metadata["last_modified_by"] = updated_at, modified_by
     updated_body = _append_record(body, _render_entry(entry))
     changed[actual_target] = _rewrite_case_file(metadata, updated_body) if existing else _render_case_file(canonical, metadata, updated_body)
