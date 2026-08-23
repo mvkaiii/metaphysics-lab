@@ -6,7 +6,6 @@ import unittest
 from pathlib import Path
 
 from engine.distribution.runtime import dispatch
-from tests.test_distribution_case_pack import IDENTITY as _UNUSED_IDENTITY  # keep import surface explicit
 from tests.test_distribution_partial_case import ENVELOPE, IDENTITY
 from tests.test_third_round_adversarial_regressions import LOCATION, ThirdRoundCaseRecordTests
 
