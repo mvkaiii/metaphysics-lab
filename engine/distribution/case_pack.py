@@ -78,9 +78,7 @@ _REQUIRED_FRONT_MATTER = (
     "created_at", "last_updated_at", "last_modified_by", "runtime_version_if_applicable",
     "source_classification", "mutation_policy",
 )
-_REQUIRED_IDENTITY_FRONT_MATTER = (
-    "subject_display_name", "subject_short_id", "filename_label",
-)
+_REQUIRED_IDENTITY_FRONT_MATTER = ("subject_display_name", "subject_short_id", "filename_label")
 _TRACKING_FILES = frozenset(PROGRESSIVE_CASE_FILES)
 _RECORDS_START = "<!-- records:start -->"
 _RECORDS_END = "<!-- records:end -->"
@@ -131,12 +129,7 @@ def _identity_from_payload(payload: Mapping[str, object]) -> dict:
         raise DistributionError("invalid_subject_id", "subject_short_id must be derived from subject_id")
     if label != normalize_filename_label(label):
         raise DistributionError("invalid_subject_display_name", "filename_label must be normalized")
-    return {
-        "subject_id": subject_id,
-        "subject_display_name": display,
-        "subject_short_id": short_id,
-        "filename_label": label,
-    }
+    return {"subject_id": subject_id, "subject_display_name": display, "subject_short_id": short_id, "filename_label": label}
 
 
 def _identity_from_metadata(metadata: Mapping[str, str]) -> dict:
@@ -144,10 +137,8 @@ def _identity_from_metadata(metadata: Mapping[str, str]) -> dict:
     if missing:
         raise DistributionError("invalid_case_metadata", "Case identity metadata is missing", {"missing_fields": missing})
     return _identity_from_payload({
-        "subject_id": metadata.get("subject_id"),
-        "subject_display_name": metadata.get("subject_display_name"),
-        "subject_short_id": metadata.get("subject_short_id"),
-        "filename_label": metadata.get("filename_label"),
+        "subject_id": metadata.get("subject_id"), "subject_display_name": metadata.get("subject_display_name"),
+        "subject_short_id": metadata.get("subject_short_id"), "filename_label": metadata.get("filename_label"),
     })
 
 
@@ -178,8 +169,7 @@ def render_front_matter(metadata: Mapping[str, object]) -> str:
         if key not in metadata:
             raise DistributionError("invalid_case_metadata", "required Case metadata is missing", {"missing_field": key})
         lines.append("%s: %s" % (key, _front_matter_value(metadata[key])))
-    extras = sorted(set(metadata) - set(_REQUIRED_FRONT_MATTER))
-    for key in extras:
+    for key in sorted(set(metadata) - set(_REQUIRED_FRONT_MATTER)):
         lines.append("%s: %s" % (key, _front_matter_value(metadata[key])))
     lines.append("---")
     return "\n".join(lines) + "\n"
@@ -211,19 +201,12 @@ def parse_front_matter(text: object) -> Tuple[dict, str]:
 
 def _metadata(canonical: str, identity: Mapping[str, str], created_at: str, modified_by: str) -> dict:
     return {
-        "case_schema_version": CASE_SCHEMA_VERSION,
-        "project_contract_version": PROJECT_CONTRACT_VERSION,
-        "record_type": _RECORD_TYPES[canonical],
-        "subject_id": identity["subject_id"],
-        "subject_display_name": identity["subject_display_name"],
-        "subject_short_id": identity["subject_short_id"],
-        "filename_label": identity["filename_label"],
-        "created_at": created_at,
-        "last_updated_at": created_at,
-        "last_modified_by": modified_by,
-        "runtime_version_if_applicable": DISTRIBUTION_RUNTIME_VERSION,
-        "source_classification": _SOURCE_CLASSIFICATION[canonical],
-        "mutation_policy": _MUTATION_POLICY[canonical],
+        "case_schema_version": CASE_SCHEMA_VERSION, "project_contract_version": PROJECT_CONTRACT_VERSION,
+        "record_type": _RECORD_TYPES[canonical], "subject_id": identity["subject_id"],
+        "subject_display_name": identity["subject_display_name"], "subject_short_id": identity["subject_short_id"],
+        "filename_label": identity["filename_label"], "created_at": created_at, "last_updated_at": created_at,
+        "last_modified_by": modified_by, "runtime_version_if_applicable": DISTRIBUTION_RUNTIME_VERSION,
+        "source_classification": _SOURCE_CLASSIFICATION[canonical], "mutation_policy": _MUTATION_POLICY[canonical],
     }
 
 
@@ -272,20 +255,25 @@ def _prefix_title(body: str, display_name: str) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
+def _rename_title(body: str, old_display_name: str, new_display_name: str) -> str:
+    lines = body.splitlines()
+    if lines:
+        old_prefix = "# %s｜" % old_display_name
+        if lines[0].startswith(old_prefix):
+            lines[0] = "# %s｜%s" % (new_display_name, lines[0][len(old_prefix):])
+    return "\n".join(lines).rstrip() + "\n"
+
+
 def _core_summary(chart, identity: Mapping[str, str], analysis: str) -> str:
     project = None if chart.project is None else chart.project.to_dict()
     external = None if chart.external is None else chart.external.to_dict()
     lines = [
-        "# %s｜命盤核心摘要" % identity["subject_display_name"], "",
-        "- 命主：%s" % identity["subject_display_name"],
-        "- Subject ID: `%s`" % identity["subject_id"],
-        "- Normalized Natal Identity: `%s`" % chart.identity,
+        "# %s｜命盤核心摘要" % identity["subject_display_name"], "", "- 命主：%s" % identity["subject_display_name"],
+        "- Subject ID: `%s`" % identity["subject_id"], "- Normalized Natal Identity: `%s`" % chart.identity,
         "- Validation: `%s`" % chart.validation.get("overall_status", "unknown"),
     ]
     if project is not None:
-        birth = project.get("birth", {})
-        bazi = project.get("bazi", {})
-        ziwei = project.get("ziwei", {})
+        birth, bazi, ziwei = project.get("birth", {}), project.get("bazi", {}), project.get("ziwei", {})
         pillars = bazi.get("pillars", {})
         lines.extend([
             "- Project source: `%s` / maturity=`%s`" % (project["source"].get("source_name"), project["source"].get("maturity")),
@@ -298,8 +286,7 @@ def _core_summary(chart, identity: Mapping[str, str], analysis: str) -> str:
         lines.append("- External source: `%s`" % external["source"].get("source_name"))
     lines.append("")
     if analysis:
-        lines.append(analysis.rstrip())
-        lines.append("")
+        lines.extend([analysis.rstrip(), ""])
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -316,8 +303,7 @@ def _render_case_file(canonical: str, metadata: Mapping[str, object], body: str)
         "08_重大決策紀錄.md": "08_major_decisions.md.tmpl",
     }[canonical]
     template = _load_template(template_name)
-    rendered_body = template.format(body=body.rstrip())
-    return render_front_matter(metadata) + rendered_body.rstrip() + "\n"
+    return render_front_matter(metadata) + template.format(body=body.rstrip()).rstrip() + "\n"
 
 
 def _manifest_expected_line(canonical: str, actual: str, present: bool) -> str:
@@ -328,19 +314,15 @@ def _manifest_expected_line(canonical: str, actual: str, present: bool) -> str:
 def _index_body(chart, identity: Mapping[str, str], materialized, calibration_status: str) -> str:
     project_name = None if chart.project is None else chart.project.source.source_name
     external_name = None if chart.external is None else chart.external.source.source_name
-    actual = {canonical: canonical_case_filename(identity, canonical) for canonical in CASE_FILES}
     lines = [
-        "# %s｜Metaphysics Lab Case｜專案索引" % identity["subject_display_name"], "",
-        "- 命主：%s" % identity["subject_display_name"],
-        "- Subject ID: `%s`" % identity["subject_id"],
-        "- Normalized Natal Identity: `%s`" % chart.identity,
-        "- Project source: `%s`" % (project_name or "none"),
-        "- External source: `%s`" % (external_name or "none"),
+        "# %s｜Metaphysics Lab Case｜專案索引" % identity["subject_display_name"], "", "- 命主：%s" % identity["subject_display_name"],
+        "- Subject ID: `%s`" % identity["subject_id"], "- Normalized Natal Identity: `%s`" % chart.identity,
+        "- Project source: `%s`" % (project_name or "none"), "- External source: `%s`" % (external_name or "none"),
         "- Case lifecycle: `progressive`", "", "## Case Files", "",
     ]
     present = set(materialized)
     for canonical in CASE_FILES:
-        lines.append(_manifest_expected_line(canonical, actual[canonical], canonical in present))
+        lines.append(_manifest_expected_line(canonical, canonical_case_filename(identity, canonical), canonical in present))
     lines.extend(["", "## Historical Calibration", "", "Historical Calibration: `%s`" % calibration_status, ""])
     return "\n".join(lines)
 
@@ -369,9 +351,7 @@ def export_case_markdown(payload: Mapping[str, object]) -> dict:
 
 def _case_files(value: object):
     raw = _mapping(value, "case_files")
-    canonical_files = {}
-    actual_by_canonical = {}
-    parsed_by_canonical = {}
+    canonical_files, actual_by_canonical, parsed_by_canonical = {}, {}, {}
     for actual, content in raw.items():
         if not isinstance(actual, str) or not isinstance(content, str):
             raise DistributionError("invalid_case_markdown", "Case filenames and contents must be text")
@@ -403,11 +383,8 @@ def _validate_manifest(files: Mapping[str, str], actual_by_canonical: Mapping[st
 def validate_case(payload: Mapping[str, object]) -> dict:
     payload = _mapping(payload, "payload")
     files, actual_by_canonical, parsed_by_canonical = _case_files(payload.get("case_files"))
-    subject = None
-    display_name = None
-    identity = None
-    versions = set()
-    contracts = set()
+    subject = display_name = identity = None
+    versions, contracts = set(), set()
     for canonical in CASE_FILES:
         if canonical not in files:
             continue
@@ -432,15 +409,12 @@ def validate_case(payload: Mapping[str, object]) -> dict:
             if parsed["filename_label"] != current_identity["filename_label"] or parsed["subject_short_id"] != current_identity["subject_short_id"]:
                 raise DistributionError("case_subject_filename_mismatch", "Case filename identity does not match front matter", {"filename": actual_by_canonical[canonical]})
             if identity is None:
-                identity = current_identity
-                display_name = current_identity["subject_display_name"]
+                identity, display_name = current_identity, current_identity["subject_display_name"]
             elif current_identity != identity:
                 raise DistributionError("case_subject_mismatch", "all Case files must use identical subject identity metadata", {"filename": actual_by_canonical[canonical]})
-
     if len(versions) != 1 or len(contracts) != 1:
         raise DistributionError("case_version_mismatch", "all Case files must use one schema and contract version", {"case_schema_versions": sorted(versions), "project_contract_versions": sorted(contracts)})
-    schema = next(iter(versions))
-    contract = next(iter(contracts))
+    schema, contract = next(iter(versions)), next(iter(contracts))
     if schema == "1.0":
         if set(files) != set(CASE_FILES) or contract != "1.0" or any(not parsed_by_canonical[name]["legacy"] for name in CASE_FILES):
             raise DistributionError("case_schema_incompatible", "legacy Case schema 1.0 requires the complete bare nine-file contract 1.0 pack")
@@ -453,23 +427,21 @@ def validate_case(payload: Mapping[str, object]) -> dict:
     else:
         raise DistributionError("case_schema_incompatible", "Case schema version is not supported by this runtime", {"case_schema_version": schema})
     return {
-        "status": "compatible", "subject_id": subject, "subject_display_name": display_name,
-        "subject": identity, "case_schema_version": schema, "project_contract_version": contract,
+        "status": "compatible", "subject_id": subject, "subject_display_name": display_name, "subject": identity,
+        "case_schema_version": schema, "project_contract_version": contract,
         "validated_files": [actual_by_canonical[name] for name in CASE_FILES if name in files],
         "canonical_slots": [name for name in CASE_FILES if name in files],
     }
 
 
 def _replace_manifest_lines(body: str, identity: Mapping[str, str], materialized) -> str:
-    lines = body.splitlines()
-    output = []
+    lines, output = body.splitlines(), []
     by_prefix = {canonical[:2]: canonical for canonical in CASE_FILES}
     for line in lines:
         matched = re.match(r"^- [✓○] (0[0-8]) ", line)
         if matched and matched.group(1) in by_prefix:
             canonical = by_prefix[matched.group(1)]
-            actual = canonical_case_filename(identity, canonical)
-            output.append(_manifest_expected_line(canonical, actual, canonical in materialized))
+            output.append(_manifest_expected_line(canonical, canonical_case_filename(identity, canonical), canonical in materialized))
         else:
             output.append(line)
     return "\n".join(output).rstrip() + "\n"
@@ -484,8 +456,7 @@ def migrate_case(payload: Mapping[str, object]) -> dict:
     display_name = _text(payload.get("subject_display_name"), "subject_display_name")
     created = create_subject_identity({"subject_display_name": display_name, "registry_markdown": payload.get("registry_markdown")})
     identity = created["identity"]
-    changed = {}
-    renamed = {}
+    changed, renamed = {}, {}
     for canonical in CASE_FILES:
         metadata, body = parse_front_matter(files[canonical])
         old_subject = metadata.get("subject_id")
@@ -499,9 +470,48 @@ def migrate_case(payload: Mapping[str, object]) -> dict:
         changed[actual] = _render_case_file(canonical, metadata, body)
         renamed[actual_by_canonical[canonical]] = actual
     return {
-        "status": "compatible", "migration": "legacy_1_0_to_subject_aware_1_1",
-        "changed_files": changed, "renamed_files": renamed, "subject_id": identity["subject_id"],
-        "subject": identity, "registry_markdown": created["registry_markdown"], "case_schema_version": CASE_SCHEMA_VERSION,
+        "status": "compatible", "migration": "legacy_1_0_to_subject_aware_1_1", "changed_files": changed,
+        "renamed_files": renamed, "subject_id": identity["subject_id"], "subject": identity,
+        "registry_markdown": created["registry_markdown"], "case_schema_version": CASE_SCHEMA_VERSION,
+    }
+
+
+def rename_case_subject_files(case_files: Mapping[str, object], new_subject_display_name: str, updated_at: str, modified_by: str = "ai") -> dict:
+    """Rename display metadata and every materialized Case filename atomically in one result."""
+    validation = validate_case({"case_files": case_files})
+    if validation["case_schema_version"] != CASE_SCHEMA_VERSION or validation.get("subject") is None:
+        raise DistributionError("case_schema_incompatible", "subject rename requires a subject-aware Case schema 1.1 pack")
+    files, actual_by_canonical, _ = _case_files(case_files)
+    old_identity = dict(validation["subject"])
+    new_display = _text(new_subject_display_name, "new_subject_display_name")
+    new_identity = dict(old_identity)
+    new_identity["subject_display_name"] = new_display
+    new_identity["filename_label"] = normalize_filename_label(new_display)
+    when = _timestamp(updated_at, "updated_at")
+    actor = _text(modified_by, "last_modified_by")
+    changed, renamed = {}, {}
+    materialized = set(files)
+    for canonical in CASE_FILES:
+        if canonical not in files:
+            continue
+        metadata, body = parse_front_matter(files[canonical])
+        metadata["subject_display_name"] = new_identity["subject_display_name"]
+        metadata["filename_label"] = new_identity["filename_label"]
+        metadata["last_updated_at"] = when
+        metadata["last_modified_by"] = actor
+        body = _rename_title(body, old_identity["subject_display_name"], new_identity["subject_display_name"])
+        if canonical == "00_專案索引.md":
+            body = _replace_manifest_lines(body, new_identity, materialized)
+            body = body.replace("- 命主：%s" % old_identity["subject_display_name"], "- 命主：%s" % new_identity["subject_display_name"], 1)
+        elif canonical == "01_命盤核心摘要.md":
+            body = body.replace("- 命主：%s" % old_identity["subject_display_name"], "- 命主：%s" % new_identity["subject_display_name"], 1)
+        new_actual = canonical_case_filename(new_identity, canonical)
+        old_actual = actual_by_canonical[canonical]
+        changed[new_actual] = _render_case_file(canonical, metadata, body)
+        renamed[old_actual] = new_actual
+    return {
+        "subject_id": new_identity["subject_id"], "subject": new_identity, "changed_files": changed,
+        "renamed_files": renamed, "removed_filenames": [old for old, new in renamed.items() if old != new],
     }
 
 
@@ -512,8 +522,7 @@ def _render_entry(entry: Mapping[str, object]) -> str:
 
 
 def _append_record(body: str, entry_text: str) -> str:
-    start = body.find(_RECORDS_START)
-    end = body.find(_RECORDS_END)
+    start, end = body.find(_RECORDS_START), body.find(_RECORDS_END)
     if start < 0 or end < 0 or end <= start:
         raise DistributionError("invalid_case_markdown", "tracking Case file is missing record boundary markers")
     content_start = start + len(_RECORDS_START)
@@ -524,15 +533,12 @@ def _append_record(body: str, entry_text: str) -> str:
 
 def _set_index_materialized(index_text: str, canonical: str, actual_target: str, updated_at: str, modified_by: str) -> str:
     metadata, body = parse_front_matter(index_text)
-    identity = _identity_from_metadata(metadata)
-    absent = _manifest_expected_line(canonical, actual_target, False)
-    present = _manifest_expected_line(canonical, actual_target, True)
+    absent, present = _manifest_expected_line(canonical, actual_target, False), _manifest_expected_line(canonical, actual_target, True)
     if present not in body:
         if absent not in body:
             raise DistributionError("case_manifest_mismatch", "00 Case manifest is missing target file state", {"target": actual_target})
         body = body.replace(absent, present, 1)
-    metadata["last_updated_at"] = updated_at
-    metadata["last_modified_by"] = modified_by
+    metadata["last_updated_at"], metadata["last_modified_by"] = updated_at, modified_by
     return render_front_matter(metadata) + body.rstrip() + "\n"
 
 
@@ -543,8 +549,7 @@ def set_case_calibration_status(index_text: str, status: str, updated_at: str, m
     body, count = re.subn(r"Historical Calibration: `(?:uncalibrated|basic|calibrated)`", "Historical Calibration: `%s`" % status, body, count=1)
     if count != 1:
         raise DistributionError("case_manifest_mismatch", "00 Case manifest is missing calibration status")
-    metadata["last_updated_at"] = updated_at
-    metadata["last_modified_by"] = modified_by
+    metadata["last_updated_at"], metadata["last_modified_by"] = updated_at, modified_by
     return render_front_matter(metadata) + body.rstrip() + "\n"
 
 
@@ -553,8 +558,7 @@ def _validate_05_entry(entry: Mapping[str, object]) -> None:
         return
     if entry.get("record_type") != "historical_calibration":
         raise DistributionError("invalid_verified_event", "05 accepts verified events or historical calibration ledger records only")
-    blind = entry.get("blind_prediction")
-    evaluation = entry.get("evaluation")
+    blind, evaluation = entry.get("blind_prediction"), entry.get("evaluation")
     if not isinstance(blind, Mapping) or blind.get("classification") != "命理推論":
         raise DistributionError("invalid_verified_event", "historical calibration blind prediction classification is invalid")
     if not isinstance(evaluation, Mapping) or evaluation.get("classification") != "已校驗資料":
@@ -606,8 +610,6 @@ def update_case_record(payload: Mapping[str, object]) -> dict:
         body = _tracking_body({"05_驗證事件紀錄.md": "驗證事件紀錄", "06_流年追蹤紀錄.md": "流年追蹤紀錄", "07_問事追蹤紀錄.md": "問事追蹤紀錄", "08_重大決策紀錄.md": "重大決策紀錄"}[canonical], identity["subject_display_name"])
         index_actual = actual_by_canonical["00_專案索引.md"]
         changed[index_actual] = _set_index_materialized(files["00_專案索引.md"], canonical, actual_target, updated_at, modified_by)
-    metadata["last_updated_at"] = updated_at
-    metadata["last_modified_by"] = modified_by
-    updated_body = _append_record(body, _render_entry(entry))
-    changed[actual_target] = _render_case_file(canonical, metadata, updated_body)
+    metadata["last_updated_at"], metadata["last_modified_by"] = updated_at, modified_by
+    changed[actual_target] = _render_case_file(canonical, metadata, _append_record(body, _render_entry(entry)))
     return {"subject_id": validation["subject_id"], "changed_files": changed}
