@@ -7,6 +7,9 @@ DISTRIBUTION_RUNTIME_VERSION = "1.0-exp"
 
 SUPPORTED_ACTIONS = (
     "runtime_info",
+    "subject.create_identity",
+    "subject.registry_validate",
+    "subject.rename",
     "build_natal",
     "reconcile_natal",
     "resolve_forecast_context",
