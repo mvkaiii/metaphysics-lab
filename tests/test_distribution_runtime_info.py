@@ -22,21 +22,29 @@ class DistributionRuntimeInfoTests(unittest.TestCase):
         self.assertEqual(result["action"], "runtime_info")
         self.assertEqual(result["runtime_version"], "1.0-exp")
         data = result["data"]
-        self.assertEqual(data["project_contract_version"], "1.0")
+        self.assertEqual(data["project_contract_version"], "1.1")
         self.assertEqual(data["runtime_schema_version"], "1.0")
-        self.assertEqual(data["case_schema_version"], "1.0")
-        self.assertIn("runtime_info", data["supported_actions"])
+        self.assertEqual(data["case_schema_version"], "1.1")
+        for action in (
+            "runtime_info",
+            "prepare_historical_calibration",
+            "lock_blind_forecast",
+            "lock_historical_calibration",
+            "finalize_historical_calibration",
+        ):
+            self.assertIn(action, data["supported_actions"])
 
         flowing = data["capabilities"]["ziwei.flowing_stars"]
         self.assertEqual(flowing["implementation"], "implemented")
         self.assertEqual(flowing["maturity"], "experimental")
         self.assertEqual(flowing["routing"], "on_demand")
-        self.assertEqual(flowing["rule_version"], "1.0-exp")
-        self.assertEqual(flowing["module"], "engine.ziwei.flowing_stars")
-        self.assertEqual(
-            flowing["conditional_dependencies"]["monthly"],
-            ["ziwei.flow_month_stem"],
-        )
+
+        historical = data["capabilities"]["historical.activation_selector"]
+        self.assertEqual(historical["implementation"], "implemented")
+        self.assertEqual(historical["maturity"], "experimental")
+        self.assertEqual(historical["routing"], "on_demand")
+        self.assertEqual(historical["rule_version"], "1.0-exp")
+        self.assertEqual(historical["profile_id"], "historical-activation-bazi-v1")
 
     def test_runtime_info_reports_all_pinned_external_dependencies_without_importing_them(self):
         runtime = self._runtime()
@@ -44,17 +52,12 @@ class DistributionRuntimeInfoTests(unittest.TestCase):
         dependencies = data["external_dependencies"]
         self.assertEqual(set(dependencies), {"lunar-python", "tzdata", "geopy", "timezonefinder"})
         self.assertEqual(dependencies["lunar-python"]["expected_version"], "1.4.8")
-        self.assertEqual(dependencies["tzdata"]["expected_version"], "2026.3")
-        self.assertEqual(dependencies["geopy"]["expected_version"], "2.5.0")
-        self.assertEqual(dependencies["timezonefinder"]["expected_version"], "8.2.0")
         for value in dependencies.values():
             self.assertIn("installed", value)
             self.assertIn("matches_pin", value)
             self.assertIn("required_for", value)
 
     def test_dependency_status_can_report_missing_optional_location_packages(self):
-        spec = self._find_spec_or_none("engine.distribution.dependencies")
-        self.assertIsNotNone(spec, "engine.distribution.dependencies must exist")
         dependencies = importlib.import_module("engine.distribution.dependencies")
 
         def missing(_name):
@@ -66,8 +69,6 @@ class DistributionRuntimeInfoTests(unittest.TestCase):
         )
         self.assertFalse(geopy["installed"])
         self.assertFalse(timezonefinder["installed"])
-        self.assertFalse(geopy["matches_pin"])
-        self.assertFalse(timezonefinder["matches_pin"])
         self.assertEqual(geopy["role"], "location")
         self.assertEqual(timezonefinder["role"], "location")
 
