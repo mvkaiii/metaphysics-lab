@@ -88,6 +88,7 @@ _OPAQUE_SUBJECT_PATTERN = re.compile(r"^subj_[0-9a-f]{12,}$")
 _SHORT_ID_PATTERN = re.compile(r"^[0-9A-F]{6,}$")
 _CALIBRATION_STATES = frozenset(("uncalibrated", "basic", "calibrated"))
 _RESERVED_INTERNAL_RECORD_TYPES = frozenset(("historical_calibration_lock",))
+_RECORD_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:@+-]*$")
 
 
 def _mapping(value: object, field_name: str) -> Mapping[str, Any]:
@@ -100,6 +101,16 @@ def _text(value: object, field_name: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise DistributionError("invalid_case_payload", "%s must be a non-empty string" % field_name, {"field": field_name})
     return value.strip()
+
+
+def _record_id(value: object, *, error_code: str = "invalid_case_payload") -> str:
+    if not isinstance(value, str) or value != value.strip() or not _RECORD_ID_PATTERN.fullmatch(value):
+        raise DistributionError(
+            error_code,
+            "record_id must be a canonical safe single-line identifier",
+            {"field": "entry.record_id"},
+        )
+    return value
 
 
 def _timestamp(value: object, field_name: str) -> str:
@@ -531,8 +542,10 @@ def rename_case_subject_files(case_files: Mapping[str, object], new_subject_disp
 
 
 def _render_entry(entry: Mapping[str, object]) -> str:
-    record_id = _text(entry.get("record_id"), "entry.record_id")
-    payload = json.dumps(dict(entry), ensure_ascii=False, sort_keys=True, indent=2)
+    record_id = _record_id(entry.get("record_id"))
+    normalized = dict(entry)
+    normalized["record_id"] = record_id
+    payload = json.dumps(normalized, ensure_ascii=False, sort_keys=True, indent=2)
     return "### %s\n\n```json\n%s\n```" % (record_id, payload)
 
 
@@ -549,12 +562,15 @@ def _record_entries(body: str) -> dict:
         first_line, marker, rest = chunk.partition("\n\n```json\n")
         if not marker or not first_line.startswith("### ") or not rest.endswith("\n```"):
             raise DistributionError("invalid_case_markdown", "tracking record block is malformed")
-        record_id = first_line[4:].strip()
+        record_id = _record_id(first_line[4:], error_code="invalid_case_markdown")
         try:
             parsed = json.loads(rest[:-4])
         except (TypeError, ValueError) as exc:
             raise DistributionError("invalid_case_markdown", "tracking record JSON cannot be parsed") from exc
-        if not isinstance(parsed, Mapping) or parsed.get("record_id") != record_id:
+        if not isinstance(parsed, Mapping):
+            raise DistributionError("invalid_case_markdown", "tracking record payload must be a mapping")
+        payload_record_id = _record_id(parsed.get("record_id"), error_code="invalid_case_markdown")
+        if payload_record_id != record_id:
             raise DistributionError("invalid_case_markdown", "tracking record heading does not match payload record_id")
         if record_id in records:
             raise DistributionError("invalid_case_markdown", "tracking file contains duplicate record_id", {"record_id": record_id})
@@ -633,14 +649,17 @@ def _update_case_record(payload: Mapping[str, object], *, allow_reserved_interna
     if operation != "append":
         raise DistributionError("unsupported_case_mutation", "unsupported Case mutation operation", {"operation": operation})
     entry = _mapping(payload.get("entry"), "entry")
-    if entry.get("record_type") in _RESERVED_INTERNAL_RECORD_TYPES and not allow_reserved_internal:
+    record_id = _record_id(entry.get("record_id"))
+    normalized_entry = dict(entry)
+    normalized_entry["record_id"] = record_id
+    if normalized_entry.get("record_type") in _RESERVED_INTERNAL_RECORD_TYPES and not allow_reserved_internal:
         raise DistributionError(
             "immutable_case_record",
             "reserved internal Case record types cannot be appended through the public mutation API",
-            {"filename": requested_filename, "record_type": entry.get("record_type")},
+            {"filename": requested_filename, "record_type": normalized_entry.get("record_type")},
         )
     if canonical == "05_驗證事件紀錄.md":
-        _validate_05_entry(entry)
+        _validate_05_entry(normalized_entry)
     updated_at = _timestamp(payload.get("updated_at"), "updated_at")
     modified_by = _text(payload.get("last_modified_by", "ai"), "last_modified_by")
     changed = {}
@@ -658,10 +677,9 @@ def _update_case_record(payload: Mapping[str, object], *, allow_reserved_interna
         body = _tracking_body({"05_驗證事件紀錄.md": "驗證事件紀錄", "06_流年追蹤紀錄.md": "流年追蹤紀錄", "07_問事追蹤紀錄.md": "問事追蹤紀錄", "08_重大決策紀錄.md": "重大決策紀錄"}[canonical], identity["subject_display_name"])
         index_actual = actual_by_canonical["00_專案索引.md"]
         changed[index_actual] = _set_index_materialized(files["00_專案索引.md"], canonical, actual_target, updated_at, modified_by)
-    record_id = _text(entry.get("record_id"), "entry.record_id")
     existing_records = _record_entries(body)
     if record_id in existing_records:
-        if existing_records[record_id] == dict(entry):
+        if existing_records[record_id] == normalized_entry:
             return {"subject_id": validation["subject_id"], "changed_files": {}}
         raise DistributionError(
             "duplicate_record_id",
@@ -669,7 +687,7 @@ def _update_case_record(payload: Mapping[str, object], *, allow_reserved_interna
             {"filename": requested_filename, "record_id": record_id},
         )
     metadata["last_updated_at"], metadata["last_modified_by"] = updated_at, modified_by
-    updated_body = _append_record(body, _render_entry(entry))
+    updated_body = _append_record(body, _render_entry(normalized_entry))
     changed[actual_target] = _rewrite_case_file(metadata, updated_body) if existing else _render_case_file(canonical, metadata, updated_body)
     return {"subject_id": validation["subject_id"], "changed_files": changed}
 
