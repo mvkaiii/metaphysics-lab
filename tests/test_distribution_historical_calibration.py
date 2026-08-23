@@ -141,6 +141,25 @@ class HistoricalCalibrationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             lock_blind_forecast(payload)
 
+    def test_blind_forecast_rejects_subject_id_short_id_mismatch(self):
+        payload = {
+            "blind_forecast_id": "bf-subject-mismatch",
+            "subject_id": "subj_aaaaaaaaaaaa",
+            "question_type": "flow-year",
+            "question_reference": "2027-work",
+            "locked_at": "2026-08-23T10:30:00+08:00",
+            "source_files_used": [
+                "Kai_BBBBBB_00_專案索引.md",
+                "Kai_BBBBBB_01_命盤核心摘要.md",
+                "Kai_BBBBBB_02_命盤資料校驗紀錄.md",
+                "Kai_BBBBBB_03_八字結構化資料包.md",
+                "Kai_BBBBBB_04_紫微基礎資料包.md",
+            ],
+            "blind_forecast_payload": {"summary": "active"},
+        }
+        with self.assertRaises(ValueError):
+            lock_blind_forecast(payload)
+
     def test_historical_lock_binds_exact_selector_selection(self):
         points = [point(2016), point(2018), point(2020), point(2023), point(2019, "control")]
         result = lock_historical_calibration(

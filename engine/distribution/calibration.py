@@ -45,7 +45,7 @@ def canonical_digest(value: object) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
-def _canonical_case_sources(sources) -> Tuple[list, list]:
+def _canonical_case_sources(sources, subject_id=None) -> Tuple[list, list]:
     if not isinstance(sources, (list, tuple)):
         raise DistributionError("blind_source_violation", "source_files_used must be a list of Case files")
     canonical = []
@@ -81,6 +81,17 @@ def _canonical_case_sources(sources) -> Tuple[list, list]:
             "first-stage blind forecast sources must belong to one subject",
             {"subject_short_ids": sorted(subject_short_ids), "actual_sources": actual},
         )
+    if subject_short_ids:
+        resolved_subject = str(subject_id or "")
+        subject_hex = resolved_subject[5:] if resolved_subject.startswith("subj_") else ""
+        is_hex = len(subject_hex) >= 12 and all(ch in "0123456789abcdef" for ch in subject_hex.lower())
+        short_id = next(iter(subject_short_ids))
+        if not is_hex or not subject_hex.upper().startswith(short_id):
+            raise DistributionError(
+                "blind_source_violation",
+                "subject-aware blind sources must match payload subject_id",
+                {"subject_id": resolved_subject, "subject_short_id": short_id, "actual_sources": actual},
+            )
     return canonical, actual
 
 
@@ -106,7 +117,8 @@ def _actual_case_filename(case_files: Mapping[str, object], canonical: str) -> s
 
 def lock_blind_forecast(payload: Mapping[str, object]) -> dict:
     payload = _mapping(payload, "payload")
-    canonical_sources, actual_sources = _canonical_case_sources(payload.get("source_files_used"))
+    subject_id = _text(payload.get("subject_id"), "subject_id")
+    canonical_sources, actual_sources = _canonical_case_sources(payload.get("source_files_used"), subject_id)
     if len(canonical_sources) != len(BASE_CASE_FILES) or set(canonical_sources) != set(BASE_CASE_FILES):
         raise DistributionError(
             "blind_source_violation",
