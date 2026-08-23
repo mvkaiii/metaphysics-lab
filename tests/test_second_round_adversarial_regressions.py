@@ -10,6 +10,7 @@ from tests.test_distribution_partial_case import ENVELOPE, IDENTITY
 from tests.test_postmerge_audit_regressions import _CREATED_AT, _apply_changed, _subject_aware_base5
 
 
+# These cases were first committed against the vulnerable baseline to preserve RED evidence.
 ROOT = Path(__file__).resolve().parents[1]
 BUNDLE = ROOT / "dist" / "ai" / "metaphysics_lab.py"
 
