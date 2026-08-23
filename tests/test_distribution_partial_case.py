@@ -11,6 +11,16 @@ IDENTITY = {
     "filename_label": "Kai",
 }
 
+LOCATION = {
+    "canonical_name": "Taipei City, Taiwan",
+    "latitude": 25.033,
+    "longitude": 121.5654,
+    "timezone": "Asia/Taipei",
+    "provider_name": "ai_host",
+    "provider_version": "user-confirmed",
+    "provider_reference": None,
+}
+
 ENVELOPE = {
     "profile_id": "natal-candidate-envelope-v1",
     "rule_version": "1.0-exp",
@@ -47,9 +57,28 @@ ENVELOPE = {
 
 
 class PartialCaseTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        built = dispatch(
+            "natal.candidate_envelope",
+            {
+                "birth": {
+                    "sex": "male",
+                    "birth_date": "1984-03-13",
+                    "birth_time_range": ["19:20", "19:21"],
+                    "birth_place": "台北市",
+                },
+                "resolved_location": LOCATION,
+            },
+        )
+        if not built.get("ok"):
+            raise AssertionError(built)
+        cls.canonical_envelope = built["data"]["candidate_envelope"]
+
     def export(self, **extra):
         payload = {
-            "candidate_envelope": ENVELOPE,
+            "candidate_envelope": self.canonical_envelope,
+            "resolved_location": LOCATION,
             **IDENTITY,
             "generated_at": "2026-08-23T00:00:00+08:00",
             "last_modified_by": "ai",
@@ -57,7 +86,7 @@ class PartialCaseTests(unittest.TestCase):
         payload.update(extra)
         return dispatch("export_case_markdown", payload)
 
-    def test_unknown_time_envelope_exports_subject_aware_base_case(self):
+    def test_bounded_envelope_exports_subject_aware_base_case(self):
         result = self.export()
         self.assertTrue(result["ok"], result)
         files = result["data"]["files"]
@@ -65,8 +94,8 @@ class PartialCaseTests(unittest.TestCase):
         self.assertIn("Kai_7F3A2C_00_專案索引.md", files)
         index = files["Kai_7F3A2C_00_專案索引.md"]
         self.assertIn("Natal Status: `partial`", index)
-        self.assertIn("Birth Time Status: `unknown_time`", index)
-        self.assertIn("Candidate Count: `2`", index)
+        self.assertIn("Birth Time Status: `bounded`", index)
+        self.assertIn("Candidate Count: `1`", index)
         core = files["Kai_7F3A2C_01_命盤核心摘要.md"]
         self.assertIn("【已確定盤面】", core)
         self.assertIn("【候選依賴盤面】", core)
@@ -90,7 +119,7 @@ class PartialCaseTests(unittest.TestCase):
         self.assertIn("single_chart_personalized_forecast", files["Kai_7F3A2C_00_專案索引.md"])
 
     def test_partial_case_rejects_envelope_that_omits_mandatory_unique_chart_blocks(self):
-        tampered = dict(ENVELOPE)
+        tampered = copy.deepcopy(ENVELOPE)
         tampered["blocked_analysis"] = []
         result = self.export(candidate_envelope=tampered)
         self.assertFalse(result["ok"])
