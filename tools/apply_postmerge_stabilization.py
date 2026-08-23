@@ -28,6 +28,10 @@ def main() -> None:
         'solar_term_time(actual.year, "立月", zone)',
         'solar_term_time(actual.year, "立春", zone)',
     )
+    Path(".stabilization-commit-message").write_text(
+        "fix: restore Li Chun literal after connector transport\n",
+        encoding="utf-8",
+    )
 
 
 if __name__ == "__main__":
