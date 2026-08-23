@@ -31,10 +31,11 @@ class AIDistributionAcceptanceTests(unittest.TestCase):
         text = (DIST / "metaphysics_lab.py").read_text(encoding="utf-8")
         self.assertIn("GENERATED FILE - DO NOT EDIT", text)
         self.assertRegex(text, r'SOURCE_DIGEST = [\'\"][0-9a-f]{64}[\'\"]')
-        self.assertIn('PROJECT_CONTRACT_VERSION = "1.0"', text.replace("'", '"'))
-        self.assertIn('RUNTIME_SCHEMA_VERSION = "1.0"', text.replace("'", '"'))
-        self.assertIn('CASE_SCHEMA_VERSION = "1.0"', text.replace("'", '"'))
-        self.assertIn('DISTRIBUTION_RUNTIME_VERSION = "1.0-exp"', text.replace("'", '"'))
+        normalized = text.replace("'", '"')
+        self.assertIn('PROJECT_CONTRACT_VERSION = "1.1"', normalized)
+        self.assertIn('RUNTIME_SCHEMA_VERSION = "1.0"', normalized)
+        self.assertIn('CASE_SCHEMA_VERSION = "1.1"', normalized)
+        self.assertIn('DISTRIBUTION_RUNTIME_VERSION = "1.0-exp"', normalized)
         self.assertNotIn("tests/", text)
         self.assertNotIn("qualification/", text)
         self.assertNotIn("/mnt/data/", text)
@@ -52,6 +53,9 @@ class AIDistributionAcceptanceTests(unittest.TestCase):
         ):
             self.assertNotIn(forbidden, fixed)
         self.assertIn("runtime_info", fixed)
+        self.assertIn("Historical Blind Calibration", fixed)
+        self.assertIn("00～04", fixed)
+        self.assertIn("05～08", fixed)
 
     def test_runtime_capabilities_remain_unpromoted(self):
         result = dispatch("runtime_info", {})
@@ -63,6 +67,8 @@ class AIDistributionAcceptanceTests(unittest.TestCase):
         self.assertEqual(caps["ziwei.natal_chart"]["maturity"], "experimental")
         self.assertEqual(caps["natal.reconciliation"]["maturity"], "stable")
         self.assertEqual(caps["natal.markdown_export"]["maturity"], "stable")
+        self.assertEqual(caps["historical.activation_selector"]["maturity"], "experimental")
+        self.assertEqual(caps["historical.activation_selector"]["routing"], "on_demand")
 
     def test_formal_release_identity_is_v1_3_0(self):
         text = (ROOT / "VERSION.md").read_text(encoding="utf-8")
