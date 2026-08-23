@@ -68,6 +68,15 @@ def _json(value: object) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2)
 
 
+def _json_semantically_equal(left: object, right: object) -> bool:
+    try:
+        return json.dumps(left, ensure_ascii=False, sort_keys=True, separators=(",", ":")) == json.dumps(
+            right, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        )
+    except (TypeError, ValueError):
+        return False
+
+
 def _list_lines(values) -> list:
     if not isinstance(values, (list, tuple)):
         return ["- none"]
@@ -185,7 +194,7 @@ def _validate_envelope(value: object) -> dict:
         "invariant_bazi_facts", "variant_bazi_facts",
         "invariant_ziwei_facts", "variant_ziwei_facts",
     ):
-        if raw[field] != classified[field]:
+        if not _json_semantically_equal(raw[field], classified[field]):
             raise DistributionError(
                 "invalid_candidate_envelope",
                 "candidate classification does not match candidate facts",
