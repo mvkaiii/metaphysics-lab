@@ -68,6 +68,12 @@ class SubjectCaseRenameTests(unittest.TestCase):
         self.assertIn("# Eric｜", index)
         self.assertIn("Eric_7F3A2C_01_命盤核心摘要.md", index)
         self.assertIn("subject_id: subj_7f3a2c91d4e8", index)
+        for filename, text in data["changed_files"].items():
+            self.assertEqual(
+                text.count("<!-- Metaphysics Lab Case Template"),
+                1,
+                "%s duplicated the canonical template marker during rename" % filename,
+            )
         validation = dispatch("validate_case", {"case_files": data["changed_files"]})
         self.assertTrue(validation["ok"], validation)
         self.assertEqual(validation["data"]["subject_display_name"], "Eric")
