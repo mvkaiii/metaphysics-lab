@@ -8,6 +8,8 @@ from engine.distribution.calibration import (
     lock_historical_calibration,
 )
 
+from tests.historical_authority_helpers import authoritative_finalize, authoritative_lock
+
 
 def _row(year):
     return {
@@ -79,7 +81,7 @@ def lock(selector=None, supplemental=None):
     years = [row["label_year"] for row in selector["high_years"]]
     points = [point(year) for year in years]
     points.append(point(selector["control_year"]["label_year"], "control"))
-    return lock_historical_calibration({
+    return authoritative_lock({
         "calibration_id": "HC-integrity-001",
         "subject_id": "case-integrity",
         "selector_result": selector,
@@ -116,7 +118,7 @@ class HistoricalCalibrationIntegrityTests(unittest.TestCase):
             "actual_event": "同一題重複提交",
         }
         with self.assertRaises(ValueError):
-            finalize_historical_calibration({
+            authoritative_finalize(locked, {
                 "locked_payload": locked["locked_payload"],
                 "payload_digest": locked["payload_digest"],
                 "responses": [duplicate, duplicate, duplicate],
