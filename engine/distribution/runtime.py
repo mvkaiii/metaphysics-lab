@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Mapping, Optional
+from zoneinfo import ZoneInfo
 
 from .constants import (
     CASE_SCHEMA_VERSION,
@@ -50,16 +52,125 @@ def runtime_info() -> dict:
     }
 
 
+def _selected_historical_rows(selector_result: Mapping[str, object]):
+    high = selector_result.get("high_years")
+    control = selector_result.get("control_year")
+    if not isinstance(high, (list, tuple)) or len(high) != 4 or not isinstance(control, Mapping):
+        raise DistributionError(
+            "historical_selector_invalid",
+            "selector result must contain four high years and one control year",
+        )
+    rows = list(high) + [control]
+    if any(not isinstance(row, Mapping) for row in rows):
+        raise DistributionError(
+            "historical_selector_invalid",
+            "selector result contains malformed selected years",
+        )
+    return rows
+
+
+def _ziwei_historical_support(
+    selector_result: Mapping[str, object],
+    payload: Mapping[str, object],
+) -> dict:
+    """Attach optional Ziwei yearly context without changing Bazi ranking truth."""
+    from .forecast import resolve_forecast_context
+
+    normalized = payload.get("normalized_natal")
+    timezone = selector_result.get("timezone")
+    if not isinstance(normalized, Mapping) or not isinstance(timezone, str) or not timezone.strip():
+        return {
+            "status": "unavailable",
+            "role": "support_only",
+            "ranking_authority": False,
+            "years": [],
+            "reason": "normalized natal facts and selector timezone are required for Ziwei support",
+        }
+
+    try:
+        zone = ZoneInfo(timezone.strip())
+    except Exception as exc:
+        return {
+            "status": "unavailable",
+            "role": "support_only",
+            "ranking_authority": False,
+            "years": [],
+            "reason": "selector timezone cannot be resolved: %s" % exc,
+        }
+
+    support_rows = []
+    failures = []
+    for row in _selected_historical_rows(selector_result):
+        label_year = row.get("label_year")
+        try:
+            start = datetime.fromisoformat(str(row["period_start"]))
+            end = datetime.fromisoformat(str(row["period_end"]))
+            if start.tzinfo is None or start.utcoffset() is None or end.tzinfo is None or end.utcoffset() is None:
+                raise ValueError("historical flow-year boundaries must include timezone offsets")
+            midpoint = start + (end - start) / 2
+            local_midpoint = midpoint.astimezone(zone)
+            target_local = local_midpoint.replace(tzinfo=None).isoformat(timespec="seconds")
+            context = resolve_forecast_context({
+                "normalized_natal": normalized,
+                "target": {
+                    "civil_datetime": target_local,
+                    "timezone": timezone.strip(),
+                },
+                "requested_scopes": ["yearly"],
+            })
+            yearly = context.get("ziwei", {}).get("yearly")
+            if not isinstance(yearly, Mapping):
+                raise ValueError("yearly Ziwei context is unavailable")
+            support_row = dict(yearly)
+            support_row["label_year"] = label_year
+            support_row["sample_datetime"] = local_midpoint.isoformat()
+            support_rows.append(support_row)
+        except (DistributionError, KeyError, TypeError, ValueError) as exc:
+            failures.append({
+                "label_year": label_year,
+                "reason": str(exc),
+                "error_code": getattr(exc, "code", None),
+            })
+
+    if len(support_rows) == 5:
+        status = "available"
+        reason = None
+    elif support_rows:
+        status = "partial"
+        reason = "Ziwei yearly support was unavailable for %d of 5 canonical years" % len(failures)
+    else:
+        status = "unavailable"
+        reason = failures[0]["reason"] if failures else "Ziwei yearly support is unavailable"
+
+    result = {
+        "status": status,
+        "role": "support_only",
+        "ranking_authority": False,
+        "years": support_rows,
+    }
+    if reason is not None:
+        result["reason"] = reason
+    if failures:
+        result["failures"] = failures
+    return result
+
+
 def _prepare_historical_calibration(payload: Mapping[str, object]) -> dict:
     from engine.historical.selector import select_historical_activation
 
     try:
-        return select_historical_activation(payload)
+        selector_result = select_historical_activation(payload)
     except ValueError as exc:
         raise DistributionError(
             "historical_selector_invalid",
             str(exc),
         ) from exc
+
+    # Canonical Bazi selection/digest is already fixed above. Ziwei is attached
+    # afterwards as support-only context and has no ranking authority in v1.
+    result = dict(selector_result)
+    result["ziwei_support"] = _ziwei_historical_support(selector_result, payload)
+    return result
 
 
 def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dict:
