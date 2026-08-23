@@ -54,6 +54,7 @@ jobs:
             tests.test_distribution_historical_calibration \
             tests.test_distribution_historical_support \
             tests.test_distribution_case_pack \
+            tests.test_distribution_partial_case \
             tests.test_distribution_runtime_info -v
 
       - name: Rebuild AI distribution
