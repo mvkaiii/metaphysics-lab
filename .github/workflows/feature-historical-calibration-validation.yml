@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feature/progressive-case-historical-calibration
+      - fix/postmerge-audit-161-165
   pull_request:
     branches:
       - main
@@ -16,11 +17,18 @@ jobs:
   validation:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout feature branch
+      - name: Checkout validation ref
         uses: actions/checkout@v4
         with:
-          ref: feature/progressive-case-historical-calibration
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
+
+      - name: Confirm validation SHA
+        run: |
+          echo "event=${{ github.event_name }}"
+          echo "github_sha=${{ github.sha }}"
+          echo "head_ref=${{ github.head_ref }}"
+          git log -1 --format=%H
 
       - name: Set up Python 3.9
         uses: actions/setup-python@v5
