@@ -70,7 +70,7 @@ jobs:
           python -m compileall engine tests tools
 
       - name: Persist stabilization source changes
-        if: github.ref == 'refs/heads/fix/postmerge-audit-161-165' || github.head_ref == 'fix/postmerge-audit-161-165'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/fix/postmerge-audit-161-165'
         run: |
           if git diff --quiet -- engine dist/ai; then
             echo "Stabilization source already committed"
