@@ -52,8 +52,50 @@ def main() -> None:
         new_test + marker,
     )
 
+    replace_once(
+        "engine/distribution/calibration.py",
+        "def _canonical_case_sources(sources) -> Tuple[list, list]:\n",
+        "def _canonical_case_sources(sources, subject_id=None) -> Tuple[list, list]:\n",
+    )
+    source_return = "    return canonical, actual\n\n\ndef _actual_case_filename"
+    source_binding = '''    if subject_short_ids:
+        resolved_subject = str(subject_id or "")
+        subject_hex = resolved_subject[5:] if resolved_subject.startswith("subj_") else ""
+        is_hex = len(subject_hex) >= 12 and all(ch in "0123456789abcdef" for ch in subject_hex.lower())
+        short_id = next(iter(subject_short_ids))
+        if not is_hex or not subject_hex.upper().startswith(short_id):
+            raise DistributionError(
+                "blind_source_violation",
+                "subject-aware blind sources must match payload subject_id",
+                {"subject_id": resolved_subject, "subject_short_id": short_id, "actual_sources": actual},
+            )
+    return canonical, actual
+
+
+def _actual_case_filename'''
+    replace_once(
+        "engine/distribution/calibration.py",
+        source_return,
+        source_binding,
+    )
+    replace_once(
+        "engine/distribution/calibration.py",
+        '''    payload = _mapping(payload, "payload")
+    canonical_sources, actual_sources = _canonical_case_sources(payload.get("source_files_used"))
+''',
+        '''    payload = _mapping(payload, "payload")
+    subject_id = _text(payload.get("subject_id"), "subject_id")
+    canonical_sources, actual_sources = _canonical_case_sources(payload.get("source_files_used"), subject_id)
+''',
+    )
+    replace_once(
+        "engine/distribution/calibration.py",
+        '        "subject_id": _text(payload.get("subject_id"), "subject_id"),\n',
+        '        "subject_id": subject_id,\n',
+    )
+
     Path(".stabilization-commit-message").write_text(
-        "test: bind blind Base5 to payload subject (#162)\n",
+        "fix: bind blind Base5 to payload subject (#162)\n",
         encoding="utf-8",
     )
 
