@@ -41,6 +41,11 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
+      - name: Rebuild AI distribution
+        run: |
+          python tools/build_ai_distribution.py
+          python tools/build_ai_distribution.py --check
+
       - name: Historical selector and progressive Case focused tests
         run: |
           python -m unittest \
@@ -55,11 +60,6 @@ jobs:
             tests.test_postmerge_audit_regressions \
             tests.test_second_round_adversarial_regressions \
             tests.test_distribution_runtime_info -v
-
-      - name: Rebuild AI distribution
-        run: |
-          python tools/build_ai_distribution.py
-          python tools/build_ai_distribution.py --check
 
       - name: Full repository regression
         run: |
