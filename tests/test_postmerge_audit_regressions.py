@@ -16,7 +16,7 @@ from engine.distribution.case_pack import (
 )
 from engine.distribution.runtime import dispatch
 from tests.test_distribution_historical_calibration import SELECTOR_RESULT, point
-from tests.test_distribution_partial_case import ENVELOPE, IDENTITY
+from tests.test_distribution_partial_case import ENVELOPE, IDENTITY, LOCATION
 
 
 _CREATED_AT = "2026-08-23T18:00:00+08:00"
@@ -183,7 +183,28 @@ registry_schema_version: 1.0
         self.assertEqual(result["error"]["code"], "subject_registry_mismatch")
 
     def test_case_export_rejects_filename_label_not_derived_from_display_name(self):
-        result = _partial_export(copy.deepcopy(ENVELOPE), filename_label="Other")
+        built = dispatch(
+            "natal.candidate_envelope",
+            {
+                "birth": {
+                    "sex": "male",
+                    "birth_date": "1984-03-13",
+                    "birth_time_range": ["19:20", "19:21"],
+                    "birth_place": "台北市",
+                },
+                "resolved_location": LOCATION,
+            },
+        )
+        self.assertTrue(built["ok"], built)
+        payload = {
+            "candidate_envelope": built["data"]["candidate_envelope"],
+            "resolved_location": LOCATION,
+            **IDENTITY,
+            "filename_label": "Other",
+            "generated_at": _CREATED_AT,
+            "last_modified_by": "test",
+        }
+        result = dispatch("export_case_markdown", payload)
         self.assertFalse(result["ok"])
         self.assertEqual(result["error"]["code"], "subject_identity_mismatch")
 
