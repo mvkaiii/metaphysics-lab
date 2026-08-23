@@ -25,6 +25,7 @@ _PROFILE_ID = "natal-candidate-envelope-v1"
 _RULE_VERSION = "1.0-exp"
 _CONTINUOUS_BAZI_KEYS = frozenset(("decadal_start",))
 _CONTINUOUS_PERIOD_KEYS = frozenset(("start_age_years", "end_age_years", "start_datetime", "end_datetime"))
+_MISSING = object()
 
 
 def _minute_text(value: int) -> str:
@@ -122,29 +123,77 @@ def _finalize_state(current, index: int) -> dict:
     }
 
 
-def _classify_top_level(candidates, key: str):
+def _serialized(value: object) -> str:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def _classify_mapping(rows):
+    """Recursively split common and candidate-dependent JSON facts.
+
+    A nested leaf is invariant only when every candidate contains the path and
+    every value is identical. Mapping siblings are classified independently so,
+    for example, a stable day pillar remains invariant even when the hour pillar
+    varies. No majority value is ever promoted to invariant.
+    """
     keys = set()
-    for candidate in candidates:
-        value = candidate.get(key, {})
+    for _, value in rows:
         if isinstance(value, Mapping):
             keys.update(value)
+
     invariant = {}
     variant = {}
     for field in sorted(keys):
-        values = [(candidate["candidate_id"], candidate.get(key, {}).get(field)) for candidate in candidates]
-        serialized = [json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")) for _, value in values]
-        if serialized and all(item == serialized[0] for item in serialized[1:]):
-            invariant[field] = values[0][1]
-        else:
-            variant[field] = {candidate_id: value for candidate_id, value in values}
+        values = []
+        all_present = True
+        all_mappings = True
+        for candidate_id, mapping in rows:
+            if not isinstance(mapping, Mapping) or field not in mapping:
+                value = _MISSING
+                all_present = False
+                all_mappings = False
+            else:
+                value = mapping[field]
+                if not isinstance(value, Mapping):
+                    all_mappings = False
+            values.append((candidate_id, value))
+
+        if all_present and all_mappings:
+            child_invariant, child_variant = _classify_mapping(values)
+            if child_invariant:
+                invariant[field] = child_invariant
+            if child_variant:
+                variant[field] = child_variant
+            if not child_invariant and not child_variant:
+                invariant[field] = {}
+            continue
+
+        if all_present:
+            serialized = [_serialized(value) for _, value in values]
+            if serialized and all(item == serialized[0] for item in serialized[1:]):
+                invariant[field] = values[0][1]
+                continue
+
+        variant[field] = {
+            candidate_id: None if value is _MISSING else value
+            for candidate_id, value in values
+        }
     return invariant, variant
+
+
+def _classify_tree(candidates, key: str):
+    rows = []
+    for candidate in candidates:
+        candidate_id = candidate["candidate_id"]
+        value = candidate.get(key, {})
+        rows.append((candidate_id, value if isinstance(value, Mapping) else {}))
+    return _classify_mapping(rows)
 
 
 def classify_candidate_facts(candidates) -> dict:
     if not candidates:
         raise ValueError("candidate list must not be empty")
-    invariant_bazi, variant_bazi = _classify_top_level(candidates, "bazi")
-    invariant_ziwei, variant_ziwei = _classify_top_level(candidates, "ziwei")
+    invariant_bazi, variant_bazi = _classify_tree(candidates, "bazi")
+    invariant_ziwei, variant_ziwei = _classify_tree(candidates, "ziwei")
     return {
         "invariant_bazi_facts": invariant_bazi,
         "variant_bazi_facts": variant_bazi,
@@ -207,6 +256,7 @@ def build_candidate_envelope(birth_payload: Mapping[str, object], resolved_locat
         raise NatalFoundationError("candidate_envelope_empty", "no qualified candidate timing state could be built", {"failures": failures})
     candidates = partition_material_states(rows)
     classified = classify_candidate_facts(candidates)
+    unresolved_time = precision_state in ("bounded", "unknown_time")
     return {
         "profile_id": _PROFILE_ID,
         "rule_version": _RULE_VERSION,
@@ -231,7 +281,7 @@ def build_candidate_envelope(birth_payload: Mapping[str, object], resolved_locat
             "unique_hour_pillar_conclusion",
             "unique_ziwei_natal_conclusion",
             "single_chart_personalized_forecast",
-        ] if len(candidates) > 1 else [],
+        ] if unresolved_time else [],
         "provenance": {
             "classification": "Project 原生盤面候選集合",
             "candidate_selection": "all civil minutes in declared uncertainty interval; contiguous identical discrete charts collapsed",
