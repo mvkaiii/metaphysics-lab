@@ -270,7 +270,7 @@ def _actual_date(value: object) -> Optional[date]:
 def _flow_label_for_date(actual: date, timezone: object) -> Tuple[Optional[int], bool]:
     if isinstance(timezone, str) and timezone:
         zone = ZoneInfo(timezone)
-        boundary = solar_term_time(actual.year, "立月", zone)
+        boundary = solar_term_time(actual.year, "立春", zone)
         if actual == boundary.date():
             return None, True
         return (actual.year if actual > boundary.date() else actual.year - 1), False
