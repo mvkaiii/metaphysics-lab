@@ -14,6 +14,7 @@ from engine.historical.selection_integrity import verify_selection_result
 from .case_identity import parse_case_filename
 from .case_pack import BASE_CASE_FILES, CASE_FILES, set_case_calibration_status, update_case_record, validate_case
 from .errors import DistributionError
+from .historical_lock_authority import load_historical_lock, persist_historical_lock
 
 
 _VERIFICATION_STATES = frozenset(("matched", "partial", "not_matched", "cannot_recall"))
@@ -273,11 +274,25 @@ def lock_historical_calibration(payload: Mapping[str, object]) -> dict:
         "canonical_test_points": normalized,
         "supplemental_blind_points": normalized_supplemental,
     }
-    return {
+    digest = canonical_digest(locked)
+    result = {
         "canonical_selection_digest": selection_digest,
         "locked_payload": locked,
-        "payload_digest": canonical_digest(locked),
+        "payload_digest": digest,
     }
+    case_files = payload.get("case_files")
+    if case_files is not None:
+        persisted = persist_historical_lock(
+            case_files,
+            subject_id=locked["subject_id"],
+            calibration_id=locked["calibration_id"],
+            locked_payload=locked,
+            payload_digest=digest,
+            updated_at=_text(payload.get("updated_at"), "updated_at"),
+            last_modified_by=_text(payload.get("last_modified_by", "ai"), "last_modified_by"),
+        )
+        result.update(persisted)
+    return result
 
 
 def _actual_date(value: object) -> Optional[date]:
@@ -346,10 +361,26 @@ def _dimension_status(state: str) -> str:
 
 def finalize_historical_calibration(payload: Mapping[str, object]) -> dict:
     payload = _mapping(payload, "payload")
-    locked = _mapping(payload.get("locked_payload"), "locked_payload")
-    digest = _text(payload.get("payload_digest"), "payload_digest")
+    case_files = payload.get("case_files")
+    lock_record_id = payload.get("lock_record_id")
+    if not isinstance(case_files, Mapping) or not isinstance(lock_record_id, str) or not lock_record_id.strip():
+        raise DistributionError(
+            "lock_authority_required",
+            "historical calibration finalize requires persisted Case lock authority",
+        )
+    authority = load_historical_lock(case_files, lock_record_id.strip())
+    locked = _mapping(authority.get("locked_payload"), "locked_payload")
+    digest = _text(authority.get("payload_digest"), "payload_digest")
     if canonical_digest(locked) != digest:
-        raise DistributionError("immutable_calibration_violation", "locked historical calibration payload digest does not match")
+        raise DistributionError("immutable_calibration_violation", "authoritative historical lock checksum does not match")
+    provided_locked = payload.get("locked_payload")
+    if provided_locked is not None and _jsonable(_mapping(provided_locked, "locked_payload")) != _jsonable(locked):
+        raise DistributionError("immutable_calibration_violation", "caller locked_payload differs from persisted Case authority")
+    provided_digest = payload.get("payload_digest")
+    if provided_digest is not None and _text(provided_digest, "payload_digest") != digest:
+        raise DistributionError("immutable_calibration_violation", "caller payload_digest differs from persisted Case authority")
+    if locked.get("subject_id") != authority.get("subject_id"):
+        raise DistributionError("immutable_calibration_violation", "historical lock subject differs from persisted Case authority")
     responses = payload.get("responses", [])
     if not isinstance(responses, (list, tuple)):
         raise DistributionError("invalid_calibration_response", "responses must be a list")
@@ -403,22 +434,19 @@ def finalize_historical_calibration(payload: Mapping[str, object]) -> dict:
         records.append(record)
     status = "basic" if blind_scorable >= 3 else "uncalibrated"
     result = {"calibration_id": locked.get("calibration_id"), "records": records, "blind_scorable_count": blind_scorable, "historical_calibration_status": status}
-    case_files = payload.get("case_files")
-    if case_files is not None:
-        if not isinstance(case_files, Mapping):
-            raise DistributionError("invalid_case_payload", "case_files must be a mapping")
-        updated_at = _text(payload.get("updated_at"), "updated_at")
-        modified_by = _text(payload.get("last_modified_by", "ai"), "last_modified_by")
-        current = dict(case_files)
-        changed_files = {}
-        for record in records:
-            update = update_case_record({
-                "case_files": current, "filename": "05_驗證事件紀錄.md", "operation": "append",
-                "updated_at": updated_at, "last_modified_by": modified_by, "entry": record,
-            })
-            current.update(update["changed_files"])
-            changed_files.update(update["changed_files"])
+    updated_at = _text(payload.get("updated_at"), "updated_at") if records or payload.get("updated_at") is not None else locked.get("locked_at")
+    modified_by = _text(payload.get("last_modified_by", "ai"), "last_modified_by")
+    current = dict(case_files)
+    changed_files = {}
+    for record in records:
+        update = update_case_record({
+            "case_files": current, "filename": "05_驗證事件紀錄.md", "operation": "append",
+            "updated_at": updated_at, "last_modified_by": modified_by, "entry": record,
+        })
+        current.update(update["changed_files"])
+        changed_files.update(update["changed_files"])
+    if payload.get("updated_at") is not None:
         index_actual = _actual_case_filename(current, "00_專案索引.md")
         changed_files[index_actual] = set_case_calibration_status(current[index_actual], status, updated_at, modified_by)
-        result["changed_files"] = changed_files
+    result["changed_files"] = changed_files
     return result
