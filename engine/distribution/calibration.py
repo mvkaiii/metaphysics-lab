@@ -146,12 +146,32 @@ def lock_historical_calibration(payload: Mapping[str, object]) -> dict:
         int(row["label_year"]): row for row in ranked
         if isinstance(row, Mapping) and isinstance(row.get("label_year"), int)
     } if isinstance(ranked, (list, tuple)) else {}
+    canonical_years = set(expected_order)
+    seen_supplemental = set()
     for raw in supplemental:
         if not isinstance(raw, Mapping):
             raise DistributionError("invalid_calibration_point", "supplemental point must be a mapping")
         year = raw.get("reference_year")
-        selector_row = ranked_map.get(year, raw)
-        normalized_supplemental.append(_normalize_test_point(raw, selector_row, "supplemental"))
+        if not isinstance(year, int) or year not in ranked_map:
+            raise DistributionError(
+                "supplemental_outside_selector_window",
+                "supplemental point must come from the selector's ranked ten-year window",
+                {"reference_year": year, "ranked_years": sorted(ranked_map)},
+            )
+        if year in canonical_years:
+            raise DistributionError(
+                "supplemental_duplicates_canonical",
+                "supplemental point must not duplicate a canonical Top 4 + Bottom 1 year",
+                {"reference_year": year},
+            )
+        if year in seen_supplemental:
+            raise DistributionError(
+                "duplicate_supplemental_point",
+                "supplemental blind points must use unique selector years",
+                {"reference_year": year},
+            )
+        seen_supplemental.add(year)
+        normalized_supplemental.append(_normalize_test_point(raw, ranked_map[year], "supplemental"))
 
     locked = {
         "calibration_id": _text(payload.get("calibration_id"), "calibration_id"),
