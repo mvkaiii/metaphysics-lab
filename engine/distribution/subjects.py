@@ -85,8 +85,13 @@ def _validate_subject_entry(value: object) -> dict:
         raise DistributionError("subject_registry_mismatch", "subject_short_id is malformed")
     display_name = _text(raw.get("subject_display_name"), "subject_display_name")
     filename_label = str(raw.get("filename_label", ""))
-    if filename_label != normalize_filename_label(filename_label):
-        raise DistributionError("subject_registry_mismatch", "filename_label is not normalized")
+    expected_label = normalize_filename_label(display_name)
+    if filename_label != expected_label:
+        raise DistributionError(
+            "subject_registry_mismatch",
+            "filename_label must equal normalized subject_display_name",
+            {"filename_label": filename_label, "expected_filename_label": expected_label},
+        )
     status = str(raw.get("status", "active"))
     if status not in ("active", "archived"):
         raise DistributionError("subject_registry_mismatch", "subject status must be active or archived")

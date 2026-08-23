@@ -127,8 +127,13 @@ def _identity_from_payload(payload: Mapping[str, object]) -> dict:
         raise DistributionError("invalid_subject_id", "subject_short_id must be uppercase hexadecimal text")
     if not subject_id[5:].upper().startswith(short_id):
         raise DistributionError("invalid_subject_id", "subject_short_id must be derived from subject_id")
-    if label != normalize_filename_label(label):
-        raise DistributionError("invalid_subject_display_name", "filename_label must be normalized")
+    expected_label = normalize_filename_label(display)
+    if label != expected_label:
+        raise DistributionError(
+            "subject_identity_mismatch",
+            "filename_label must equal normalized subject_display_name",
+            {"filename_label": label, "expected_filename_label": expected_label},
+        )
     return {"subject_id": subject_id, "subject_display_name": display, "subject_short_id": short_id, "filename_label": label}
 
 
