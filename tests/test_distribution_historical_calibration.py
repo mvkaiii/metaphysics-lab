@@ -1,4 +1,6 @@
 import copy
+import hashlib
+import json
 import unittest
 
 from engine.distribution.calibration import (
@@ -16,21 +18,75 @@ BASE_FILES = [
     "04_紫微基礎資料包.md",
 ]
 
-SELECTOR_RESULT = {
-    "selection_digest": "a" * 64,
-    "high_years": [
-        {"label_year": 2016, "period_start": "2016-02-04T17:00:00+08:00", "period_end": "2017-02-03T22:00:00+08:00"},
-        {"label_year": 2018, "period_start": "2018-02-04T05:00:00+08:00", "period_end": "2019-02-04T11:00:00+08:00"},
-        {"label_year": 2020, "period_start": "2020-02-04T17:00:00+08:00", "period_end": "2021-02-03T22:00:00+08:00"},
-        {"label_year": 2023, "period_start": "2023-02-04T10:00:00+08:00", "period_end": "2024-02-04T16:00:00+08:00"},
-    ],
-    "control_year": {
-        "label_year": 2019,
-        "period_start": "2019-02-04T11:00:00+08:00",
-        "period_end": "2020-02-04T17:00:00+08:00",
-    },
-    "control_quality": "strong_control",
-}
+
+def _rank(tier1=0, tier2=0, tier3=0):
+    return {
+        "tier1_family_count": tier1,
+        "tier1_evidence_count": tier1,
+        "cross_layer_tier1": False,
+        "tier2_family_count": tier2,
+        "tier2_evidence_count": tier2,
+        "tier3_family_count": tier3,
+        "tier3_evidence_count": tier3,
+    }
+
+
+def _selector_row(year, rank, start=None, end=None):
+    return {
+        "label_year": year,
+        "period_start": start or "%04d-02-04T12:00:00+08:00" % year,
+        "period_end": end or "%04d-02-04T12:00:00+08:00" % (year + 1),
+        "flow_year_pillar": "甲子",
+        "decadal_index": 4,
+        "decadal_pillar": "甲子",
+        "decadal_boundary_in_period": False,
+        "decadal_boundary_datetimes": [],
+        "rank_vector": rank,
+        "evidence": [],
+    }
+
+
+def _selector_result():
+    ranked = [
+        _selector_row(2016, _rank(tier1=4), "2016-02-04T17:00:00+08:00", "2017-02-03T22:00:00+08:00"),
+        _selector_row(2018, _rank(tier1=3), "2018-02-04T05:00:00+08:00", "2019-02-04T11:00:00+08:00"),
+        _selector_row(2020, _rank(tier1=2), "2020-02-04T17:00:00+08:00", "2021-02-03T22:00:00+08:00"),
+        _selector_row(2023, _rank(tier1=1), "2023-02-04T10:00:00+08:00", "2024-02-04T16:00:00+08:00"),
+        _selector_row(2025, _rank(tier2=3)),
+        _selector_row(2024, _rank(tier2=2)),
+        _selector_row(2022, _rank(tier2=1)),
+        _selector_row(2021, _rank(tier3=3)),
+        _selector_row(2017, _rank(tier3=1)),
+        _selector_row(2019, _rank(), "2019-02-04T11:00:00+08:00", "2020-02-04T17:00:00+08:00"),
+    ]
+    result = {
+        "profile_id": "historical-activation-bazi-v1",
+        "rule_version": "1.0-exp",
+        "as_of_datetime": "2026-08-23T10:30:00+08:00",
+        "timezone": "Asia/Taipei",
+        "ranked_periods": ranked,
+        "high_years": ranked[:4],
+        "control_year": ranked[-1],
+        "control_quality": "strong_control",
+        "major_cycle_coverage": "single_cycle",
+    }
+    canonical = {
+        "profile_id": result["profile_id"],
+        "rule_version": result["rule_version"],
+        "as_of_datetime": result["as_of_datetime"],
+        "timezone": result["timezone"],
+        "ranked_periods": result["ranked_periods"],
+        "high_year_labels": [row["label_year"] for row in result["high_years"]],
+        "control_year_label": result["control_year"]["label_year"],
+        "control_quality": result["control_quality"],
+        "major_cycle_coverage": result["major_cycle_coverage"],
+    }
+    raw = json.dumps(canonical, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    result["selection_digest"] = hashlib.sha256(raw).hexdigest()
+    return result
+
+
+SELECTOR_RESULT = _selector_result()
 
 
 def point(year, role="high_activation", blindness="blind"):
@@ -78,7 +134,7 @@ class HistoricalCalibrationTests(unittest.TestCase):
                 "locked_at": "2026-08-23T10:31:00+08:00",
             }
         )
-        self.assertEqual(result["canonical_selection_digest"], "a" * 64)
+        self.assertEqual(result["canonical_selection_digest"], SELECTOR_RESULT["selection_digest"])
         self.assertEqual(len(result["payload_digest"]), 64)
         self.assertEqual([p["reference_year"] for p in result["locked_payload"]["canonical_test_points"]], [2016, 2018, 2020, 2023, 2019])
         self.assertIn("period_start", result["locked_payload"]["canonical_test_points"][0])
