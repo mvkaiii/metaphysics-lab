@@ -9,10 +9,12 @@ from __future__ import annotations
 
 import json
 import re
+from datetime import date
 from typing import Mapping
 
 from engine.natal.candidates import classify_candidate_facts
 
+from . import natal as distribution_natal
 from .case_pack import (
     BASE_CASE_FILES,
     CASE_FILES,
@@ -77,10 +79,49 @@ def _json_semantically_equal(left: object, right: object) -> bool:
         return False
 
 
+def _has_control_characters(value: str) -> bool:
+    return any(ord(char) < 32 or ord(char) == 127 for char in value)
+
+
 def _list_lines(values) -> list:
     if not isinstance(values, (list, tuple)):
         return ["- none"]
     return ["- `%s`" % str(item) for item in values] or ["- none"]
+
+
+def _validate_known_facts(known: Mapping[str, object]) -> None:
+    unexpected_known = sorted(set(known) - _KNOWN_FACT_FIELDS)
+    if unexpected_known:
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "known_facts contains candidate-dependent or unsupported fields",
+            {"unexpected_known_facts": unexpected_known},
+        )
+    for field in _TEXT_KNOWN_FACT_FIELDS:
+        if field in known:
+            item = known[field]
+            if not isinstance(item, str) or not item.strip() or _has_control_characters(item):
+                raise DistributionError(
+                    "invalid_candidate_envelope",
+                    "known_facts text fields must contain non-empty single-line text without control characters",
+                    {"field": field},
+                )
+    birth_date = known.get("birth_date")
+    if isinstance(birth_date, str):
+        try:
+            parsed_date = date.fromisoformat(birth_date)
+        except ValueError as exc:
+            raise DistributionError(
+                "invalid_candidate_envelope",
+                "birth_date must be a valid Gregorian YYYY-MM-DD date",
+                {"birth_date": birth_date},
+            ) from exc
+        if parsed_date.isoformat() != birth_date:
+            raise DistributionError(
+                "invalid_candidate_envelope",
+                "birth_date must use canonical Gregorian YYYY-MM-DD text",
+                {"birth_date": birth_date},
+            )
 
 
 def _validate_envelope(value: object) -> dict:
@@ -103,22 +144,7 @@ def _validate_envelope(value: object) -> dict:
         if not isinstance(raw.get(field), Mapping):
             raise DistributionError("invalid_candidate_envelope", "%s must be a mapping" % field, {"field": field})
     known = raw["known_facts"]
-    unexpected_known = sorted(set(known) - _KNOWN_FACT_FIELDS)
-    if unexpected_known:
-        raise DistributionError(
-            "invalid_candidate_envelope",
-            "known_facts contains candidate-dependent or unsupported fields",
-            {"unexpected_known_facts": unexpected_known},
-        )
-    for field in _TEXT_KNOWN_FACT_FIELDS:
-        if field in known:
-            item = known[field]
-            if not isinstance(item, str) or not item.strip():
-                raise DistributionError(
-                    "invalid_candidate_envelope",
-                    "known_facts text fields must contain non-empty text",
-                    {"field": field},
-                )
+    _validate_known_facts(known)
     reported_time = known.get("reported_birth_time")
     if reported_time is not None and not _valid_time_text(reported_time):
         raise DistributionError(
@@ -201,6 +227,58 @@ def _validate_envelope(value: object) -> dict:
                 {"field": field},
             )
     return raw
+
+
+def _canonical_birth_basis(envelope: Mapping[str, object]) -> dict:
+    known = envelope["known_facts"]
+    birth = {
+        "sex": known.get("sex"),
+        "birth_date": known.get("birth_date"),
+        "birth_place": known.get("birth_place"),
+    }
+    if envelope["natal_precision_state"] == "bounded":
+        birth["birth_time_range"] = list(known["reported_birth_time_range"])
+    return birth
+
+
+def _validate_builder_authority(payload: Mapping[str, object], envelope: Mapping[str, object]) -> None:
+    raw_location = payload.get("resolved_location")
+    if raw_location is None:
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "partial Case requires the resolved_location used by the canonical Candidate Envelope builder",
+        )
+    try:
+        location = distribution_natal.resolved_location_from_payload(raw_location)
+    except DistributionError as exc:
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "partial Case resolved_location authority is invalid",
+            {"cause": exc.code},
+        ) from exc
+    known = envelope["known_facts"]
+    if known.get("resolved_place_label") != location.canonical_name or known.get("timezone") != location.timezone:
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "candidate known facts do not match resolved_location authority",
+        )
+    try:
+        rebuilt = distribution_natal.build_candidate_natal({
+            "birth": _canonical_birth_basis(envelope),
+            "resolved_location": raw_location,
+        })
+    except DistributionError as exc:
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "candidate envelope cannot be reproduced by the canonical builder",
+            {"cause": exc.code},
+        ) from exc
+    canonical = rebuilt.get("candidate_envelope")
+    if not isinstance(canonical, Mapping) or not _json_semantically_equal(envelope, canonical):
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "candidate envelope does not match the canonical full-interval builder result",
+        )
 
 
 def _index_body(identity: Mapping[str, str], envelope: Mapping[str, object]) -> str:
@@ -330,6 +408,7 @@ def _ziwei_body(identity: Mapping[str, str], envelope: Mapping[str, object]) -> 
 def export_partial_case_markdown(payload: Mapping[str, object]) -> dict:
     payload = _mapping(payload, "payload")
     envelope = _validate_envelope(payload.get("candidate_envelope"))
+    _validate_builder_authority(payload, envelope)
     identity = _identity_from_payload(payload)
     generated_at = _timestamp(payload.get("generated_at"), "generated_at")
     modified_by = _text(payload.get("last_modified_by", "ai"), "last_modified_by")
