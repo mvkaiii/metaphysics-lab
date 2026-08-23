@@ -39,6 +39,7 @@ jobs:
             tests.test_historical_activation_selector \
             tests.test_historical_activation_capabilities \
             tests.test_distribution_historical_calibration \
+            tests.test_distribution_historical_support \
             tests.test_distribution_case_pack \
             tests.test_distribution_runtime_info -v
 
