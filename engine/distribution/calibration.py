@@ -9,6 +9,7 @@ from typing import Mapping, Optional, Tuple
 from zoneinfo import ZoneInfo
 
 from engine.bazi.calendar import solar_term_time
+from engine.historical.selection_integrity import verify_selection_result
 
 from .case_pack import BASE_CASE_FILES, set_case_calibration_status, update_case_record
 from .errors import DistributionError
@@ -109,7 +110,13 @@ def _normalize_test_point(raw: Mapping[str, object], selector_row: Mapping[str, 
 def lock_historical_calibration(payload: Mapping[str, object]) -> dict:
     payload = _mapping(payload, "payload")
     selector = _mapping(payload.get("selector_result"), "selector_result")
-    selection_digest = _text(selector.get("selection_digest"), "selector_result.selection_digest")
+    try:
+        selection_digest = verify_selection_result(selector)
+    except ValueError as exc:
+        raise DistributionError(
+            "selector_integrity_mismatch",
+            str(exc),
+        ) from exc
     canonical = payload.get("canonical_test_points")
     if not isinstance(canonical, (list, tuple)) or len(canonical) != 5:
         raise DistributionError("invalid_calibration_point", "canonical_test_points must contain exactly five points")
@@ -267,11 +274,19 @@ def finalize_historical_calibration(payload: Mapping[str, object]) -> dict:
     }
     records = []
     blind_scorable = 0
+    seen_references = set()
     for index, raw in enumerate(responses, start=1):
         response = _mapping(raw, "response")
         reference = response.get("reference_year")
         if not isinstance(reference, int) or reference not in point_map:
             raise DistributionError("invalid_calibration_response", "response reference_year is not in locked test points")
+        if reference in seen_references:
+            raise DistributionError(
+                "duplicate_calibration_response",
+                "each locked historical test point may be answered only once",
+                {"reference_year": reference},
+            )
+        seen_references.add(reference)
         state = response.get("verification_state")
         if state not in _VERIFICATION_STATES:
             raise DistributionError("invalid_calibration_response", "verification_state is invalid")
