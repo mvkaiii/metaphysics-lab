@@ -72,7 +72,7 @@ jobs:
       - name: Persist stabilization source changes
         if: github.event_name == 'push' && github.ref == 'refs/heads/fix/postmerge-audit-161-165'
         run: |
-          if git diff --quiet -- engine dist/ai; then
+          if git diff --quiet -- engine tests dist/ai; then
             echo "Stabilization source already committed"
             rm -f .stabilization-commit-message
             exit 0
@@ -81,7 +81,7 @@ jobs:
           rm -f .stabilization-commit-message
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add engine dist/ai
+          git add engine tests dist/ai
           git commit -m "$message"
           git push origin HEAD:fix/postmerge-audit-161-165
 
