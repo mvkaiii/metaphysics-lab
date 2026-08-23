@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validation:
@@ -40,6 +40,67 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
+
+      - name: Commit #164 Case record idempotency
+        if: github.event_name == 'push' && github.ref == 'refs/heads/fix/postmerge-audit-161-165'
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("engine/distribution/case_pack.py")
+          text = path.read_text(encoding="utf-8")
+          old = '''def _append_record(body: str, entry_text: str) -> str:\n    start, end = body.find(_RECORDS_START), body.find(_RECORDS_END)\n    if start < 0 or end < 0 or end <= start:\n        raise DistributionError("invalid_case_markdown", "tracking Case file is missing record boundary markers")\n    content_start = start + len(_RECORDS_START)\n    current = body[content_start:end].strip()\n    updated = entry_text if current == _EMPTY_RECORDS or not current else current + "\\n\\n" + entry_text\n    return body[:content_start] + "\\n" + updated + "\\n" + body[end:]\n'''
+          new = '''def _record_entries(body: str) -> dict:\n    start, end = body.find(_RECORDS_START), body.find(_RECORDS_END)\n    if start < 0 or end < 0 or end <= start:\n        raise DistributionError("invalid_case_markdown", "tracking Case file is missing record boundary markers")\n    content_start = start + len(_RECORDS_START)\n    current = body[content_start:end].strip()\n    if current == _EMPTY_RECORDS or not current:\n        return {}\n    records = {}\n    for chunk in re.split(r"\\n\\n(?=### )", current):\n        first_line, marker, rest = chunk.partition("\\n\\n```json\\n")\n        if not marker or not first_line.startswith("### ") or not rest.endswith("\\n```"):\n            raise DistributionError("invalid_case_markdown", "tracking record block is malformed")\n        record_id = first_line[4:].strip()\n        try:\n            parsed = json.loads(rest[:-4])\n        except (TypeError, ValueError) as exc:\n            raise DistributionError("invalid_case_markdown", "tracking record JSON cannot be parsed") from exc\n        if not isinstance(parsed, Mapping) or parsed.get("record_id") != record_id:\n            raise DistributionError("invalid_case_markdown", "tracking record heading does not match payload record_id")\n        if record_id in records:\n            raise DistributionError("invalid_case_markdown", "tracking file contains duplicate record_id", {"record_id": record_id})\n        records[record_id] = dict(parsed)\n    return records\n\n\ndef _append_record(body: str, entry_text: str) -> str:\n    start, end = body.find(_RECORDS_START), body.find(_RECORDS_END)\n    if start < 0 or end < 0 or end <= start:\n        raise DistributionError("invalid_case_markdown", "tracking Case file is missing record boundary markers")\n    content_start = start + len(_RECORDS_START)\n    current = body[content_start:end].strip()\n    updated = entry_text if current == _EMPTY_RECORDS or not current else current + "\\n\\n" + entry_text\n    return body[:content_start] + "\\n" + updated + "\\n" + body[end:]\n'''
+          if new not in text:
+              if text.count(old) != 1:
+                  raise SystemExit("#164 helper patch target mismatch")
+              text = text.replace(old, new, 1)
+          old2 = '''    metadata["last_updated_at"], metadata["last_modified_by"] = updated_at, modified_by\n    updated_body = _append_record(body, _render_entry(entry))\n'''
+          new2 = '''    record_id = _text(entry.get("record_id"), "entry.record_id")\n    existing_records = _record_entries(body)\n    if record_id in existing_records:\n        if existing_records[record_id] == dict(entry):\n            return {"subject_id": validation["subject_id"], "changed_files": {}}\n        raise DistributionError(\n            "duplicate_record_id",\n            "record_id already exists in this Case slot with different content",\n            {"filename": requested_filename, "record_id": record_id},\n        )\n    metadata["last_updated_at"], metadata["last_modified_by"] = updated_at, modified_by\n    updated_body = _append_record(body, _render_entry(entry))\n'''
+          if new2 not in text:
+              if text.count(old2) != 1:
+                  raise SystemExit("#164 update patch target mismatch")
+              text = text.replace(old2, new2, 1)
+          path.write_text(text, encoding="utf-8")
+          PY
+          if ! git diff --quiet -- engine/distribution/case_pack.py; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add engine/distribution/case_pack.py
+            git commit -m "fix: make Case record append idempotent (#164)"
+          fi
+
+      - name: Commit #165 filename-label identity binding
+        if: github.event_name == 'push' && github.ref == 'refs/heads/fix/postmerge-audit-161-165'
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          case_path = Path("engine/distribution/case_pack.py")
+          text = case_path.read_text(encoding="utf-8")
+          old = '''    if label != normalize_filename_label(label):\n        raise DistributionError("invalid_subject_display_name", "filename_label must be normalized")\n'''
+          new = '''    expected_label = normalize_filename_label(display)\n    if label != expected_label:\n        raise DistributionError(\n            "subject_identity_mismatch",\n            "filename_label must equal normalized subject_display_name",\n            {"filename_label": label, "expected_filename_label": expected_label},\n        )\n'''
+          if new not in text:
+              if text.count(old) != 1:
+                  raise SystemExit("#165 case identity patch target mismatch")
+              text = text.replace(old, new, 1)
+              case_path.write_text(text, encoding="utf-8")
+
+          subject_path = Path("engine/distribution/subjects.py")
+          text = subject_path.read_text(encoding="utf-8")
+          old = '''    filename_label = str(raw.get("filename_label", ""))\n    if filename_label != normalize_filename_label(filename_label):\n        raise DistributionError("subject_registry_mismatch", "filename_label is not normalized")\n'''
+          new = '''    filename_label = str(raw.get("filename_label", ""))\n    expected_label = normalize_filename_label(display_name)\n    if filename_label != expected_label:\n        raise DistributionError(\n            "subject_registry_mismatch",\n            "filename_label must equal normalized subject_display_name",\n            {"filename_label": filename_label, "expected_filename_label": expected_label},\n        )\n'''
+          if new not in text:
+              if text.count(old) != 1:
+                  raise SystemExit("#165 registry identity patch target mismatch")
+              text = text.replace(old, new, 1)
+              subject_path.write_text(text, encoding="utf-8")
+          PY
+          if ! git diff --quiet -- engine/distribution/case_pack.py engine/distribution/subjects.py; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add engine/distribution/case_pack.py engine/distribution/subjects.py
+            git commit -m "fix: bind filename label to display name (#165)"
+          fi
+          git push origin HEAD:fix/postmerge-audit-161-165
 
       - name: Historical selector and progressive Case focused tests
         run: |
