@@ -10,6 +10,8 @@ from __future__ import annotations
 import json
 from typing import Mapping
 
+from engine.natal.candidates import classify_candidate_facts
+
 from .case_pack import (
     BASE_CASE_FILES,
     CASE_FILES,
@@ -82,6 +84,22 @@ def _validate_envelope(value: object) -> dict:
         )
     if raw["provenance"].get("midpoint_used") is not False or raw["provenance"].get("default_time_used") is not False:
         raise DistributionError("invalid_candidate_envelope", "partial Case cannot accept midpoint/default-time candidate provenance")
+    if any(not isinstance(item, Mapping) for item in candidates):
+        raise DistributionError("invalid_candidate_envelope", "candidate entries must be structured mappings")
+    try:
+        classified = classify_candidate_facts(candidates)
+    except (KeyError, TypeError, ValueError) as exc:
+        raise DistributionError("invalid_candidate_envelope", "candidate facts cannot be classified") from exc
+    for field in (
+        "invariant_bazi_facts", "variant_bazi_facts",
+        "invariant_ziwei_facts", "variant_ziwei_facts",
+    ):
+        if raw[field] != classified[field]:
+            raise DistributionError(
+                "invalid_candidate_envelope",
+                "candidate classification does not match candidate facts",
+                {"field": field},
+            )
     return raw
 
 

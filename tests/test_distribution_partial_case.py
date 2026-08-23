@@ -1,3 +1,4 @@
+import copy
 import unittest
 
 from engine.distribution.runtime import dispatch
@@ -30,8 +31,8 @@ ENVELOPE = {
     "invariant_ziwei_facts": {"life_master": "祿存"},
     "variant_ziwei_facts": {"ming_palace": {"candidate-01": "辰", "candidate-02": "巳"}},
     "candidates": [
-        {"candidate_id": "candidate-01", "reported_time_start": "00:00", "reported_time_end": "00:59", "bazi": {"pillars": {"hour": "甲子"}}, "ziwei": {"ming_palace": "辰"}},
-        {"candidate_id": "candidate-02", "reported_time_start": "01:00", "reported_time_end": "02:59", "bazi": {"pillars": {"hour": "乙丑"}}, "ziwei": {"ming_palace": "巳"}},
+        {"candidate_id": "candidate-01", "reported_time_start": "00:00", "reported_time_end": "00:59", "bazi": {"day_master": "丙", "pillars": {"year": "甲子", "month": "丁卯", "day": "丙辰", "hour": "甲子"}}, "ziwei": {"life_master": "祿存", "ming_palace": "辰"}},
+        {"candidate_id": "candidate-02", "reported_time_start": "01:00", "reported_time_end": "02:59", "bazi": {"day_master": "丙", "pillars": {"year": "甲子", "month": "丁卯", "day": "丙辰", "hour": "乙丑"}}, "ziwei": {"life_master": "祿存", "ming_palace": "巳"}},
     ],
     "boundary_ambiguities": [],
     "allowed_analysis": ["invariant_natal_structure", "candidate_comparison"],
@@ -91,6 +92,14 @@ class PartialCaseTests(unittest.TestCase):
     def test_partial_case_rejects_envelope_that_omits_mandatory_unique_chart_blocks(self):
         tampered = dict(ENVELOPE)
         tampered["blocked_analysis"] = []
+        result = self.export(candidate_envelope=tampered)
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["error"]["code"], "invalid_candidate_envelope")
+
+    def test_partial_case_rejects_forged_invariant_classification(self):
+        tampered = copy.deepcopy(ENVELOPE)
+        tampered["invariant_bazi_facts"]["pillars"]["hour"] = "甲子"
+        tampered["variant_bazi_facts"]["pillars"].pop("hour")
         result = self.export(candidate_envelope=tampered)
         self.assertFalse(result["ok"])
         self.assertEqual(result["error"]["code"], "invalid_candidate_envelope")
