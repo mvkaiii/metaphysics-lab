@@ -36,6 +36,28 @@ class DistributionCandidateEnvelopeTests(unittest.TestCase):
         self.assertFalse(envelope["provenance"]["default_time_used"])
         self.assertGreaterEqual(envelope["candidate_count"], 1)
 
+    def test_bounded_range_remains_blocked_even_when_compressed_to_one_material_state(self):
+        result = dispatch(
+            "natal.candidate_envelope",
+            {
+                "birth": {
+                    "sex": "male",
+                    "birth_date": "1984-03-13",
+                    "birth_time_range": ["19:20", "19:21"],
+                    "birth_place": "台北市",
+                },
+                "resolved_location": LOCATION,
+            },
+        )
+        self.assertTrue(result["ok"], result)
+        envelope = result["data"]["candidate_envelope"]
+        self.assertEqual(envelope["natal_precision_state"], "bounded")
+        self.assertEqual(envelope["candidate_count"], 1)
+        self.assertIn("unique_birth_time_claim", envelope["blocked_analysis"])
+        self.assertIn("unique_hour_pillar_conclusion", envelope["blocked_analysis"])
+        self.assertIn("unique_ziwei_natal_conclusion", envelope["blocked_analysis"])
+        self.assertIn("single_chart_personalized_forecast", envelope["blocked_analysis"])
+
     def test_unknown_time_bypasses_full_natal_precision_gate(self):
         fake = {
             "profile_id": "natal-candidate-envelope-v1",
