@@ -50,6 +50,18 @@ def runtime_info() -> dict:
     }
 
 
+def _prepare_historical_calibration(payload: Mapping[str, object]) -> dict:
+    from engine.historical.selector import select_historical_activation
+
+    try:
+        return select_historical_activation(payload)
+    except ValueError as exc:
+        raise DistributionError(
+            "historical_selector_invalid",
+            str(exc),
+        ) from exc
+
+
 def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dict:
     """Dispatch one portable runtime action and always return a structured envelope."""
     if not isinstance(action, str) or not action.strip():
@@ -62,19 +74,39 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
     if action == "runtime_info":
         return _ok(action, runtime_info())
 
+    request = {} if payload is None else payload
     try:
         if action == "build_natal":
             from .natal import build_natal
 
-            return _ok(action, build_natal({} if payload is None else payload))
+            return _ok(action, build_natal(request))
         if action == "reconcile_natal":
             from .natal import reconcile_natal
 
-            return _ok(action, reconcile_natal({} if payload is None else payload))
+            return _ok(action, reconcile_natal(request))
         if action == "resolve_forecast_context":
             from .forecast import resolve_forecast_context
 
-            return _ok(action, resolve_forecast_context({} if payload is None else payload))
+            return _ok(action, resolve_forecast_context(request))
+        if action == "prepare_historical_calibration":
+            return _ok(action, _prepare_historical_calibration(request))
+        if action in (
+            "lock_blind_forecast",
+            "lock_historical_calibration",
+            "finalize_historical_calibration",
+        ):
+            from .calibration import (
+                finalize_historical_calibration,
+                lock_blind_forecast,
+                lock_historical_calibration,
+            )
+
+            handler = {
+                "lock_blind_forecast": lock_blind_forecast,
+                "lock_historical_calibration": lock_historical_calibration,
+                "finalize_historical_calibration": finalize_historical_calibration,
+            }[action]
+            return _ok(action, handler(request))
         if action in (
             "export_case_markdown",
             "validate_case",
@@ -94,7 +126,7 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
                 "migrate_case": migrate_case,
                 "update_case_record": update_case_record,
             }[action]
-            return _ok(action, handler({} if payload is None else payload))
+            return _ok(action, handler(request))
     except DistributionError as exc:
         return _error(action, exc.code, str(exc), exc.details)
 
