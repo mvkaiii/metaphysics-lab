@@ -111,6 +111,26 @@ def _prepare_historical_calibration(payload: Mapping[str, object]) -> dict:
     return result
 
 
+def _export_case(request: Mapping[str, object]) -> dict:
+    has_full = request.get("normalized_natal") is not None
+    has_partial = request.get("candidate_envelope") is not None
+    if has_full and has_partial:
+        raise DistributionError(
+            "ambiguous_case_natal_source",
+            "Case export must use exactly one natal source: normalized_natal or candidate_envelope",
+        )
+    if has_partial:
+        from .partial_case import export_partial_case_markdown
+        return export_partial_case_markdown(request)
+    if not has_full:
+        raise DistributionError(
+            "missing_case_natal_source",
+            "Case export requires normalized_natal or candidate_envelope",
+        )
+    from .case_pack import export_case_markdown
+    return export_case_markdown(request)
+
+
 def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dict:
     """Dispatch one portable runtime action and always return a structured envelope."""
     if not isinstance(action, str) or not action.strip():
@@ -141,9 +161,11 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
             from .calibration import finalize_historical_calibration, lock_blind_forecast, lock_historical_calibration
             handler = {"lock_blind_forecast": lock_blind_forecast, "lock_historical_calibration": lock_historical_calibration, "finalize_historical_calibration": finalize_historical_calibration}[action]
             return _ok(action, handler(request))
-        if action in ("export_case_markdown", "validate_case", "migrate_case", "update_case_record"):
-            from .case_pack import export_case_markdown, migrate_case, update_case_record, validate_case
-            handler = {"export_case_markdown": export_case_markdown, "validate_case": validate_case, "migrate_case": migrate_case, "update_case_record": update_case_record}[action]
+        if action == "export_case_markdown":
+            return _ok(action, _export_case(request))
+        if action in ("validate_case", "migrate_case", "update_case_record"):
+            from .case_pack import migrate_case, update_case_record, validate_case
+            handler = {"validate_case": validate_case, "migrate_case": migrate_case, "update_case_record": update_case_record}[action]
             return _ok(action, handler(request))
     except DistributionError as exc:
         return _error(action, exc.code, str(exc), exc.details)
