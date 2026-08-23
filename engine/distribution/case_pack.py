@@ -1,14 +1,16 @@
-"""Portable nine-file Markdown Case Pack.
+"""Portable progressive Markdown Case Pack.
 
 Case files store private facts, provenance, analysis labels and append-first
-tracking history. They do not contain executable program logic.
+tracking history. New Case schema 1.1 starts with 00-04 only; 05-08 are
+materialized when the first real record exists. Legacy schema 1.0 nine-file
+packs remain readable.
 """
 
 from __future__ import annotations
 
 import json
 import re
-from datetime import date, datetime
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Mapping, Optional, Tuple
 
@@ -42,6 +44,8 @@ CASE_FILES = (
     "07_問事追蹤紀錄.md",
     "08_重大決策紀錄.md",
 )
+BASE_CASE_FILES = CASE_FILES[:5]
+PROGRESSIVE_CASE_FILES = CASE_FILES[5:]
 
 _RECORD_TYPES = {
     "00_專案索引.md": "project_index",
@@ -61,14 +65,14 @@ _SOURCE_CLASSIFICATION = {
     "02_命盤資料校驗紀錄.md": "已校驗資料",
     "03_八字結構化資料包.md": "Structured natal facts",
     "04_紫微基礎資料包.md": "Structured natal facts",
-    "05_驗證事件紀錄.md": "已驗證事件",
+    "05_驗證事件紀錄.md": "Verification ledger",
     "06_流年追蹤紀錄.md": "Forecast tracking",
     "07_問事追蹤紀錄.md": "Forecast tracking",
     "08_重大決策紀錄.md": "Decision tracking",
 }
 
 _MUTATION_POLICY = {
-    "00_專案索引.md": "schema_or_subject_metadata_only",
+    "00_專案索引.md": "schema_subject_manifest_calibration_state",
     "01_命盤核心摘要.md": "material_natal_change_only",
     "02_命盤資料校驗紀錄.md": "reconciliation_change_only",
     "03_八字結構化資料包.md": "material_natal_or_schema_change_only",
@@ -92,11 +96,12 @@ _REQUIRED_FRONT_MATTER = (
     "mutation_policy",
 )
 
-_TRACKING_FILES = frozenset(CASE_FILES[5:])
+_TRACKING_FILES = frozenset(PROGRESSIVE_CASE_FILES)
 _RECORDS_START = "<!-- records:start -->"
 _RECORDS_END = "<!-- records:end -->"
 _EMPTY_RECORDS = "目前沒有已記錄項目。"
 _SUBJECT_PATTERN = re.compile(r"^[A-Za-z0-9._-]+$")
+_CALIBRATION_STATES = frozenset(("uncalibrated", "basic", "calibrated"))
 
 
 def _mapping(value: object, field_name: str) -> Mapping[str, Any]:
@@ -159,10 +164,7 @@ def _front_matter_value(value: object) -> str:
         return "null"
     text = str(value)
     if "\n" in text or "\r" in text:
-        raise DistributionError(
-            "invalid_case_metadata",
-            "front matter values must be one line",
-        )
+        raise DistributionError("invalid_case_metadata", "front matter values must be one line")
     return text
 
 
@@ -249,10 +251,7 @@ def _normalized_model(value: object):
     project = None if project_raw is None else project_natal_from_payload(project_raw)
     external = _external_from_payload(external_raw)
     if project is None and external is None:
-        raise DistributionError(
-            "invalid_case_payload",
-            "Case export requires at least one natal source",
-        )
+        raise DistributionError("invalid_case_payload", "Case export requires at least one natal source")
     return build_normalized_natal(project=project, external=external)
 
 
@@ -340,6 +339,47 @@ def _render_case_file(filename: str, metadata: Mapping[str, object], body: str) 
     return render_front_matter(metadata) + rendered_body.rstrip() + "\n"
 
 
+def _index_body(chart, subject: str, materialized, calibration_status: str) -> str:
+    project_name = None if chart.project is None else chart.project.source.source_name
+    external_name = None if chart.external is None else chart.external.source.source_name
+    labels = {
+        "00": "專案索引",
+        "01": "命盤核心摘要",
+        "02": "命盤資料校驗紀錄",
+        "03": "八字結構化資料包",
+        "04": "紫微基礎資料包",
+        "05": "驗證事件紀錄",
+        "06": "流年追蹤紀錄",
+        "07": "問事追蹤紀錄",
+        "08": "重大決策紀錄",
+    }
+    lines = [
+        "# Metaphysics Lab Case｜專案索引",
+        "",
+        "- Subject ID: `%s`" % subject,
+        "- Normalized Natal Identity: `%s`" % chart.identity,
+        "- Project source: `%s`" % (project_name or "none"),
+        "- External source: `%s`" % (external_name or "none"),
+        "- Case lifecycle: `progressive`",
+        "",
+        "## Case Files",
+        "",
+    ]
+    present = set(materialized)
+    for filename in CASE_FILES:
+        prefix = filename[:2]
+        marker = "✓" if filename in present else "○"
+        lines.append("- %s %s %s" % (marker, prefix, labels[prefix]))
+    lines.extend([
+        "",
+        "## Historical Calibration",
+        "",
+        "Historical Calibration: `%s`" % calibration_status,
+        "",
+    ])
+    return "\n".join(lines)
+
+
 def export_case_markdown(payload: Mapping[str, object]) -> dict:
     payload = _mapping(payload, "payload")
     chart = _normalized_model(payload.get("normalized_natal"))
@@ -349,31 +389,15 @@ def export_case_markdown(payload: Mapping[str, object]) -> dict:
     generated_date = datetime.fromisoformat(generated_at).date()
     analysis = _analysis_section(payload.get("analysis_sections"))
 
-    project_name = None if chart.project is None else chart.project.source.source_name
-    external_name = None if chart.external is None else chart.external.source.source_name
-    index_body = (
-        "# Metaphysics Lab Case｜專案索引\n\n"
-        "- Subject ID: `%s`\n"
-        "- Normalized Natal Identity: `%s`\n"
-        "- Project source: `%s`\n"
-        "- External source: `%s`\n"
-        "- 本 Case 固定使用 9 份 Markdown；永久更新時只替換實際變動的檔案。\n"
-        % (subject, chart.identity, project_name or "none", external_name or "none")
-    )
-
     bodies = {
-        "00_專案索引.md": index_body,
+        "00_專案索引.md": _index_body(chart, subject, BASE_CASE_FILES, "uncalibrated"),
         "01_命盤核心摘要.md": _core_summary(chart, subject, analysis),
         "02_命盤資料校驗紀錄.md": export_calibration_markdown(chart, generated_date),
         "03_八字結構化資料包.md": export_bazi_markdown(chart, generated_date),
         "04_紫微基礎資料包.md": export_ziwei_markdown(chart, generated_date),
-        "05_驗證事件紀錄.md": _tracking_body("驗證事件紀錄"),
-        "06_流年追蹤紀錄.md": _tracking_body("流年追蹤紀錄"),
-        "07_問事追蹤紀錄.md": _tracking_body("問事追蹤紀錄"),
-        "08_重大決策紀錄.md": _tracking_body("重大決策紀錄"),
     }
     files = {}
-    for filename in CASE_FILES:
+    for filename in BASE_CASE_FILES:
         files[filename] = _render_case_file(
             filename,
             _metadata(filename, subject, generated_at, modified_by),
@@ -384,22 +408,50 @@ def export_case_markdown(payload: Mapping[str, object]) -> dict:
 
 def _case_files(value: object) -> Mapping[str, str]:
     raw = _mapping(value, "case_files")
-    if set(raw) != set(CASE_FILES) or len(raw) != len(CASE_FILES):
+    keys = set(raw)
+    unknown = keys - set(CASE_FILES)
+    missing_base = set(BASE_CASE_FILES) - keys
+    if unknown or missing_base:
         raise DistributionError(
             "case_file_set_mismatch",
-            "Case pack must contain exactly the canonical nine Markdown files",
-            {"expected": list(CASE_FILES), "actual": sorted(str(key) for key in raw)},
+            "Case pack must contain all base files and only canonical Case filenames",
+            {"missing_base": sorted(missing_base), "unknown": sorted(str(item) for item in unknown)},
         )
-    if any(not isinstance(raw[name], str) for name in CASE_FILES):
+    if any(not isinstance(raw[name], str) for name in raw):
         raise DistributionError("invalid_case_markdown", "all Case file contents must be text")
     return raw
+
+
+def _manifest_expected_line(filename: str, present: bool) -> str:
+    labels = {
+        "00": "專案索引", "01": "命盤核心摘要", "02": "命盤資料校驗紀錄",
+        "03": "八字結構化資料包", "04": "紫微基礎資料包", "05": "驗證事件紀錄",
+        "06": "流年追蹤紀錄", "07": "問事追蹤紀錄", "08": "重大決策紀錄",
+    }
+    return "- %s %s %s" % ("✓" if present else "○", filename[:2], labels[filename[:2]])
+
+
+def _validate_manifest(files: Mapping[str, str]) -> None:
+    _, body = parse_front_matter(files["00_專案索引.md"])
+    for filename in CASE_FILES:
+        expected = _manifest_expected_line(filename, filename in files)
+        if expected not in body:
+            raise DistributionError(
+                "case_manifest_mismatch",
+                "00 Case manifest does not match materialized files",
+                {"filename": filename, "expected_line": expected},
+            )
 
 
 def validate_case(payload: Mapping[str, object]) -> dict:
     payload = _mapping(payload, "payload")
     files = _case_files(payload.get("case_files"))
     subject = None
+    versions = set()
+    contracts = set()
     for filename in CASE_FILES:
+        if filename not in files:
+            continue
         metadata, _ = parse_front_matter(files[filename])
         missing = [key for key in _REQUIRED_FRONT_MATTER if key not in metadata]
         if missing:
@@ -408,24 +460,14 @@ def validate_case(payload: Mapping[str, object]) -> dict:
                 "Case file is missing required metadata",
                 {"filename": filename, "missing_fields": missing},
             )
-        if metadata["case_schema_version"] != CASE_SCHEMA_VERSION:
-            raise DistributionError(
-                "case_schema_incompatible",
-                "Case schema version is not supported by this runtime",
-                {"filename": filename, "case_schema_version": metadata["case_schema_version"]},
-            )
-        if metadata["project_contract_version"] != PROJECT_CONTRACT_VERSION:
-            raise DistributionError(
-                "case_contract_incompatible",
-                "Case Project Contract version is not supported by this runtime",
-                {"filename": filename, "project_contract_version": metadata["project_contract_version"]},
-            )
         if metadata["record_type"] != _RECORD_TYPES[filename]:
             raise DistributionError(
                 "case_record_type_mismatch",
                 "Case filename and record_type do not match",
                 {"filename": filename, "record_type": metadata["record_type"]},
             )
+        versions.add(metadata["case_schema_version"])
+        contracts.add(metadata["project_contract_version"])
         current_subject = metadata["subject_id"]
         if subject is None:
             subject = current_subject
@@ -435,47 +477,59 @@ def validate_case(payload: Mapping[str, object]) -> dict:
                 "all Case files must belong to the same subject_id",
                 {"filename": filename, "expected_subject_id": subject, "actual_subject_id": current_subject},
             )
+
+    if len(versions) != 1 or len(contracts) != 1:
+        raise DistributionError(
+            "case_version_mismatch",
+            "all Case files must use one schema and contract version",
+            {"case_schema_versions": sorted(versions), "project_contract_versions": sorted(contracts)},
+        )
+    schema = next(iter(versions))
+    contract = next(iter(contracts))
+    if schema == "1.0":
+        if set(files) != set(CASE_FILES) or contract != "1.0":
+            raise DistributionError(
+                "case_schema_incompatible",
+                "legacy Case schema 1.0 requires the complete nine-file contract 1.0 pack",
+            )
+    elif schema == CASE_SCHEMA_VERSION:
+        if contract != PROJECT_CONTRACT_VERSION:
+            raise DistributionError(
+                "case_contract_incompatible",
+                "Case Project Contract version is not supported by this runtime",
+                {"project_contract_version": contract},
+            )
+        _validate_manifest(files)
+    else:
+        raise DistributionError(
+            "case_schema_incompatible",
+            "Case schema version is not supported by this runtime",
+            {"case_schema_version": schema},
+        )
     return {
         "status": "compatible",
         "subject_id": subject,
-        "validated_files": list(CASE_FILES),
+        "case_schema_version": schema,
+        "project_contract_version": contract,
+        "validated_files": [name for name in CASE_FILES if name in files],
     }
 
 
 def migrate_case(payload: Mapping[str, object]) -> dict:
-    payload = _mapping(payload, "payload")
-    files = _case_files(payload.get("case_files"))
-    versions = set()
-    contracts = set()
-    for filename in CASE_FILES:
-        metadata, _ = parse_front_matter(files[filename])
-        versions.add(metadata.get("case_schema_version"))
-        contracts.add(metadata.get("project_contract_version"))
-    if versions != {CASE_SCHEMA_VERSION} or contracts != {PROJECT_CONTRACT_VERSION}:
-        return {
-            "status": "unsupported_breaking",
-            "migration": "not_available",
-            "changed_files": {},
-            "case_schema_versions": sorted(str(item) for item in versions),
-            "project_contract_versions": sorted(str(item) for item in contracts),
-        }
+    files = _case_files(_mapping(payload, "payload").get("case_files"))
     validation = validate_case({"case_files": files})
     return {
         "status": validation["status"],
         "migration": "no_change",
         "changed_files": {},
         "subject_id": validation["subject_id"],
+        "case_schema_version": validation["case_schema_version"],
     }
 
 
 def _render_entry(entry: Mapping[str, object]) -> str:
     record_id = _text(entry.get("record_id"), "entry.record_id")
-    payload = json.dumps(
-        dict(entry),
-        ensure_ascii=False,
-        sort_keys=True,
-        indent=2,
-    )
+    payload = json.dumps(dict(entry), ensure_ascii=False, sort_keys=True, indent=2)
     return "### %s\n\n```json\n%s\n```" % (record_id, payload)
 
 
@@ -489,17 +543,77 @@ def _append_record(body: str, entry_text: str) -> str:
         )
     content_start = start + len(_RECORDS_START)
     current = body[content_start:end].strip()
-    if current == _EMPTY_RECORDS or not current:
-        updated = entry_text
-    else:
-        updated = current + "\n\n" + entry_text
+    updated = entry_text if current == _EMPTY_RECORDS or not current else current + "\n\n" + entry_text
     return body[:content_start] + "\n" + updated + "\n" + body[end:]
+
+
+def _set_index_materialized(index_text: str, filename: str, updated_at: str, modified_by: str) -> str:
+    metadata, body = parse_front_matter(index_text)
+    absent = _manifest_expected_line(filename, False)
+    present = _manifest_expected_line(filename, True)
+    if present not in body:
+        if absent not in body:
+            raise DistributionError("case_manifest_mismatch", "00 Case manifest is missing target file state")
+        body = body.replace(absent, present, 1)
+    metadata["last_updated_at"] = updated_at
+    metadata["last_modified_by"] = modified_by
+    return render_front_matter(metadata) + body.rstrip() + "\n"
+
+
+def set_case_calibration_status(
+    index_text: str,
+    status: str,
+    updated_at: str,
+    modified_by: str,
+) -> str:
+    if status not in _CALIBRATION_STATES:
+        raise DistributionError(
+            "invalid_calibration_status",
+            "unsupported historical calibration status",
+            {"status": status},
+        )
+    metadata, body = parse_front_matter(index_text)
+    body, count = re.subn(
+        r"Historical Calibration: `(?:uncalibrated|basic|calibrated)`",
+        "Historical Calibration: `%s`" % status,
+        body,
+        count=1,
+    )
+    if count != 1:
+        raise DistributionError("case_manifest_mismatch", "00 Case manifest is missing calibration status")
+    metadata["last_updated_at"] = updated_at
+    metadata["last_modified_by"] = modified_by
+    return render_front_matter(metadata) + body.rstrip() + "\n"
+
+
+def _validate_05_entry(entry: Mapping[str, object]) -> None:
+    if entry.get("status") == "verified":
+        return
+    if entry.get("record_type") != "historical_calibration":
+        raise DistributionError(
+            "invalid_verified_event",
+            "05 accepts verified events or historical calibration ledger records only",
+        )
+    blind = entry.get("blind_prediction")
+    evaluation = entry.get("evaluation")
+    if not isinstance(blind, Mapping) or blind.get("classification") != "命理推論":
+        raise DistributionError("invalid_verified_event", "historical calibration blind prediction classification is invalid")
+    if not isinstance(evaluation, Mapping) or evaluation.get("classification") != "已校驗資料":
+        raise DistributionError("invalid_verified_event", "historical calibration evaluation classification is invalid")
+    actual = entry.get("user_confirmed_actual")
+    if actual is not None:
+        if not isinstance(actual, Mapping) or actual.get("classification") != "已驗證事件":
+            raise DistributionError("invalid_verified_event", "historical calibration actual-event classification is invalid")
 
 
 def update_case_record(payload: Mapping[str, object]) -> dict:
     payload = _mapping(payload, "payload")
     files = _case_files(payload.get("case_files"))
     validation = validate_case({"case_files": files})
+    if validation["case_schema_version"] == "1.0":
+        legacy = True
+    else:
+        legacy = False
     filename = _text(payload.get("filename"), "filename")
     if filename not in _TRACKING_FILES:
         raise DistributionError(
@@ -524,20 +638,31 @@ def update_case_record(payload: Mapping[str, object]) -> dict:
             {"operation": operation},
         )
     entry = _mapping(payload.get("entry"), "entry")
-    if filename == "05_驗證事件紀錄.md" and entry.get("status") != "verified":
-        raise DistributionError(
-            "invalid_verified_event",
-            "05_驗證事件紀錄.md accepts only user-confirmed verified events",
-        )
+    if filename == "05_驗證事件紀錄.md":
+        _validate_05_entry(entry)
     updated_at = _timestamp(payload.get("updated_at"), "updated_at")
     modified_by = _text(payload.get("last_modified_by", "ai"), "last_modified_by")
 
-    metadata, body = parse_front_matter(files[filename])
+    changed = {}
+    if filename in files:
+        metadata, body = parse_front_matter(files[filename])
+    else:
+        if legacy:
+            raise DistributionError("case_file_set_mismatch", "legacy Case is missing required tracking file")
+        index_metadata, _ = parse_front_matter(files["00_專案索引.md"])
+        metadata = _metadata(filename, validation["subject_id"], index_metadata["created_at"], modified_by)
+        body = _tracking_body({
+            "05_驗證事件紀錄.md": "驗證事件紀錄",
+            "06_流年追蹤紀錄.md": "流年追蹤紀錄",
+            "07_問事追蹤紀錄.md": "問事追蹤紀錄",
+            "08_重大決策紀錄.md": "重大決策紀錄",
+        }[filename])
+        changed["00_專案索引.md"] = _set_index_materialized(
+            files["00_專案索引.md"], filename, updated_at, modified_by
+        )
+
     metadata["last_updated_at"] = updated_at
     metadata["last_modified_by"] = modified_by
     updated_body = _append_record(body, _render_entry(entry))
-    updated_text = render_front_matter(metadata) + updated_body.rstrip() + "\n"
-    return {
-        "subject_id": validation["subject_id"],
-        "changed_files": {filename: updated_text},
-    }
+    changed[filename] = _render_case_file(filename, metadata, updated_body)
+    return {"subject_id": validation["subject_id"], "changed_files": changed}
