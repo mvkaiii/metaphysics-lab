@@ -103,7 +103,30 @@ class AIDistributionBundleTests(unittest.TestCase):
         modular = dispatch("export_case_markdown", payload)
         _, bundled = self.bundled_request("export_case_markdown", payload)
         self.assertEqual(bundled, modular)
-        self.assertEqual(len(bundled["data"]["files"]), 9)
+        self.assertEqual(len(bundled["data"]["files"]), 5)
+        self.assertEqual(
+            list(bundled["data"]["files"]),
+            [
+                "00_專案索引.md",
+                "01_命盤核心摘要.md",
+                "02_命盤資料校驗紀錄.md",
+                "03_八字結構化資料包.md",
+                "04_紫微基礎資料包.md",
+            ],
+        )
+
+    def test_historical_selector_request_matches_modular_runtime(self):
+        payload = {
+            "normalized_natal": self.normalized,
+            "as_of_datetime": "2026-08-23T10:27:00+08:00",
+            "timezone": "Asia/Taipei",
+        }
+        modular = dispatch("prepare_historical_calibration", payload)
+        _, bundled = self.bundled_request("prepare_historical_calibration", payload)
+        self.assertEqual(bundled, modular)
+        self.assertTrue(bundled["ok"], bundled)
+        self.assertEqual(len(bundled["data"]["high_years"]), 4)
+        self.assertIn("control_year", bundled["data"])
 
     def test_request_cli_reads_json_stdin_and_returns_one_json_object(self):
         completed, result = self.bundled_request("runtime_info", {})
