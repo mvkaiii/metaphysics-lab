@@ -78,7 +78,10 @@ class ThirdRoundPartialCaseTests(unittest.TestCase):
             }
         ])
         canonical = copy.deepcopy(ENVELOPE)
-        with mock.patch("engine.distribution.partial_case.build_candidate_envelope", return_value=canonical) as builder:
+        with mock.patch(
+            "engine.distribution.natal.build_candidate_natal",
+            return_value={"resolved_location": LOCATION, "candidate_envelope": canonical},
+        ) as builder:
             result = self.export(arbitrary)
         self.assertFalse(result["ok"], result)
         self.assertEqual(result["error"]["code"], "invalid_candidate_envelope")
