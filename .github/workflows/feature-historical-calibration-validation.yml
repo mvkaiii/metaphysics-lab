@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - feature/progressive-case-historical-calibration
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
