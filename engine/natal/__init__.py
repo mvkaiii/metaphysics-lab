@@ -1,3 +1,4 @@
+from .candidates import build_candidate_envelope
 from .errors import NatalFoundationError
 from .models import (
     ExternalNatalView,
@@ -18,4 +19,5 @@ __all__ = (
     "ResolvedField",
     "ResolvedNatalView",
     "NormalizedNatalChart",
+    "build_candidate_envelope",
 )

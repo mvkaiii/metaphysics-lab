@@ -1,0 +1,79 @@
+name: Feature Historical Calibration Validation
+
+on:
+  push:
+    branches:
+      - feature/progressive-case-historical-calibration
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/progressive-case-historical-calibration
+          fetch-depth: 0
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Historical selector and progressive Case focused tests
+        run: |
+          python -m unittest \
+            tests.test_historical_activation_relations \
+            tests.test_historical_activation_selector \
+            tests.test_historical_activation_capabilities \
+            tests.test_distribution_historical_calibration \
+            tests.test_distribution_historical_support \
+            tests.test_distribution_case_pack \
+            tests.test_distribution_runtime_info -v
+
+      - name: Rebuild AI distribution
+        run: |
+          python tools/build_ai_distribution.py
+          python tools/build_ai_distribution.py --check
+
+      - name: Full repository regression
+        run: |
+          python -m unittest discover -s tests -p 'test_*.py' -v
+
+      - name: Python 3.9 compile check
+        run: |
+          python -m compileall engine tests tools
+
+      - name: Persist generated distribution on feature branch
+        if: github.ref == 'refs/heads/feature/progressive-case-historical-calibration' || github.head_ref == 'feature/progressive-case-historical-calibration'
+        run: |
+          if git diff --quiet -- dist/ai; then
+            echo "Generated distribution already committed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist/ai
+          git commit -m "build: refresh progressive case distribution"
+          git push origin HEAD:feature/progressive-case-historical-calibration
+
+      - name: Upload generated distribution
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: progressive-case-ai-distribution
+          path: dist/ai/
+          if-no-files-found: error

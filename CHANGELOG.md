@@ -1,5 +1,23 @@
 # 變更紀錄
 
+## Unreleased｜Progressive Case + Historical Blind Calibration
+
+本段記錄尚未正式發版、目前位於 feature branch / Draft PR 的 Project Contract 1.1 + Case Schema 1.1 變更；正式 release identity 仍為 **v1.3.0｜2026-08-23**，AI Distribution Runtime 仍為 `1.0-exp`。
+
+- 新 Case 改為 Progressive Case：第一次本命建立只 materialize `00_專案索引.md`～`04_紫微基礎資料包.md`；`05`～`08` 只在第一次真正有對應紀錄時建立。
+- `00_專案索引.md` 作為 Case manifest，追蹤 materialized files 與 Historical Calibration 狀態。
+- Legacy Case Schema 1.0 的既有九檔 Case 保留相容讀取；升級不得為了符合新 progressive 規則刪除舊檔。
+- 新增 Historical Blind Calibration：第一次未來問事若尚未校準，先只以 Base Case `00`～`04` 鎖定 Stage 1，再進歷史盲測與 Stage 2，避免歷史答案污染第一版未來盲判。
+- 新增 `historical.activation_selector` = implemented / experimental / on_demand / 1.0-exp，profile `historical-activation-bazi-v1`。
+- Selector 使用最近10個已完整結束的立春流年期，對全部10年建立 Tier 1／Tier 2／Tier 3 deterministic evidence 與 lexicographic rank vector，canonical selection 固定為真正 Top 4 High + Bottom 1 Control。
+- Selector 不接受 known-event / preferred-year / manual-rank hints；已知歷史事件與 conversation contamination 不能改 canonical 4+1，只能改 blind-evidence quality metadata。
+- Control year 分 `strong_control / acceptable_control / relative_low`；`relative_low` 不得冒充真正穩定年。
+- Historical Calibration 將原始盲讀、使用者確認事件、timing/domain/event-form evaluation 分別保存為命理推論、已驗證事件、已校驗資料；`cannot_recall` 不計入失準。
+- Timing evaluation 以 Li-Chun flow-year interval 優先；Gregorian 年份只作使用者友善 label，避免一月／立春前事件被機械式判成 ±1 年。
+- Ziwei v1 只在 Bazi canonical selection 完成後附加 selected-year yearly support context；`ziwei_support` 明確標 `support_only / ranking_authority=false`，不得改 `high_years`、`control_year` 或 Bazi `selection_digest`。
+- Project Contract / Case Schema 升至 `1.1`；Runtime Schema 與 AI Distribution Runtime 維持 `1.0` / `1.0-exp`。
+- 本次不提升任何既有 capability maturity，不建立新 Stable 宣稱，也不改正式 v1.3.0 tag / GitHub Release。
+
 ## v1.3.0｜2026-08-23
 
 v1.3.0 正式收斂 v1.2.0 之後已完成並進入 `main` 的 Natal Foundation、Ziwei Fine Cycle、Ziwei Flowing Stars 與 AI Distribution Pack。

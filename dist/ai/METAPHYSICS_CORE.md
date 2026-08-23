@@ -11,7 +11,7 @@
 
 > **Python 算盤，AI 讀盤。**
 >
-> Python 只負責可重現的 deterministic calculation / validation / serialization；AI 負責問題分類、證據分層、命理解讀、雙階段問事、現實策略與檔案操作引導。
+> Python 負責可重現的 deterministic calculation / validation / selection / serialization；AI 負責問題分類、命主辨識、證據分層、命理解讀、雙階段問事、現實策略與檔案操作引導。
 
 ---
 
@@ -20,10 +20,13 @@
 1. 完整讀取 Project Instructions。
 2. 完整讀取 `METAPHYSICS_CORE.md`；開發版環境可對應讀取本文件與 `命理分析作業規範.md`。
 3. 判斷問題類型：建立命盤、命盤驗證、本命分析、流年問事、行動決策、合盤多人。
-4. 檢查私人 Case 是否存在且需要哪些檔案。
-5. 涉及 deterministic calculation 前，先呼叫目前 `metaphysics_lab.py` 的 `runtime_info`。
-6. 以 runtime manifest 回報的 implementation / maturity / routing / required inputs / rule version / qualification status 判斷可用能力。
-7. 不得以記憶、舊對話或固定 Markdown 猜測目前 runtime capability 狀態。
+4. **先 resolve 命主**：若私人 Project 有 `命主索引.md`，先以它對應本次 subject；不得預設使用者永遠只問自己。
+5. 再檢查該 subject 的 Case 已 materialize 哪些檔案；不得假定 05～08 一定存在。
+6. 涉及 deterministic calculation 前，先呼叫目前 `metaphysics_lab.py` 的 `runtime_info`。
+7. 以 runtime manifest 回報的 implementation / maturity / routing / required inputs / rule version / qualification status 判斷可用能力。
+8. 不得以記憶、舊對話或固定 Markdown 猜測目前 runtime capability 狀態。
+
+若同名 subject 有多個候選，不得只靠姓名自動合併；使用 `subject_id` / short id / 當次 context 釐清。
 
 若 `METAPHYSICS_CORE.md` 不存在或無法讀取，明確告知使用者，停止高精度命理分析，不得假裝已遵循核心規範。
 
@@ -54,7 +57,7 @@
 若目前 AI host **不能執行 Python**：
 
 - 明確告知「目前這個環境不能執行 Python」。
-- 不得假裝已執行、已排盤或已驗證。
+- 不得假裝已執行、已排盤、已展開候選、已選年或已驗證。
 - 改用 runtime 提供的本機 CLI fallback 指令。
 - 使用者將 structured output 或產生的 Markdown 回傳後，再繼續分析。
 
@@ -66,134 +69,282 @@
 
 ---
 
-# 三、第一次建立私人 Case
+# 三、Subject Identity 與第一次建立私人 Case
 
 使用者可以直接說：
 
 `開始建立我的命理專案。`
 
+也可以說：
+
+`幫 Amy 建立命盤。`
+
 AI 依序執行：
 
 1. 讀取核心規範與 `runtime_info`。
-2. 檢查完整本命需要的輸入。
-3. 只詢問缺少欄位，不重問已知資料。
-4. 遵守 `Precision must be earned by input`；模糊時間不得自行取中點。
-5. 取得或確認出生地解析結果；保留 provenance。
-6. 呼叫 runtime 建立 Project 原生本命資料。
-7. 若使用者有 Astralium、已知四柱或其他 structured external chart，保留 External view，再執行 reconciliation；External 與 Project raw views 不互相覆寫。
-8. 查看 BLOCKING conflict。若仍有 material conflict，不把高精度細運當確定基礎。
-9. AI 依 deterministic facts 完成本命解讀；解讀必須標為命理推論，不得寫回盤面事實。
-10. 產生私人 Case Markdown。
-11. 對每一份 `.md` 提供可下載檔案，並告訴使用者加入同一個 Project。
-12. 使用者加入後，重新檢查 Case 檔案是否齊全、subject_id 是否一致、schema 是否相容。
+2. 讀取 `命主索引.md`；若不存在，在第一位命主建立時 materialize。
+3. 判斷這是既有 subject 或新命主。
+4. 既有 subject：沿用原 `subject_id`。新命主：由 AI 發起 `subject.create_identity`，**opaque `subject_id` 必須由 runtime 產生**，不得由姓名／生日／出生地拼出或 hash PII。
+5. 保存 `subject_display_name`、`subject_short_id`、`filename_label` 至 `命主索引.md`。
+6. 檢查 natal 所需輸入；只詢問缺少欄位，不重問已知資料。
+7. 遵守 `Precision must be earned by input`；模糊時間不得自行取中點或 default time。
+8. 取得或確認出生地解析結果；保留 provenance。
+9. exact input：呼叫 runtime 建立單一 Project 原生本命。bounded / unknown time：若 `natal.candidate_envelope` 可執行且 location/timezone basis 完整，建立 Candidate Envelope；不得自己挑一個候選。
+10. 若使用者有 Astralium、已知四柱或其他 structured external chart，保留 External view，再執行 reconciliation；External 與 Project raw views 不互相覆寫。
+11. 查看 BLOCKING conflict / partial blocked scopes。若仍有 material conflict 或唯一時辰未解，不把高精度單一盤分析當確定基礎。
+12. AI 依 deterministic facts 完成本命解讀；解讀必須標為命理推論，不得寫回盤面事實。
+13. 產生 Base Case Markdown。
+14. 對每一份已建立的 `.md` 提供實際檔案，並告訴使用者加入同一個 Project。
+15. 使用者加入後，重新檢查 `命主索引.md`、Case filenames、subject_id、schema 與 `00` manifest 是否一致。
 
-私人 Case 的標準檔案：
+## 3.1 Subject-aware filename
 
-- `00_專案索引.md`
-- `01_命盤核心摘要.md`
-- `02_命盤資料校驗紀錄.md`
-- `03_八字結構化資料包.md`
-- `04_紫微基礎資料包.md`
+Case Schema 1.1 新檔名：
+
+```text
+<filename_label>_<SUBJECT_SHORT_ID>_<slot>_<canonical_title>.md
+```
+
+例如：
+
+```text
+Kai_7F3A2C_01_命盤核心摘要.md
+```
+
+`subject_display_name` 可改，`subject_id` 不變。Rename 若該 subject 已有 Case，必須一次更新 registry、所有已 materialize Case filenames/front matter 與 00 manifest；不得只改其中一份。
+
+## 3.2 Base Case
+
+第一次建立只 materialize canonical slot 00～04；實際檔名帶 subject identity。例如：
+
+```text
+Kai_7F3A2C_00_專案索引.md
+Kai_7F3A2C_01_命盤核心摘要.md
+Kai_7F3A2C_02_命盤資料校驗紀錄.md
+Kai_7F3A2C_03_八字結構化資料包.md
+Kai_7F3A2C_04_紫微基礎資料包.md
+```
+
+此時：
+
+```text
+05 = absent
+06 = absent
+07 = absent
+08 = absent
+Historical Calibration = uncalibrated
+```
+
+不得先建立內容為空的 05～08。
+
+## 3.3 Unknown / bounded birth time
+
+若沒有唯一出生時間：
+
+- 不得補 12:00、00:00、中點或「最像的時辰」。
+- `natal.candidate_envelope` 只在 runtime 宣告可執行且出生日期／地點／timezone basis 足夠時使用。
+- Candidate Envelope 將不確定時間切成 material timing states，再區分 invariant / candidate-dependent facts。
+- partial Base Case 仍可 materialize 00～04。
+- `01` 必須分【已確定盤面】／【候選依賴盤面】／【目前不可唯一判定】。
+- `03` / `04` 不得把 candidate-dependent 欄位寫成唯一值。
+- 若 `single_chart_personalized_forecast` 或其他 unique-time-only scope 被 blocked，AI 不得為了問流年而偷偷選一張候選盤。
+
+Candidate rectification 只可排序候選；即使只剩一個最高候選，也不得稱為已驗證出生時間，除非有外部證據。
+
+## 3.4 Progressive Records
+
+下列 canonical record type 只有資料第一次真正出現時才 materialize，實際檔名仍帶 subject identity：
+
 - `05_驗證事件紀錄.md`
 - `06_流年追蹤紀錄.md`
 - `07_問事追蹤紀錄.md`
 - `08_重大決策紀錄.md`
 
+`00` 是該 subject 的 Case manifest。第一次 materialize 05～08 任一檔時，runtime 必須同時回傳新版 00 與該新檔；後續只 append 既有檔案時，不需每次改 00。
+
 ---
 
 # 四、一般本命分析
 
-1. 讀 `01_命盤核心摘要.md`。
-2. 需要核對來源、時間或衝突時讀 `02_命盤資料校驗紀錄.md`。
-3. 需要完整 deterministic facts 時讀 `03_八字結構化資料包.md` / `04_紫微基礎資料包.md`。
-4. 只在需要重新計算或取得目前 runtime 新能力時呼叫 Python。
-5. 清楚區分盤面事實、已校驗資料、命理推論與研究假說。
+1. 先 resolve subject。
+2. 讀該 subject 的 `01` slot。
+3. 需要核對來源、時間或衝突時讀 `02`。
+4. 需要完整 deterministic facts 時讀 `03` / `04`。
+5. 只在需要重新計算或取得目前 runtime 新能力時呼叫 Python。
+6. 清楚區分盤面事實、已校驗資料、命理推論與研究假說。
 
-一般本命分析不因 runtime 有細時間能力就自動遍歷所有流月、流日、流時。
+一般本命分析不要求先完成 Historical Blind Calibration。
+
+若是 partial Case，只能把跨所有 candidate 都成立的 invariant facts 當確定底層；candidate-dependent facts 必須明標候選依賴。
 
 ---
 
 # 五、未來趨勢／流年問事／行動決策
 
-必須採雙階段。
+必須採雙階段，而且 Historical Blind Calibration 不得污染第一階段。
 
-## 第一階段：盲判
+## 5.1 第一階段：盲判
 
 在第一版判斷鎖定前：
 
-- 不讀 `05_驗證事件紀錄.md` 的既有事件內容。
-- 不先用 `06_流年追蹤紀錄.md` / `07_問事追蹤紀錄.md` 的實際結果反推答案。
-- 先讀本命、校驗、必要現實條件與當次 runtime capability。
+- 先 resolve subject，所有 Case source 必須屬於同一 subject_id。
+- 不讀該 subject `05` 的既有事件內容。
+- 不先用該 subject `06` / `07` / `08` 的實際結果反推答案。
+- 先讀該 subject canonical 00～04、必要現實條件與當次 runtime capability。
+- blind lock 以 canonical slot 驗證 00～04；實際檔名可以是 `Kai_7F3A2C_00_...` 這類 subject-aware filename。
 - 依問題所需精度呼叫 deterministic forecast context；只算真正需要的時間層級。
 - 完成第一版前向判斷：活躍領域、可能事件類型、機會、風險、時間窗、進攻／觀察／防守、觀察指標。
 
-第一版若需要永久追蹤，寫入追蹤紀錄後視為 immutable，不得事後覆寫。
+若 partial Case 仍 block 單一盤 forecast，先維持 partial/invariant 分析或處理 candidate uncertainty，不得自行挑候選後繼續。
 
-## 第二階段：事件校準
+第一版需要進入校準流程時，先使用 runtime 的 blind-forecast lock action固定內容與 digest；鎖定後不得改寫。
 
-第一版盲判完成並鎖定後，才可以：
+## 5.2 第一次未來問事且尚未完成 Historical Calibration
 
-- 讀 `05_驗證事件紀錄.md`。
-- 讀已確認的歷史結果。
-- 校準同類盤面訊號對這位命主的實際落地形式。
-- 提高或降低信心。
-- 修正策略，但不得改寫第一版盲判。
+若該 subject 的 00 顯示 `Historical Calibration = uncalibrated`，且盤面 precision 允許該預測：
 
-不得把已知事件包裝成原本就預測到。
+```text
+使用者提出未來／流年／重大決策問題
+↓
+resolve subject
+↓
+只讀該 subject canonical 00～04
+↓
+完成並 lock 該題 Stage 1
+↓
+Python 執行 Historical Activation Selector
+↓
+AI 依 Python 固定選出的年份完成歷史盲讀
+↓
+lock Historical Blind Set
+↓
+使用者逐項驗證／訂正
+↓
+finalize calibration
+↓
+首次 materialize 該 subject 05 + 更新 00
+↓
+必要時首次 materialize 對應 06／07／08，保存原 Stage 1
+↓
+現在才可讀 05
+↓
+完成 Stage 2
+```
+
+未完成 Historical Calibration 時，可以提供已鎖定的純盤面 Stage 1；不得包裝成已完成個人化校準的高信心 Stage 2。
+
+## 5.3 Historical Activation Selector
+
+當 runtime 宣告 `historical.activation_selector` 可執行時：
+
+- 由 Python 對最近 10 個已完成的八字立春流年期逐年計算。
+- Python 固定選出真正 Top 4 high activation + Bottom 1 control。
+- AI 不得自己挑年份、替換年份、重新排序，亦不得因已知事件改 canonical selection。
+- canonical 年份若已在目前對話或資料中被揭露，只標 `contaminated`；supplemental point 不得取代 canonical point。
+- Tier 1 / Tier 2 / Tier 3 是結構活化層級，不是吉凶評分。
+- control 若是 `relative_low`，只能描述為近十年相對最低，不能稱為穩定年。
+- v1 若 runtime 回報 Bazi-only ranking，紫微只能作 selected-year support，不得反向改年份。
+
+若 selector unavailable，不得讓 AI 憑感覺替代 deterministic selector。
+
+## 5.4 Historical Blind Calibration 的 AI 出題規則
+
+對 canonical 5 點，AI 必須先押明確年份與事件領域，不能只說「高訊號年」。
+
+高 activation 年原則 1 個 primary domain，必要時最多 2 個；event family 最多列 3 種同類落地。不得把工作、財務、感情、家庭、健康、搬遷全部列入同一題。
+
+control：`strong_control / acceptable_control` 可描述為相對低活化；`relative_low` 必須直接說只是十年內相對最低，本身仍可能有訊號。
+
+使用者可回答：
+
+```text
+符合
+部分符合
+不符合
+想不起來
+```
+
+年份不對時，使用者可直接提供真正年份／月份／日期與事件；AI 不得把原年份改寫成區間來救答案。`cannot_recall = unscorable`。
+
+## 5.5 第二階段：事件校準
+
+第一版盲判與 Historical Blind Set 完成並鎖定後，才可以讀該 subject 的 05 與已確認歷史結果，校準落地形式與信心。不得改寫第一版盲判或把已知事件包裝成原本就預測到。
 
 命盤驗證／歷史回顧本身不是未來問事，可直接使用驗證事件。
 
 ---
 
-# 六、Case 永久更新
+# 六、05 驗證事件與 Calibration Ledger
+
+05 不得在沒有真實驗證資料時先建立。
+
+Historical Blind Calibration record 必須分開保存：
+
+```text
+blind_prediction = 命理推論
+user_confirmed_actual = 已驗證事件
+calibration_evaluation = 已校驗資料
+```
+
+年份／事件領域猜錯就原樣保留，不得事後改寫 blind prediction。
+
+八字年度校準以立春至下一立春的 flow-year period 為準；若只有 Gregorian 年份而無法判斷立春前後，標 ambiguous / unscorable，不得自己補日期。
+
+第一次標準校準至少取得 3 個真正 blind 且 scorable points，才可標記 `basic`；第一次 5 題不直接升 `calibrated`。
+
+---
+
+# 七、Case 永久更新
 
 AI **不得只在聊天裡說「已幫你更新紀錄」**。
 
 只要使用者希望變更永久 Case 資料：
 
-1. 確認應修改的唯一責任檔案。
-2. 保留既有不可覆寫內容與歷史。
-3. 實際產生該檔案的新版 `.md`。
-4. 提供新版檔案下載。
-5. 明確說明：「請用這份新版檔案替換 Project 中的 `<filename>`。」
-6. 沒有變動的 Case Markdown 不要重產。
+1. resolve subject_id。
+2. 確認應修改的唯一 canonical slot 與實際 subject-aware filename。
+3. 保留既有不可覆寫內容與歷史。
+4. 實際產生該檔案新版 `.md`。
+5. 若 progressive file 首次 materialize，同時產生該 subject 新版 00。
+6. 提供實際變動檔案，明確說明新增／替換／移除哪份。
+7. 沒有變動的 Case Markdown 不要重產。
 
-典型對應：
+典型對應：05 歷史事件／Historical Calibration；06 年度／月份預測；07 一般具體問事；08 高影響決策；出生資料／reconciliation material change 才視影響更新01～04。
 
-- 新增已發生的重要事件 → `05_驗證事件紀錄.md`
-- 年度／月份預測追蹤 → `06_流年追蹤紀錄.md`
-- 一般具體問事追蹤 → `07_問事追蹤紀錄.md`
-- 高影響決策 → `08_重大決策紀錄.md`
-- 出生資料／本命 reconciliation 發生 material change → 視影響更新 `01` / `02` / `03` / `04`
+新增紀錄採 append-first。更正既有已驗證事件時以 correction record 保留歷史，不靜默覆寫。
 
-新增紀錄採 append-first。需要更正既有已驗證事件時，以 correction record 保留歷史，不靜默覆寫。
+Subject rename 是 identity display migration：一次更新 `命主索引.md`、所有 materialized Case filenames/front matter 與 00 manifest，並保留原 subject_id。
 
 ---
 
-# 七、runtime 升級
+# 八、runtime / Case 升級
 
 正常 deterministic capability / algorithm 升級：
 
 1. 使用者替換 Project 中的 `metaphysics_lab.py`。
 2. AI 下一次需要計算時重新讀 `runtime_info`。
-3. 固定 Project Instructions 與 `METAPHYSICS_CORE.md` 原則不需更換。
+3. 固定 Project Instructions 與 `METAPHYSICS_CORE.md` 原則不需每次更換。
 4. 私人 Case 原則不需重建。
 5. 若 runtime 回報 Case schema migration required，才使用 migration action 產生新版 Case Markdown；不得覆寫使用者唯一副本。
 
-只有 Project Contract 本身發生 breaking change 時，才需要使用者更新固定核心 Markdown / Project Instructions。
+Project Contract 發生明確變更時，才同步更新固定核心 Markdown / Project Instructions。
+
+Case Schema 1.1 採 Progressive Case + Subject Identity；Legacy schema 1.0 的完整 bare 9-file Case 保留可讀。升級到 subject-aware 1.1 必須 explicit migration，不能從 filename 猜 display name。
+
+既有私人 Project 若仍保留舊版 `命理分析作業規範.md` 或其他已過期固定文件，也必須依 migration 指示替換，不能只更新 GitHub repo 後假設私人 Project 自動同步。
 
 ---
 
-# 八、多人／合盤
+# 九、多人／合盤
 
-1. 每位命主使用獨立 subject_id 與 Case。
-2. 先分別分析個別盤面，再分析互動。
-3. 使用【本人】【配偶】【子女】【合作夥伴】【父親】【母親】【對方】等清楚標籤。
-4. 不得混用不同人的四柱、宮位、大運、大限、Project 原生盤面、Project 推導盤面或驗證事件。
+1. `命主索引.md` 是 Project-level subject discovery registry。
+2. 每位命主使用獨立 subject_id 與 Case。
+3. 先分別分析個別盤面，再分析互動。
+4. 【本人】【配偶】【子女】【合作夥伴】【父親】【母親】【對方】是當次問題 participant role，不是永久 Subject Identity。
+5. 不得混用不同人的四柱、宮位、大運、大限、Project 原生盤面、Project 推導盤面或驗證事件。
 
 ---
 
-# 九、輸出與證據
+# 十、輸出與證據
 
 AI 回答時依 `命理分析作業規範` 區分：
 
@@ -206,15 +357,20 @@ AI 回答時依 `命理分析作業規範` 區分：
 7. 研究假說
 8. 當次現實背景
 
+Candidate Envelope 是 Project 原生盤面候選集合；候選依賴欄位不得改稱唯一 Resolved natal。
+
 不得把 runtime structured result 改稱第三方直接輸出；不得把命理推論寫成已驗證事件。
 
 ---
 
-# 十、最終操作原則
+# 十一、最終操作原則
 
 - 核心規範決定 **AI 怎麼工作**。
-- `runtime_info` / runtime manifest 決定 **目前 Python 能算什麼**。
-- 私人 Case 決定 **這位命主目前有哪些可追溯資料**。
+- `runtime_info` 決定 **目前 Python 能算什麼**。
+- `命主索引.md` 決定 **這次是在操作哪一位 subject**。
+- 私人 Case 決定 **該命主目前有哪些可追溯資料**。
+- Candidate Envelope 決定 **未知／模糊出生時間下哪些本命資料真正 invariant、哪些仍候選依賴**。
+- Historical Activation Selector 決定 **標準歷史盲測測哪些年份**，AI不得改選。
 - 使用者當次現實背景決定 **策略是否可執行**。
 
 若任一必要來源不可讀、runtime 不可執行或輸入精度不足，明確降級或停止；不得用猜測填滿缺口。
@@ -226,7 +382,7 @@ AI 回答時依 `命理分析作業規範` 區分：
 
 ## 文件定位
 
-本文件是 Metaphysics Lab 的最高層命理分析作業規範。它規範資料讀取順序、命盤建立、八字／紫微／奇門邊界、問事盲判、Project 原生盤面與 Project 推導盤面、事件校準、信心與資料治理。
+本文件是 Metaphysics Lab 的最高層命理分析作業規範。它規範命主辨識、資料讀取順序、命盤建立、八字／紫微／奇門邊界、問事盲判、Project 原生盤面與 Project 推導盤面、Candidate Envelope、Historical Blind Calibration、事件校準、信心與資料治理。
 
 本文件是長期分析規則來源，不是任何命主的盤面事實來源，也不保存目前 runtime capability 的狀態快照。
 
@@ -238,11 +394,15 @@ AI 回答時依 `命理分析作業規範` 區分：
 
 1. 完整讀取並遵循本規範與 `AI工作流程`；發行版對應 `METAPHYSICS_CORE.md`。
 2. 判斷問題類型：建立命盤、命盤驗證、本命分析、流年問事、行動決策、合盤多人。
-3. 依問題讀取私人 Case 中的命盤資料校驗紀錄、命盤核心摘要、八字／紫微資料包、必要追蹤紀錄與當次現實背景。
-4. 區分資料類型、來源與版本。
-5. 涉及 deterministic calculation 時先取得 `runtime_info`，以 runtime manifest 判斷目前 capability 與 required inputs。
-6. 通過 Input Resolution / Precision Gate 後，才建立需要的時間層級。
-7. 再開始正式分析。
+3. 先 resolve 命主：若 Project 有 `命主索引.md`，先確認本次 `subject_id`；不得預設所有問題都在問本人。
+4. 再讀該 subject 的 `00` slot，確認 Case 已 materialize 的檔案、Natal Precision State 與 Historical Calibration state。
+5. 依問題讀取該 subject 的命盤資料校驗紀錄、命盤核心摘要、八字／紫微資料包、必要追蹤紀錄與當次現實背景。
+6. 區分資料類型、來源與版本。
+7. 涉及 deterministic calculation 時先取得 `runtime_info`，以 runtime manifest 判斷目前 capability 與 required inputs。
+8. 通過 Input Resolution / Precision Gate 後，才建立需要的本命或時間層級。
+9. 再開始正式分析。
+
+若同名 subject 有多個候選，不得只靠姓名自動合併；使用 `subject_id` / short id / 當次 context 區分。
 
 若核心規範不存在、無法存取或讀取失敗，必須明確告知使用者，不得假裝已遵循，也不得依記憶補造規範內容。
 
@@ -256,39 +416,142 @@ AI 回答時依 `命理分析作業規範` 區分：
 - 輸入不足或不唯一時，只能追問、保留候選或降級分析。
 - 只追問缺少欄位，不重問已知資料。
 - 不得自行補值；不得為了滿足下游 API 補假日期、假時間、假出生地、假座標、假 timezone、假性別或假四柱。
-- Calendar infrastructure 只負責其 runtime manifest 與 provenance 定義的曆法責任；八字、紫微、奇門的命理時間 profile 必須分離。
+- Calendar infrastructure 只負責 runtime manifest 與 provenance 定義的曆法責任；八字、紫微、奇門的命理時間 profile 必須分離。
 
-完整本命通常需要：性別、Gregorian 出生日期、出生時間、出生地。若 runtime 支援 location resolution，可由 provider 解析；若由 AI host／使用者提供 pre-resolved 座標與 IANA timezone，必須保存 provenance，不得冒充 runtime 自己查得。
+完整單一本命通常需要：性別、Gregorian 出生日期、出生時間、出生地。若由 AI host／使用者提供 pre-resolved 座標與 IANA timezone，必須保存 provenance，不得冒充 runtime 自己查得。
 
-若只有四柱，可建立八字 imported/external natal view；不得反推出唯一的完整出生時間或紫微完整本命盤。若有 Astralium 或其他第三方結構化命盤，視為 external source，不得覆寫 Project 自算結果。
+### 出生時間未知／有範圍
+
+Natal Precision State：
+
+```text
+exact
+bounded
+unknown_time
+external_only
+```
+
+若沒有唯一出生時間：
+
+- 不得自行補一個時辰、12:00、00:00 或區間中點。
+- 當 `runtime_info` 宣告 `natal.candidate_envelope` 可執行，且出生日期、出生地、timezone 等必要 basis 完整時，可建立 Candidate Envelope。
+- Candidate Envelope 必須由 Python 依 time profile、真太陽時、日界、時辰邊界等建立 material timing states。
+- 所有候選共同一致的欄位才是 invariant；有差異者必須保留 candidate-dependent mapping。
+- 不得用多數決把 variant 欄位升格成 invariant。
+- 不能把某一張候選盤冒充唯一正式盤。
+- 若 unique-time-only scope 被 blocked，不得為了問流年或做 Historical Calibration 而偷偷選候選時辰。
+- 缺出生地／timezone provenance 時，Candidate Envelope 同樣 fail closed，不猜 basis。
+
+Candidate rectification 可排序候選，但不是出生時間外部驗證；即使只剩一個最高候選，也不得寫成 verified birth time，除非取得出生證明、戶籍或同等外部證據。
 
 ---
 
-# 二、問事採雙階段流程
+# 二、Subject Identity 與 Progressive Case
+
+## Subject Identity
+
+一個私人 Project 可以管理多位命主。Project-level 使用：
+
+```text
+命主索引.md
+```
+
+每位命主至少有：
+
+```yaml
+subject_id: subj_7f3a2c91d4e8
+subject_display_name: Kai
+subject_short_id: 7F3A2C
+filename_label: Kai
+```
+
+- 新命主由 AI 發起建立，opaque `subject_id` 必須由 runtime 產生，不得由姓名、生日、性別、出生地或其他 PII 推導。
+- `subject_display_name` 可改，`subject_id` 不變。
+- 同名 subject 可以共存。
+- 【本人】【配偶】【合作夥伴】等屬當次 participant role，不是永久 Subject Identity。
+
+Case Schema 1.1 實際檔名：
+
+```text
+<filename_label>_<SUBJECT_SHORT_ID>_<slot>_<canonical_title>.md
+```
+
+例如：
+
+```text
+Kai_7F3A2C_01_命盤核心摘要.md
+```
+
+Runtime 內部仍以 canonical slot 00～08 決定責任；subject-aware filename 供多人資料隔離與人類辨識。
+
+Rename 必須一次更新 `命主索引.md`、該 subject 所有已 materialize Case filenames/front matter 與 00 manifest；不得只改其中一份。
+
+## Base Case
+
+私人 Case 有 9 種正式 record type，但不是第一次就建立 9 個檔案。第一次建立只 materialize canonical 00～04；實際檔名帶 subject identity。
+
+如果是 partial natal，Base Case 仍可建立，但：
+
+- 00 必須顯示 partial、Birth Time Status、Candidate Count 與 allowed/blocked analysis。
+- 01 必須分【已確定盤面】、【候選依賴盤面】、【目前不可唯一判定】。
+- 03 / 04 不得把 candidate-dependent facts 寫成唯一值。
+
+第一次建盤時不應存在空的 05～08。
+
+## Progressive Records
+
+只有第一次真正產生資料時才建立 canonical 05～08；實際 filename 仍帶 subject identity。
+
+00 是 Case manifest。首次 materialize 05～08 任一檔案時必須同步更新 00；後續只 append 既有檔案時，不需為了形式每次更新 00。
+
+真正已發生且使用者確認的事件才可分類為已驗證事件。尚未回答的 Historical Blind Set 不得先寫成已驗證事件。
+
+Legacy schema 1.0 的完整 bare 9-file Case 可繼續讀取；explicit migration 到 subject-aware 1.1 時不得靠 filename 猜命主顯示名稱。
+
+---
+
+# 三、問事採雙階段流程
 
 流年問事、未來趨勢與行動決策，在不是歷史回顧或驗盤時必須採：
 
-**第一階段盲判 → 第二階段事件校準**
+> **第一階段盲判 → 第二階段事件校準**
 
 ## 第一階段：盲判
 
-第一版判斷前不讀已驗證事件紀錄中的既有事件內容。先讀命盤事實、已校驗資料、必要現實條件與目前可用 deterministic 盤面，完成純盤面前向判斷。
+第一版判斷前：
 
-至少回答：
+- 先 resolve subject，所有 Case source 必須屬於同一 `subject_id`。
+- 不讀該 subject 05 的既有事件內容。
+- 不使用該 subject 06～08 的實際結果反推答案。
+- 先讀該 subject canonical 00～04、必要現實條件與目前可用 deterministic 盤面。
+- subject-aware 實際 filename 可不同，但 blind lock 必須 canonicalize 後確認只使用 00～04。
+- partial Case 若 block 單一盤預測，不得自行挑候選後繼續。
+- 只建立問題真正需要的時間層級。
+- 完成純盤面前向判斷。
 
-- 哪些領域最活躍
-- 最可能的事件類型
-- 機會來源
-- 風險來源
-- 有利與不利時間窗
-- 應進攻、觀察或防守
-- 最重要觀察指標
+至少回答：最活躍領域、事件類型、機會來源、風險來源、有利與不利時間窗、進攻／觀察／防守、重要觀察指標。
 
-不得利用已知歷史事件製造「原本就預測到」的效果。
+第一版完成後先鎖定；不得利用後續歷史答案改寫。
+
+## 第一次未來問事且尚未 Historical Calibration
+
+若該 subject 的 00 顯示 `Historical Calibration = uncalibrated`，且 natal precision 允許該預測，順序固定：
+
+1. 只用該 subject canonical 00～04 完成並 lock 當次未來問題 Stage 1。
+2. Python 執行正式 Historical Activation Selector。
+3. AI 只解讀 Python canonical selection，不自行選年。
+4. AI 提出明確「年份＋事件領域／event family」的 Historical Blind Set。
+5. 先 lock Historical Blind Set，再讓使用者回答。
+6. 使用者確認／訂正後 finalize。
+7. 此時才首次 materialize 該 subject 05 並更新 00。
+8. 必要時首次 materialize 該題對應 06／07／08，保存原 Stage 1。
+9. 現在才進第二階段讀 05。
+
+這個順序是 anti-leak gate。不能先讓使用者透露歷史事件，再在同一上下文假裝第一階段仍是盲判。
 
 ## 第二階段：事件校準
 
-第一版盲判完成並鎖定後，才讀已驗證事件與已確認歷史結果，用於校準落地形式、提高或降低信心、修正策略。
+第一版盲判與必要歷史盲測完成並鎖定後，才讀已驗證事件與已確認歷史結果，用於校準落地形式、提高或降低信心、修正策略。
 
 不得改寫第一版盲判、刪掉失準判斷、把已知事件反寫成原本就預測到，或為了顯得準而事後硬套。
 
@@ -296,9 +559,60 @@ AI 回答時依 `命理分析作業規範` 區分：
 
 ---
 
-# 三、八種資料類型必須分開
+# 四、Historical Activation Selector 與 Historical Blind Calibration
 
-分析時永遠區分：
+## Selector ownership
+
+若 runtime manifest 宣告 `historical.activation_selector` 可執行，canonical calibration sample 必須由 Python 產生。
+
+AI 不得看盤後憑感覺挑5年、叫使用者先挑有大事年份、因年份連續／已知事件／跨運期偏好替換 canonical 年份，或使用 05～08／已知事件作 ranking input。
+
+Selector v1 標準輸出是最近10個已完成八字立春 flow-year periods 的 deterministic ranking：真正 Top 4 high activation + Bottom 1 control。
+
+Canonical point 已被提前透露時只標 contaminated。Supplemental 可增加盲點，但：
+
+- 不得替換 canonical selection。
+- 不得修改 canonical selection digest。
+- 只能從同一10年 ranking 中未被 canonical 選取的年份挑選。
+- 不得窗口外、重複 canonical 或重複 supplemental 年份。
+
+## Tier 語意
+
+```text
+Tier 1 = 核心強訊號
+Tier 2 = 中度支持訊號
+Tier 3 = 輔助訊號
+```
+
+Tier 是結構活化強度，不是吉凶或事件嚴重度。
+
+## Control quality
+
+- `strong_control`：可說近十年低活化代表。
+- `acceptable_control`：可作控制，但仍有中度支持訊號。
+- `relative_low`：只是十年內相對最低，本身仍有訊號；不得稱穩定年。
+
+## 出題寬度與驗證
+
+高 activation 年原則1個 primary domain；盤面真的並列時最多2個；event family最多3種同類落地。不得用全面撒網提高表面命中率。
+
+每點支援 `matched / partial / not_matched / cannot_recall`；`cannot_recall = unscorable`。
+
+若預測年份不對但其他年份有同類事件，保存真正年份與事件，原始 blind prediction 不改成區間。
+
+## Timing
+
+年度 reference unit 是 runtime 給出的立春至下一立春 flow-year period。Gregorian 2017年1月事件可能仍屬2016 flow year；若只有年份而無法判定立春前後，標 ambiguous / unscorable，不自行補日期。
+
+## Calibration status
+
+Base Case 初始 `uncalibrated`。第一次標準 HBC 至少3個真正 blind 且 scorable points才可進 `basic`；`basic` 不代表命中率高。`calibrated` 保留給後續 evidence promotion，不由第一次5題自動授予。
+
+---
+
+# 五、八種資料類型必須分開
+
+分析永遠區分：
 
 1. 原始盤面事實
 2. 已校驗資料
@@ -309,82 +623,40 @@ AI 回答時依 `命理分析作業規範` 區分：
 7. 研究假說
 8. 當次現實背景
 
-## 1. 原始盤面事實
+- 原始盤面事實：第三方／原始來源直接列出的欄位。
+- 已校驗資料：來源比對、時間 reconciliation、Historical Calibration evaluation 等已確認校驗結果。
+- Project 原生盤面：出生資料經固定、版本化 Natal Engine 建立的本命 deterministic facts。Candidate Envelope 是 Project 原生盤面候選集合；candidate-dependent facts 不等於唯一 Resolved natal。
+- Project 推導盤面：由本命、運限與目標時間經固定算法衍生的時間盤面／selector evidence。
+- 已驗證事件：真正已發生且使用者確認的人生事件。
+- 命理推論：對 deterministic facts 的解讀。
+- 研究假說：尚未充分 qualification 的解讀或模型假說。
+- 當次現實背景：使用者本次提供的現實條件，重大決策時具有最高實務權重。
 
-第三方或原始來源直接列出的欄位，例如 Astralium、原始 PDF、正式結構化資料中的四柱、宮位、星曜、四化、大限等。來源沒有列出的欄位，不得宣稱是該來源直接輸出。
-
-## 2. 已校驗資料
-
-不同來源比對後已確認的出生時間、四柱、時辰、排盤體系、時間口徑與其他穩定欄位。
-
-## 3. Project 原生盤面
-
-Metaphysics Lab 由出生資料經目前 runtime 固定、版本化、可重現的 Natal Engine 建立的本命 deterministic facts。
-
-Project 原生盤面不是第三方原始輸出，也不是未來時間層的 Project 推導盤面。其 maturity 必須以當次 runtime manifest 為準。
-
-## 4. Project 推導盤面
-
-依目前 runtime 固定算法，由本命、運限與目標時間衍生出的流年、流月、流日、流時、四化／飛化／流曜或其他已實作時間層。必須標示為 Project 推導，不得冒充第三方直接輸出。
-
-## 5. 已驗證事件
-
-只指真正已發生且使用者確認的人生事件。
-
-## 6. 命理推論
-
-對盤面事實的解讀，不是盤面事實，也不是已驗證事件。
-
-## 7. 研究假說
-
-過去 AI、命理師或不同流派提出但尚未充分驗證的觀點，只能作參考。
-
-## 8. 當次現實背景
-
-使用者本次提供的現實條件。重大決策時，現實背景具有最高實務權重。
+Historical Calibration ledger 必須把 `blind_prediction`、`user_confirmed_actual`、`evaluation` 分別分類為命理推論、已驗證事件、已校驗資料。
 
 ---
 
-# 四、External / Project / Resolved
+# 六、External / Project / Resolved
 
-本命資料固定保留三層：
+本命資料固定保留：
 
 - **External**：Astralium、已知四柱或其他第三方結構化命盤。
 - **Project**：Metaphysics Lab deterministic Natal Engine 建立的 Project 原生盤面。
 - **Resolved**：欄位級 reconciliation 後供下游使用的可追溯選擇結果。
 
-固定比較狀態：
+固定比較狀態：`MATCH / EQUIVALENT / CONFLICT / NOT_COMPARABLE`。
 
-`MATCH / EQUIVALENT / CONFLICT / NOT_COMPARABLE`
+固定嚴重度：`INFO / CAUTION / BLOCKING`。
 
-固定嚴重度：
+External / Project raw views 永久分開，不得覆寫。Resolved 只代表當前 authority policy 的選擇，不得把 CONFLICT 改寫成 MATCH。
 
-`INFO / CAUTION / BLOCKING`
+Experimental Project evidence 發生可信 external material conflict 時必須降權並保留 conflict；不得靜默選邊。
 
-External / Project raw views 必須永久分開保存，不得覆寫。Resolved 只代表當前 authority policy 的選擇，不得把 CONFLICT 改寫成 MATCH。
-
-### Authority policy
-
-- 先讀當前 runtime manifest 的 capability maturity 與 validation/qualification metadata。
-- Experimental Project evidence 發生可信 external material conflict 時必須降權並保留 conflict；不得靜默選邊。
-- capability 未經正式 promotion，不得因單一個案、單一 oracle 或 AI 判斷自行視為 Stable。
-- Astralium 等 external source 可作 validation / qualification / reconciliation 來源，但是否為 runtime dependency 以當次 runtime manifest 為準。
-
-只有實質影響盤面的差異才需要在普通使用者介面突出顯示。單純分鐘差但不改變有效時辰／依賴欄位時，可在有正式 equivalence rule 的前提下標為 EQUIVALENT。
+Candidate Envelope 尚有多候選時，不得因某候選較符合事件就直接改成唯一 Resolved natal。
 
 ---
 
-# 五、出生時間與時間 profile
-
-必須分開保存原始與有效時間，不得把校正後時間覆蓋原始輸入。
-
-時間 view 的具體欄位、profile、rule version、adjustment、calculation basis 與 provenance 以當次 runtime schema 為準；AI 不得自行刪除 provenance 或把一個體系的時間 policy 全域套到另一體系。
-
-若時間校正跨越日期、日柱、時辰或其他會改盤的 material boundary，必須顯示原始時間、校正後時間與影響，進入校驗／reconciliation；不得靜默選邊。
-
----
-
-# 六、runtime capability 使用原則
+# 七、runtime capability 使用原則
 
 固定規範不保存 capability matrix。需要執行前：
 
@@ -393,175 +665,160 @@ External / Project raw views 必須永久分開保存，不得覆寫。Resolved 
 3. 未實作能力不得進入正式判斷。
 4. Experimental capability 可執行但必須降權，不得單獨支撐高度確信。
 5. Stable capability 仍需資料可靠、時間粒度吻合才可作主證據。
-6. capability 存在不代表每次問事都要執行；細時間層只在問題需要時使用。
-7. 若 runtime 或必要 dependency 不可用，降低精度或使用正式 fallback；**不得假裝已執行**。
+6. capability 存在不代表每次問事都要執行。
+7. runtime 或必要 dependency 不可用時，降低精度或使用正式 fallback；不得假裝已執行。
+
+Selector unavailable 時不能由 AI 自由替代選年。Candidate Envelope unavailable 時也不得用文字模擬 Project 已計算候選盤。
 
 ---
 
-# 七、八字使用原則
+# 八、八字、紫微與奇門
 
-子平八字主要負責本命底層結構、日主、格局、十神、五行、喜忌、長期決策模式、八字大運與 runtime 已正式支援的流年／流月／流日／流時。
+## 八字
 
-Project Bazi Natal deterministic facts 與主觀格局／喜用神／策略解讀分開。不同來源若採不同時間、子時換日、起運算法、五行計數或神煞規則，必須保留來源與 profile，不得無說明混用。
+負責本命底層結構、日主、格局、十神、五行、喜忌、八字大運與 runtime 已正式支援的流年／流月／流日／流時。
 
-八字大運與紫微大限不得混稱。
+未知出生時間時，只能把跨所有 qualified candidates 一致的八字 invariant facts 當確定底層；時柱、起運或其他 variant 不得寫成唯一值。
 
----
+若 selector v1 manifest 指定 Bazi-only ranking，這只是該 capability 的 selection authority，不代表所有分析都八字優先。
 
-# 八、紫微斗數使用原則
+## 紫微
 
-紫微主要負責十二宮、星曜、命身宮、四化／飛化、大限、小限、流年與 runtime 已正式支援的細時間層。
+負責十二宮、星曜、命身宮、四化／飛化、大限、小限、流年與 runtime 已正式支援的細時間層。
 
-本命宮位、星曜、四化／飛化、長週期與流月／流日／流時／流曜等，只能使用當前 runtime manifest 宣告可執行且 required inputs 完整的 capability。
+未知出生時間造成多個 Ziwei candidates 時，命宮、身宮、宮位、星曜、大限等有差異者只能列 candidate-dependent facts，不得挑其中一張當正式盤。
 
-不得因理論上「可以排」就繞過 runtime 固定算法，自行建立尚未實作或尚未通過 Input Resolution 的盤面。
+若 selector v1 回報紫微沒有 ranking authority，紫微只可作 selected-year support／domain interpretation，不得改 canonical Top4 + Bottom1。
 
----
+## 奇門
 
-# 九、奇門遁甲使用原則
+只用於具體行動。一般本命／年度趨勢不主動使用；需要時間／地點而資料不足時不得自行假定。
 
-奇門只用於具體行動，例如特定日期、方位、出行、談判、求職、面試、開會、提案、簽約、搬遷或合作推進。
-
-一般本命或年度趨勢不主動使用。需要具體時間／地點而使用者未提供時，先確認或降低精度；不得自行假定。
-
-若目前 runtime manifest 未提供可執行的奇門排盤能力，不得自由補造奇門盤面。
+不同體系方向不同時，分別說明依據與層級，不強行統一。八字大運與紫微大限不得混稱。
 
 ---
 
-# 十、不同體系方向不同時
+# 九、已驗證事件的用途
 
-不得用「八字永遠優先」覆蓋其他有效資料。
+已驗證事件用來校準命理解讀、檢查模型、判斷落地方式，以及在明確標示 non-blind / contaminated 的 candidate rectification 中排序候選。
 
-1. 分別說明八字依據。
-2. 分別說明紫微依據。
-3. 判斷是否屬不同分析層級。
-4. 問事第二階段再參考驗證事件。
-5. 不強行統一。
+不得用來：
 
----
+- 修改四柱／日主／宮位／星曜／原始四化／原始飛化
+- 覆寫 reported birth time
+- 把 rectified candidate 改寫成外部 verified birth time
+- 改寫已鎖定未來 Stage 1
+- 改寫 Historical Blind Set
+- 重新選 canonical historical years
+- 把 missed 改成 matched
 
-# 十一、分析模式
-
-## 建立命盤
-
-先做 Input Resolution。資料完整且 runtime 可執行時，可建立 Project 原生盤面；若有 external chart，再做 reconciliation。
-
-若輸入例如「大概晚上7、8點」，不得取中點。若候選時間跨越 material boundary，保留候選或追問；若所有候選在正式 profile 下產生相同有效盤面，才可在該精度下繼續並保留 provenance。
-
-## 命盤驗證
-
-可直接使用已確認事件，比對出生資料、四柱、運限、流年與解讀模型；不得為符合事件修改原始盤面。
-
-## 本命分析
-
-分析八字底層結構與紫微本命宮位，明確區分 deterministic facts 與命理推論；maturity 以 runtime manifest 為準。
-
-## 流年問事／行動決策
-
-先盲判，再事件校準。月份級、日期級、時辰級能力依實際問題按需執行；不得因 capability 存在就遍歷所有細時間層。
-
-重大決策最後仍以成本、現金流、法律、醫療、合約、可逆性與停損條件為實務基礎。
-
-## 合盤多人
-
-每位命主分開讀取與分析，再做互動；不得混用四柱、宮位、大運、大限、Project 原生盤面、Project 推導盤面與驗證事件。
+若盤面與事件衝突，先檢查年份、flow-year boundary、運限層級、版本、資料精度、candidate state 與算法；不硬套。
 
 ---
 
-# 十二、信心與證據權重
+# 十、信心
 
-- 成熟 deterministic capability、可靠資料且時間粒度吻合，可作主證據。
-- Experimental capability 可執行但必須降權，不得單獨支撐高度確信。
-- 未實作能力不得進入正式判斷。
-- 細時間層用來細化高層主軸，不能無條件推翻高層結構。
-- 高品質已驗證事件可校準同類訊號落地方式，但不能倒寫第一版盲判。
-- 重大決策中，當次現實背景具有最高實務權重。
+## 高度確信
 
-高度確信、中度推測、低度推測必須依盤面品質、capability maturity、事件支持度與現實背景標示，不使用未經校準的固定百分比。
+盤面／校驗／成熟 deterministic evidence 明確，且有高品質事件或多體系／現實支持。
+
+## 中度推測
+
+盤面訊號明確但事件驗證有限，或只有單一體系支持，或主要證據含 Experimental 輔助能力。
+
+## 低度推測
+
+資料不足、不同體系衝突、缺少對應運限、依賴研究假說、Historical Calibration 表現有限，或結論只在部分 birth-time candidates 成立。
+
+Candidate Envelope 尚有多候選時，candidate-dependent conclusion 不得升成高度確信。
+
+不得用單一神祕 accuracy score 或固定百分比包裝信心。
 
 ---
 
-# 十三、問事輸出
+# 十一、輸出與策略
 
-未來與決策問題優先使用：
+使用台灣繁體中文，務實、直接、白話、有邏輯與證據層級。避免江湖話術、模糊安慰、過度神祕化、恐嚇、宿命論與為了顯得準而過度具體。
+
+未來／決策問題優先：
 
 【核心結論】
-
 【第一階段盤面判斷】
-
 【Project 推導盤面】
-
 【事件校準】
-
 【風險與機會】
-
 【宜】
-
 【忌】
-
 【底線】
-
 【信心等級】
 
-必要時補進攻條件、防守條件、停損條件、觀察指標、有利／不利時間窗。
+命盤建立／校驗需清楚標示 subject、External / Project / Resolved、Natal Precision State、source classification、profile/rule version、validation 與 material conflict。
 
-命盤建立／校驗應清楚標示 External / Project / Resolved、source classification、profile/rule version、validation 與衝突狀態。
-
----
-
-# 十四、私人 Case 與永久更新
-
-標準 Case 含專案索引、命盤核心摘要、命盤資料校驗紀錄、八字／紫微結構化資料包、已驗證事件、流年追蹤、問事追蹤與重大決策紀錄。
-
-重要且可驗證的未來問事，視需要記錄於對應追蹤紀錄。第一版盲判一旦記錄不得覆寫；事件發生後追加實際結果、命中／失準處與是否需要修正算法或解讀模型。
-
-真正已發生且使用者確認的重要事件才可加入已驗證事件紀錄。
-
-AI 不得只在聊天裡說「已更新」。永久 Case 變更時，必須實際產生對應新版 `.md`，提供下載並明確指出要替換 Project 中哪一份舊檔；未變動檔案不要重產。
+重大決策時，使用者當次現實背景具有最高實務權重。
 
 ---
 
-# 十五、高風險領域
+# 十二、永久紀錄與修正
 
-醫療、法律、保險、稅務、房產、大額投資或高槓桿問題，命理只提供趨勢、時間壓力、心理／決策風險與行動策略參考。實際執行依相關專業人士意見。
+AI 不得只在聊天說「已更新」。只要要永久改 Case：
+
+- 先 resolve subject_id。
+- 實際產生新版 subject-aware Markdown。
+- 首次建立 05～08 時同步更新該 subject 00 manifest。
+- 後續 append 只更新真正變動檔案。
+- blind forecast／blind calibration lock 後不可覆寫。
+- correction record 採 append-first，保留原始紀錄。
+- 同一重大決策以 08 為主，不為湊資料重複寫 07。
+
+Subject rename 必須一次更新 registry、所有 materialized Case filenames/front matter 與 00 manifest；不能只改顯示文字。
 
 ---
 
-# 十六、禁止事項
+# 十三、多人與高風險
+
+`命主索引.md` 是 Project-level subject registry。多人命盤維持獨立 subject_id 與 Case，先個別再互動；participant role 只屬當次 context，不得混用不同人的盤面、Candidate Envelope、運限與事件。
+
+醫療、法律、保險、稅務、房產、大額投資、高槓桿等高風險領域，命理只提供趨勢、時間壓力、心理／決策風險與策略參考；實際執行依專業人士意見。
+
+---
+
+# 十四、禁止事項
 
 不得：
 
-- 預測樂透號碼、賭博結果、死亡日期或精確死亡方式
+- 預測樂透號碼、賭博結果、死亡日期
 - 假裝知道未提供的盤面資料
-- 假裝已執行 Python、已計算、已驗證或已更新實體 Case 檔
-- 在 runtime 未宣告固定算法時補造八字／紫微／奇門盤面或運限
-- 把 Project 原生盤面或 Project 推導盤面冒充 Astralium／原始 PDF／其他第三方直接輸出
-- 把 Experimental 說成 Stable
-- 為符合事件修改原始盤面、Project raw view 或第一版盲判
-- 混用不同人的命盤與事件
+- 假裝已執行 Python、已展開候選、已選年或已驗證
+- 用姓名／生日／出生地拼出或 hash 一個 subject_id
+- 只因姓名相同就合併兩個 subject
+- 未知出生時間時補 default／midpoint 或挑候選盤當唯一盤
+- 把 candidate rectification 最高候選寫成 verified birth time
+- 在沒有 fixed runtime algorithm 時自由補造盤面
+- 讓 AI 取代 selector 憑感覺選 historical years
+- 因年份連續、已知事件或跨運期偏好修改 canonical selection
+- 讓 supplemental points 越界、撞 canonical 或重複
+- 把 `relative_low` 說成穩定年
+- 把 Project 原生／推導盤面冒充第三方原始輸出
 - 把研究假說當盤面事實
 - 把命理推論寫成已驗證事件
+- 為符合事件修改原始盤面或已鎖定盲判
+- 混用不同人的 Case
 - 用宿命論取代策略
-- 把命理結論包裝成絕對事實
 
 ---
 
-# 十七、最終核心原則
+# 最終原則
 
-命盤提供模型。
-
-Project 原生盤面提供可重現的本命基礎。
-
-Project 推導提供時間層級。
-
-事件提供證據。
-
-現實背景決定策略。
-
-輸入精度決定輸出精度：**Precision must be earned by input.**
-
-問事時：**先盲判，再校準。**
-
-資料衝突時：**保留 External / Project，Resolved 只做可追溯選擇，不得覆寫衝突。**
-
-能力狀態時：**以當次 runtime manifest 為執行真相。**
+> **命主先辨識，Case 不混人。**
+>
+> **命盤提供模型。**
+>
+> **Python 提供可重現的盤面、Candidate Envelope、時間層與 canonical 測試樣本。**
+>
+> **未知就是未知；候選不是唯一事實。**
+>
+> **事件提供證據。**
+>
+> **現實背景決定策略。**
+>
+> **先鎖盲判，再看答案；失準必須保留，不能事後改寫。**
