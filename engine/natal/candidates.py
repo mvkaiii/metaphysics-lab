@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from datetime import datetime
 from typing import Mapping, Optional
 
@@ -26,6 +27,13 @@ _RULE_VERSION = "1.0-exp"
 _CONTINUOUS_BAZI_KEYS = frozenset(("decadal_start",))
 _CONTINUOUS_PERIOD_KEYS = frozenset(("start_age_years", "end_age_years", "start_datetime", "end_datetime"))
 _MISSING = object()
+_CANDIDATE_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+
+
+def _candidate_id(value: object) -> str:
+    if not isinstance(value, str) or value != value.strip() or not _CANDIDATE_ID_PATTERN.fullmatch(value):
+        raise ValueError("candidate_id must be a canonical single-line identifier")
+    return value
 
 
 def _minute_text(value: int) -> str:
@@ -196,9 +204,7 @@ def classify_candidate_facts(candidates) -> dict:
     for candidate in candidates:
         if not isinstance(candidate, Mapping):
             raise ValueError("candidate entries must be mappings")
-        candidate_id = candidate.get("candidate_id")
-        if not isinstance(candidate_id, str) or not candidate_id.strip():
-            raise ValueError("candidate_id must be non-empty text")
+        candidate_id = _candidate_id(candidate.get("candidate_id"))
         if candidate_id in candidate_ids:
             raise ValueError("candidate_id values must be unique")
         candidate_ids.add(candidate_id)
