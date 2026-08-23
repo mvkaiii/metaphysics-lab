@@ -85,3 +85,16 @@ jobs:
           name: progressive-case-ai-distribution
           path: dist/ai/
           if-no-files-found: error
+
+      - name: Upload stabilization source snapshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: postmerge-audit-source
+          path: |
+            engine/
+            tests/
+            tools/
+            templates/
+            requirements.txt
+          if-no-files-found: error
