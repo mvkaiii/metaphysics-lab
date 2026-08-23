@@ -60,7 +60,7 @@ class DocumentationContractConsistencyTests(unittest.TestCase):
         self.assertIn("唯一", text)
 
     def test_project_workflow_resolves_subject_before_case_files(self):
-        for relative in ("core/AI工作流程.md", "core/PROJECT_INSTRUCTIONS.md"):
+        for relative in ("core/AI工作流程.md", "core/核心提示詞.md"):
             text = (ROOT / relative).read_text(encoding="utf-8")
             self.assertIn("命主索引.md", text, relative)
             self.assertIn("subject_id", text, relative)
