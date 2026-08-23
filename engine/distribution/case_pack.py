@@ -113,6 +113,15 @@ def _record_id(value: object, *, error_code: str = "invalid_case_payload") -> st
     return value
 
 
+def _json_semantically_equal(left: object, right: object) -> bool:
+    try:
+        return json.dumps(left, ensure_ascii=False, sort_keys=True, separators=(",", ":")) == json.dumps(
+            right, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        )
+    except (TypeError, ValueError):
+        return False
+
+
 def _timestamp(value: object, field_name: str) -> str:
     text = _text(value, field_name)
     try:
@@ -652,6 +661,13 @@ def _update_case_record(payload: Mapping[str, object], *, allow_reserved_interna
     record_id = _record_id(entry.get("record_id"))
     normalized_entry = dict(entry)
     normalized_entry["record_id"] = record_id
+    entry_subject_id = normalized_entry.get("subject_id")
+    if entry_subject_id is not None and entry_subject_id != validation.get("subject_id"):
+        raise DistributionError(
+            "case_subject_mismatch",
+            "tracking record subject_id must match the authoritative Case subject",
+            {"entry_subject_id": entry_subject_id, "case_subject_id": validation.get("subject_id")},
+        )
     if normalized_entry.get("record_type") in _RESERVED_INTERNAL_RECORD_TYPES and not allow_reserved_internal:
         raise DistributionError(
             "immutable_case_record",
@@ -679,7 +695,7 @@ def _update_case_record(payload: Mapping[str, object], *, allow_reserved_interna
         changed[index_actual] = _set_index_materialized(files["00_專案索引.md"], canonical, actual_target, updated_at, modified_by)
     existing_records = _record_entries(body)
     if record_id in existing_records:
-        if existing_records[record_id] == normalized_entry:
+        if _json_semantically_equal(existing_records[record_id], normalized_entry):
             return {"subject_id": validation["subject_id"], "changed_files": {}}
         raise DistributionError(
             "duplicate_record_id",
