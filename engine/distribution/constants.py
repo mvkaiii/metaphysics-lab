@@ -1,8 +1,8 @@
 """Version constants for the portable AI distribution contract."""
 
-PROJECT_CONTRACT_VERSION = "1.0"
+PROJECT_CONTRACT_VERSION = "1.1"
 RUNTIME_SCHEMA_VERSION = "1.0"
-CASE_SCHEMA_VERSION = "1.0"
+CASE_SCHEMA_VERSION = "1.1"
 DISTRIBUTION_RUNTIME_VERSION = "1.0-exp"
 
 SUPPORTED_ACTIONS = (
@@ -10,6 +10,10 @@ SUPPORTED_ACTIONS = (
     "build_natal",
     "reconcile_natal",
     "resolve_forecast_context",
+    "prepare_historical_calibration",
+    "lock_blind_forecast",
+    "lock_historical_calibration",
+    "finalize_historical_calibration",
     "export_case_markdown",
     "validate_case",
     "migrate_case",
