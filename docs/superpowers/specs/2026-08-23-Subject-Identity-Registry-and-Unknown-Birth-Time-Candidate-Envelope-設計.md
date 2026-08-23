@@ -1,7 +1,7 @@
 # Subject Identity Registry + Unknown Birth Time Candidate Envelope｜設計規格
 
 日期：2026-08-23  
-狀態：Approved design captured for implementation planning  
+狀態：Design approved in chat; written spec pending user review  
 適用分支：`feature/progressive-case-historical-calibration`
 
 ---
@@ -26,15 +26,15 @@
 ### 2.1 In scope
 
 - Project-level `命主索引.md`
-- AI / runtime 建立 opaque `subject_id`
+- AI 發起、runtime 建立 opaque `subject_id`
 - `subject_display_name`
 - filename-safe display label
 - subject short id
 - 多命主 Case 檔名契約
-- Case schema 1.1 在尚未 release 前收斂到新 filename contract
-- Legacy Case schema 1.0 相容讀取與 explicit migration
+- Case Schema 1.1 在尚未 release 前收斂到新 filename contract
+- Legacy Case Schema 1.0 相容讀取與 explicit migration
 - 命主改名 / rename operation
-- unknown / bounded birth time precision states
+- exact / bounded / unknown_time / external_only natal precision states
 - Bazi candidate envelope
 - Ziwei candidate envelope
 - Base Case 00–04 在 partial natal 下的 materialization contract
@@ -48,6 +48,7 @@
 - 將候選排序結果標記為外部已驗證出生時間
 - 在本規格中定義完整 candidate-rectification scoring profile
 - 把關係角色（本人、配偶、合作夥伴）永久寫死成 subject identity
+- 在缺出生地／時區 provenance 時假裝完成 Project candidate natal
 
 ---
 
@@ -66,9 +67,10 @@ subject_short_id: 7F3A2C
 - 由 runtime 建立；AI 負責在 workflow 中發起建立，不讓使用者手動編造。
 - opaque；不得包含姓名、生日、性別、出生地或其他可直接識別資料。
 - 一旦建立後永久不變。
-- 建議格式：`subj_` + 至少 12 個十六進位字元。
+- 格式：`subj_` + 至少 12 個十六進位字元。
 - 產生方式使用 runtime 的安全隨機來源；不得由 PII hash 推導。
 - 一次建立後必須持久化到 `命主索引.md`，避免同一命主反覆生成不同 ID。
+- identity creation 是一次性持久化動作，不要求與命盤計算相同的 deterministic 重算語意。
 
 ### 3.2 `subject_display_name`
 
@@ -79,8 +81,10 @@ subject_short_id: 7F3A2C
 
 ### 3.3 `subject_short_id`
 
-- 由完整 `subject_id` 的固定前綴衍生，只供檔名辨識與同名防碰撞。
-- 建議為 6 個大寫十六進位字元。
+- 由完整 `subject_id` 的十六進位部分衍生，只供檔名辨識與同名防碰撞。
+- 預設先使用 6 個大寫十六進位字元。
+- 建立／migration 時必須檢查 `命主索引.md` 內是否碰撞。
+- 若 6 碼碰撞，依 8、10、12... 碼延長直到 registry 內唯一。
 - 不作為唯一 authority。
 
 ---
@@ -116,10 +120,11 @@ Registry 只保存 identity / display / Case discovery metadata，不保存完�
 
 ### 4.1 Registry authority
 
-- 新命主建立前，AI 應先搜尋 `命主索引.md` 是否已有合理候選。
+- 新命主建立前，AI 應先讀／搜尋 `命主索引.md` 是否已有合理候選。
 - 同名不等於同一人；如果有多個同名 subject，必須以 short id / context 區分。
 - 不得只憑姓名自動合併兩個 subject。
 - 若 registry 不存在，第一位命主建立時 materialize。
+- AI 不能只在聊天文字宣稱「已建立命主」；若要成為持久身份，必須把 runtime 產生的 ID 寫進 registry。
 
 ### 4.2 Rename
 
@@ -198,7 +203,8 @@ Runtime 不再用完整 filename 直接判定 record type，而是 parse：
 並驗證：
 
 - slot / canonical title 合法
-- filename short id 與 front matter `subject_id` 衍生值一致
+- filename short id 與 front matter `subject_short_id` 一致
+- `subject_short_id` 能由 front matter `subject_id` 合法衍生
 - filename label 與 front matter `filename_label` 一致
 - front matter `subject_display_name` 屬於同一 subject
 - 同一 Case pack 所有 `subject_id` 一致
@@ -259,12 +265,14 @@ participants:
 
 因 Case Schema 1.1 尚未正式 release，本規格直接將新 filename / identity contract 納入 1.1，不額外先發 1.2。
 
+目前 feature branch 先前產生的開發中 1.1 Case fixture 必須一起升級到此 filename contract；它們不是已發布 public contract，因此不另外建立 1.1→1.2 migration。
+
 ### 8.2 Legacy 1.0
 
 - 舊 `00_專案索引.md`～`08_重大決策紀錄.md` 九檔仍可讀。
 - 不要求自動 rename。
 - migration 必須 explicit；不得靠 filename 或內容猜姓名。
-- migration 若沒有 `subject_display_name`，必須要求一個使用者可接受的顯示名稱或私人標籤後才能建立新 filename。
+- migration 若沒有 `subject_display_name`，必須取得一個使用者可接受的顯示名稱或私人標籤後才能建立新 filename。
 
 ---
 
@@ -290,23 +298,41 @@ external_only
 規則：
 
 - 不得取中點當答案。
-- runtime 枚舉此範圍涵蓋的合法 time candidates。
-- 若經目前 time profile / true-solar handling 後所有候選都落在同一命理時辰，可將 hour branch 標為 invariant；exact minute 仍 unknown。
-- 若跨時辰，保存多候選。
+- runtime 將時間範圍切成所有會造成 Project natal 結果不同的 material timing states。
+- 若所有 qualified states 的命理時辰／後續盤面完全一致，可將對應欄位標為 invariant；exact minute 仍 unknown。
+- 若跨時辰或其他 material boundary，保存多候選。
 
 ### 9.3 unknown_time
 
 完全不知道時間。
 
 - 不得自行補 12:00、00:00 或其他 default。
-- 建立合法候選集合。
-- 一般情況最多 12 個時辰候選；若 boundary / time profile 造成更多 material candidates，應明確列出而不是強制壓成 12。
+- 將該 civil birth date 的未知時間範圍切成所有 material timing states。
+- 一般情況可對應約 12 個時辰候選；若 time profile、真太陽時、DST、日界或其他 boundary 產生更多 material states，必須完整保留，不強制壓成 12。
 
 ### 9.4 external_only
 
 只有外部既有命盤資料、沒有足夠 raw birth input 建立 Project natal。
 
 沿用 External / Project / Resolved 分層，不反推缺少的出生時間。
+
+### 9.5 Location / timezone boundary
+
+`bounded` / `unknown_time` 只放寬出生時間精度，**不放寬出生地與 timezone provenance**。
+
+若要建立 Project candidate natal，仍需能重現：
+
+- civil birth date
+- resolved birthplace / coordinates or equivalent approved location basis
+- IANA timezone or equivalent approved timezone provenance
+- sex where downstream capability requires it
+
+若缺少上述必要 basis：
+
+- 可保留 external-only / known raw facts
+- 不得自行猜地點或 timezone
+- 不得宣稱已建立 Project candidate envelope
+- runtime 應回 machine-readable blocked / missing basis
 
 ---
 
@@ -326,7 +352,7 @@ natal.candidate_envelope
 subject_id: subj_...
 natal_precision_state: unknown_time
 candidate_count: 12
-candidate_time_basis: hour_branch
+candidate_time_basis: material_timing_state
 known_facts: {}
 invariant_bazi_facts: {}
 variant_bazi_facts: {}
@@ -337,7 +363,23 @@ allowed_analysis: []
 blocked_analysis: []
 ```
 
-### 10.1 核心規則
+### 10.1 Material timing state
+
+Candidate 不是「每個時辰任選一個代表分鐘」。
+
+Runtime 必須從使用者提供的 civil-time uncertainty interval 建立**會造成計算結果不同的等價區段**，至少考慮現有 Project 支援的：
+
+- timezone / DST ambiguity
+- true-solar correction
+- civil date rollover
+- Bazi early-Zi / day boundary
+- hour branch boundary
+- Ziwei effective-time / late-Zi profile
+- 其他已版本化、會改變 natal output 的 timing boundary
+
+同一等價區段只需保留一個 canonical material state；不同輸出狀態不得因為「同屬一個時辰名稱」而被合併。
+
+### 10.2 核心規則
 
 對所有合法 candidates：
 
@@ -346,6 +388,7 @@ blocked_analysis: []
 3. 欄位存在差異者進 `variant_*`，保留候選對應值。
 4. 不得使用多數決把 variant 轉成 invariant。
 5. 某 candidate 無法 qualified 時必須記錄，不能靜默丟棄以製造一致性。
+6. 同一輸入、同一 location/timezone basis、同一 profile 應得到相同 candidate partition 與 invariant/variant classification。
 
 ---
 
@@ -459,7 +502,7 @@ Candidate Summaries
 Blocked Conclusions
 ```
 
-同一命主仍是一個 Case；不得為 12 個時辰建立 12 個假 subject。
+同一命主仍是一個 Case；不得為候選時辰建立多個假 subject。
 
 ---
 
@@ -559,12 +602,14 @@ AI workflow：
 duplicate_subject_identity
 ambiguous_subject_reference
 invalid_subject_display_name
+subject_short_id_collision
 case_subject_filename_mismatch
 case_filename_slot_mismatch
 subject_registry_mismatch
 candidate_envelope_empty
 candidate_profile_mismatch
 partial_natal_scope_blocked
+missing_candidate_location_basis
 ```
 
 所有錯誤 machine-readable、fail closed，不用模糊文字默默 fallback。
@@ -577,7 +622,8 @@ partial_natal_scope_blocked
 
 - runtime 產生 subject_id 不含 PII
 - 同一 persisted subject 不重建 ID
-- 同名 subject 可共存且 short id 不同
+- 同名 subject 可共存且 short id 唯一
+- short-id collision 會 deterministic 延長顯示長度，不覆蓋既有 subject
 - display name rename 不改 subject_id
 - filename normalization deterministic
 - filename / front matter mismatch fail closed
@@ -589,10 +635,12 @@ partial_natal_scope_blocked
 
 - unknown time 不使用 default 時間
 - bounded range 不取中點
-- candidate enumeration deterministic given same input/profile
+- candidate enumeration 依 material timing states 分割，不以任意代表分鐘取代
+- same input / basis / profile candidate partition deterministic
 - invariant facts 必須在所有 qualified candidates 完全一致
 - variant facts 保留 candidate mapping
 - boundary candidate 不被靜默丟棄
+- missing location/timezone 不建立假 Project candidate natal
 - partial Case 00–04 可 export / validate
 - unique-time-only analysis 在 partial state 會 blocked
 - candidate rectification 不改 raw birth input
@@ -627,5 +675,6 @@ Repo 文件更新不代表既有私人 Project 自動同步。
 - AI 可發起 Subject 建立，但 opaque ID 由 runtime 產生。
 - 名字是 display metadata，不是 identity authority。
 - 不知道出生時間可以保留部分盤面，但不能取得不存在的精度。
+- 缺出生地／timezone 仍不得猜測 Project natal basis。
 - Candidate ranking 不是出生時間驗證。
 - 原始輸入、Project 計算、已校驗資料、已驗證事件、命理推論永遠分層。
