@@ -250,17 +250,21 @@ def _analysis_section(value: object) -> str:
 
 def _prefix_title(body: str, display_name: str) -> str:
     lines = body.splitlines()
-    if lines and lines[0].startswith("# ") and not lines[0].startswith("# %s｜" % display_name):
-        lines[0] = "# %s｜%s" % (display_name, lines[0][2:])
+    for index, line in enumerate(lines):
+        if line.startswith("# "):
+            if not line.startswith("# %s｜" % display_name):
+                lines[index] = "# %s｜%s" % (display_name, line[2:])
+            break
     return "\n".join(lines).rstrip() + "\n"
 
 
 def _rename_title(body: str, old_display_name: str, new_display_name: str) -> str:
     lines = body.splitlines()
-    if lines:
-        old_prefix = "# %s｜" % old_display_name
-        if lines[0].startswith(old_prefix):
-            lines[0] = "# %s｜%s" % (new_display_name, lines[0][len(old_prefix):])
+    old_prefix = "# %s｜" % old_display_name
+    for index, line in enumerate(lines):
+        if line.startswith(old_prefix):
+            lines[index] = "# %s｜%s" % (new_display_name, line[len(old_prefix):])
+            break
     return "\n".join(lines).rstrip() + "\n"
 
 
