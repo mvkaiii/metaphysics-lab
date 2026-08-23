@@ -88,11 +88,6 @@ def _actual_case_filename'''
     canonical_sources, actual_sources = _canonical_case_sources(payload.get("source_files_used"), subject_id)
 ''',
     )
-    replace_once(
-        "engine/distribution/calibration.py",
-        '        "subject_id": _text(payload.get("subject_id"), "subject_id"),\n',
-        '        "subject_id": subject_id,\n',
-    )
 
     Path(".stabilization-commit-message").write_text(
         "fix: bind blind Base5 to payload subject (#162)\n",
