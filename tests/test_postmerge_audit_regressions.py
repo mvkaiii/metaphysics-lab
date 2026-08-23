@@ -1,7 +1,11 @@
 import copy
 import unittest
 
-from engine.distribution.calibration import lock_blind_forecast
+from engine.distribution.calibration import (
+    canonical_digest,
+    lock_blind_forecast,
+    lock_historical_calibration,
+)
 from engine.distribution.case_pack import (
     BASE_CASE_FILES,
     CASE_FILES,
@@ -11,6 +15,7 @@ from engine.distribution.case_pack import (
     canonical_case_filename,
 )
 from engine.distribution.runtime import dispatch
+from tests.test_distribution_historical_calibration import SELECTOR_RESULT, point
 from tests.test_distribution_partial_case import ENVELOPE, IDENTITY
 
 
@@ -59,6 +64,24 @@ def _apply_changed(files, result):
     updated = dict(files)
     updated.update(result["data"]["changed_files"])
     return updated
+
+
+def _historical_lock_payload(case_files=None):
+    payload = {
+        "calibration_id": "HC-authority-001",
+        "subject_id": "subj_7f3a2c91d4e8",
+        "selector_result": SELECTOR_RESULT,
+        "canonical_test_points": [point(2016), point(2018), point(2020), point(2023), point(2019, "control")],
+        "supplemental_blind_points": [],
+        "locked_at": _CREATED_AT,
+    }
+    if case_files is not None:
+        payload.update({
+            "case_files": case_files,
+            "updated_at": _CREATED_AT,
+            "last_modified_by": "test",
+        })
+    return payload
 
 
 class PostmergeAuditRegressionTests(unittest.TestCase):
@@ -163,6 +186,35 @@ registry_schema_version: 1.0
         result = _partial_export(copy.deepcopy(ENVELOPE), filename_label="Other")
         self.assertFalse(result["ok"])
         self.assertEqual(result["error"]["code"], "subject_identity_mismatch")
+
+    def test_finalize_historical_calibration_requires_case_lock_authority(self):
+        locked = lock_historical_calibration(_historical_lock_payload())
+        result = dispatch("finalize_historical_calibration", {
+            "locked_payload": locked["locked_payload"],
+            "payload_digest": locked["payload_digest"],
+            "responses": [],
+        })
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["error"]["code"], "lock_authority_required")
+
+    def test_historical_lock_is_persisted_and_rehashed_tamper_is_rejected(self):
+        files = _subject_aware_base5("subj_7f3a2c91d4e8", "7F3A2C")
+        locked = lock_historical_calibration(_historical_lock_payload(files))
+        self.assertIn("changed_files", locked)
+        self.assertIn("lock_record_id", locked)
+        authoritative_files = dict(files)
+        authoritative_files.update(locked["changed_files"])
+        tampered = copy.deepcopy(locked["locked_payload"])
+        tampered["canonical_test_points"][0]["interpretation_text"] = "tampered after lock"
+        result = dispatch("finalize_historical_calibration", {
+            "case_files": authoritative_files,
+            "lock_record_id": locked["lock_record_id"],
+            "locked_payload": tampered,
+            "payload_digest": canonical_digest(tampered),
+            "responses": [],
+        })
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["error"]["code"], "immutable_calibration_violation")
 
 
 if __name__ == "__main__":
