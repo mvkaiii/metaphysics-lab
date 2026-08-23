@@ -19,6 +19,7 @@ def replace_once(path: str, old: str, new: str) -> None:
 
 
 def main() -> None:
+    # #162 patches are now persisted; these remain idempotent guards until cleanup.
     replace_once(
         "engine/distribution/calibration.py",
         'solar_term_time(actual.year, "立月", zone)',
@@ -46,11 +47,7 @@ def main() -> None:
             lock_blind_forecast(payload)
 
 '''
-    replace_once(
-        "tests/test_distribution_historical_calibration.py",
-        marker,
-        new_test + marker,
-    )
+    replace_once("tests/test_distribution_historical_calibration.py", marker, new_test + marker)
 
     replace_once(
         "engine/distribution/calibration.py",
@@ -73,11 +70,7 @@ def main() -> None:
 
 
 def _actual_case_filename'''
-    replace_once(
-        "engine/distribution/calibration.py",
-        source_return,
-        source_binding,
-    )
+    replace_once("engine/distribution/calibration.py", source_return, source_binding)
     replace_once(
         "engine/distribution/calibration.py",
         '''    payload = _mapping(payload, "payload")
@@ -89,8 +82,41 @@ def _actual_case_filename'''
 ''',
     )
 
+    # #161 RED: make the hand-written envelope semantically match real runtime
+    # envelopes first, then forge one variant hour pillar into an invariant claim.
+    replace_once(
+        "tests/test_distribution_partial_case.py",
+        "import unittest\n",
+        "import copy\nimport unittest\n",
+    )
+    replace_once(
+        "tests/test_distribution_partial_case.py",
+        '"bazi": {"pillars": {"hour": "\u7532\u5b50"}}, "ziwei": {"ming_palace": "\u8fb0"}',
+        '"bazi": {"day_master": "\u4e19", "pillars": {"year": "\u7532\u5b50", "month": "\u4e01\u536f", "day": "\u4e19\u8fb0", "hour": "\u7532\u5b50"}}, "ziwei": {"life_master": "\u797f\u5b58", "ming_palace": "\u8fb0"}',
+    )
+    replace_once(
+        "tests/test_distribution_partial_case.py",
+        '"bazi": {"pillars": {"hour": "\u4e59\u4e11"}}, "ziwei": {"ming_palace": "\u5df3"}',
+        '"bazi": {"day_master": "\u4e19", "pillars": {"year": "\u7532\u5b50", "month": "\u4e01\u536f", "day": "\u4e19\u8fb0", "hour": "\u4e59\u4e11"}}, "ziwei": {"life_master": "\u797f\u5b58", "ming_palace": "\u5df3"}',
+    )
+    partial_marker = "\n\nif __name__ == \"__main__\":\n"
+    forged_test = '''
+    def test_partial_case_rejects_forged_invariant_classification(self):
+        tampered = copy.deepcopy(ENVELOPE)
+        tampered["invariant_bazi_facts"]["pillars"]["hour"] = "\u7532\u5b50"
+        tampered["variant_bazi_facts"]["pillars"].pop("hour")
+        result = self.export(candidate_envelope=tampered)
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["error"]["code"], "invalid_candidate_envelope")
+'''
+    replace_once(
+        "tests/test_distribution_partial_case.py",
+        partial_marker,
+        forged_test + partial_marker,
+    )
+
     Path(".stabilization-commit-message").write_text(
-        "fix: bind blind Base5 to payload subject (#162)\n",
+        "test: reject forged Candidate Envelope invariants (#161)\n",
         encoding="utf-8",
     )
 
