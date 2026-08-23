@@ -41,45 +41,41 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
-      - name: Commit Case-backed historical authority policy
+      - name: Commit historical authority test migration
         if: github.event_name == 'push' && github.ref == 'refs/heads/fix/postmerge-audit-161-165'
         run: |
           python - <<'PY'
           from pathlib import Path
-          path = Path("engine/distribution/calibration.py")
+
+          path = Path("tests/test_distribution_historical_calibration.py")
           text = path.read_text(encoding="utf-8")
-          replacements = [
-              (
-                  "from .errors import DistributionError\n",
-                  "from .errors import DistributionError\nfrom .historical_lock_authority import load_historical_lock, persist_historical_lock\n",
-              ),
-              (
-                  '''    return {\n        "canonical_selection_digest": selection_digest,\n        "locked_payload": locked,\n        "payload_digest": canonical_digest(locked),\n    }\n\n\ndef _actual_date''',
-                  '''    digest = canonical_digest(locked)\n    result = {\n        "canonical_selection_digest": selection_digest,\n        "locked_payload": locked,\n        "payload_digest": digest,\n    }\n    case_files = payload.get("case_files")\n    if case_files is not None:\n        persisted = persist_historical_lock(\n            case_files,\n            subject_id=locked["subject_id"],\n            calibration_id=locked["calibration_id"],\n            locked_payload=locked,\n            payload_digest=digest,\n            updated_at=_text(payload.get("updated_at"), "updated_at"),\n            last_modified_by=_text(payload.get("last_modified_by", "ai"), "last_modified_by"),\n        )\n        result.update(persisted)\n    return result\n\n\ndef _actual_date''',
-              ),
-              (
-                  '''def finalize_historical_calibration(payload: Mapping[str, object]) -> dict:\n    payload = _mapping(payload, "payload")\n    locked = _mapping(payload.get("locked_payload"), "locked_payload")\n    digest = _text(payload.get("payload_digest"), "payload_digest")\n    if canonical_digest(locked) != digest:\n        raise DistributionError("immutable_calibration_violation", "locked historical calibration payload digest does not match")\n    responses = payload.get("responses", [])\n''',
-                  '''def finalize_historical_calibration(payload: Mapping[str, object]) -> dict:\n    payload = _mapping(payload, "payload")\n    case_files = payload.get("case_files")\n    lock_record_id = payload.get("lock_record_id")\n    if not isinstance(case_files, Mapping) or not isinstance(lock_record_id, str) or not lock_record_id.strip():\n        raise DistributionError(\n            "lock_authority_required",\n            "historical calibration finalize requires persisted Case lock authority",\n        )\n    authority = load_historical_lock(case_files, lock_record_id.strip())\n    locked = _mapping(authority.get("locked_payload"), "locked_payload")\n    digest = _text(authority.get("payload_digest"), "payload_digest")\n    if canonical_digest(locked) != digest:\n        raise DistributionError("immutable_calibration_violation", "authoritative historical lock checksum does not match")\n    provided_locked = payload.get("locked_payload")\n    if provided_locked is not None and _jsonable(_mapping(provided_locked, "locked_payload")) != _jsonable(locked):\n        raise DistributionError("immutable_calibration_violation", "caller locked_payload differs from persisted Case authority")\n    provided_digest = payload.get("payload_digest")\n    if provided_digest is not None and _text(provided_digest, "payload_digest") != digest:\n        raise DistributionError("immutable_calibration_violation", "caller payload_digest differs from persisted Case authority")\n    if locked.get("subject_id") != authority.get("subject_id"):\n        raise DistributionError("immutable_calibration_violation", "historical lock subject differs from persisted Case authority")\n    responses = payload.get("responses", [])\n''',
-              ),
-              (
-                  '''    result = {"calibration_id": locked.get("calibration_id"), "records": records, "blind_scorable_count": blind_scorable, "historical_calibration_status": status}\n    case_files = payload.get("case_files")\n    if case_files is not None:\n        if not isinstance(case_files, Mapping):\n            raise DistributionError("invalid_case_payload", "case_files must be a mapping")\n        updated_at = _text(payload.get("updated_at"), "updated_at")\n        modified_by = _text(payload.get("last_modified_by", "ai"), "last_modified_by")\n        current = dict(case_files)\n        changed_files = {}\n        for record in records:\n            update = update_case_record({\n                "case_files": current, "filename": "05_驗證事件紀錄.md", "operation": "append",\n                "updated_at": updated_at, "last_modified_by": modified_by, "entry": record,\n            })\n            current.update(update["changed_files"])\n            changed_files.update(update["changed_files"])\n        index_actual = _actual_case_filename(current, "00_專案索引.md")\n        changed_files[index_actual] = set_case_calibration_status(current[index_actual], status, updated_at, modified_by)\n        result["changed_files"] = changed_files\n    return result\n''',
-                  '''    result = {"calibration_id": locked.get("calibration_id"), "records": records, "blind_scorable_count": blind_scorable, "historical_calibration_status": status}\n    updated_at = _text(payload.get("updated_at"), "updated_at") if records or payload.get("updated_at") is not None else locked.get("locked_at")\n    modified_by = _text(payload.get("last_modified_by", "ai"), "last_modified_by")\n    current = dict(case_files)\n    changed_files = {}\n    for record in records:\n        update = update_case_record({\n            "case_files": current, "filename": "05_驗證事件紀錄.md", "operation": "append",\n            "updated_at": updated_at, "last_modified_by": modified_by, "entry": record,\n        })\n        current.update(update["changed_files"])\n        changed_files.update(update["changed_files"])\n    if payload.get("updated_at") is not None:\n        index_actual = _actual_case_filename(current, "00_專案索引.md")\n        changed_files[index_actual] = set_case_calibration_status(current[index_actual], status, updated_at, modified_by)\n    result["changed_files"] = changed_files\n    return result\n''',
-              ),
-          ]
-          for old, new in replacements:
-              if new in text:
-                  continue
-              count = text.count(old)
-              if count != 1:
-                  raise SystemExit("historical authority patch target mismatch: %d" % count)
-              text = text.replace(old, new, 1)
+          import_marker = ")\n\n\nBASE_FILES = ["
+          import_replacement = ")\n\nfrom tests.historical_authority_helpers import authoritative_finalize, authoritative_lock\n\n\nBASE_FILES = ["
+          if import_replacement not in text:
+              if text.count(import_marker) != 1:
+                  raise SystemExit("historical calibration import patch target mismatch")
+              text = text.replace(import_marker, import_replacement, 1)
+          text = text.replace("lock_historical_calibration(", "authoritative_lock(")
+          text = text.replace("finalize_historical_calibration(", "authoritative_finalize(locked, ")
+          path.write_text(text, encoding="utf-8")
+
+          path = Path("tests/test_distribution_historical_integrity.py")
+          text = path.read_text(encoding="utf-8")
+          import_marker = ")\n\n\ndef _row(year):"
+          import_replacement = ")\n\nfrom tests.historical_authority_helpers import authoritative_finalize, authoritative_lock\n\n\ndef _row(year):"
+          if import_replacement not in text:
+              if text.count(import_marker) != 1:
+                  raise SystemExit("historical integrity import patch target mismatch")
+              text = text.replace(import_marker, import_replacement, 1)
+          text = text.replace("lock_historical_calibration(", "authoritative_lock(")
+          text = text.replace("finalize_historical_calibration(", "authoritative_finalize(locked, ")
           path.write_text(text, encoding="utf-8")
           PY
-          if ! git diff --quiet -- engine/distribution/calibration.py; then
+          if ! git diff --quiet -- tests/test_distribution_historical_calibration.py tests/test_distribution_historical_integrity.py; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add engine/distribution/calibration.py
-            git commit -m "fix: require Case-backed historical lock authority (#163)"
+            git add tests/test_distribution_historical_calibration.py tests/test_distribution_historical_integrity.py
+            git commit -m "test: migrate historical finalize to Case authority (#163)"
             git push origin HEAD:fix/postmerge-audit-161-165
           fi
 
@@ -90,6 +86,7 @@ jobs:
             tests.test_historical_activation_selector \
             tests.test_historical_activation_capabilities \
             tests.test_distribution_historical_calibration \
+            tests.test_distribution_historical_integrity \
             tests.test_distribution_historical_support \
             tests.test_distribution_case_pack \
             tests.test_distribution_partial_case \
