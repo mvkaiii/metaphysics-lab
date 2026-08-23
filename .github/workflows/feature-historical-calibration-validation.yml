@@ -1,24 +1,34 @@
-name: Second Round Fix Application
+name: Feature Historical Calibration Validation
 
 on:
   push:
     branches:
+      - feature/progressive-case-historical-calibration
       - fix/postmerge-audit-161-165
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  apply-and-validate:
-    if: github.actor != 'github-actions[bot]'
+  validation:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout fix branch
+      - name: Checkout validation ref
         uses: actions/checkout@v4
         with:
-          ref: fix/postmerge-audit-161-165
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
+
+      - name: Confirm validation SHA
+        run: |
+          echo "event=${{ github.event_name }}"
+          echo "github_sha=${{ github.sha }}"
+          echo "head_ref=${{ github.head_ref }}"
+          git log -1 --format=%H
 
       - name: Set up Python 3.9
         uses: actions/setup-python@v5
@@ -31,301 +41,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
-      - name: Apply reviewed minimal fixes
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          def replace_once(path, old, new):
-              text = path.read_text(encoding='utf-8')
-              count = text.count(old)
-              if count != 1:
-                  raise SystemExit(f'{path}: expected one match, found {count}')
-              path.write_text(text.replace(old, new, 1), encoding='utf-8')
-
-          partial = Path('engine/distribution/partial_case.py')
-          replace_once(partial, 'import json\nfrom typing import Mapping\n', 'import json\nimport re\nfrom typing import Mapping\n')
-          replace_once(partial, '''_KNOWN_FACT_FIELDS = frozenset((
-              "sex",
-              "birth_date",
-              "birth_place",
-              "resolved_place_label",
-              "timezone",
-              "reported_birth_time",
-              "reported_birth_time_range",
-          ))
-
-
-          def _mapping''', '''_KNOWN_FACT_FIELDS = frozenset((
-              "sex",
-              "birth_date",
-              "birth_place",
-              "resolved_place_label",
-              "timezone",
-              "reported_birth_time",
-              "reported_birth_time_range",
-          ))
-          _TEXT_KNOWN_FACT_FIELDS = frozenset((
-              "sex", "birth_date", "birth_place", "resolved_place_label", "timezone",
-          ))
-          _TIME_TEXT_PATTERN = re.compile(r"^(?:[01]\\d|2[0-3]):[0-5]\\d$")
-
-
-          def _valid_time_text(value: object) -> bool:
-              return isinstance(value, str) and bool(_TIME_TEXT_PATTERN.fullmatch(value))
-
-
-          def _time_minutes(value: str) -> int:
-              hour, minute = value.split(":", 1)
-              return int(hour) * 60 + int(minute)
-
-
-          def _mapping''')
-          replace_once(partial, '''    if not isinstance(candidate_count, int) or candidate_count < 1 or not isinstance(candidates, list) or len(candidates) != candidate_count:
-              raise DistributionError("invalid_candidate_envelope", "candidate_count must match the candidate list")
-''', '''    if type(candidate_count) is not int or candidate_count < 1 or not isinstance(candidates, list) or len(candidates) != candidate_count:
-              raise DistributionError("invalid_candidate_envelope", "candidate_count must be a true integer matching the candidate list")
-''')
-          replace_once(partial, '''    known = raw["known_facts"]
-              unexpected_known = sorted(set(known) - _KNOWN_FACT_FIELDS)
-              if unexpected_known:
-                  raise DistributionError(
-                      "invalid_candidate_envelope",
-                      "known_facts contains candidate-dependent or unsupported fields",
-                      {"unexpected_known_facts": unexpected_known},
-                  )
-              if known.get("reported_birth_time") not in (None, ""):
-                  raise DistributionError(
-                      "invalid_candidate_envelope",
-                      "partial Case cannot claim one exact reported birth time",
-                      {"reported_birth_time": known.get("reported_birth_time")},
-                  )
-              reported_range = known.get("reported_birth_time_range")
-              if precision == "unknown_time" and reported_range not in (None, ""):
-                  raise DistributionError(
-                      "invalid_candidate_envelope",
-                      "unknown_time candidate envelope cannot claim a reported birth-time range",
-                  )
-              if precision == "bounded":
-                  if not isinstance(reported_range, (list, tuple)) or len(reported_range) != 2 or any(
-                      not isinstance(item, str) or not item.strip() for item in reported_range
-                  ):
-                      raise DistributionError(
-                          "invalid_candidate_envelope",
-                          "bounded candidate envelope requires a two-value reported birth-time range",
-                      )
-''', '''    known = raw["known_facts"]
-              unexpected_known = sorted(set(known) - _KNOWN_FACT_FIELDS)
-              if unexpected_known:
-                  raise DistributionError(
-                      "invalid_candidate_envelope",
-                      "known_facts contains candidate-dependent or unsupported fields",
-                      {"unexpected_known_facts": unexpected_known},
-                  )
-              for field in _TEXT_KNOWN_FACT_FIELDS:
-                  if field in known:
-                      item = known[field]
-                      if not isinstance(item, str) or not item.strip():
-                          raise DistributionError(
-                              "invalid_candidate_envelope",
-                              "known_facts text fields must contain non-empty text",
-                              {"field": field},
-                          )
-              reported_time = known.get("reported_birth_time")
-              if reported_time is not None and not _valid_time_text(reported_time):
-                  raise DistributionError(
-                      "invalid_candidate_envelope",
-                      "reported_birth_time must be valid HH:MM text or null",
-                      {"reported_birth_time": reported_time},
-                  )
-              if reported_time is not None:
-                  raise DistributionError(
-                      "invalid_candidate_envelope",
-                      "partial Case cannot claim one exact reported birth time",
-                      {"reported_birth_time": reported_time},
-                  )
-              reported_range = known.get("reported_birth_time_range")
-              if reported_range is not None:
-                  if not isinstance(reported_range, (list, tuple)) or len(reported_range) != 2 or any(
-                      not _valid_time_text(item) for item in reported_range
-                  ):
-                      raise DistributionError(
-                          "invalid_candidate_envelope",
-                          "reported_birth_time_range must be two valid HH:MM values or null",
-                      )
-                  if _time_minutes(reported_range[1]) < _time_minutes(reported_range[0]):
-                      raise DistributionError(
-                          "invalid_candidate_envelope",
-                          "reported_birth_time_range cannot cross the civil-date boundary in v1",
-                      )
-              if precision == "unknown_time" and reported_range is not None:
-                  raise DistributionError(
-                      "invalid_candidate_envelope",
-                      "unknown_time candidate envelope cannot claim a reported birth-time range",
-                  )
-              if precision == "bounded" and reported_range is None:
-                  raise DistributionError(
-                      "invalid_candidate_envelope",
-                      "bounded candidate envelope requires a two-value reported birth-time range",
-                  )
-''')
-          replace_once(partial, '''    for field in ("allowed_analysis", "blocked_analysis", "boundary_ambiguities"):
-              if not isinstance(raw.get(field), list):
-                  raise DistributionError("invalid_candidate_envelope", "%s must be a list" % field, {"field": field})
-              blocked = raw["blocked_analysis"]
-              if any(not isinstance(item, str) for item in blocked):
-                  raise DistributionError("invalid_candidate_envelope", "blocked_analysis must contain string scope identifiers")
-              missing_blocks = sorted(_REQUIRED_PARTIAL_BLOCKS - set(blocked))
-''', '''    for field in ("allowed_analysis", "blocked_analysis", "boundary_ambiguities"):
-              if not isinstance(raw.get(field), list):
-                  raise DistributionError("invalid_candidate_envelope", "%s must be a list" % field, {"field": field})
-              allowed = raw["allowed_analysis"]
-              blocked = raw["blocked_analysis"]
-              for field, scopes in (("allowed_analysis", allowed), ("blocked_analysis", blocked)):
-                  if any(not isinstance(item, str) or not item.strip() or item != item.strip() for item in scopes):
-                      raise DistributionError(
-                          "invalid_candidate_envelope",
-                          "%s must contain canonical non-empty string scope identifiers" % field,
-                          {"field": field},
-                      )
-              overlap = sorted(set(allowed) & set(blocked))
-              if overlap:
-                  raise DistributionError(
-                      "invalid_candidate_envelope",
-                      "allowed_analysis and blocked_analysis must be mutually exclusive",
-                      {"overlapping_analysis": overlap},
-                  )
-              missing_blocks = sorted(_REQUIRED_PARTIAL_BLOCKS - set(blocked))
-''')
-
-          candidates = Path('engine/natal/candidates.py')
-          replace_once(candidates, 'import hashlib\nimport json\nfrom datetime import datetime\n', 'import hashlib\nimport json\nimport re\nfrom datetime import datetime\n')
-          replace_once(candidates, '''_CONTINUOUS_PERIOD_KEYS = frozenset(("start_age_years", "end_age_years", "start_datetime", "end_datetime"))
-          _MISSING = object()
-
-
-          def _minute_text''', '''_CONTINUOUS_PERIOD_KEYS = frozenset(("start_age_years", "end_age_years", "start_datetime", "end_datetime"))
-          _MISSING = object()
-          _CANDIDATE_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
-
-
-          def _candidate_id(value: object) -> str:
-              if not isinstance(value, str) or value != value.strip() or not _CANDIDATE_ID_PATTERN.fullmatch(value):
-                  raise ValueError("candidate_id must be a canonical single-line identifier")
-              return value
-
-
-          def _minute_text''')
-          replace_once(candidates, '''        candidate_id = candidate.get("candidate_id")
-                  if not isinstance(candidate_id, str) or not candidate_id.strip():
-                      raise ValueError("candidate_id must be non-empty text")
-                  if candidate_id in candidate_ids:
-''', '''        candidate_id = _candidate_id(candidate.get("candidate_id"))
-                  if candidate_id in candidate_ids:
-''')
-
-          case_pack = Path('engine/distribution/case_pack.py')
-          replace_once(case_pack, '''_CALIBRATION_STATES = frozenset(("uncalibrated", "basic", "calibrated"))
-          _RESERVED_INTERNAL_RECORD_TYPES = frozenset(("historical_calibration_lock",))
-''', '''_CALIBRATION_STATES = frozenset(("uncalibrated", "basic", "calibrated"))
-          _RESERVED_INTERNAL_RECORD_TYPES = frozenset(("historical_calibration_lock",))
-          _RECORD_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:@+-]*$")
-''')
-          replace_once(case_pack, '''def _text(value: object, field_name: str) -> str:
-              if not isinstance(value, str) or not value.strip():
-                  raise DistributionError("invalid_case_payload", "%s must be a non-empty string" % field_name, {"field": field_name})
-              return value.strip()
-
-
-          def _timestamp''', '''def _text(value: object, field_name: str) -> str:
-              if not isinstance(value, str) or not value.strip():
-                  raise DistributionError("invalid_case_payload", "%s must be a non-empty string" % field_name, {"field": field_name})
-              return value.strip()
-
-
-          def _record_id(value: object, *, error_code: str = "invalid_case_payload") -> str:
-              if not isinstance(value, str) or value != value.strip() or not _RECORD_ID_PATTERN.fullmatch(value):
-                  raise DistributionError(
-                      error_code,
-                      "record_id must be a canonical safe single-line identifier",
-                      {"field": "entry.record_id"},
-                  )
-              return value
-
-
-          def _timestamp''')
-          replace_once(case_pack, '''def _render_entry(entry: Mapping[str, object]) -> str:
-              record_id = _text(entry.get("record_id"), "entry.record_id")
-              payload = json.dumps(dict(entry), ensure_ascii=False, sort_keys=True, indent=2)
-              return "### %s\\n\\n```json\\n%s\\n```" % (record_id, payload)
-''', '''def _render_entry(entry: Mapping[str, object]) -> str:
-              record_id = _record_id(entry.get("record_id"))
-              normalized = dict(entry)
-              normalized["record_id"] = record_id
-              payload = json.dumps(normalized, ensure_ascii=False, sort_keys=True, indent=2)
-              return "### %s\\n\\n```json\\n%s\\n```" % (record_id, payload)
-''')
-          replace_once(case_pack, '''        record_id = first_line[4:].strip()
-                  try:
-                      parsed = json.loads(rest[:-4])
-                  except (TypeError, ValueError) as exc:
-                      raise DistributionError("invalid_case_markdown", "tracking record JSON cannot be parsed") from exc
-                  if not isinstance(parsed, Mapping) or parsed.get("record_id") != record_id:
-                      raise DistributionError("invalid_case_markdown", "tracking record heading does not match payload record_id")
-''', '''        record_id = _record_id(first_line[4:], error_code="invalid_case_markdown")
-                  try:
-                      parsed = json.loads(rest[:-4])
-                  except (TypeError, ValueError) as exc:
-                      raise DistributionError("invalid_case_markdown", "tracking record JSON cannot be parsed") from exc
-                  if not isinstance(parsed, Mapping):
-                      raise DistributionError("invalid_case_markdown", "tracking record payload must be a mapping")
-                  payload_record_id = _record_id(parsed.get("record_id"), error_code="invalid_case_markdown")
-                  if payload_record_id != record_id:
-                      raise DistributionError("invalid_case_markdown", "tracking record heading does not match payload record_id")
-''')
-          replace_once(case_pack, '''    entry = _mapping(payload.get("entry"), "entry")
-              if entry.get("record_type") in _RESERVED_INTERNAL_RECORD_TYPES and not allow_reserved_internal:
-                  raise DistributionError(
-                      "immutable_case_record",
-                      "reserved internal Case record types cannot be appended through the public mutation API",
-                      {"filename": requested_filename, "record_type": entry.get("record_type")},
-                  )
-              if canonical == "05_驗證事件紀錄.md":
-                  _validate_05_entry(entry)
-''', '''    entry = _mapping(payload.get("entry"), "entry")
-              record_id = _record_id(entry.get("record_id"))
-              normalized_entry = dict(entry)
-              normalized_entry["record_id"] = record_id
-              if normalized_entry.get("record_type") in _RESERVED_INTERNAL_RECORD_TYPES and not allow_reserved_internal:
-                  raise DistributionError(
-                      "immutable_case_record",
-                      "reserved internal Case record types cannot be appended through the public mutation API",
-                      {"filename": requested_filename, "record_type": normalized_entry.get("record_type")},
-                  )
-              if canonical == "05_驗證事件紀錄.md":
-                  _validate_05_entry(normalized_entry)
-''')
-          replace_once(case_pack, '''    record_id = _text(entry.get("record_id"), "entry.record_id")
-              existing_records = _record_entries(body)
-              if record_id in existing_records:
-                  if existing_records[record_id] == dict(entry):
-                      return {"subject_id": validation["subject_id"], "changed_files": {}}
-''', '''    existing_records = _record_entries(body)
-              if record_id in existing_records:
-                  if existing_records[record_id] == normalized_entry:
-                      return {"subject_id": validation["subject_id"], "changed_files": {}}
-''')
-          replace_once(case_pack, '''    updated_body = _append_record(body, _render_entry(entry))
-''', '''    updated_body = _append_record(body, _render_entry(normalized_entry))
-''')
-          PY
-
-      - name: Rebuild AI distribution
-        run: |
-          python tools/build_ai_distribution.py
-          python tools/build_ai_distribution.py --check
-
-      - name: Focused second-round and existing contract tests
+      - name: Historical selector and progressive Case focused tests
         run: |
           python -m unittest \
             tests.test_historical_activation_relations \
@@ -340,20 +56,28 @@ jobs:
             tests.test_second_round_adversarial_regressions \
             tests.test_distribution_runtime_info -v
 
+      - name: Rebuild AI distribution
+        run: |
+          python tools/build_ai_distribution.py
+          python tools/build_ai_distribution.py --check
+
       - name: Full repository regression
-        run: python -m unittest discover -s tests -p 'test_*.py' -v
+        run: |
+          python -m unittest discover -s tests -p 'test_*.py' -v
 
       - name: Python 3.9 compile check
-        run: python -m compileall engine tests tools
-
-      - name: Diff sanity
-        run: git diff --check
-
-      - name: Persist reviewed fixes and generated distribution
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add engine/distribution/partial_case.py engine/natal/candidates.py engine/distribution/case_pack.py dist/ai
-          git diff --cached --exit-code && { echo "No fix changes to commit"; exit 1; } || true
-          git commit -m "fix: harden second-round candidate and case boundaries"
-          git push origin HEAD:fix/postmerge-audit-161-165
+          python -m compileall engine tests tools
+
+      - name: Verify clean validation tree
+        run: |
+          git diff --exit-code
+          test -z "$(git status --short)"
+
+      - name: Upload generated distribution
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: progressive-case-ai-distribution
+          path: dist/ai/
+          if-no-files-found: error
