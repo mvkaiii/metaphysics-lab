@@ -82,8 +82,8 @@ def _actual_case_filename'''
 ''',
     )
 
-    # #161 RED: make the hand-written envelope semantically match real runtime
-    # envelopes first, then forge one variant hour pillar into an invariant claim.
+    # #161: make the hand-written envelope match real runtime candidate shape,
+    # then verify a forged variant-as-invariant claim is rejected.
     replace_once(
         "tests/test_distribution_partial_case.py",
         "import unittest\n",
@@ -109,14 +109,41 @@ def _actual_case_filename'''
         self.assertFalse(result["ok"])
         self.assertEqual(result["error"]["code"], "invalid_candidate_envelope")
 '''
+    replace_once("tests/test_distribution_partial_case.py", partial_marker, forged_test + partial_marker)
+
     replace_once(
-        "tests/test_distribution_partial_case.py",
-        partial_marker,
-        forged_test + partial_marker,
+        "engine/distribution/partial_case.py",
+        "from typing import Mapping\n\n",
+        "from typing import Mapping\n\nfrom engine.natal.candidates import classify_candidate_facts\n\n",
     )
+    validation_tail = '''    if raw["provenance"].get("midpoint_used") is not False or raw["provenance"].get("default_time_used") is not False:
+        raise DistributionError("invalid_candidate_envelope", "partial Case cannot accept midpoint/default-time candidate provenance")
+    return raw
+'''
+    validation_green = '''    if raw["provenance"].get("midpoint_used") is not False or raw["provenance"].get("default_time_used") is not False:
+        raise DistributionError("invalid_candidate_envelope", "partial Case cannot accept midpoint/default-time candidate provenance")
+    if any(not isinstance(item, Mapping) for item in candidates):
+        raise DistributionError("invalid_candidate_envelope", "candidate entries must be structured mappings")
+    try:
+        classified = classify_candidate_facts(candidates)
+    except (KeyError, TypeError, ValueError) as exc:
+        raise DistributionError("invalid_candidate_envelope", "candidate facts cannot be classified") from exc
+    for field in (
+        "invariant_bazi_facts", "variant_bazi_facts",
+        "invariant_ziwei_facts", "variant_ziwei_facts",
+    ):
+        if raw[field] != classified[field]:
+            raise DistributionError(
+                "invalid_candidate_envelope",
+                "candidate classification does not match candidate facts",
+                {"field": field},
+            )
+    return raw
+'''
+    replace_once("engine/distribution/partial_case.py", validation_tail, validation_green)
 
     Path(".stabilization-commit-message").write_text(
-        "test: reject forged Candidate Envelope invariants (#161)\n",
+        "fix: validate Candidate Envelope semantics (#161)\n",
         encoding="utf-8",
     )
 
