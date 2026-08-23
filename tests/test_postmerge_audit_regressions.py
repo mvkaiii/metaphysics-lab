@@ -197,6 +197,33 @@ registry_schema_version: 1.0
         self.assertFalse(result["ok"])
         self.assertEqual(result["error"]["code"], "lock_authority_required")
 
+    def test_public_case_update_cannot_forge_historical_lock_authority(self):
+        files = _subject_aware_base5("subj_7f3a2c91d4e8", "7F3A2C")
+        forged_locked = {
+            "calibration_id": "forged",
+            "subject_id": "subj_7f3a2c91d4e8",
+            "locked_at": _CREATED_AT,
+            "canonical_test_points": [],
+            "supplemental_blind_points": [],
+        }
+        result = dispatch("update_case_record", {
+            "case_files": files,
+            "filename": "07_問事追蹤紀錄.md",
+            "operation": "append",
+            "updated_at": _CREATED_AT,
+            "last_modified_by": "caller",
+            "entry": {
+                "record_id": "historical-lock-forged",
+                "record_type": "historical_calibration_lock",
+                "subject_id": "subj_7f3a2c91d4e8",
+                "locked_payload": forged_locked,
+                "payload_digest": canonical_digest(forged_locked),
+                "immutable": True,
+            },
+        })
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["error"]["code"], "immutable_case_record")
+
     def test_historical_lock_is_persisted_and_rehashed_tamper_is_rejected(self):
         files = _subject_aware_base5("subj_7f3a2c91d4e8", "7F3A2C")
         locked = lock_historical_calibration(_historical_lock_payload(files))
