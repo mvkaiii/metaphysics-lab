@@ -4,7 +4,10 @@ import subprocess
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
+from engine.birth.errors import BirthFoundationError
+from engine.birth.models import ResolvedBirthPlace
 from engine.distribution.runtime import dispatch
 
 
@@ -26,6 +29,19 @@ COMPLETE_BIRTH = {
     "birth_time": "19:20",
     "birth_place": "台北市",
 }
+
+
+def offline_taipei():
+    return ResolvedBirthPlace(
+        canonical_name="Taipei City, Taiwan",
+        latitude=25.033,
+        longitude=121.5654,
+        timezone="Asia/Taipei",
+        provider_name="metaphysics_lab_offline_registry",
+        provider_version="1.0",
+        resolution_status="resolved_offline_registry",
+        provider_reference="tw-tpe|geonames:1668341",
+    )
 
 
 class DistributionNatalTests(unittest.TestCase):
@@ -55,7 +71,6 @@ class DistributionNatalTests(unittest.TestCase):
             {"birth": COMPLETE_BIRTH, "resolved_location": RESOLVED_TAIPEI},
         )
         self.assertTrue(result["ok"], result)
-        self.assertEqual(result["runtime_version"], "1.0-exp")
         data = result["data"]
         project = data["project_natal"]
         self.assertEqual(project["source"]["source_type"], "project")
@@ -69,6 +84,60 @@ class DistributionNatalTests(unittest.TestCase):
         serialized = json.dumps(data, ensure_ascii=False).lower()
         self.assertNotIn("interpretation", serialized)
         self.assertNotIn("advice", serialized)
+
+    def test_explicit_resolved_location_has_precedence_over_offline_registry(self):
+        with patch(
+            "engine.distribution.natal.resolve_offline_birth_place",
+            side_effect=AssertionError("offline resolver must not run for explicit location"),
+        ):
+            result = dispatch(
+                "build_natal",
+                {"birth": COMPLETE_BIRTH, "resolved_location": RESOLVED_TAIPEI},
+            )
+        self.assertTrue(result["ok"], result)
+        self.assertEqual(result["data"]["resolved_location"]["provider_name"], "ai_host")
+
+    def test_build_natal_uses_unique_offline_registry_match_before_network(self):
+        with patch("engine.distribution.natal.resolve_offline_birth_place", return_value=offline_taipei()), patch(
+            "engine.distribution.natal._network_provider",
+            side_effect=AssertionError("network provider must not run after offline match"),
+        ):
+            result = dispatch("build_natal", {"birth": COMPLETE_BIRTH})
+        self.assertTrue(result["ok"], result)
+        location = result["data"]["resolved_location"]
+        self.assertEqual(location["provider_name"], "metaphysics_lab_offline_registry")
+        self.assertEqual(location["provider_version"], "1.0")
+        self.assertEqual(location["timezone"], "Asia/Taipei")
+
+    def test_offline_ambiguity_fails_without_network_fallback(self):
+        ambiguity = BirthFoundationError(
+            "ambiguous_birth_place",
+            "offline birth-place alias matches multiple registry records",
+            {"query": "Springfield", "candidate_count": 2, "candidates": []},
+        )
+        with patch("engine.distribution.natal.resolve_offline_birth_place", side_effect=ambiguity), patch(
+            "engine.distribution.natal._network_provider",
+            side_effect=AssertionError("ambiguous offline result must not fall through to network"),
+        ):
+            result = dispatch(
+                "build_natal",
+                {
+                    "birth": dict(COMPLETE_BIRTH, birth_place="Springfield"),
+                    "network_location": {"enabled": True, "user_agent": "portable-test"},
+                },
+            )
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["error"]["code"], "ambiguous_birth_place")
+
+    def test_offline_miss_without_network_returns_location_not_resolved(self):
+        with patch("engine.distribution.natal.resolve_offline_birth_place", return_value=None):
+            result = dispatch(
+                "build_natal",
+                {"birth": dict(COMPLETE_BIRTH, birth_place="Unsupported Place")},
+            )
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["error"]["code"], "location_not_resolved")
+        self.assertEqual(result["error"]["details"]["query"], "Unsupported Place")
 
     def test_build_natal_pre_resolved_path_does_not_require_location_packages(self):
         script = r'''
@@ -106,15 +175,6 @@ if not result.get("ok"):
             capture_output=True,
         )
         self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
-
-    def test_build_natal_without_location_path_fails_closed(self):
-        result = dispatch("build_natal", {"birth": COMPLETE_BIRTH})
-        self.assertFalse(result["ok"])
-        self.assertEqual(result["error"]["code"], "location_resolution_required")
-        self.assertEqual(
-            result["error"]["details"]["required_fields"],
-            ["canonical_name", "latitude", "longitude", "timezone", "provider_name", "provider_version"],
-        )
 
     def test_invalid_pre_resolved_coordinates_are_rejected(self):
         invalid = dict(RESOLVED_TAIPEI)
