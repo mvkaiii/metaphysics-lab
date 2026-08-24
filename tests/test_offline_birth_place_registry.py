@@ -41,7 +41,7 @@ class OfflineBirthPlaceRegistryTests(unittest.TestCase):
         self.assertEqual(taiwan, TAIWAN_CANONICAL)
         self.assertEqual(international, INTERNATIONAL_CANONICAL)
 
-    def test_registry_records_have_valid_required_fields_and_provenance(self):
+    def test_registry_records_have_valid_required_fields_and_geonames_provenance(self):
         raw = _load_registry_json()
         record_ids = set()
         for row in raw["records"]:
@@ -61,16 +61,16 @@ class OfflineBirthPlaceRegistryTests(unittest.TestCase):
             self.assertTrue(str(row["timezone"]).strip())
             self.assertIsInstance(row["aliases"], list)
             self.assertTrue(row["aliases"])
-            self.assertTrue(str(row["source"]).strip())
-            self.assertTrue(str(row["source_version"]).strip())
-            self.assertTrue(str(row["source_reference"]).strip())
+            self.assertEqual(row["source"], "geonames-curated")
+            self.assertEqual(row["source_version"], "2026-08-24")
+            self.assertRegex(row["source_reference"], r"^geonames:\d+$")
 
     def test_all_taiwan_records_use_asia_taipei(self):
         for row in _load_registry_json()["records"]:
             if row["country_code"] == "TW":
                 self.assertEqual(row["timezone"], "Asia/Taipei", row["canonical_name"])
 
-    def test_taipei_explicit_aliases_resolve_to_same_record(self):
+    def test_taipei_explicit_aliases_resolve_to_same_record_with_stable_provenance(self):
         from engine.birth.offline_registry import resolve_offline_birth_place
 
         values = ["台北", "臺北", "台北市", "臺北市", "Taipei", "Taipei City"]
@@ -82,7 +82,25 @@ class OfflineBirthPlaceRegistryTests(unittest.TestCase):
         self.assertEqual(first.timezone, "Asia/Taipei")
         self.assertEqual(first.provider_name, "metaphysics_lab_offline_registry")
         self.assertEqual(first.provider_version, "1.0")
-        self.assertTrue(first.provider_reference.startswith("registry:1.0:"))
+        self.assertEqual(first.resolution_status, "resolved")
+        self.assertEqual(
+            first.provider_reference,
+            "tw-geonames-1668338|geonames:1668338",
+        )
+
+    def test_registry_metadata_is_exact_and_does_not_expose_alias_payload(self):
+        from engine.birth.offline_registry import offline_birth_place_registry_metadata
+
+        metadata = offline_birth_place_registry_metadata()
+        self.assertEqual(metadata["version"], "1.0")
+        self.assertEqual(metadata["record_count"], 40)
+        self.assertEqual(
+            metadata["coverage_profile"],
+            "taiwan-admin1-plus-explicit-major-cities-v1",
+        )
+        self.assertEqual(metadata["source_profiles"], ["geonames-curated-2026-08-24"])
+        self.assertNotIn("records", metadata)
+        self.assertNotIn("aliases", metadata)
 
     def test_normalization_is_conservative_and_deterministic(self):
         from engine.birth.offline_registry import normalize_birth_place_alias
@@ -98,6 +116,26 @@ class OfflineBirthPlaceRegistryTests(unittest.TestCase):
 
         self.assertIsNone(resolve_offline_birth_place("Taipie"))
         self.assertIsNone(resolve_offline_birth_place("Taipei-ish"))
+
+    def test_committed_short_chiayi_and_hsinchu_aliases_fail_closed(self):
+        from engine.birth.offline_registry import resolve_offline_birth_place
+
+        expected = {
+            "Chiayi": {"Chiayi City", "Chiayi County"},
+            "嘉義": {"Chiayi City", "Chiayi County"},
+            "Hsinchu": {"Hsinchu City", "Hsinchu County"},
+            "新竹": {"Hsinchu City", "Hsinchu County"},
+        }
+        for alias, names in expected.items():
+            with self.subTest(alias=alias):
+                with self.assertRaises(BirthFoundationError) as caught:
+                    resolve_offline_birth_place(alias)
+                self.assertEqual(caught.exception.code, "ambiguous_birth_place")
+                self.assertEqual(caught.exception.details["candidate_count"], 2)
+                self.assertEqual(
+                    {row["canonical_name"] for row in caught.exception.details["candidates"]},
+                    names,
+                )
 
     def test_synthetic_duplicate_alias_fails_closed_with_all_candidates(self):
         from engine.birth.offline_registry import OfflineBirthPlaceRegistry
