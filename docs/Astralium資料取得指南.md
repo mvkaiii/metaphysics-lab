@@ -59,7 +59,7 @@ https://getastralium.com/
 
 ## 四、不知道出生時間怎麼辦
 
-不要為了讓 Astralium或 Project 排出完整盤而隨便填一個時辰。
+不要為了讓 Astralium 或 Project 排出完整盤而隨便填一個時辰。
 
 如果來源已經提供明確四柱或部分命盤，可以先保存為 External view；但「來源有四柱」不等於「已知唯一 civil 出生時間」，也不能自動推出完整紫微本命。
 
@@ -153,4 +153,4 @@ Astralium raw chart 不會因為進入 Project 就變成 **Project 原生盤面*
 
 出生年月日時、出生地、第三方 raw chart、Historical Calibration 回答與人生事件都屬私人 Case 資料。
 
-GitHub repo 只保存共用規則、程式、測試與非私人模板；實際命主資料留在私人 ChatGPT Project、Claude Project或其他受控環境。
+GitHub repo 只保存共用規則、程式、測試與非私人模板；實際命主資料留在私人 ChatGPT Project、Claude Project 或其他受控環境。
