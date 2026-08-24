@@ -6,8 +6,8 @@ The source tree stays modular. This builder creates exactly three deterministic
 artifacts for end users:
 
 - metaphysics_lab.py
-- METAPHYSICS_CORE.md
-- PROJECT_INSTRUCTIONS.md
+- metaphysics_core.md
+- project_instructions.md
 """
 
 from __future__ import annotations
@@ -40,9 +40,9 @@ from engine.distribution.manifest import load_capabilities
 
 BUILD_FORMAT_VERSION = "1.0"
 ARTIFACT_NAMES = (
-    "METAPHYSICS_CORE.md",
-    "PROJECT_INSTRUCTIONS.md",
+    "metaphysics_core.md",
     "metaphysics_lab.py",
+    "project_instructions.md",
 )
 
 _BOOTSTRAP = r'''#!/usr/bin/env python3
@@ -363,8 +363,8 @@ def _render_bundle(repo_root: Path) -> str:
 def render_distribution(repo_root: Path) -> Dict[str, bytes]:
     root = Path(repo_root)
     artifacts = {
-        "PROJECT_INSTRUCTIONS.md": _render_project_instructions(root).encode("utf-8"),
-        "METAPHYSICS_CORE.md": _render_metaphysics_core(root).encode("utf-8"),
+        "project_instructions.md": _render_project_instructions(root).encode("utf-8"),
+        "metaphysics_core.md": _render_metaphysics_core(root).encode("utf-8"),
         "metaphysics_lab.py": _render_bundle(root).encode("utf-8"),
     }
     return {name: artifacts[name] for name in ARTIFACT_NAMES}
