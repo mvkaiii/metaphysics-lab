@@ -1,7 +1,7 @@
 name: distribution-filename-migration-helper
 
 on:
-  push:
+  pull_request:
     branches:
       - release/v1.3.0-publish
 
@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   migrate:
+    if: github.head_ref == 'tmp/lowercase-selfref-trigger'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
