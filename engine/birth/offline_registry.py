@@ -6,7 +6,7 @@ import re
 import unicodedata
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, Iterable, List, Mapping, Optional, Sequence
+from typing import Dict, List, Mapping, Optional, Sequence
 
 from .errors import BirthFoundationError
 from .models import ResolvedBirthPlace
@@ -92,7 +92,6 @@ def _validated_record(record: Mapping[str, object]) -> Dict[str, object]:
     canonical_key = normalize_birth_place_alias(canonical_name)
     if canonical_key not in normalized_seen:
         aliases.append(canonical_name)
-        normalized_seen.add(canonical_key)
     return {
         "record_id": record_id,
         "canonical_name": canonical_name,
@@ -164,16 +163,13 @@ class OfflineBirthPlaceRegistry:
             timezone=str(record["timezone"]),
             provider_name=REGISTRY_PROVIDER_NAME,
             provider_version=self.version,
-            resolution_status="resolved_offline_registry",
-            provider_reference=(
-                "registry:%s:%s:source=%s"
-                % (self.version, record["record_id"], record["source_reference"])
-            ),
+            resolution_status="resolved",
+            provider_reference="%s|%s" % (record["record_id"], record["source_reference"]),
         )
 
     def metadata(self) -> dict:
         source_profiles = sorted(
-            set("%s:%s" % (row["source"], row["source_version"]) for row in self.records)
+            set("%s-%s" % (row["source"], row["source_version"]) for row in self.records)
         )
         return {
             "version": self.version,
