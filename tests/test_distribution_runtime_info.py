@@ -71,6 +71,21 @@ class DistributionRuntimeInfoTests(unittest.TestCase):
             self.assertIn("installed", value)
             self.assertIn("matches_pin", value)
 
+    def test_runtime_info_exposes_exact_bundled_offline_registry_profile(self):
+        runtime = self._runtime()
+        info = runtime.dispatch("runtime_info", {})["data"]["offline_location_registry"]
+        self.assertEqual(info["version"], "1.0")
+        self.assertEqual(info["record_count"], 40)
+        self.assertEqual(
+            info["coverage_profile"],
+            "taiwan-admin1-plus-explicit-major-cities-v1",
+        )
+        self.assertEqual(info["source_profiles"], ["geonames-curated-2026-08-24"])
+        self.assertIs(info["bundled"], True)
+        self.assertIs(info["available"], True)
+        self.assertNotIn("records", info)
+        self.assertNotIn("aliases", info)
+
     def test_legacy_external_dependency_view_is_diagnostic_only(self):
         runtime = self._runtime()
         dependencies = runtime.dispatch("runtime_info", {})["data"]["external_dependencies"]
