@@ -8,6 +8,7 @@ from importlib.resources import files
 from zoneinfo import ZoneInfo
 
 from engine.vendor.manifest import bundled_dependency
+from engine.vendor.materialize import VendorMaterializationError, ensure_private_vendor_root
 
 from .models import (
     CalendarResolverException,
@@ -119,8 +120,9 @@ def _load_private_tzdata_metadata():
             {"expected_authority": "bundled"},
         )
     try:
+        ensure_private_vendor_root()
         module = importlib.import_module(_PRIVATE_TZDATA_MODULE)
-    except (ImportError, ModuleNotFoundError) as exc:
+    except (VendorMaterializationError, ImportError, ModuleNotFoundError) as exc:
         raise CalendarResolverException(
             "provider_failure",
             "bundled tzdata package is unavailable",
@@ -161,10 +163,11 @@ class PinnedTzdataProvider:
                 {"timezone": timezone_name},
             )
         try:
+            ensure_private_vendor_root()
             resource = files(_PRIVATE_ZONEINFO_PACKAGE).joinpath(*parts)
             with resource.open("rb") as handle:
                 return ZoneInfo.from_file(handle, key=timezone_name)
-        except (ModuleNotFoundError, FileNotFoundError, IsADirectoryError, ValueError) as exc:
+        except (VendorMaterializationError, ModuleNotFoundError, FileNotFoundError, IsADirectoryError, ValueError) as exc:
             raise CalendarResolverException(
                 "invalid_timezone",
                 f"unknown IANA timezone: {timezone_name!r}",
