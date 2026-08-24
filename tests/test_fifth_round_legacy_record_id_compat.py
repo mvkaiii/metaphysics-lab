@@ -98,20 +98,23 @@ class FifthRoundLegacyRecordIdCompatibilityTests(unittest.TestCase):
             legacy[slot] = text
         return legacy
 
+    def _migrate(self, case_files):
+        return dispatch(
+            "migrate_case",
+            {
+                "case_files": case_files,
+                "subject_display_name": "Legacy Example",
+                "updated_at": "2026-08-24T04:00:00+08:00",
+            },
+        )
+
     def test_legacy_1_0_unicode_space_record_id_remains_readable(self):
         result = dispatch("validate_case", {"case_files": self.legacy_case()})
         self.assertTrue(result["ok"], result)
         self.assertEqual(result["data"]["case_schema_version"], "1.0")
 
     def test_legacy_1_0_unicode_space_record_id_migrates_to_valid_1_1(self):
-        migrated = dispatch(
-            "migrate_case",
-            {
-                "case_files": self.legacy_case(),
-                "subject_display_name": "Legacy Example",
-                "updated_at": "2026-08-24T04:00:00+08:00",
-            },
-        )
+        migrated = self._migrate(self.legacy_case())
         self.assertTrue(migrated["ok"], migrated)
         changed = migrated["data"]["changed_files"]
         validated = dispatch("validate_case", {"case_files": changed})
@@ -120,6 +123,21 @@ class FifthRoundLegacyRecordIdCompatibilityTests(unittest.TestCase):
         question_text = next(text for name, text in changed.items() if name.endswith("07_問事追蹤紀錄.md"))
         self.assertNotIn("年度 預測 1", question_text)
         self.assertIn("legacy-07-", question_text)
+
+    def test_long_legacy_1_0_record_id_migrates_within_1_1_length_limit(self):
+        legacy_id = "舊年度預測 " + ("甲乙丙丁" * 80)
+        legacy = self.legacy_case(record_id=legacy_id)
+        readable = dispatch("validate_case", {"case_files": legacy})
+        self.assertTrue(readable["ok"], readable)
+        migrated = self._migrate(legacy)
+        self.assertTrue(migrated["ok"], migrated)
+        changed = migrated["data"]["changed_files"]
+        validated = dispatch("validate_case", {"case_files": changed})
+        self.assertTrue(validated["ok"], validated)
+        question_text = next(text for name, text in changed.items() if name.endswith("07_問事追蹤紀錄.md"))
+        heading = next(line[4:] for line in question_text.splitlines() if line.startswith("### legacy-07-"))
+        self.assertLessEqual(len(heading), 128)
+        self.assertNotIn(legacy_id, question_text)
 
     def test_legacy_1_0_nonfinite_json_is_still_rejected(self):
         result = dispatch("validate_case", {"case_files": self.legacy_case(nonfinite=True)})
