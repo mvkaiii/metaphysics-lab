@@ -1,1 +1,2 @@
 One-time trigger for validated lowercase distribution self-reference migration.
+Rerun after scoping current public docs and excluding historical specs/plans.
