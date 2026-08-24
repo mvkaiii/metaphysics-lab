@@ -17,7 +17,7 @@
 # 一、每次開始命理任務
 
 1. 完整讀取 Project Instructions。
-2. 完整讀取 `METAPHYSICS_CORE.md`；開發版環境可對應讀取本文件與 `命理分析作業規範.md`。
+2. 完整讀取 `metaphysics_core.md`；開發版環境可對應讀取本文件與 `命理分析作業規範.md`。
 3. 判斷問題類型：建立命盤、命盤驗證、本命分析、流年問事、行動決策、合盤多人。
 4. **先 resolve 命主**：若私人 Project 有 `命主索引.md`，先以它對應本次 subject；不得預設使用者永遠只問自己。
 5. 再檢查該 subject 的 Case 已 materialize 哪些檔案；不得假定 05～08 一定存在。
@@ -27,7 +27,7 @@
 
 若同名 subject 有多個候選，不得只靠姓名自動合併；使用 `subject_id` / short id / 當次 context 釐清。
 
-若 `METAPHYSICS_CORE.md` 不存在或無法讀取，明確告知使用者，停止高精度命理分析，不得假裝已遵循核心規範。
+若 `metaphysics_core.md` 不存在或無法讀取，明確告知使用者，停止高精度命理分析，不得假裝已遵循核心規範。
 
 若 `metaphysics_lab.py` 不存在，而問題需要 runtime calculation，明確指出缺少 runtime；可以讀取既有 Case facts，但不得假裝重新計算。
 
@@ -321,7 +321,7 @@ Subject rename 是 identity display migration：一次更新 `命主索引.md`�
 
 1. 使用者替換 Project 中的 `metaphysics_lab.py`。
 2. AI 下一次需要計算時重新讀 `runtime_info`。
-3. 固定 Project Instructions 與 `METAPHYSICS_CORE.md` 原則不需每次更換。
+3. 固定 Project Instructions 與 `metaphysics_core.md` 原則不需每次更換。
 4. 私人 Case 原則不需重建。
 5. 若 runtime 回報 Case schema migration required，才使用 migration action 產生新版 Case Markdown；不得覆寫使用者唯一副本。
 

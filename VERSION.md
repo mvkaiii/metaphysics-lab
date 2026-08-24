@@ -123,11 +123,11 @@ v1.3.0 正式提供 mobile-first AI release surface：
 
 ```text
 dist/ai/metaphysics_lab.py
-dist/ai/METAPHYSICS_CORE.md
-dist/ai/PROJECT_INSTRUCTIONS.md
+dist/ai/metaphysics_core.md
+dist/ai/project_instructions.md
 ```
 
-一般使用者不需要理解 repo modules。前兩個檔案上傳到 ChatGPT / Claude Project，`PROJECT_INSTRUCTIONS.md` 內容貼入 Project Instructions；完整分析若平台提供，可優先使用較高推理強度模式。
+一般使用者不需要理解 repo modules。前兩個檔案上傳到 ChatGPT / Claude Project，`project_instructions.md` 內容貼入 Project Instructions；完整分析若平台提供，可優先使用較高推理強度模式。
 
 Runtime 更新預設只替換 `metaphysics_lab.py`。Project Contract 或 Case Schema 只有在明確 migration 通知時才同步。
 

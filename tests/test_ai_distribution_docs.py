@@ -16,8 +16,8 @@ RELEASE_NOTES = ROOT / "docs" / "發布說明-v1.3.0.md"
 
 USER_ARTIFACTS = (
     "metaphysics_lab.py",
-    "METAPHYSICS_CORE.md",
-    "PROJECT_INSTRUCTIONS.md",
+    "metaphysics_core.md",
+    "project_instructions.md",
 )
 USER_LABELS = (
     "命理計算程式",
@@ -75,8 +75,8 @@ class AIDistributionDocsTests(unittest.TestCase):
 
     def test_project_install_is_two_uploads_plus_one_copy(self):
         self.assertIn("上傳 `metaphysics_lab.py`", self.install)
-        self.assertIn("上傳 `METAPHYSICS_CORE.md`", self.install)
-        self.assertIn("`PROJECT_INSTRUCTIONS.md`", self.install)
+        self.assertIn("上傳 `metaphysics_core.md`", self.install)
+        self.assertIn("`project_instructions.md`", self.install)
         self.assertIn("Project Instructions", self.install)
         for label in USER_LABELS:
             self.assertIn(label, self.install)
@@ -112,8 +112,8 @@ class AIDistributionDocsTests(unittest.TestCase):
         self.assertIn("Runtime", self.update)
         self.assertIn("Case Schema", self.update)
         self.assertIn("只替換 `metaphysics_lab.py`", self.update)
-        self.assertIn("PROJECT_INSTRUCTIONS.md", self.update)
-        self.assertIn("METAPHYSICS_CORE.md", self.update)
+        self.assertIn("project_instructions.md", self.update)
+        self.assertIn("metaphysics_core.md", self.update)
         self.assertIn("schema migration", self.update)
         self.assertIn("runtime_info", self.update)
         self.assertNotIn("ziwei.flowing_stars` 仍 planned", self.update)

@@ -37,7 +37,7 @@ v1.3.0 把本命建立、紫微較細時間層與 AI Project 使用方式正式�
 - 可以只用出生資料建立 Project 八字／紫微本命。
 - Astralium 或其他第三方八字／紫微排盤是**可選**交叉校驗來源，不是 runtime dependency。
 - 支援更細的紫微時間層與流曜相關計算；實際可執行範圍由 `runtime_info` 判斷。
-- 一般使用者只需要 `metaphysics_lab.py`、`METAPHYSICS_CORE.md`、`PROJECT_INSTRUCTIONS.md` 三個檔案。
+- 一般使用者只需要 `metaphysics_lab.py`、`metaphysics_core.md`、`project_instructions.md` 三個檔案。
 - GitHub Release 的一般流程是從下載區取得這三個檔案，不需要使用 Source code ZIP。
 - Python 負責固定計算，AI 負責命理解讀；缺少出生資料時不得自行猜值。
 
@@ -47,8 +47,8 @@ v1.3.0 把本命建立、紫微較細時間層與 AI Project 使用方式正式�
 
 ### AI Distribution Pack
 
-- 正式提供 AI-first / mobile-first 發行形式：`metaphysics_lab.py`、`METAPHYSICS_CORE.md`、`PROJECT_INSTRUCTIONS.md`。
-- 前兩個檔案加入 Project；`PROJECT_INSTRUCTIONS.md` 內容貼入 Project Instructions。
+- 正式提供 AI-first / mobile-first 發行形式：`metaphysics_lab.py`、`metaphysics_core.md`、`project_instructions.md`。
+- 前兩個檔案加入 Project；`project_instructions.md` 內容貼入 Project Instructions。
 - `dist/ai/metaphysics_lab.py` 為 deterministic single-file runtime；第三方 package source 不 vendor 進 bundle。
 - 新增 `runtime_info`、portable natal / reconciliation、forecast context、Case export、single-file CLI 與 modular ↔ bundled parity tests。
 - pre-resolved location path 可在沒有 location network packages 的環境使用；無可靠地點來源時 fail closed，不猜地點。

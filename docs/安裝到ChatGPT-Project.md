@@ -11,14 +11,14 @@
 | 用途 | 實際檔名 | 安裝方式 |
 |---|---|---|
 | **命理計算程式** | `metaphysics_lab.py` | 上傳到 Project |
-| **命理分析核心規則** | `METAPHYSICS_CORE.md` | 上傳到 Project |
-| **Project 設定指令** | `PROJECT_INSTRUCTIONS.md` | 全文貼到 Project Instructions |
+| **命理分析核心規則** | `metaphysics_core.md` | 上傳到 Project |
+| **Project 設定指令** | `project_instructions.md` | 全文貼到 Project Instructions |
 
 實際操作：
 
 1. 上傳 `metaphysics_lab.py` 到 Project。
-2. 上傳 `METAPHYSICS_CORE.md` 到 Project。
-3. 開啟 Project Instructions，把 `PROJECT_INSTRUCTIONS.md` 的全文複製進去。
+2. 上傳 `metaphysics_core.md` 到 Project。
+3. 開啟 Project Instructions，把 `project_instructions.md` 的全文複製進去。
 
 也就是**兩個上傳檔＋一份貼進 Project Instructions 的文字**。不需要下載 Source code，也不需要解壓縮原始碼。
 
@@ -143,7 +143,7 @@ python metaphysics_lab.py request --input - --pretty
 
 一般 Runtime 更新只需要替換 Project 裡的 `metaphysics_lab.py`。
 
-`METAPHYSICS_CORE.md`、Project Instructions、`命主索引.md` 與私人 Case 不需要每次一起重建；只有 Project Contract 或 Case Schema 明確變更時才依 migration 指示處理。
+`metaphysics_core.md`、Project Instructions、`命主索引.md` 與私人 Case 不需要每次一起重建；只有 Project Contract 或 Case Schema 明確變更時才依 migration 指示處理。
 
 ## 12. 隱私
 

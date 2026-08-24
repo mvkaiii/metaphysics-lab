@@ -10,8 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "dist" / "ai"
 EXPECTED_ARTIFACTS = {
     "metaphysics_lab.py",
-    "METAPHYSICS_CORE.md",
-    "PROJECT_INSTRUCTIONS.md",
+    "metaphysics_core.md",
+    "project_instructions.md",
 }
 
 
@@ -42,8 +42,8 @@ class AIDistributionAcceptanceTests(unittest.TestCase):
 
     def test_fixed_markdown_has_no_dynamic_capability_snapshot(self):
         fixed = (
-            (DIST / "METAPHYSICS_CORE.md").read_text(encoding="utf-8")
-            + (DIST / "PROJECT_INSTRUCTIONS.md").read_text(encoding="utf-8")
+            (DIST / "metaphysics_core.md").read_text(encoding="utf-8")
+            + (DIST / "project_instructions.md").read_text(encoding="utf-8")
         )
         for forbidden in (
             "600/600",
