@@ -1,5 +1,9 @@
 # Metaphysics Lab 版本
 
+> `VERSION.md` 是給開發、驗證與版本治理看的**技術版本表**。第一次使用請先看 `README.md` 或 `docs/快速開始.md`；一般使用者版 v1.3.0 發布說明見 `docs/發布說明-v1.3.0.md`。
+>
+> 本文件的「v1.3.0」區塊保存正式 Release snapshot。已合併 `main`、但尚未成為下一個正式 Release 的 Project Contract / Case Schema 1.1 變更，記錄在 `CHANGELOG.md` 的 Unreleased 區，不回寫改造 v1.3.0 歷史快照。
+
 ## 最新正式發布
 
 - Metaphysics Lab Core：**v1.3.0**
@@ -123,7 +127,7 @@ dist/ai/METAPHYSICS_CORE.md
 dist/ai/PROJECT_INSTRUCTIONS.md
 ```
 
-一般使用者不需要理解 repo modules。前兩個檔案上傳到 ChatGPT / Claude Project，`PROJECT_INSTRUCTIONS.md` 內容貼入 Project Instructions；完整分析建議使用 High reasoning。
+一般使用者不需要理解 repo modules。前兩個檔案上傳到 ChatGPT / Claude Project，`PROJECT_INSTRUCTIONS.md` 內容貼入 Project Instructions；完整分析若平台提供，可優先使用較高推理強度模式。
 
 Runtime 更新預設只替換 `metaphysics_lab.py`。Project Contract 或 Case Schema 只有在明確 migration 通知時才同步。
 
@@ -148,7 +152,7 @@ AI Distribution Runtime 目前版本仍為 `1.0-exp`；本次 GitHub Release 不
 
 ## 版本治理規則
 
-`VERSION.md` 只回答「目前正式有效的是什麼」。歷史變更請看 `CHANGELOG.md`，升級操作請看 `docs/更新與版本同步.md`。
+`VERSION.md` 只回答「目前正式有效的是什麼」。歷史與尚未發布變更請看 `CHANGELOG.md`，升級操作請看 `docs/更新與版本同步.md`。
 
 以下變更必須留下版本歷程並重新跑對應 gate：
 

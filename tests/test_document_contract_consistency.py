@@ -66,24 +66,23 @@ class DocumentationContractConsistencyTests(unittest.TestCase):
             self.assertIn("subject_id", text, relative)
             self.assertIn("subject_display_name", text, relative)
 
-    def test_user_facing_case_guidance_uses_subject_aware_filename_contract(self):
+    def test_user_facing_case_guidance_uses_subject_aware_filename_contract_with_fictional_examples(self):
         for relative in ("docs/命盤資料準備指南.md", "docs/快速開始.md"):
             text = (ROOT / relative).read_text(encoding="utf-8")
             self.assertIn("命主索引.md", text, relative)
-            self.assertIn("Kai_7F3A2C_01_命盤核心摘要.md", text, relative)
+            self.assertIn("Alex_7F3A2C_01_命盤核心摘要.md", text, relative)
             self.assertIn("<filename_label>_<SUBJECT_SHORT_ID>_<slot>_<canonical_title>.md", text, relative)
+            self.assertNotIn("Kai", text, relative)
 
-    def test_current_authority_case_docs_distinguish_canonical_slots_from_persisted_filenames(self):
+    def test_technical_authority_docs_distinguish_canonical_slots_from_persisted_filenames(self):
         for relative in (
-            "README.md",
-            "docs/安裝到ChatGPT-Project.md",
             "docs/更新與版本同步.md",
             "docs/架構說明.md",
             "docs/資料治理.md",
+            "docs/命盤資料準備指南.md",
         ):
             text = (ROOT / relative).read_text(encoding="utf-8")
             self.assertIn("<filename_label>_<SUBJECT_SHORT_ID>_<slot>_<canonical_title>.md", text, relative)
-            self.assertIn("Kai_7F3A2C_01_命盤核心摘要.md", text, relative)
             self.assertIn("canonical slot", text, relative)
 
     def test_update_contract_keeps_legacy_readable_without_forced_destructive_rename(self):

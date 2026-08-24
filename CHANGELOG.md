@@ -1,54 +1,72 @@
 # 變更紀錄
 
-## Unreleased｜Progressive Case + Historical Blind Calibration
+這份文件保存正式版本與尚未發布變更的技術紀錄。第一次使用 Metaphysics Lab 請先看 `README.md`；一般使用者版 v1.3.0 發布說明見 `docs/發布說明-v1.3.0.md`。
 
-本段記錄尚未正式發版、目前位於 feature branch / Draft PR 的 Project Contract 1.1 + Case Schema 1.1 變更；正式 release identity 仍為 **v1.3.0｜2026-08-23**，AI Distribution Runtime 仍為 `1.0-exp`。
+## Unreleased｜Project Contract 1.1 + Case Schema 1.1
 
-- 新 Case 改為 Progressive Case：第一次本命建立只 materialize `00_專案索引.md`～`04_紫微基礎資料包.md`；`05`～`08` 只在第一次真正有對應紀錄時建立。
-- `00_專案索引.md` 作為 Case manifest，追蹤 materialized files 與 Historical Calibration 狀態。
-- Legacy Case Schema 1.0 的既有九檔 Case 保留相容讀取；升級不得為了符合新 progressive 規則刪除舊檔。
-- 新增 Historical Blind Calibration：第一次未來問事若尚未校準，先只以 Base Case `00`～`04` 鎖定 Stage 1，再進歷史盲測與 Stage 2，避免歷史答案污染第一版未來盲判。
-- 新增 `historical.activation_selector` = implemented / experimental / on_demand / 1.0-exp，profile `historical-activation-bazi-v1`。
-- Selector 使用最近10個已完整結束的立春流年期，對全部10年建立 Tier 1／Tier 2／Tier 3 deterministic evidence 與 lexicographic rank vector，canonical selection 固定為真正 Top 4 High + Bottom 1 Control。
-- Selector 不接受 known-event / preferred-year / manual-rank hints；已知歷史事件與 conversation contamination 不能改 canonical 4+1，只能改 blind-evidence quality metadata。
-- Control year 分 `strong_control / acceptable_control / relative_low`；`relative_low` 不得冒充真正穩定年。
-- Historical Calibration 將原始盲讀、使用者確認事件、timing/domain/event-form evaluation 分別保存為命理推論、已驗證事件、已校驗資料；`cannot_recall` 不計入失準。
-- Timing evaluation 以 Li-Chun flow-year interval 優先；Gregorian 年份只作使用者友善 label，避免一月／立春前事件被機械式判成 ±1 年。
-- Ziwei v1 只在 Bazi canonical selection 完成後附加 selected-year yearly support context；`ziwei_support` 明確標 `support_only / ranking_authority=false`，不得改 `high_years`、`control_year` 或 Bazi `selection_digest`。
+這批變更已合併進 `main`，但**尚未建立下一個正式 GitHub Release**。目前正式版本仍是 **v1.3.0｜2026-08-23**，既有 Experimental 能力不因合併 main 自動升 Stable。
+
+### 一般使用者摘要
+
+- 同一個 Project 可以更安全地管理多位命主，避免不同人的 Case 混在一起。
+- 新 Case 採漸進式建立：先建立基礎資料，需要追蹤時才新增事件、流年、問事與重大決策紀錄。
+- 出生時間未知或只有範圍時，不會自己猜中點或任意時辰；可保留候選狀態，只使用真正一致的資料。
+- 第一次做個人化未來分析時，流程維持「先盲判、再用已確認事件校準」，避免先知道歷史答案再改第一版判斷。
+- Legacy Case 1.0 維持可讀與可遷移；不要求使用者破壞性重建舊 Case。
+
+### 技術紀錄
+
 - Project Contract / Case Schema 升至 `1.1`；Runtime Schema 與 AI Distribution Runtime 維持 `1.0` / `1.0-exp`。
-- 本次不提升任何既有 capability maturity，不建立新 Stable 宣稱，也不改正式 v1.3.0 tag / GitHub Release。
+- Subject Identity 使用 opaque `subject_id` 作為命主權威識別，顯示名稱與檔名 label 可改但不得改變 identity。
+- 新 Case 採 Progressive Case：第一次建立只產生 `00`～`04` Base Case；`05`～`08` 有實際紀錄時才建立。
+- 新增 Candidate Envelope：完整掃描 unknown / bounded birth-time uncertainty，不使用 midpoint、default time 或 majority voting 製造假精度。
+- 新增 Historical Blind Calibration 與 `historical.activation_selector`；selector 為 `implemented / experimental / on_demand / 1.0-exp`。
+- Selector 使用最近 10 個已完整結束的立春流年期，canonical selection 固定為 Top 4 High + Bottom 1 Control；已知事件與對話內容不能改 canonical selection。
+- Ziwei yearly context 僅作 `support_only / ranking_authority=false`，不得改 Bazi selection digest。
+- Case record 使用 JSON typed semantics；非標準 `NaN / Infinity / -Infinity` fail closed。
+- Legacy Case 1.0 舊 record ID 仍可讀；遷移到 1.1 時不符合新規則的 ID 會 deterministic remap 為固定長度 safe ID。
+- 本批修正經 post-merge adversarial audit、RED→GREEN regression 與 exact-head immutable CI 驗證後合併 PR #166。
+- 本批不修改 v1.3.0 tag / GitHub Release，也不提升任何既有 capability maturity。
 
 ## v1.3.0｜2026-08-23
 
-v1.3.0 正式收斂 v1.2.0 之後已完成並進入 `main` 的 Natal Foundation、Ziwei Fine Cycle、Ziwei Flowing Stars 與 AI Distribution Pack。
+### 一般使用者摘要
 
-本次正式 release **不因發版而自動提升 capability maturity**：原本 Experimental / On-demand 的能力維持原狀；當前 implementation / maturity / routing 仍以 `runtime_info` 為權威來源。
+v1.3.0 把本命建立、紫微較細時間層與 AI Project 使用方式正式收斂成同一個版本。
+
+- 可以只用出生資料建立 Project 八字／紫微本命。
+- Astralium 或其他第三方八字／紫微排盤是**可選**交叉校驗來源，不是 runtime dependency。
+- 支援更細的紫微時間層與流曜相關計算；實際可執行範圍由 `runtime_info` 判斷。
+- 一般使用者只需要 `metaphysics_lab.py`、`METAPHYSICS_CORE.md`、`PROJECT_INSTRUCTIONS.md` 三個檔案。
+- GitHub Release 的一般流程是從下載區取得這三個檔案，不需要使用 Source code ZIP。
+- Python 負責固定計算，AI 負責命理解讀；缺少出生資料時不得自行猜值。
+
+完整一般使用者版 GitHub Release 文案來源：`docs/發布說明-v1.3.0.md`。
+
+正式 release **不因發版而自動提升 capability maturity**；當前 implementation / maturity / routing 仍以 `runtime_info` 為技術權威來源。
 
 ### AI Distribution Pack
 
-- 正式提供 AI-first / mobile-first 發行形式：一般使用者只需要 `metaphysics_lab.py`、`METAPHYSICS_CORE.md` 與 `PROJECT_INSTRUCTIONS.md`；前兩者加入 Project，後者貼入 Project Instructions。
-- GitHub Release 以三個獨立 assets 為主要手機下載方式；ZIP 僅是 GitHub 自動 source archive，不是一般使用者主流程。
-- 新增 deterministic single-file `dist/ai/metaphysics_lab.py`；模組化 source 維持 repo 內可測試／可 qualification，build output 不 vendor 第三方 package source。
-- 新增 `runtime_info`、portable natal / reconciliation、deterministic forecast context 與 Case export 等 structured runtime actions；Python 負責計算，AI 負責解讀。
+- 正式提供 AI-first / mobile-first 發行形式：`metaphysics_lab.py`、`METAPHYSICS_CORE.md`、`PROJECT_INSTRUCTIONS.md`。
+- 前兩個檔案加入 Project；`PROJECT_INSTRUCTIONS.md` 內容貼入 Project Instructions。
+- `dist/ai/metaphysics_lab.py` 為 deterministic single-file runtime；第三方 package source 不 vendor 進 bundle。
+- 新增 `runtime_info`、portable natal / reconciliation、forecast context、Case export、single-file CLI 與 modular ↔ bundled parity tests。
 - pre-resolved location path 可在沒有 location network packages 的環境使用；無可靠地點來源時 fail closed，不猜地點。
-- forecast context 只 materialize requested scopes；月／日／時 transformation/flying 與 flowing stars 共用同一 resolved source，避免兩套 stem / boundary 漂移。
-- 新增九份私人 Case Markdown Pack、schema validation、same-schema migration contract 與 append-first record update；第一版 blind forecast 不可覆寫。
-- 新增 deterministic builder、build digest、`--check`、單檔 CLI 與 modular ↔ bundled parity tests。
-- `runtime-info` 不需展開完整 engine；缺少核心 dependency 的計算 action 回 machine-readable error，不輸出 traceback。
-- 使用者文件改為 mobile-first / AI-first：推薦 High reasoning，並提供 AI host 無法執行 Python 時的同一單檔 local CLI fallback。
+- forecast context 只建立 requested scopes；月／日／時 transformation/flying 與 flowing stars 共用同一 resolved source。
 - 一般 Runtime 更新預設只替換 `metaphysics_lab.py`；Project Contract 或 Case Schema 只有在明確 migration 通知時才同步。
-- AI Distribution Runtime 版本仍為 `1.0-exp`；本次正式 GitHub Release 不把它或任何 experimental metaphysics capability 自動升 Stable。
+- AI Distribution Runtime 仍為 `1.0-exp`；正式 GitHub Release 不把 experimental metaphysics capability 自動升 Stable。
 
 ### Phase 2C｜Ziwei Flowing Stars
 
-- 新增 `ziwei.flowing_stars` = implemented / experimental / on_demand / 1.0-exp；profile `ziwei-flowing-stars-common-v1`。
-- 流曜屬 `Project 推導盤面`，canonical location 固定為 Earthly Branch。
-- 支援 decadal／yearly／monthly／daily／hourly 五種 scope；月日時重用 Phase 2B `ResolvedCycleStem`，大限重用 `ZiweiDecadalPeriod.stem_branch`，流年採 lunar-year neutral source，不重算上游 boundary policy。
-- 核心10顆為天魁、天鉞、文昌、文曲、祿存、擎羊、陀羅、天馬、紅鸞、天喜；yearly 額外加入年解。
+- `ziwei.flowing_stars` = `implemented / experimental / on_demand / 1.0-exp`；profile `ziwei-flowing-stars-common-v1`。
+- 流曜屬 **Project 推導盤面**，canonical location 固定為 Earthly Branch。
+- 支援 decadal / yearly / monthly / daily / hourly 五種 scope。
+- 月日時重用 Phase 2B `ResolvedCycleStem`；大限重用 `ZiweiDecadalPeriod.stem_branch`；流年採 lunar-year neutral source，不重算上游 boundary policy。
+- 核心 10 顆為天魁、天鉞、文昌、文曲、祿存、擎羊、陀羅、天馬、紅鸞、天喜；yearly 額外加入年解。
 - `FlowingStarLayer` 與 Stable transformation/flying layer 分離，join key 為 `chart_id + scope + reference`。
 - pinned iztro 2.6.0 revision `814b77e6371e1050cac31bbf674db3c3138fcfde` qualification：600/600 source cases、6120 placements、0 unexpected mismatch。
-- Astralium flowing-stars private qualification 維持 `PENDING`；沒有沿用 Natal private PASS，沒有 promotion。
-- 明確排除歲前十二神、將前十二神、博士十二神、長生十二神、小限流曜、流曜亮度、scoring、AI interpretation。
+- Astralium flowing-stars private qualification 維持 `PENDING`；沒有沿用 Natal private PASS，也沒有 promotion。
+- 明確排除**歲前十二神**、**將前十二神**、博士十二神、長生十二神、小限流曜、流曜亮度、scoring、AI interpretation。
 
 ### Phase 2C0｜Natal Chart Foundation
 
@@ -56,8 +74,8 @@ v1.3.0 正式收斂 v1.2.0 之後已完成並進入 `main` 的 Natal Foundation�
 
 - 新增 structured birth input resolution 與 Precision Gate；原則為 **Precision must be earned by input**。
 - 完整 Mode A 最低輸入：性別、Gregorian 出生日期、出生時間、出生地。
-- 缺欄位只回 machine-readable `missing_fields` / `allowed_actions`；不自行補值。
-- 新增 birthplace geocoding / timezone resolution，零候選或多個 material candidates fail closed。
+- 缺欄位只回 machine-readable `missing_fields` / `allowed_actions`，不自行補值。
+- birthplace geocoding / timezone resolution 零候選或多個 material candidates fail closed。
 - Calendar Resolver 保持 neutral；**Calendar Resolver 不負責真太陽時**。
 - 保存 `reported_civil_time`、`normalized_civil_time`、`bazi_effective_time`、`ziwei_effective_time`。
 - 真太陽時 profile 固定記錄「經度校正＋均時差」，八字與紫微 profile 獨立。
@@ -72,7 +90,7 @@ v1.3.0 正式收斂 v1.2.0 之後已完成並進入 `main` 的 Natal Foundation�
 
 #### Normalized Natal / reconciliation
 
-- 新增 External / Project / Resolved 三層資料模型；raw views 永久分開，不互相覆寫。
+- 新增 External / Project / Resolved 三層資料模型，raw views 永久分開、不互相覆寫。
 - 固定 field status：`MATCH / EQUIVALENT / CONFLICT / NOT_COMPARABLE`。
 - 固定 severity：`INFO / CAUTION / BLOCKING`。
 - `natal.reconciliation` = implemented / stable / on_demand / 1.0。
@@ -86,17 +104,14 @@ v1.3.0 正式收斂 v1.2.0 之後已完成並進入 `main` 的 Natal Foundation�
 
 #### Qualification / privacy
 
-- 新增 Phase 2C0 aggregate qualification summary；只允許 aggregate counts、digests、versions、statuses。
+- private aggregate qualification：Bazi **PASS**（6 direct matches、3 explicit profile differences、0 unexpected mismatch）；Ziwei Astralium natal **PASS**（129 matches、1 equivalent、0 unexpected mismatch）。
 - raw private birth input、full address、raw chart、external raw payload 不進 repo。
-- 已以一個授權 private natal case 完成本機 aggregate qualification：Bazi 為 **PASS**（6 direct matches、3 explicit profile differences、0 unexpected mismatch）；Ziwei Astralium natal 為 **PASS**（129 matches、1 equivalent、0 unexpected mismatch）。
-- private qualification 只提交 aggregate counts / digests；raw source 仍留在共用 repo 外。
 - 單一 private case 不構成 promotion 依據；`bazi.natal_chart` / `ziwei.natal_chart` 仍為 Experimental，`promotion_allowed = false`。
-- Phase 2C0 當時沒有包含 moving stars；v1.3.0 由後續 Phase 2C 正式納入 `ziwei.flowing_stars` 的 implemented / experimental / on_demand 狀態。
 
 ### Phase 2B｜Ziwei Fine Cycle Stem Resolver v1
 
 - 新增 `engine/calendar/sexagenary.py` 中立干支 helper。
-- 新增 `engine/ziwei/fine_cycle_stems.py`，固定 profile `ziwei-fine-cycle-lunar-late-zi-v1` / `1.0-exp`。
+- 新增 `engine/ziwei/fine_cycle_stems.py`，profile `ziwei-fine-cycle-lunar-late-zi-v1` / `1.0-exp`。
 - 紫微流月 stem 採農曆月與閏月 15/16 分界；23:xx 不提前切換流月。
 - 紫微流日固定 `late_zi_forward-v1`：22:59 舊日、23:00 effective date +1、00:00 不 double-rollover。
 - 紫微流時使用 effective Ziwei day stem 起五鼠遁，hour branch 直接採 CalendarContext。
@@ -112,8 +127,8 @@ pinned iztro 814b77e6...        integration PASS
 Astralium fine-cycle             PENDING
 ```
 
-- `leap_twelfth_month_second_half` 只有 synthetic internal coverage，為 not externally qualified。
-- repo 不提交 Astralium raw private chart；只保存 aggregate PENDING state。
+- `leap_twelfth_month_second_half` 只有 synthetic internal coverage，為 **not externally qualified**。
+- repo 不提交 Astralium raw private chart，只保存 aggregate PENDING state。
 
 ### v1.3.0 release acceptance
 
@@ -124,7 +139,7 @@ Full repository           488/488 PASS
 Python 3.9 compileall            PASS
 ```
 
-Release tag / GitHub Release 必須指向 release 文件 merge 後、重新驗證成功的 exact `main` commit。
+這裡保存的是 v1.3.0 發布當時的 acceptance snapshot；後續 main 的測試數量增加，不回寫改造歷史 release evidence。
 
 ## v1.2.0｜2026-08-21
 

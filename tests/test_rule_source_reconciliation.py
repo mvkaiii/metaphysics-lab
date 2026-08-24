@@ -87,7 +87,8 @@ class RuleSourceReconciliationTests(unittest.TestCase):
         self.assertNotIn("Fine Cycle Stem Resolver = implemented / stable / default", current_guidance)
         self.assertIn("runtime_info", current_guidance)
         self.assertIn("metaphysics_lab.py", current_guidance)
-        self.assertIn("High reasoning", current_guidance)
+        self.assertIn("較高推理", current_guidance)
+        self.assertNotIn("High reasoning", current_guidance)
 
     def test_release_baseline_and_runtime_contract_are_explicitly_distinct(self):
         sync = (ROOT / "docs/更新與版本同步.md").read_text(encoding="utf-8")
@@ -112,7 +113,7 @@ class RuleSourceReconciliationTests(unittest.TestCase):
         self.assertNotIn("Fine Cycle Stem Resolver = implemented / stable", docs)
         self.assertNotIn("Fine Cycle Stem Resolver = implemented / stable / default", docs)
         self.assertIn("runtime_info", docs)
-        self.assertIn("正式 release identity", docs)
+        self.assertIn("正式版本", docs)
 
 
 if __name__ == "__main__":
