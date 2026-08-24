@@ -1,0 +1,53 @@
+name: Feature Portable Offline Natal Validation
+
+on:
+  push:
+    branches:
+      - feature/portable-offline-natal-pipeline
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  task-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact feature head
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Confirm validation SHA
+        run: git log -1 --format=%H
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Materialize pinned vendor bytes when refresh tool exists
+        if: ${{ hashFiles('tools/vendor_refresh.py') != '' }}
+        run: |
+          mkdir -p /tmp/metaphysics-vendor
+          python -m pip download --no-deps --no-binary :all: lunar-python==1.4.8 -d /tmp/metaphysics-vendor
+          python -m pip download --no-deps --only-binary=:all: tzdata==2026.3 -d /tmp/metaphysics-vendor
+          python tools/vendor_refresh.py \
+            --lunar-sdist /tmp/metaphysics-vendor/lunar_python-1.4.8.tar.gz \
+            --tzdata-wheel /tmp/metaphysics-vendor/tzdata-2026.3-py2.py3-none-any.whl
+
+      - name: Task 1 vendor tests
+        run: python -m unittest tests.test_vendor_manifest tests.test_vendor_import_isolation -v
+
+      - name: Commit generated vendor bytes when changed
+        if: ${{ success() && hashFiles('tools/vendor_refresh.py') != '' }}
+        run: |
+          if git diff --quiet -- vendor _metaphysics_lab_vendor; then
+            echo "vendor bytes already committed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add vendor _metaphysics_lab_vendor
+          git commit -m "build: materialize pinned calendar vendor bytes"
+          git push origin HEAD:feature/portable-offline-natal-pipeline
