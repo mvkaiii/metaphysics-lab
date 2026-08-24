@@ -3,6 +3,7 @@ name: Feature Historical Calibration Validation
 on:
   push:
     branches:
+      - feature/progressive-case-historical-calibration
       - fix/postmerge-audit-161-165
   pull_request:
     branches:
@@ -10,17 +11,24 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   validation:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout fix branch
+      - name: Checkout validation ref
         uses: actions/checkout@v4
         with:
-          ref: fix/postmerge-audit-161-165
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
+
+      - name: Confirm validation SHA
+        run: |
+          echo "event=${{ github.event_name }}"
+          echo "github_sha=${{ github.sha }}"
+          echo "head_ref=${{ github.head_ref }}"
+          git log -1 --format=%H
 
       - name: Set up Python 3.9
         uses: actions/setup-python@v5
@@ -63,18 +71,11 @@ jobs:
         run: |
           python -m compileall engine tests tools
 
-      - name: Persist generated distribution on fix branch
-        if: github.ref == 'refs/heads/fix/postmerge-audit-161-165' || github.head_ref == 'fix/postmerge-audit-161-165'
+      - name: Verify clean validation tree
         run: |
-          if git diff --quiet -- dist/ai; then
-            echo "Generated distribution already committed"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add dist/ai
-          git commit -m "build: refresh postmerge audit distribution"
-          git push origin HEAD:fix/postmerge-audit-161-165
+          git diff --check
+          git diff --exit-code
+          test -z "$(git status --short)"
 
       - name: Upload generated distribution
         if: always()
