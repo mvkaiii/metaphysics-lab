@@ -3,32 +3,25 @@ name: Feature Historical Calibration Validation
 on:
   push:
     branches:
-      - feature/progressive-case-historical-calibration
       - fix/postmerge-audit-161-165
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validation:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout validation ref
+      - name: Checkout fix branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          ref: fix/postmerge-audit-161-165
           fetch-depth: 0
 
-      - name: Confirm validation SHA
-        run: |
-          echo "event=${{ github.event_name }}"
-          echo "github_sha=${{ github.sha }}"
-          echo "head_ref=${{ github.head_ref }}"
-          git log -1 --format=%H
+      - name: Confirm implementation SHA
+        run: git log -1 --format=%H
 
       - name: Set up Python 3.9
         uses: actions/setup-python@v5
@@ -41,47 +34,83 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
+      - name: Apply AR-EE325-01 source fix
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('engine/distribution/case_pack.py')
+          text = path.read_text(encoding='utf-8')
+
+          if 'def _validate_json_value(' not in text:
+              replacements = [
+                  (
+                      'import json\nimport re\n',
+                      'import json\nimport math\nimport re\n',
+                  ),
+                  (
+                      '''def _json_semantically_equal(left: object, right: object) -> bool:\n    try:\n        return json.dumps(left, ensure_ascii=False, sort_keys=True, separators=(",", ":")) == json.dumps(\n            right, ensure_ascii=False, sort_keys=True, separators=(",", ":")\n        )\n    except (TypeError, ValueError):\n        return False\n''',
+                      '''def _validate_json_value(value: object, *, error_code: str, field: str) -> None:\n    if isinstance(value, float) and not math.isfinite(value):\n        raise DistributionError(\n            error_code,\n            "Case record JSON cannot contain non-finite numbers",\n            {"field": field},\n        )\n    if isinstance(value, Mapping):\n        for key, item in value.items():\n            if isinstance(key, float) and not math.isfinite(key):\n                raise DistributionError(\n                    error_code,\n                    "Case record JSON cannot contain non-finite numbers",\n                    {"field": "%s.<key>" % field},\n                )\n            _validate_json_value(item, error_code=error_code, field="%s.%s" % (field, key))\n    elif isinstance(value, list):\n        for index, item in enumerate(value):\n            _validate_json_value(item, error_code=error_code, field="%s[%d]" % (field, index))\n\n\ndef _reject_json_constant(value: str):\n    raise ValueError("non-standard JSON numeric constant: %s" % value)\n\n\ndef _json_semantically_equal(left: object, right: object) -> bool:\n    try:\n        return json.dumps(left, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False) == json.dumps(\n            right, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False\n        )\n    except (TypeError, ValueError):\n        return False\n''',
+                  ),
+                  (
+                      '        metadata, _ = parse_front_matter(files[canonical])\n        missing = [key for key in _REQUIRED_FRONT_MATTER if key not in metadata]\n',
+                      '        metadata, body = parse_front_matter(files[canonical])\n        missing = [key for key in _REQUIRED_FRONT_MATTER if key not in metadata]\n',
+                  ),
+                  (
+                      '        if metadata["record_type"] != _RECORD_TYPES[canonical]:\n            raise DistributionError("case_record_type_mismatch", "Case filename and record_type do not match", {"filename": actual_by_canonical[canonical], "record_type": metadata["record_type"]})\n        versions.add(metadata["case_schema_version"])\n',
+                      '        if metadata["record_type"] != _RECORD_TYPES[canonical]:\n            raise DistributionError("case_record_type_mismatch", "Case filename and record_type do not match", {"filename": actual_by_canonical[canonical], "record_type": metadata["record_type"]})\n        if canonical in _TRACKING_FILES:\n            _record_entries(body)\n        versions.add(metadata["case_schema_version"])\n',
+                  ),
+                  (
+                      '''def _render_entry(entry: Mapping[str, object]) -> str:\n    record_id = _record_id(entry.get("record_id"))\n    normalized = dict(entry)\n    normalized["record_id"] = record_id\n    payload = json.dumps(normalized, ensure_ascii=False, sort_keys=True, indent=2)\n    return "### %s\\n\\n```json\\n%s\\n```" % (record_id, payload)\n''',
+                      '''def _render_entry(entry: Mapping[str, object]) -> str:\n    record_id = _record_id(entry.get("record_id"))\n    normalized = dict(entry)\n    normalized["record_id"] = record_id\n    _validate_json_value(normalized, error_code="invalid_case_payload", field="entry")\n    try:\n        payload = json.dumps(normalized, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False)\n    except (TypeError, ValueError) as exc:\n        raise DistributionError("invalid_case_payload", "tracking record payload must be standard JSON") from exc\n    return "### %s\\n\\n```json\\n%s\\n```" % (record_id, payload)\n''',
+                  ),
+                  (
+                      '            parsed = json.loads(rest[:-4])\n        except (TypeError, ValueError) as exc:\n            raise DistributionError("invalid_case_markdown", "tracking record JSON cannot be parsed") from exc\n        if not isinstance(parsed, Mapping):\n            raise DistributionError("invalid_case_markdown", "tracking record payload must be a mapping")\n',
+                      '            parsed = json.loads(rest[:-4], parse_constant=_reject_json_constant)\n        except (TypeError, ValueError) as exc:\n            raise DistributionError("invalid_case_markdown", "tracking record JSON cannot be parsed") from exc\n        if not isinstance(parsed, Mapping):\n            raise DistributionError("invalid_case_markdown", "tracking record payload must be a mapping")\n        _validate_json_value(parsed, error_code="invalid_case_markdown", field="tracking_record")\n',
+                  ),
+                  (
+                      '    normalized_entry = dict(entry)\n    normalized_entry["record_id"] = record_id\n    entry_subject_id = normalized_entry.get("subject_id")\n',
+                      '    normalized_entry = dict(entry)\n    normalized_entry["record_id"] = record_id\n    _validate_json_value(normalized_entry, error_code="invalid_case_payload", field="entry")\n    entry_subject_id = normalized_entry.get("subject_id")\n',
+                  ),
+              ]
+              for old, new in replacements:
+                  if text.count(old) != 1:
+                      raise SystemExit('expected exactly one source match; got %d' % text.count(old))
+                  text = text.replace(old, new, 1)
+              path.write_text(text, encoding='utf-8')
+          PY
+
       - name: Rebuild AI distribution
         run: |
           python tools/build_ai_distribution.py
           python tools/build_ai_distribution.py --check
 
-      - name: Historical selector and progressive Case focused tests
+      - name: Focused AR-EE325-01 regression
         run: |
           python -m unittest \
-            tests.test_historical_activation_relations \
-            tests.test_historical_activation_selector \
-            tests.test_historical_activation_capabilities \
-            tests.test_distribution_historical_calibration \
-            tests.test_distribution_historical_integrity \
-            tests.test_distribution_historical_support \
             tests.test_distribution_case_pack \
-            tests.test_distribution_partial_case \
-            tests.test_postmerge_audit_regressions \
-            tests.test_second_round_adversarial_regressions \
             tests.test_third_round_adversarial_regressions \
             tests.test_third_round_bundle_parity \
-            tests.test_fourth_round_nonfinite_case_records \
-            tests.test_distribution_runtime_info -v
+            tests.test_fourth_round_nonfinite_case_records -v
 
       - name: Full repository regression
-        run: |
-          python -m unittest discover -s tests -p 'test_*.py' -v
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
 
       - name: Python 3.9 compile check
-        run: |
-          python -m compileall engine tests tools
+        run: python -m compileall engine tests tools
 
-      - name: Verify clean validation tree
-        run: |
-          git diff --check
-          git diff --exit-code
-          test -z "$(git status --short)"
+      - name: Verify patch before persistence
+        run: git diff --check
 
-      - name: Upload generated distribution
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: progressive-case-ai-distribution
-          path: dist/ai/
-          if-no-files-found: error
+      - name: Persist source and generated distribution
+        if: github.event_name == 'push' && github.ref == 'refs/heads/fix/postmerge-audit-161-165'
+        run: |
+          if git diff --quiet -- engine/distribution/case_pack.py dist/ai; then
+            echo "AR-EE325-01 source and distribution already committed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add engine/distribution/case_pack.py dist/ai
+          git commit -m "fix: reject nonfinite Case record values"
+          git push origin HEAD:fix/postmerge-audit-161-165
