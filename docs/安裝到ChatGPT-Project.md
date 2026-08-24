@@ -1,52 +1,74 @@
 # 安裝到 ChatGPT / Claude Project
 
-這份文件給一般使用者。安裝 Metaphysics Lab 不需要理解開發 repo，也不需要自己拼裝多個 Python 模組。
+這份文件只處理安裝與第一次啟動。一般使用者不需要理解開發 repo，也不需要自己拼裝 Python 模組。
 
-## 安裝檔案
+> 以下姓名、日期與識別碼都是**虛構示例**。
 
-你需要三個發行檔：
+## 1. 下載與安裝
 
-```text
-metaphysics_lab.py
-METAPHYSICS_CORE.md
-PROJECT_INSTRUCTIONS.md
-```
+到 GitHub Release 頁面下方的**下載區（GitHub 顯示為 Assets）**，下載三個檔案：
 
-安裝方式固定為：
+| 用途 | 實際檔名 | 安裝方式 |
+|---|---|---|
+| **命理計算程式** | `metaphysics_lab.py` | 上傳到 Project |
+| **命理分析核心規則** | `METAPHYSICS_CORE.md` | 上傳到 Project |
+| **Project 設定指令** | `PROJECT_INSTRUCTIONS.md` | 全文貼到 Project Instructions |
+
+實際操作：
 
 1. 上傳 `metaphysics_lab.py` 到 Project。
 2. 上傳 `METAPHYSICS_CORE.md` 到 Project。
 3. 開啟 Project Instructions，把 `PROJECT_INSTRUCTIONS.md` 的全文複製進去。
 
-所以是**兩個上傳檔＋一份貼進 Project Instructions 的文字**。
+也就是**兩個上傳檔＋一份貼進 Project Instructions 的文字**。不需要下載 Source code，也不需要解壓縮原始碼。
 
-ChatGPT Project 與 Claude Project 的介面名稱可能不同，但概念相同：兩個檔案放入專案知識／檔案區，最高層 Instructions 放入專案指示區。
+ChatGPT Project 與 Claude Project 的介面名稱可能不同，但概念相同。
 
-## 建議模型／推理設定
+## 2. 推理模式
 
-Metaphysics Lab 的完整分析包含多步 deterministic 資料、八字／紫微交叉、證據層級、Historical Blind Calibration 與未來問事雙階段流程，因此建議：
+完整本命、流年、多人合盤或重大決策通常需要較多推理。如果平台提供**較高推理強度**或深度思考模式，可以優先使用；不要把文件綁死在某個平台特定的模式名稱。
 
-- **High reasoning：完整本命、流年、多人合盤、重大決策的預設。**
-- Medium：一般分析、Case 維護、較單純問題。
-- Instant：適合快速行政操作；不建議作為完整命理解讀預設。
+## 3. 第一次啟動
 
-平台的具體模型名稱會變動，因此 Project Instructions 不硬編某一個模型名稱；重點是選擇當下平台提供的高推理模式。
+三個檔案設定完成後，直接說：
 
-## 第一次啟動
+> **「開始建立我的命理專案。」**
 
-三個發行檔設定完成後，直接說：
+AI 應自行進入初始化流程，而不是要求你先讀技術文件。
 
-> **開始建立我的命理專案。**
+## 4. 命盤資料有三種提供方式
 
-AI 應依 `PROJECT_INSTRUCTIONS.md` 與 `METAPHYSICS_CORE.md` 自動進入初始化流程，而不是要求你閱讀技術文件。
+### 只有出生資料
 
-### 先建立／辨識命主
+通常提供性別、出生日期、出生時間、出生地，由 Metaphysics Lab 建立 Project 原生命盤。
 
-Unreleased Project Contract 1.1 支援同一個 Project 管理多人。AI 在讀取 Case 前必須先讀 Project-level `命主索引.md`，依 `subject_id` resolve 這次問題的命主；不能把 Project 裡所有 Case 都當成本人。
+### 出生資料 + Astralium
 
-新命主由 runtime 的 `subject.create_identity` 建立 opaque identity。`subject_id` 不由姓名、生日或出生地推導；同名命主可以共存。顯示名稱日後可以 rename，但 `subject_id` 與 `subject_short_id` 不變。
+如果另有 Astralium 八字／紫微或其他第三方排盤，可以一起提供作為**可選**交叉校驗來源。
 
-Case Schema 1.1 的實際 persisted filename 是：
+### 只有第三方排盤
+
+如果目前只有 Astralium 或其他結構化命盤，也可以先保存 External 資料；系統不會把第三方資料冒充成 Project 已自行計算的命盤。
+
+## 5. 多人 Project
+
+同一個 Project 可以管理多人。AI 會先讀取或建立：
+
+```text
+命主索引.md
+```
+
+每位命主都有自己的 `subject_id`，用來避免不同人的 Case 混在一起；這個 ID 不由姓名、生日或出生地推導。
+
+虛構範例：
+
+```text
+subject_display_name: Alex
+subject_id: subj_7f3a2c91d4e8
+subject_short_id: 7F3A2C
+```
+
+Case Schema 1.1 的實際檔名格式是：
 
 ```text
 <filename_label>_<SUBJECT_SHORT_ID>_<slot>_<canonical_title>.md
@@ -55,164 +77,53 @@ Case Schema 1.1 的實際 persisted filename 是：
 例如：
 
 ```text
-Kai_7F3A2C_01_命盤核心摘要.md
+Alex_7F3A2C_01_命盤核心摘要.md
 ```
 
-其中 `01_命盤核心摘要.md` 是內部 **canonical slot**；Project 裡真正看到的是帶 subject prefix 的檔名。
+`01_命盤核心摘要.md` 是內部 canonical slot；一般使用者看到的實際檔案會帶命主名稱與短識別碼。
 
-## 出生資料與 Candidate Envelope
+## 6. 出生時間不確定
 
-完整 Mode A 通常需要：
+如果只知道大概時段，AI 不得自行補一個精確時間。
 
-- 性別
-- Gregorian 出生日期
-- 出生時間
-- 出生地
+當 `runtime_info` 顯示 `natal.candidate_envelope` 可執行，而且必要出生資料足夠時，系統可以建立 **Candidate Envelope**，保留不同時間可能造成的候選狀態。
 
-出生時間不確定時，AI 不得自行補成精確分鐘；地點有多個合理候選時，也不得自己猜。
+這時可以建立 `partial` Case；所有候選一致的部分可先使用，需要唯一出生時間才能成立的結論則保持未確定。即使候選最後只剩一種盤面結構，也不代表原始出生時間已被外部證實。
 
-如果只知道時間範圍，或完全不知道出生時間，而 runtime 的 `natal.candidate_envelope` 可執行，AI 可建立 **Candidate Envelope**，不必假設 midpoint。Python 會掃描 uncertainty interval，再把相鄰且 deterministic discrete chart structure 相同的分鐘合併成 material state。
+## 7. 第一次 Case 會看到什麼
 
-這種情況可以輸出 `partial` Base Case，但必須保留：
-
-- invariant facts：所有 candidates 都一致的資料。
-- candidate-dependent facts：會隨候選時間改變的資料。
-- unresolved birth-time uncertainty。
-- blocked scopes：unique birth time、unique hour pillar、unique Ziwei natal、single-chart personalized forecast 等仍不可解鎖。
-
-即使一個 bounded range 壓縮後只剩1個material state，也不能反過來宣稱出生時間已唯一確定。Candidate Envelope 不使用 majority voting，也不把候選盤冒充唯一 `NormalizedNatalChart`。
-
-## 三個發行檔的責任邊界
-
-### `metaphysics_lab.py`
-
-只負責 deterministic 工作：
-
-- runtime capability / dependency 狀態
-- Subject Registry / Subject Identity
-- 本命建立與 reconciliation
-- `natal.candidate_envelope`
-- 八字／紫微可重現計算
-- forecast context
-- Historical Activation Selector
-- Historical Calibration lock / finalize 所需的 deterministic 資料治理
-- Case Markdown export / validation / migration / progressive materialization
-
-它不負責自由文字的命理解讀，也不替使用者做人生決策。
-
-### `METAPHYSICS_CORE.md`
-
-固定提供 AI 工作流程與分析治理，包括：
-
-- subject resolution
-- task classification
-- 證據／資料層級
-- 先盲判、再事件校準
-- Historical Blind Calibration
-- Input Precision Gate
-- Candidate Envelope / partial Case 邊界
-- Progressive Case 建立與更新規則
-- runtime 不可執行時的 fallback
-
-### `PROJECT_INSTRUCTIONS.md`
-
-是最高層 AI 指示，負責：
-
-- 角色與語氣
-- 八種資料類型
-- External / Project / Resolved
-- 八字／紫微／奇門分工
-- 多命主隔離
-- 高風險領域限制
-- 禁止事項與信心標示
-
-它的內容要放在 Project Instructions，不是當成一般知識檔讓 AI 自己猜何時讀。
-
-## 建立 Case：第一次只建立 Base5
-
-第一次本命資料完成後，AI 應先產生五份 Base Case。以下 `00_...`～`04_...` 是 internal canonical slot：
+建立完成後，系統先建立基礎 Case，不會先產生一堆空白追蹤檔。虛構命主 Alex 例如：
 
 ```text
-00_專案索引.md
-01_命盤核心摘要.md
-02_命盤資料校驗紀錄.md
-03_八字結構化資料包.md
-04_紫微基礎資料包.md
+Alex_7F3A2C_00_專案索引.md
+Alex_7F3A2C_01_命盤核心摘要.md
+Alex_7F3A2C_02_命盤資料校驗紀錄.md
+Alex_7F3A2C_03_八字結構化資料包.md
+Alex_7F3A2C_04_紫微基礎資料包.md
 ```
 
-以 Kai / `7F3A2C` 為例，真正加入 Project 的實體檔案會是：
+之後真的有驗證事件、流年追蹤、一般問事或重大決策時，才逐步新增對應紀錄。
 
-```text
-Kai_7F3A2C_00_專案索引.md
-Kai_7F3A2C_01_命盤核心摘要.md
-Kai_7F3A2C_02_命盤資料校驗紀錄.md
-Kai_7F3A2C_03_八字結構化資料包.md
-Kai_7F3A2C_04_紫微基礎資料包.md
-```
+## 8. 問未來的順序
 
-把這五份與 `命主索引.md` 加入自己的 Project。它們是私人 Case，不會被共用 runtime 更新自動覆蓋。
+如果需要 Historical Blind Calibration，AI 會先完成未受歷史事件影響的第一版盤面判斷，再請你驗證過去事件，最後才做第二階段校準。這樣可以避免先知道答案後再修改第一版預測。
 
-其餘 record type 不先建立空檔，而是在第一次真正有內容時 materialize：
+## 9. Astralium／第三方盤的資料邊界
 
-```text
-Kai_7F3A2C_05_驗證事件紀錄.md    ← Historical Blind Calibration 完成或首次新增已確認事件
-Kai_7F3A2C_06_流年追蹤紀錄.md    ← 首次永久保存流年／年度預測
-Kai_7F3A2C_07_問事追蹤紀錄.md    ← 首次永久保存一般問事
-Kai_7F3A2C_08_重大決策紀錄.md    ← 首次永久保存重大決策
-```
-
-所以 00～08 是完整 canonical slot 集合，不代表第一次初始化就一定有九個實體檔案。
-
-## Historical Blind Calibration
-
-Historical Calibration 的年份不能由 AI 自己挑。
-
-若需要校準，runtime 會以目前 subject Case 的 deterministic 八字基礎執行 `historical.activation_selector`：
-
-1. 取最近10個已完整結束的 Bazi flow-year periods，以立春為界。
-2. 對10年全部依固定 Tier 1 / Tier 2 / Tier 3 relation profile 計算 structural activation。
-3. 使用 deterministic rank vector 排序。
-4. canonical selection 固定取真正 Top 4 high + Bottom 1 control。
-5. AI 只能解讀這5年，不能因聊天內容、已知事件或想讓答案更漂亮而換年。
-
-AI 會先給出明確的「年份＋事件領域／事件形式」盲讀，再請使用者逐題回答：符合／部分符合／不符合／想不起來。若實際事情發生在別的年份，直接告訴 AI 正確年份與事件；原始盲讀不得被改寫。
-
-該 subject 的 canonical 05 只在使用者確認實際事件後首次建立，並區分：
-
-- 原始歷史盲讀：命理推論
-- 使用者確認實際事件：已驗證事件
-- timing / domain / event-form 評價：已校驗資料
-
-## 第一次問未來時
-
-若 Case 尚未完成 Historical Calibration，而使用者第一次問流年／未來趨勢／行動決策，AI 必須先：
-
-1. resolve subject。
-2. 只讀該 subject canonical 00～04 與必要現實條件。
-3. 完成該問題的 Stage 1 盲判並鎖定。
-4. 才執行 Historical Blind Calibration。
-5. materialize 05 後進入 Stage 2 事件校準。
-
-這個順序是為了避免先知道歷史答案後污染第一版未來盲判。
-
-## 有 Astralium／第三方命盤時
-
-第三方盤是可選 External source，不是安裝必要條件。
-
-若同時存在 Project deterministic natal 與 external structured chart，AI 應保留：
+第三方盤是 External source，不是安裝必要條件。若同時有 Project 自算命盤與第三方盤，應保留：
 
 ```text
 External / Project / Resolved
 MATCH / EQUIVALENT / CONFLICT / NOT_COMPARABLE
 ```
 
-不能為了讓盤看起來一致而改寫任何一方 raw view。
+兩邊原始資料不互相覆寫。
 
-## 如果 AI 無法執行 Python
+## 10. 如果 AI 無法執行 Python
 
-Project 能保存 Python 檔，不代表每次對話都有 Python execution。
+Project 能保存 Python 檔，不代表每次對話都能執行 Python。
 
-若當次環境**無法執行 Python**，AI 必須明確說明，**不得假裝**已經跑過 `metaphysics_lab.py`。
+若當次環境**無法執行 Python**，AI 必須明確說明，**不得假裝**已經跑過新的命盤計算。
 
 本機 fallback：
 
@@ -226,16 +137,14 @@ python metaphysics_lab.py request --input request.json --pretty
 python metaphysics_lab.py request --input - --pretty
 ```
 
-把 JSON 結果交回 AI 後繼續分析。這個 fallback 使用的是同一個發行 runtime，因此不會另建第二套命盤算法。
+把 JSON 結果交回 AI 後繼續分析。
 
-## 平常更新
+## 11. 平常更新
 
 一般 Runtime 更新只需要替換 Project 裡的 `metaphysics_lab.py`。
 
-`METAPHYSICS_CORE.md`、Project Instructions、`命主索引.md` 與私人 Case 不應因每一次 runtime 更新就重建；只有 Project Contract 或 Case Schema 明確變更時才照 migration 指示處理。
+`METAPHYSICS_CORE.md`、Project Instructions、`命主索引.md` 與私人 Case 不需要每次一起重建；只有 Project Contract 或 Case Schema 明確變更時才依 migration 指示處理。
 
-Legacy Case 1.0 仍可由新版 runtime 讀取，不因安裝1.1就強制 destructive rename。完整規則見 [更新與版本同步](更新與版本同步.md)。
+## 12. 隱私
 
-## 隱私
-
-`命主索引.md`、出生資料、Case Markdown、Historical Calibration 回答、私人事件、raw third-party chart、PDF 與截圖不要提交回共用 GitHub repo。共用發行檔本身不得包含私人 Case 資料。
+`命主索引.md`、出生資料、Case Markdown、事件紀錄、第三方 raw chart、PDF 與截圖都屬私人資料，不要提交回公開／共用 GitHub repo。
