@@ -61,6 +61,7 @@ jobs:
             tests.test_second_round_adversarial_regressions \
             tests.test_third_round_adversarial_regressions \
             tests.test_third_round_bundle_parity \
+            tests.test_fourth_round_nonfinite_case_records \
             tests.test_distribution_runtime_info -v
 
       - name: Full repository regression
