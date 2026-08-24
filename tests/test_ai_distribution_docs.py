@@ -7,7 +7,10 @@ README = ROOT / "README.md"
 QUICK = ROOT / "docs" / "快速開始.md"
 INSTALL = ROOT / "docs" / "安裝到ChatGPT-Project.md"
 DATA_GUIDE = ROOT / "docs" / "命盤資料準備指南.md"
+ASTRALIUM_GUIDE = ROOT / "docs" / "Astralium資料取得指南.md"
 UPDATE = ROOT / "docs" / "更新與版本同步.md"
+GOVERNANCE = ROOT / "docs" / "資料治理.md"
+ARCHITECTURE = ROOT / "docs" / "架構說明.md"
 CHANGELOG = ROOT / "CHANGELOG.md"
 RELEASE_NOTES = ROOT / "docs" / "發布說明-v1.3.0.md"
 
@@ -22,6 +25,17 @@ USER_LABELS = (
     "Project 設定指令",
 )
 STARTUP = "開始建立我的命理專案。"
+PUBLIC_GUIDES = (
+    README,
+    QUICK,
+    INSTALL,
+    DATA_GUIDE,
+    ASTRALIUM_GUIDE,
+    UPDATE,
+    GOVERNANCE,
+    ARCHITECTURE,
+    RELEASE_NOTES,
+)
 
 
 class AIDistributionDocsTests(unittest.TestCase):
@@ -78,8 +92,8 @@ class AIDistributionDocsTests(unittest.TestCase):
         self.assertIn("Astralium", combined)
         self.assertIn("可選", combined)
 
-    def test_user_facing_examples_are_fictional_and_not_private_kai_examples(self):
-        for path in (README, QUICK, INSTALL, DATA_GUIDE):
+    def test_public_examples_are_fictional_and_do_not_use_private_kai_name(self):
+        for path in PUBLIC_GUIDES:
             text = path.read_text(encoding="utf-8")
             self.assertNotIn("Kai", text, str(path))
             self.assertNotIn("1984年3月13日19:20", text, str(path))
