@@ -9,9 +9,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 EXPECTED_ARTIFACTS = [
-    "METAPHYSICS_CORE.md",
-    "PROJECT_INSTRUCTIONS.md",
+    "metaphysics_core.md",
     "metaphysics_lab.py",
+    "project_instructions.md",
 ]
 FORBIDDEN_FIXED_MD = (
     "Phase 2C",
@@ -47,7 +47,7 @@ class AIDistributionBuildTests(unittest.TestCase):
             output = Path(output_dir)
             builder.build_distribution(ROOT, output)
             expected = (ROOT / "core" / "核心提示詞.md").read_text(encoding="utf-8").replace("\r\n", "\n").rstrip() + "\n"
-            actual = (output / "PROJECT_INSTRUCTIONS.md").read_text(encoding="utf-8")
+            actual = (output / "project_instructions.md").read_text(encoding="utf-8")
             self.assertEqual(actual, expected)
 
     def test_fixed_markdown_contains_stable_source_markers_but_no_dynamic_snapshot(self):
@@ -55,8 +55,8 @@ class AIDistributionBuildTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as output_dir:
             output = Path(output_dir)
             builder.build_distribution(ROOT, output)
-            core = (output / "METAPHYSICS_CORE.md").read_text(encoding="utf-8")
-            instructions = (output / "PROJECT_INSTRUCTIONS.md").read_text(encoding="utf-8")
+            core = (output / "metaphysics_core.md").read_text(encoding="utf-8")
+            instructions = (output / "project_instructions.md").read_text(encoding="utf-8")
             self.assertIn("Source: core/AI工作流程.md", core)
             self.assertIn("Source: core/命理分析作業規範.md", core)
             combined = core + "\n" + instructions
@@ -106,7 +106,7 @@ class AIDistributionBuildTests(unittest.TestCase):
                 capture_output=True,
             )
             self.assertEqual(clean.returncode, 0, clean.stdout + clean.stderr)
-            with (output / "PROJECT_INSTRUCTIONS.md").open("a", encoding="utf-8") as handle:
+            with (output / "project_instructions.md").open("a", encoding="utf-8") as handle:
                 handle.write("drift\n")
             drift = subprocess.run(
                 [sys.executable, "tools/build_ai_distribution.py", "--output-dir", str(output), "--check"],
@@ -115,7 +115,7 @@ class AIDistributionBuildTests(unittest.TestCase):
                 capture_output=True,
             )
             self.assertNotEqual(drift.returncode, 0)
-            self.assertIn("PROJECT_INSTRUCTIONS.md", drift.stdout + drift.stderr)
+            self.assertIn("project_instructions.md", drift.stdout + drift.stderr)
 
 
 if __name__ == "__main__":
