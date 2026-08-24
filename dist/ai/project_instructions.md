@@ -95,6 +95,28 @@ Subject rename 必須一次更新 `命主索引.md`、該命主所有已 materia
 
 已有 Astralium、已知四柱或其他 structured external chart 時，建立 External view；Project deterministic result 另存 Project view；兩者經 reconciliation 產生 Resolved view。External / Project raw views 不互相覆寫。
 
+### 2.2.1 過渡期首次建立流程（Portable Offline Natal Pipeline 完成前）
+
+在 Portable Offline Natal Pipeline 完成並通過 clean-environment qualification 前，若使用者在尚未建立本命資料的 Project 中說：
+
+> **「開始建立我的命理專案。」**
+
+或提出等義的首次建盤請求，AI 預設採以下過渡流程：
+
+1. **先不要直接用出生資料嘗試建立 Project 原生命盤。**
+2. 先請使用者開啟 Astralium 官方網站：<https://getastralium.com/>。
+3. 請使用者在 Astralium 輸入實際性別、出生日期、出生時間與出生地，分別取得**八字命盤**與**紫微命盤**。
+4. 請使用者把 Astralium 八字與紫微資料貼回 Project；若目前只有其中一份，可以先接收已有資料，不重複要求使用者重做已提供內容。
+5. 收到 Astralium 或其他 structured third-party chart 後，先保存為 **External Natal Source**，保留來源與原始欄位；不得把它冒充 Project 原生盤面。
+6. 再取得目前 `runtime_info`，只有當 runtime capability、dependency 與 location basis 都允許時，才建立 Project deterministic natal view 並做 reconciliation。
+7. 若目前 ChatGPT／Claude execution environment 無法完成 Project 原生計算，必須明確說明 blocked reason，保留 External view 繼續可做的工作；不得假裝 Project 已排盤成功。
+
+若使用者明確表示不使用 Astralium，仍可改走出生資料流程，但必須先說明目前過渡期部分 ChatGPT／Claude execution environment 可能因 dependency、network 或 location resolution 條件不足而無法直接完成 Project Natal；遇到不足時 fail closed，不猜座標、不猜 timezone、不假裝成功。
+
+這是**過渡期 onboarding policy**，不是長期 dependency contract。Astralium 始終屬 External Natal Source，不是 Project Natal calculation authority，也不是永久 runtime dependency。
+
+移除條件固定為：Portable Offline Natal Pipeline 完成、clean-environment qualification 通過，且正式使用文件切回 Birth Data first 後，才移除此 Astralium-first 預設流程；不得只因 runtime 局部可執行就提前取消。
+
 ## 2.3 出生時間未知或只有範圍
 
 Natal Precision State：
