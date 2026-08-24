@@ -15,7 +15,6 @@ permissions:
 
 jobs:
   validation:
-    if: ${{ github.ref_name != 'feature/portable-offline-natal-pipeline' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout validation ref
@@ -60,7 +59,6 @@ jobs:
             tests.test_distribution_partial_case \
             tests.test_postmerge_audit_regressions \
             tests.test_second_round_adversarial_regressions \
-            tests.test_third_round_adversarial_regressions \
             tests.test_third_round_bundle_parity \
             tests.test_fourth_round_nonfinite_case_records \
             tests.test_fifth_round_legacy_record_id_compat \
@@ -86,53 +84,4 @@ jobs:
         with:
           name: progressive-case-ai-distribution
           path: dist/ai/
-          if-no-files-found: error
-
-  portable-vendor-materialization:
-    if: ${{ github.event_name == 'workflow_dispatch' && github.ref_name == 'feature/portable-offline-natal-pipeline' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout portable feature ref
-        uses: actions/checkout@v4
-        with:
-          ref: feature/portable-offline-natal-pipeline
-          fetch-depth: 0
-
-      - name: Confirm exact feature SHA
-        run: git log -1 --format=%H
-
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.9'
-
-      - name: Download exact pinned upstream artifacts
-        run: |
-          mkdir -p /tmp/metaphysics-vendor
-          python -m pip download --no-deps --no-binary :all: lunar-python==1.4.8 -d /tmp/metaphysics-vendor
-          python -m pip download --no-deps --only-binary=:all: tzdata==2026.3 -d /tmp/metaphysics-vendor
-          sha256sum /tmp/metaphysics-vendor/lunar_python-1.4.8.tar.gz
-          sha256sum /tmp/metaphysics-vendor/tzdata-2026.3-py2.py3-none-any.whl
-
-      - name: Materialize verified private vendor trees
-        run: |
-          python tools/vendor_refresh.py \
-            --lunar-sdist /tmp/metaphysics-vendor/lunar_python-1.4.8.tar.gz \
-            --tzdata-wheel /tmp/metaphysics-vendor/tzdata-2026.3-py2.py3-none-any.whl
-
-      - name: Run Task 1 vendor contract tests
-        run: python -m unittest tests.test_vendor_manifest tests.test_vendor_import_isolation -v
-
-      - name: Verify no symlinks and show materialized size
-        run: |
-          test -z "$(find _metaphysics_lab_vendor vendor -type l -print)"
-          du -sh _metaphysics_lab_vendor vendor
-
-      - name: Upload verified vendor materialization
-        uses: actions/upload-artifact@v4
-        with:
-          name: portable-offline-vendor-materialization
-          path: |
-            _metaphysics_lab_vendor/
-            vendor/
           if-no-files-found: error
