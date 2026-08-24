@@ -1,0 +1,73 @@
+{
+  "packages": [
+    {
+      "artifact_sha256": "3aa11cc73c25e70ddf0ba5bdac7398c03acc9491a3aa512a91c9642973b669d6",
+      "artifact_shard_sha256": {
+        "vendor/artifacts/lunar_python-1.4.8.tar.gz.b64part01": "0cdb8b3aedb5b525fc1a6784252dd2dfbcd29d66c9d9c63ec4d83287f84e16e8",
+        "vendor/artifacts/lunar_python-1.4.8.tar.gz.b64part02": "23e599226a2cd44d60eff5e95d70c33dcd424e752e7ac14a1231cbf63a0ddaf7",
+        "vendor/artifacts/lunar_python-1.4.8.tar.gz.b64part03": "8c7a2a095ea699e16e8719cb2241ac6f605d4661e1ad42d39264b027c9d829e6"
+      },
+      "artifact_shards": [
+        "vendor/artifacts/lunar_python-1.4.8.tar.gz.b64part01",
+        "vendor/artifacts/lunar_python-1.4.8.tar.gz.b64part02",
+        "vendor/artifacts/lunar_python-1.4.8.tar.gz.b64part03"
+      ],
+      "bundled": true,
+      "import_namespace": "_metaphysics_lab_vendor.lunar_python",
+      "license_file": "vendor/licenses/lunar-python-LICENSE.txt",
+      "license_spdx": "MIT",
+      "package_name": "lunar-python",
+      "runtime_authority": "bundled",
+      "source_artifact": "lunar_python-1.4.8.tar.gz",
+      "source_repository": "https://github.com/6tail/lunar-python",
+      "source_revision": "000c8a3d74eed098d6256a28fdd51b869324c559",
+      "storage_mode": "artifact_shards_materialized",
+      "vendored_path": "_metaphysics_lab_vendor/lunar_python",
+      "vendored_tree_sha256": "4bdfa74a22952023d4613df223e1e87d010b472b78f0f809cc48b700ce842c07",
+      "version": "1.4.8"
+    },
+    {
+      "artifact_sha256": "dc096730c87af6cab1b171c9d532be840741ff5d459015e7f6947bd7d7e54931",
+      "artifact_shard_sha256": {
+        "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.b64part01": "fd39819ed242fcf352a3332841453aa616caa866c2a62584d391f879edc793cd",
+        "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.b64part02": "cfa2949cf7dbddf9c416299eaa40ee08951aced400279568f4b73a4657c1df26",
+        "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.b64part03": "d57add7e6f23f970a11f61c9b89711941842e2ffd23bfe52292e897663b93cc4",
+        "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.b64part04": "0ef5376d6cf1872da8159f06e92937cb994573d8fafa5c9457532c418223578a",
+        "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.b64part05": "fef4d036f33219620ea2205bead62a03e300f2f35b21d5914ee46b295a86aec7",
+        "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.b64part06": "c73274c8161867dad4ae0b0085679ff3ecc819af1a6697af9373a30558258ea8",
+        "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.b64part07": "219b7cb0127f39ba1abdcaab9d2f0993bbe72dd26d939783de44f716bf535feb",
+        "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.b64part08": "093f6080594f2fc14819ae86ce551c4a6036505b0e9a2eb93c67efa9ee96d55e",
+        "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.b64part09": "4f02082185899ad0d44baf032a137106539e03083b59118b8e2d2fdad6ce4afc",
+        "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.b64part10": "feedfd39b382f615ec35dad36ba2c07613dba46293b2472ad300ff466e9186b6"
+      },
+      "artifact_shards": [
+        "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.b64part01",
+        "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.b64part02",
+        "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.b64part03",
+        "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.b64part04",
+        "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.b64part05",
+        "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.b64part06",
+        "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.b64part07",
+        "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.b64part08",
+        "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.b64part09",
+        "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.b64part10"
+      ],
+      "bundled": true,
+      "iana_version": "2026c",
+      "import_namespace": "_metaphysics_lab_vendor.tzdata",
+      "license_file": "vendor/licenses/tzdata-LICENSE.txt",
+      "license_spdx": "Apache-2.0",
+      "package_name": "tzdata",
+      "runtime_authority": "bundled",
+      "source_artifact": "tzdata-2026.3-py2.py3-none-any.whl",
+      "source_repository": "https://github.com/python/tzdata",
+      "source_revision": "a44279419071b7aa41ebe7eca301ebb2e759571a",
+      "storage_mode": "artifact_shards_materialized",
+      "vendored_path": "_metaphysics_lab_vendor/tzdata",
+      "vendored_tree_sha256": "a36e10a120028b8adc4f1e5645987e31befe4a1282a63e29017cea13a8914fcc",
+      "version": "2026.3"
+    }
+  ],
+  "schema_version": "1.0",
+  "storage_profile": "artifact-shards-materialized-private-tree-v1"
+}
