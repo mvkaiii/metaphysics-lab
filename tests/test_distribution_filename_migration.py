@@ -18,6 +18,10 @@ PUBLIC_DOCS = (
     ROOT / "docs" / "發布說明-v1.3.0.md",
     ROOT / "docs" / "更新與版本同步.md",
 )
+LEGACY_FILENAMES = (
+    "METAPHYSICS_CORE.md",
+    "PROJECT_INSTRUCTIONS.md",
+)
 
 
 class DistributionFilenameMigrationTests(unittest.TestCase):
@@ -30,8 +34,19 @@ class DistributionFilenameMigrationTests(unittest.TestCase):
         combined = "\n".join(path.read_text(encoding="utf-8") for path in PUBLIC_DOCS)
         self.assertIn("metaphysics_core.md", combined)
         self.assertIn("project_instructions.md", combined)
-        self.assertNotIn("METAPHYSICS_CORE.md", combined)
-        self.assertNotIn("PROJECT_INSTRUCTIONS.md", combined)
+        for legacy in LEGACY_FILENAMES:
+            self.assertNotIn(legacy, combined)
+
+    def test_distributed_markdown_self_references_use_lowercase_filenames(self):
+        rendered = build_ai_distribution.render_distribution(ROOT)
+        combined = (
+            rendered["metaphysics_core.md"].decode("utf-8")
+            + "\n"
+            + rendered["project_instructions.md"].decode("utf-8")
+        )
+        self.assertIn("metaphysics_core.md", combined)
+        for legacy in LEGACY_FILENAMES:
+            self.assertNotIn(legacy, combined)
 
 
 if __name__ == "__main__":
