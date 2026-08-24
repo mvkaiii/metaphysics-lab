@@ -1,4 +1,4 @@
-name: publish-v1.3.0
+name: distribution-filename-migration-helper
 
 on:
   push:
@@ -9,96 +9,90 @@ permissions:
   contents: write
 
 jobs:
-  publish:
+  migrate:
     runs-on: ubuntu-24.04
-    env:
-      TARGET_SHA: f7e48ebea8c841194b71b8c0f2c2168550763322
-      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: f7e48ebea8c841194b71b8c0f2c2168550763322
+          ref: release/distribution-filenames-lowercase
           fetch-depth: 0
 
-      - name: Verify exact release target and assets
-        shell: bash
-        run: |
-          set -euo pipefail
-          test "$(git rev-parse HEAD)" = "$TARGET_SHA"
-          test -f dist/ai/metaphysics_lab.py
-          test -f dist/ai/METAPHYSICS_CORE.md
-          test -f dist/ai/PROJECT_INSTRUCTIONS.md
-          grep -F 'Metaphysics Lab Core：**v1.3.0**' VERSION.md
-          sha256sum \
-            dist/ai/metaphysics_lab.py \
-            dist/ai/METAPHYSICS_CORE.md \
-            dist/ai/PROJECT_INSTRUCTIONS.md
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: pip
 
-      - name: Refuse to overwrite an existing v1.3.0
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Normalize internal distribution filename references
         shell: bash
         run: |
           set -euo pipefail
-          if gh release view v1.3.0 >/dev/null 2>&1; then
-            echo 'v1.3.0 GitHub Release already exists; refusing to overwrite.' >&2
-            exit 1
+          python - <<'PY'
+          from pathlib import Path
+
+          replacements = {
+              'METAPHYSICS_CORE.md': 'metaphysics_core.md',
+              'PROJECT_INSTRUCTIONS.md': 'project_instructions.md',
+          }
+          targets = [
+              Path('core/AI工作流程.md'),
+              Path('core/核心提示詞.md'),
+              Path('core/命理分析作業規範.md'),
+              Path('CHANGELOG.md'),
+              Path('VERSION.md'),
+          ]
+          for path in targets:
+              text = path.read_text(encoding='utf-8')
+              updated = text
+              for old, new in replacements.items():
+                  updated = updated.replace(old, new)
+              if updated != text:
+                  path.write_text(updated, encoding='utf-8')
+          PY
+
+          python tools/build_ai_distribution.py
+          python tools/build_ai_distribution.py --check
+
+      - name: Verify no legacy filename remains in public distribution
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -e dist/ai/METAPHYSICS_CORE.md
+          test ! -e dist/ai/PROJECT_INSTRUCTIONS.md
+          test -f dist/ai/metaphysics_core.md
+          test -f dist/ai/project_instructions.md
+          ! grep -R -n -E 'METAPHYSICS_CORE\.md|PROJECT_INSTRUCTIONS\.md' dist/ai README.md docs/ core/ CHANGELOG.md VERSION.md
+
+      - name: Focused filename and distribution tests
+        run: |
+          python -m unittest \
+            tests.test_distribution_filename_migration \
+            tests.test_ai_distribution_acceptance \
+            tests.test_ai_distribution_build \
+            tests.test_ai_distribution_docs -v
+
+      - name: Full repository regression
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+
+      - name: Compile and diff check
+        run: |
+          python -m compileall engine tests tools
+          git diff --check
+
+      - name: Commit validated migration output
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add core CHANGELOG.md VERSION.md dist/ai
+          if git diff --cached --quiet; then
+            echo 'No additional migration changes.'
+            exit 0
           fi
-          if git ls-remote --exit-code --tags origin refs/tags/v1.3.0 >/dev/null 2>&1; then
-            echo 'v1.3.0 tag already exists; refusing to overwrite.' >&2
-            exit 1
-          fi
-
-      - name: Prepare release notes
-        shell: bash
-        run: |
-          cat > /tmp/v1.3.0-notes.md <<'EOF'
-          ## Metaphysics Lab v1.3.0
-
-          v1.3.0 正式收斂 Natal Foundation、Ziwei Fine Cycle、Ziwei Flowing Stars 與 AI Distribution Pack。
-
-          ### 手機／一般使用者
-
-          在下方 **Assets** 逐檔下載，不需要下載或解壓 source ZIP：
-
-          - `metaphysics_lab.py` — deterministic runtime；上傳到 ChatGPT / Claude Project
-          - `METAPHYSICS_CORE.md` — 穩定 AI 工作契約；上傳到 Project
-          - `PROJECT_INSTRUCTIONS.md` — 複製內容到 Project Instructions
-
-          完整命盤、流年或決策分析建議使用 **High reasoning**，然後對 AI 說：**「開始建立我的命理專案。」**
-
-          ### Governance
-
-          - Release target: `f7e48ebea8c841194b71b8c0f2c2168550763322`
-          - Project Contract: `1.0`
-          - Case Schema: `1.0`
-          - AI Distribution Runtime: `1.0-exp`
-          - 本次 release 不自動提升任何 Experimental capability 的 maturity。
-          - 當前 implementation / maturity / routing 以 `runtime_info` 為權威來源。
-
-          Release 前已通過：release-focused governance suite、deterministic build `--check`、full repository **488/488 PASS**、Python 3.9 compileall。
-          EOF
-
-      - name: Create tag, GitHub Release, and individual assets
-        shell: bash
-        run: |
-          set -euo pipefail
-          gh release create v1.3.0 \
-            dist/ai/metaphysics_lab.py \
-            dist/ai/METAPHYSICS_CORE.md \
-            dist/ai/PROJECT_INSTRUCTIONS.md \
-            --target "$TARGET_SHA" \
-            --title 'Metaphysics Lab v1.3.0' \
-            --notes-file /tmp/v1.3.0-notes.md \
-            --latest
-
-      - name: Verify published release
-        shell: bash
-        run: |
-          set -euo pipefail
-          tag_sha="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/v1.3.0" --jq '.object.sha')"
-          test "$tag_sha" = "$TARGET_SHA"
-
-          mapfile -t assets < <(gh release view v1.3.0 --json assets --jq '.assets[].name' | sort)
-          expected=(METAPHYSICS_CORE.md PROJECT_INSTRUCTIONS.md metaphysics_lab.py)
-          test "${assets[*]}" = "${expected[*]}"
-
-          gh release view v1.3.0 --json url,tagName,name,isLatest --jq '.'
+          git commit -m 'release: sync internal references to lowercase filenames'
+          git push origin HEAD:release/distribution-filenames-lowercase
