@@ -11,6 +11,7 @@ from typing import Mapping, Optional
 
 from engine.birth.errors import BirthFoundationError
 from engine.birth.models import ResolvedBirthPlace
+from engine.birth.offline_registry import resolve_offline_birth_place
 from engine.natal.candidates import build_candidate_envelope
 from engine.natal.errors import NatalFoundationError
 from engine.natal.external import import_external_natal
@@ -97,15 +98,28 @@ def build_natal(payload: Mapping[str, object]) -> dict:
     if not resolution.ok or resolution.input is None:
         details = resolution.to_dict()
         raise DistributionError(resolution.error_code or "birth_input_unresolved", "birth input is not precise enough for a full natal build", details)
+
     raw_location = payload.get("resolved_location")
     location: Optional[ResolvedBirthPlace] = None
     provider = None
+
     if raw_location is not None:
         location = resolved_location_from_payload(raw_location)
     else:
-        provider = _network_provider(payload)
-        if provider is None:
-            raise DistributionError("location_resolution_required", "build_natal requires a pre-resolved location or explicitly enabled network resolution", {"required_fields": list(_REQUIRED_LOCATION_FIELDS)})
+        query = resolution.input.birth_place.label
+        try:
+            location = resolve_offline_birth_place(query)
+        except BirthFoundationError as exc:
+            raise _foundation_error(exc) from exc
+        if location is None:
+            provider = _network_provider(payload)
+            if provider is None:
+                raise DistributionError(
+                    "location_not_resolved",
+                    "birth place is not available in the offline registry and network resolution is disabled",
+                    {"query": query},
+                )
+
     try:
         if location is not None:
             project = build_project_natal(resolution.input, resolved_location=location)
