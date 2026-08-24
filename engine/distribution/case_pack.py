@@ -114,6 +114,16 @@ def _record_id(value: object, *, error_code: str = "invalid_case_payload") -> st
     return value
 
 
+def _legacy_record_id(value: object, *, error_code: str = "invalid_case_markdown") -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise DistributionError(
+            error_code,
+            "legacy record_id must be a non-empty string",
+            {"field": "entry.record_id"},
+        )
+    return value.strip()
+
+
 def _validate_json_value(value: object, *, error_code: str, field: str) -> None:
     if isinstance(value, float) and not math.isfinite(value):
         raise DistributionError(
@@ -456,7 +466,7 @@ def validate_case(payload: Mapping[str, object]) -> dict:
         if metadata["record_type"] != _RECORD_TYPES[canonical]:
             raise DistributionError("case_record_type_mismatch", "Case filename and record_type do not match", {"filename": actual_by_canonical[canonical], "record_type": metadata["record_type"]})
         if canonical in _TRACKING_FILES:
-            _record_entries(body)
+            _record_entries(body, legacy_record_ids=metadata["case_schema_version"] == "1.0")
         versions.add(metadata["case_schema_version"])
         contracts.add(metadata["project_contract_version"])
         current_subject = metadata["subject_id"]
@@ -526,6 +536,8 @@ def migrate_case(payload: Mapping[str, object]) -> dict:
         metadata.update(_metadata(canonical, identity, metadata["created_at"], metadata.get("last_modified_by", "ai")))
         metadata["last_updated_at"] = _timestamp(payload.get("updated_at"), "updated_at")
         metadata["legacy_subject_id"] = old_subject
+        if canonical in _TRACKING_FILES:
+            body = _migrate_legacy_tracking_body(body, canonical)
         body = _prefix_title(body, identity["subject_display_name"])
         if canonical == "00_專案索引.md":
             body = _replace_manifest_lines(body, identity, CASE_FILES)
@@ -590,7 +602,7 @@ def _render_entry(entry: Mapping[str, object]) -> str:
     return "### %s\n\n```json\n%s\n```" % (record_id, payload)
 
 
-def _record_entries(body: str) -> dict:
+def _record_entries(body: str, *, legacy_record_ids: bool = False) -> dict:
     start, end = body.find(_RECORDS_START), body.find(_RECORDS_END)
     if start < 0 or end < 0 or end <= start:
         raise DistributionError("invalid_case_markdown", "tracking Case file is missing record boundary markers")
@@ -599,11 +611,12 @@ def _record_entries(body: str) -> dict:
     if current == _EMPTY_RECORDS or not current:
         return {}
     records = {}
+    parse_record_id = _legacy_record_id if legacy_record_ids else _record_id
     for chunk in re.split(r"\n\n(?=### )", current):
         first_line, marker, rest = chunk.partition("\n\n```json\n")
         if not marker or not first_line.startswith("### ") or not rest.endswith("\n```"):
             raise DistributionError("invalid_case_markdown", "tracking record block is malformed")
-        record_id = _record_id(first_line[4:], error_code="invalid_case_markdown")
+        record_id = parse_record_id(first_line[4:], error_code="invalid_case_markdown")
         try:
             parsed = json.loads(rest[:-4], parse_constant=_reject_json_constant)
         except (TypeError, ValueError) as exc:
@@ -611,13 +624,34 @@ def _record_entries(body: str) -> dict:
         if not isinstance(parsed, Mapping):
             raise DistributionError("invalid_case_markdown", "tracking record payload must be a mapping")
         _validate_json_value(parsed, error_code="invalid_case_markdown", field="tracking_record")
-        payload_record_id = _record_id(parsed.get("record_id"), error_code="invalid_case_markdown")
+        payload_record_id = parse_record_id(parsed.get("record_id"), error_code="invalid_case_markdown")
         if payload_record_id != record_id:
             raise DistributionError("invalid_case_markdown", "tracking record heading does not match payload record_id")
         if record_id in records:
             raise DistributionError("invalid_case_markdown", "tracking file contains duplicate record_id", {"record_id": record_id})
-        records[record_id] = dict(parsed)
+        normalized = dict(parsed)
+        normalized["record_id"] = record_id
+        records[record_id] = normalized
     return records
+
+
+def _migrated_record_id(canonical: str, legacy_record_id: str) -> str:
+    if legacy_record_id == legacy_record_id.strip() and _RECORD_ID_PATTERN.fullmatch(legacy_record_id):
+        return legacy_record_id
+    return "legacy-%s-%s" % (canonical[:2], legacy_record_id.encode("utf-8").hex())
+
+
+def _migrate_legacy_tracking_body(body: str, canonical: str) -> str:
+    records = _record_entries(body, legacy_record_ids=True)
+    rendered = []
+    for legacy_id, entry in records.items():
+        normalized = dict(entry)
+        normalized["record_id"] = _migrated_record_id(canonical, legacy_id)
+        rendered.append(_render_entry(normalized))
+    start, end = body.find(_RECORDS_START), body.find(_RECORDS_END)
+    content_start = start + len(_RECORDS_START)
+    content = _EMPTY_RECORDS if not rendered else "\n\n".join(rendered)
+    return body[:content_start] + "\n" + content + "\n" + body[end:]
 
 
 def _append_record(body: str, entry_text: str) -> str:
@@ -727,7 +761,7 @@ def _update_case_record(payload: Mapping[str, object], *, allow_reserved_interna
         body = _tracking_body({"05_驗證事件紀錄.md": "驗證事件紀錄", "06_流年追蹤紀錄.md": "流年追蹤紀錄", "07_問事追蹤紀錄.md": "問事追蹤紀錄", "08_重大決策紀錄.md": "重大決策紀錄"}[canonical], identity["subject_display_name"])
         index_actual = actual_by_canonical["00_專案索引.md"]
         changed[index_actual] = _set_index_materialized(files["00_專案索引.md"], canonical, actual_target, updated_at, modified_by)
-    existing_records = _record_entries(body)
+    existing_records = _record_entries(body, legacy_record_ids=legacy)
     if record_id in existing_records:
         if _json_semantically_equal(existing_records[record_id], normalized_entry):
             return {"subject_id": validation["subject_id"], "changed_files": {}}
