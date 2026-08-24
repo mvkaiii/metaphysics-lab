@@ -1,10 +1,13 @@
-"""Inspect external runtime dependencies without importing them."""
+"""Inspect bundled core and optional execution-environment dependencies."""
 
 from __future__ import annotations
 
 import importlib.util
 from importlib import metadata
+from pathlib import Path
 from typing import Callable, Dict, Optional
+
+from engine.vendor.manifest import bundled_dependency
 
 
 _DEPENDENCIES = {
@@ -33,6 +36,9 @@ _DEPENDENCIES = {
         "required_for": ["network_location_resolution"],
     },
 }
+
+_BUNDLED_CORE = ("lunar-python", "tzdata")
+_OPTIONAL_EXTERNAL = ("geopy", "timezonefinder")
 
 
 def _default_version_getter(distribution_name: str) -> Optional[str]:
@@ -71,8 +77,59 @@ def inspect_dependency(
     }
 
 
+def inspect_optional_external_dependencies() -> Dict[str, Dict[str, object]]:
+    return {name: inspect_dependency(name) for name in _OPTIONAL_EXTERNAL}
+
+
 def inspect_external_dependencies() -> Dict[str, Dict[str, object]]:
-    return {
-        name: inspect_dependency(name)
-        for name in sorted(_DEPENDENCIES)
-    }
+    """Backward-compatible execution-environment diagnostics only."""
+    result = {}
+    for name in sorted(_DEPENDENCIES):
+        row = inspect_dependency(name)
+        row["deprecated"] = True
+        row["authority"] = "diagnostic_only"
+        result[name] = row
+    return result
+
+
+def _repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def inspect_bundled_dependencies() -> Dict[str, Dict[str, object]]:
+    """Report bundled-core authority without consulting public package state."""
+    result: Dict[str, Dict[str, object]] = {}
+    for name in _BUNDLED_CORE:
+        config = _DEPENDENCIES[name]
+        row = {
+            "package": name,
+            "expected_version": str(config["expected_version"]),
+            "version": None,
+            "bundled": True,
+            "available": False,
+            "runtime_uses_environment_package": False,
+            "source_revision": None,
+            "artifact_sha256": None,
+            "vendored_tree_sha256": None,
+            "license": None,
+            "role": str(config["role"]),
+            "required_for": list(config["required_for"]),
+        }
+        try:
+            manifest_row = bundled_dependency(name)
+            vendored_path = manifest_row.get("vendored_path")
+            available = isinstance(vendored_path, str) and (_repo_root() / vendored_path).is_dir()
+            row.update(
+                {
+                    "version": manifest_row.get("version"),
+                    "available": bool(available),
+                    "source_revision": manifest_row.get("source_revision"),
+                    "artifact_sha256": manifest_row.get("artifact_sha256"),
+                    "vendored_tree_sha256": manifest_row.get("vendored_tree_sha256"),
+                    "license": manifest_row.get("license_spdx"),
+                }
+            )
+        except (KeyError, RuntimeError, ValueError):
+            pass
+        result[name] = row
+    return result
