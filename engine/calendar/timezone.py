@@ -1,13 +1,13 @@
 from __future__ import annotations
 
+import importlib
 import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from importlib.metadata import PackageNotFoundError, version
 from importlib.resources import files
 from zoneinfo import ZoneInfo
 
-import tzdata
+from engine.vendor.manifest import bundled_dependency
 
 from .models import (
     CalendarResolverException,
@@ -19,6 +19,8 @@ EXPECTED_TZDATA_VERSION = "2026.3"
 EXPECTED_IANA_VERSION = "2026c"
 TIMEZONE_SOURCE_REVISION = "a44279419071b7aa41ebe7eca301ebb2e759571a"
 TIMEZONE_PROFILE = "tzdata-2026.3-iana-2026c-v1"
+_PRIVATE_TZDATA_MODULE = "_metaphysics_lab_vendor.tzdata"
+_PRIVATE_ZONEINFO_PACKAGE = "_metaphysics_lab_vendor.tzdata.zoneinfo"
 ZHI = tuple("子丑寅卯辰巳午未申酉戌亥")
 _CIVIL_DATETIME_PATTERN = re.compile(
     r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,6})?)?$"
@@ -88,39 +90,66 @@ def _parse_civil(value: str) -> datetime:
     return parsed
 
 
+def _load_private_tzdata_metadata():
+    try:
+        metadata = bundled_dependency("tzdata")
+    except (KeyError, RuntimeError, ValueError) as exc:
+        raise CalendarResolverException(
+            "provider_failure",
+            "bundled tzdata metadata is unavailable",
+            {"expected_version": EXPECTED_TZDATA_VERSION},
+        ) from exc
+    actual_version = str(metadata.get("version", ""))
+    actual_revision = str(metadata.get("source_revision", ""))
+    if actual_version != EXPECTED_TZDATA_VERSION or actual_revision != TIMEZONE_SOURCE_REVISION:
+        raise CalendarResolverException(
+            "provider_failure",
+            "bundled tzdata metadata does not match the pinned profile",
+            {
+                "expected_package_version": EXPECTED_TZDATA_VERSION,
+                "actual_package_version": actual_version,
+                "expected_source_revision": TIMEZONE_SOURCE_REVISION,
+                "actual_source_revision": actual_revision,
+            },
+        )
+    if metadata.get("runtime_authority") != "bundled" or metadata.get("bundled") is not True:
+        raise CalendarResolverException(
+            "provider_failure",
+            "tzdata runtime authority is not bundled",
+            {"expected_authority": "bundled"},
+        )
+    try:
+        module = importlib.import_module(_PRIVATE_TZDATA_MODULE)
+    except (ImportError, ModuleNotFoundError) as exc:
+        raise CalendarResolverException(
+            "provider_failure",
+            "bundled tzdata package is unavailable",
+            {"expected_version": EXPECTED_TZDATA_VERSION},
+        ) from exc
+    module_version = getattr(module, "__version__", None)
+    iana_version = getattr(module, "IANA_VERSION", None)
+    if module_version != EXPECTED_TZDATA_VERSION or iana_version != EXPECTED_IANA_VERSION:
+        raise CalendarResolverException(
+            "provider_failure",
+            "bundled tzdata package does not match the pinned profile",
+            {
+                "expected_package_version": EXPECTED_TZDATA_VERSION,
+                "actual_module_version": module_version,
+                "expected_tzdb_version": EXPECTED_IANA_VERSION,
+                "actual_tzdb_version": iana_version,
+            },
+        )
+    return actual_version, iana_version, actual_revision
+
+
 class PinnedTzdataProvider:
     def __init__(self) -> None:
-        try:
-            package_version = version("tzdata")
-        except PackageNotFoundError as exc:
-            raise CalendarResolverException(
-                "provider_failure",
-                "tzdata package is not installed",
-                {"expected_version": EXPECTED_TZDATA_VERSION},
-            ) from exc
-        iana_version = getattr(tzdata, "IANA_VERSION", None)
-        module_version = getattr(tzdata, "__version__", None)
-        if (
-            package_version != EXPECTED_TZDATA_VERSION
-            or module_version != EXPECTED_TZDATA_VERSION
-            or iana_version != EXPECTED_IANA_VERSION
-        ):
-            raise CalendarResolverException(
-                "provider_failure",
-                "tzdata provider version does not match the pinned profile",
-                {
-                    "expected_package_version": EXPECTED_TZDATA_VERSION,
-                    "actual_package_version": package_version,
-                    "actual_module_version": module_version,
-                    "expected_tzdb_version": EXPECTED_IANA_VERSION,
-                    "actual_tzdb_version": iana_version,
-                },
-            )
+        package_version, iana_version, source_revision = _load_private_tzdata_metadata()
         self.metadata = TimezoneProviderMetadata(
             name="tzdata",
             package_version=package_version,
             tzdb_version=iana_version,
-            source_revision=TIMEZONE_SOURCE_REVISION,
+            source_revision=source_revision,
         )
 
     def zone(self, timezone_name: str) -> ZoneInfo:
@@ -131,11 +160,11 @@ class PinnedTzdataProvider:
                 f"invalid IANA timezone: {timezone_name!r}",
                 {"timezone": timezone_name},
             )
-        resource = files("tzdata.zoneinfo").joinpath(*parts)
         try:
+            resource = files(_PRIVATE_ZONEINFO_PACKAGE).joinpath(*parts)
             with resource.open("rb") as handle:
                 return ZoneInfo.from_file(handle, key=timezone_name)
-        except (FileNotFoundError, IsADirectoryError, ValueError) as exc:
+        except (ModuleNotFoundError, FileNotFoundError, IsADirectoryError, ValueError) as exc:
             raise CalendarResolverException(
                 "invalid_timezone",
                 f"unknown IANA timezone: {timezone_name!r}",
