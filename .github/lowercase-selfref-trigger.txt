@@ -1,0 +1,1 @@
+One-time trigger for validated lowercase distribution self-reference migration.
