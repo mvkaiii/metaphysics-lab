@@ -1,23 +1,34 @@
-name: Temporary Bounded Legacy Record ID Migration Fix
+name: Feature Historical Calibration Validation
 
 on:
   push:
     branches:
+      - feature/progressive-case-historical-calibration
       - fix/postmerge-audit-161-165
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  implement:
+  validation:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout branch head
+      - name: Checkout validation ref
         uses: actions/checkout@v4
         with:
-          ref: fix/postmerge-audit-161-165
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
+
+      - name: Confirm validation SHA
+        run: |
+          echo "event=${{ github.event_name }}"
+          echo "github_sha=${{ github.sha }}"
+          echo "head_ref=${{ github.head_ref }}"
+          git log -1 --format=%H
 
       - name: Set up Python 3.9
         uses: actions/setup-python@v5
@@ -30,54 +41,48 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
-      - name: Apply fixed-length deterministic legacy ID remap
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          path = Path("engine/distribution/case_pack.py")
-          text = path.read_text(encoding="utf-8")
-          old_import = "import json\nimport math\n"
-          new_import = "import hashlib\nimport json\nimport math\n"
-          if text.count(old_import) != 1:
-              raise SystemExit("unexpected import patch target")
-          text = text.replace(old_import, new_import, 1)
-
-          old = '    return "legacy-%s-%s" % (canonical[:2], legacy_record_id.encode("utf-8").hex())\n'
-          new = '    digest = hashlib.sha256(legacy_record_id.encode("utf-8")).hexdigest()\n    return "legacy-%s-%s" % (canonical[:2], digest)\n'
-          if text.count(old) != 1:
-              raise SystemExit("unexpected migration patch target")
-          text = text.replace(old, new, 1)
-          path.write_text(text, encoding="utf-8")
-          PY
-
-      - name: Rebuild generated distribution
+      - name: Rebuild AI distribution
         run: |
           python tools/build_ai_distribution.py
           python tools/build_ai_distribution.py --check
 
-      - name: Focused regression
+      - name: Historical selector and progressive Case focused tests
         run: |
           python -m unittest \
+            tests.test_historical_activation_relations \
+            tests.test_historical_activation_selector \
+            tests.test_historical_activation_capabilities \
+            tests.test_distribution_historical_calibration \
+            tests.test_distribution_historical_integrity \
+            tests.test_distribution_historical_support \
             tests.test_distribution_case_pack \
+            tests.test_distribution_partial_case \
+            tests.test_postmerge_audit_regressions \
+            tests.test_second_round_adversarial_regressions \
+            tests.test_third_round_adversarial_regressions \
+            tests.test_third_round_bundle_parity \
             tests.test_fourth_round_nonfinite_case_records \
             tests.test_fifth_round_legacy_record_id_compat \
-            tests.test_third_round_adversarial_regressions \
-            tests.test_third_round_bundle_parity -v
+            tests.test_distribution_runtime_info -v
 
-      - name: Full regression
-        run: python -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Full repository regression
+        run: |
+          python -m unittest discover -s tests -p 'test_*.py' -v
 
-      - name: Compile and diff check
+      - name: Python 3.9 compile check
         run: |
           python -m compileall engine tests tools
-          git diff --check
 
-      - name: Commit only source and generated bundle
+      - name: Verify clean validation tree
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add engine/distribution/case_pack.py dist/ai/metaphysics_lab.py
-          test -z "$(git status --short | grep -vE '^(M | M|A |\?\?) (engine/distribution/case_pack.py|dist/ai/metaphysics_lab.py)$' || true)"
-          git commit -m "fix: bound migrated legacy Case record ids"
-          git push origin HEAD:fix/postmerge-audit-161-165
+          git diff --check
+          git diff --exit-code
+          test -z "$(git status --short)"
+
+      - name: Upload generated distribution
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: progressive-case-ai-distribution
+          path: dist/ai/
+          if-no-files-found: error
