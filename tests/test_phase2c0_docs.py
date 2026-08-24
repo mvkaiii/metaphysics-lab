@@ -61,9 +61,10 @@ class Phase2C0DocumentationTests(unittest.TestCase):
         self.assertIn("Stable", combined)
         self.assertIn("不得覆寫", combined)
 
-    def test_user_guidance_supports_mode_a_and_ambiguity_without_fake_precision(self):
+    def test_user_guidance_supports_birth_data_and_ambiguity_without_fake_precision(self):
         combined = "\n".join((read("quickstart"), read("install"), read("readme")))
-        self.assertIn("男，1984年3月13日19:20，台北市出生", combined)
+        self.assertIn("女，1992年8月17日14:30，高雄市出生", combined)
+        self.assertIn("虛構", combined)
         self.assertIn("出生日期", combined)
         self.assertIn("出生時間", combined)
         self.assertIn("出生地", combined)
@@ -71,6 +72,7 @@ class Phase2C0DocumentationTests(unittest.TestCase):
         self.assertIn("只追問", combined)
         self.assertIn("候選", combined)
         self.assertIn("大概晚上7、8點", combined)
+        self.assertNotIn("男，1984年3月13日19:20，台北市出生", combined)
 
     def test_natal_capabilities_remain_experimental_after_phase2c_activation(self):
         self.assertEqual(get_bazi_capability("bazi.natal_chart")["maturity"], "experimental")
