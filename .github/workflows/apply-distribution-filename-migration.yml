@@ -1,0 +1,102 @@
+name: Apply lowercase distribution filename migration
+
+on:
+  push:
+    branches:
+      - release/distribution-filenames-lowercase
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/distribution-filenames-lowercase
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Apply scoped filename migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          replacements = {
+              'METAPHYSICS_CORE.md': 'metaphysics_core.md',
+              'PROJECT_INSTRUCTIONS.md': 'project_instructions.md',
+          }
+          targets = [
+              'tools/build_ai_distribution.py',
+              'tests/test_ai_distribution_acceptance.py',
+              'tests/test_ai_distribution_build.py',
+              'tests/test_ai_distribution_docs.py',
+              'README.md',
+              'docs/快速開始.md',
+              'docs/安裝到ChatGPT-Project.md',
+              'docs/發布說明-v1.3.0.md',
+              'docs/更新與版本同步.md',
+              'CHANGELOG.md',
+          ]
+          for relative in targets:
+              path = Path(relative)
+              text = path.read_text(encoding='utf-8')
+              updated = text
+              for old, new in replacements.items():
+                  updated = updated.replace(old, new)
+              if updated != text:
+                  path.write_text(updated, encoding='utf-8')
+          PY
+
+          rm -f dist/ai/METAPHYSICS_CORE.md dist/ai/PROJECT_INSTRUCTIONS.md
+          python tools/build_ai_distribution.py
+          python tools/build_ai_distribution.py --check
+
+      - name: Verify migration contract
+        run: |
+          python -m unittest \
+            tests.test_distribution_filename_migration \
+            tests.test_ai_distribution_acceptance \
+            tests.test_ai_distribution_build \
+            tests.test_ai_distribution_docs -v
+
+      - name: Full repository regression
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+
+      - name: Compile and diff checks
+        run: |
+          python -m compileall engine tests tools
+          git diff --check
+
+      - name: Commit migration only after validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            tools/build_ai_distribution.py \
+            tests/test_ai_distribution_acceptance.py \
+            tests/test_ai_distribution_build.py \
+            tests/test_ai_distribution_docs.py \
+            README.md \
+            docs/快速開始.md \
+            docs/安裝到ChatGPT-Project.md \
+            docs/發布說明-v1.3.0.md \
+            docs/更新與版本同步.md \
+            CHANGELOG.md \
+            dist/ai \
+            tests/test_distribution_filename_migration.py
+          if git diff --cached --quiet; then
+            echo 'No migration changes to commit.'
+            exit 0
+          fi
+          git commit -m 'release: normalize distribution filenames to lowercase'
+          git push origin HEAD:release/distribution-filenames-lowercase
