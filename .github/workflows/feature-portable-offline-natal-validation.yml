@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - feature/portable-offline-natal-pipeline
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -16,6 +19,7 @@ jobs:
       - name: Checkout exact feature head
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
 
       - name: Confirm validation SHA
@@ -40,7 +44,7 @@ jobs:
         run: python -m unittest tests.test_vendor_manifest tests.test_vendor_import_isolation -v
 
       - name: Commit generated vendor bytes when changed
-        if: ${{ success() && hashFiles('tools/vendor_refresh.py') != '' }}
+        if: ${{ success() && hashFiles('tools/vendor_refresh.py') != '' && github.event_name != 'pull_request' }}
         run: |
           if git diff --quiet -- vendor _metaphysics_lab_vendor; then
             echo "vendor bytes already committed"
