@@ -8,6 +8,7 @@ Legacy schema 1.0 bare nine-file packs remain readable and explicitly migratable
 from __future__ import annotations
 
 import json
+import math
 import re
 from datetime import datetime
 from pathlib import Path
@@ -113,10 +114,35 @@ def _record_id(value: object, *, error_code: str = "invalid_case_payload") -> st
     return value
 
 
+def _validate_json_value(value: object, *, error_code: str, field: str) -> None:
+    if isinstance(value, float) and not math.isfinite(value):
+        raise DistributionError(
+            error_code,
+            "Case record JSON cannot contain non-finite numbers",
+            {"field": field},
+        )
+    if isinstance(value, Mapping):
+        for key, item in value.items():
+            if isinstance(key, float) and not math.isfinite(key):
+                raise DistributionError(
+                    error_code,
+                    "Case record JSON cannot contain non-finite numbers",
+                    {"field": "%s.<key>" % field},
+                )
+            _validate_json_value(item, error_code=error_code, field="%s.%s" % (field, key))
+    elif isinstance(value, list):
+        for index, item in enumerate(value):
+            _validate_json_value(item, error_code=error_code, field="%s[%d]" % (field, index))
+
+
+def _reject_json_constant(value: str):
+    raise ValueError("non-standard JSON numeric constant: %s" % value)
+
+
 def _json_semantically_equal(left: object, right: object) -> bool:
     try:
-        return json.dumps(left, ensure_ascii=False, sort_keys=True, separators=(",", ":")) == json.dumps(
-            right, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        return json.dumps(left, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False) == json.dumps(
+            right, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False
         )
     except (TypeError, ValueError):
         return False
@@ -423,12 +449,14 @@ def validate_case(payload: Mapping[str, object]) -> dict:
     for canonical in CASE_FILES:
         if canonical not in files:
             continue
-        metadata, _ = parse_front_matter(files[canonical])
+        metadata, body = parse_front_matter(files[canonical])
         missing = [key for key in _REQUIRED_FRONT_MATTER if key not in metadata]
         if missing:
             raise DistributionError("invalid_case_metadata", "Case file is missing required metadata", {"filename": actual_by_canonical[canonical], "missing_fields": missing})
         if metadata["record_type"] != _RECORD_TYPES[canonical]:
             raise DistributionError("case_record_type_mismatch", "Case filename and record_type do not match", {"filename": actual_by_canonical[canonical], "record_type": metadata["record_type"]})
+        if canonical in _TRACKING_FILES:
+            _record_entries(body)
         versions.add(metadata["case_schema_version"])
         contracts.add(metadata["project_contract_version"])
         current_subject = metadata["subject_id"]
@@ -554,7 +582,11 @@ def _render_entry(entry: Mapping[str, object]) -> str:
     record_id = _record_id(entry.get("record_id"))
     normalized = dict(entry)
     normalized["record_id"] = record_id
-    payload = json.dumps(normalized, ensure_ascii=False, sort_keys=True, indent=2)
+    _validate_json_value(normalized, error_code="invalid_case_payload", field="entry")
+    try:
+        payload = json.dumps(normalized, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False)
+    except (TypeError, ValueError) as exc:
+        raise DistributionError("invalid_case_payload", "tracking record payload must be standard JSON") from exc
     return "### %s\n\n```json\n%s\n```" % (record_id, payload)
 
 
@@ -573,11 +605,12 @@ def _record_entries(body: str) -> dict:
             raise DistributionError("invalid_case_markdown", "tracking record block is malformed")
         record_id = _record_id(first_line[4:], error_code="invalid_case_markdown")
         try:
-            parsed = json.loads(rest[:-4])
+            parsed = json.loads(rest[:-4], parse_constant=_reject_json_constant)
         except (TypeError, ValueError) as exc:
             raise DistributionError("invalid_case_markdown", "tracking record JSON cannot be parsed") from exc
         if not isinstance(parsed, Mapping):
             raise DistributionError("invalid_case_markdown", "tracking record payload must be a mapping")
+        _validate_json_value(parsed, error_code="invalid_case_markdown", field="tracking_record")
         payload_record_id = _record_id(parsed.get("record_id"), error_code="invalid_case_markdown")
         if payload_record_id != record_id:
             raise DistributionError("invalid_case_markdown", "tracking record heading does not match payload record_id")
@@ -661,6 +694,7 @@ def _update_case_record(payload: Mapping[str, object], *, allow_reserved_interna
     record_id = _record_id(entry.get("record_id"))
     normalized_entry = dict(entry)
     normalized_entry["record_id"] = record_id
+    _validate_json_value(normalized_entry, error_code="invalid_case_payload", field="entry")
     entry_subject_id = normalized_entry.get("subject_id")
     if entry_subject_id is not None and entry_subject_id != validation.get("subject_id"):
         raise DistributionError(
