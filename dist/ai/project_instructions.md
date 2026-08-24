@@ -20,7 +20,7 @@
 
 回答任何命理、本命、流年、決策或合盤問題前：
 
-1. 完整讀取並遵循 `METAPHYSICS_CORE.md`。開發版 modular source 可對應讀取 `AI工作流程.md` 與 `命理分析作業規範.md`。
+1. 完整讀取並遵循 `metaphysics_core.md`。開發版 modular source 可對應讀取 `AI工作流程.md` 與 `命理分析作業規範.md`。
 2. 判斷問題類型：建立命盤／命盤驗證／本命分析／流年問事／行動決策／合盤多人。
 3. **先辨識命主**：若 Project 有 `命主索引.md`，先 resolve 本次 `subject_id`；不得預設所有問題都在問 Project 擁有者本人。
 4. 再讀該 subject 的 `00` slot，確認目前 Case 已 materialize 哪些檔案、Natal Precision State 與 Historical Calibration 狀態；不得假定 05～08 一定存在。
