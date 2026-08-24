@@ -46,6 +46,8 @@ def _write_tzdata_wheel(path: Path) -> bytes:
             "tzdata/__init__.py",
             '__version__ = "2026.3"\nIANA_VERSION = "2026c"\n',
         )
+        # Deliberately include an unrelated package-root file. The approved plan
+        # vendors tzdata/__init__.py plus the complete zoneinfo/** resource tree.
         archive.writestr("tzdata/zones", "Asia/Taipei\nAmerica/New_York\n")
         archive.writestr("tzdata/zoneinfo/__init__.py", "")
         archive.writestr("tzdata/zoneinfo/Asia/Taipei", tzif)
@@ -57,7 +59,7 @@ def _write_tzdata_wheel(path: Path) -> bytes:
 
 
 class VendorRefreshTests(unittest.TestCase):
-    def test_refresh_copies_complete_tzdata_package_root_and_binary_resources(self):
+    def test_refresh_preserves_tzdata_init_complete_zoneinfo_bytes_and_licenses(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             temp = Path(temp_dir)
             repo = temp / "repo"
@@ -72,14 +74,10 @@ class VendorRefreshTests(unittest.TestCase):
             ):
                 manifest = vendor_refresh.refresh_vendor(repo, lunar, tzdata)
 
-            self.assertEqual(
-                (repo / "_metaphysics_lab_vendor" / "tzdata" / "zones").read_text(encoding="utf-8"),
-                "Asia/Taipei\nAmerica/New_York\n",
-            )
-            self.assertEqual(
-                (repo / "_metaphysics_lab_vendor" / "tzdata" / "zoneinfo" / "Asia" / "Taipei").read_bytes(),
-                tzif,
-            )
+            tz_root = repo / "_metaphysics_lab_vendor" / "tzdata"
+            self.assertIn('__version__ = "2026.3"', (tz_root / "__init__.py").read_text(encoding="utf-8"))
+            self.assertEqual((tz_root / "zoneinfo" / "Asia" / "Taipei").read_bytes(), tzif)
+            self.assertFalse((tz_root / "zones").exists())
             self.assertTrue((repo / "vendor" / "licenses" / "lunar-python-LICENSE.txt").is_file())
             self.assertTrue((repo / "vendor" / "licenses" / "tzdata-LICENSE.txt").is_file())
             self.assertEqual(
