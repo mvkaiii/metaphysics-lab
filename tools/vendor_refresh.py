@@ -8,8 +8,10 @@ from __future__ import annotations
 
 import argparse
 import ast
+import base64
 import hashlib
 import json
+import lzma
 import os
 import shutil
 import stat
@@ -34,10 +36,19 @@ TZDATA_SOURCE_REVISION = "a44279419071b7aa41ebe7eca301ebb2e759571a"
 
 FORBIDDEN_PUBLIC_IMPORT_ROOTS = frozenset(("lunar_python", "tzdata"))
 MANIFEST_SCHEMA_VERSION = "1.0"
+STORAGE_PROFILE = "artifact-shards-base64-xz-private-tree-v1"
+ARTIFACT_STORAGE_ENCODING = "base64"
+ARTIFACT_COMPRESSION = "xz"
+ARTIFACT_XZ_PRESET = 9
+ARTIFACT_SHARD_CHARACTERS = 9600
 
 
 class VendorRefreshError(RuntimeError):
     pass
+
+
+def _sha256_bytes(payload: bytes) -> str:
+    return hashlib.sha256(payload).hexdigest()
 
 
 def _sha256_file(path: Path) -> str:
@@ -53,7 +64,9 @@ def _verified_artifact(path: Path, expected_name: str, expected_sha256: str) -> 
     if not path.is_file():
         raise VendorRefreshError("artifact not found: %s" % path)
     if path.name != expected_name:
-        raise VendorRefreshError("expected artifact %s, got %s" % (expected_name, path.name))
+        raise VendorRefreshError(
+            "expected artifact %s, got %s" % (expected_name, path.name)
+        )
     actual = _sha256_file(path)
     if actual != expected_sha256:
         raise VendorRefreshError(
@@ -79,7 +92,8 @@ def _tree_sha256(root: Path) -> str:
     root = Path(root)
     digest = hashlib.sha256()
     files = sorted(
-        path for path in root.rglob("*")
+        path
+        for path in root.rglob("*")
         if path.is_file() and not path.is_symlink()
     )
     if not files:
@@ -99,24 +113,26 @@ def _scan_private_imports(package_root: Path) -> None:
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         except (UnicodeDecodeError, SyntaxError) as exc:
-            raise VendorRefreshError("cannot scan vendored Python file %s: %s" % (path, exc)) from exc
+            raise VendorRefreshError(
+                "cannot scan vendored Python file %s: %s" % (path, exc)
+            ) from exc
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
-                for alias in node.names:
-                    root = alias.name.split(".", 1)[0]
-                    if root in FORBIDDEN_PUBLIC_IMPORT_ROOTS:
-                        violations.append((path, node.lineno, alias.name))
+                names = [alias.name for alias in node.names]
             elif isinstance(node, ast.ImportFrom) and node.level == 0:
-                module = node.module or ""
-                root = module.split(".", 1)[0]
-                if root in FORBIDDEN_PUBLIC_IMPORT_ROOTS:
-                    violations.append((path, node.lineno, module))
+                names = [node.module or ""]
+            else:
+                continue
+            for name in names:
+                if name.split(".", 1)[0] in FORBIDDEN_PUBLIC_IMPORT_ROOTS:
+                    violations.append((path, getattr(node, "lineno", 0), name))
     if violations:
         formatted = ", ".join(
-            "%s:%s:%s" % (path, lineno, module)
-            for path, lineno, module in violations[:20]
+            "%s:%s:%s" % item for item in violations[:20]
         )
-        raise VendorRefreshError("vendored package imports public vendor namespace: %s" % formatted)
+        raise VendorRefreshError(
+            "vendored package imports public vendor namespace: %s" % formatted
+        )
 
 
 def _reject_symlinks(root: Path) -> None:
@@ -132,7 +148,9 @@ def _write_file(root: Path, relative: PurePosixPath, payload: bytes) -> Path:
     return target
 
 
-def _extract_lunar(sdist: Path, staging_vendor_root: Path, staging_license_root: Path) -> None:
+def _extract_lunar(
+    sdist: Path, staging_vendor_root: Path, staging_license_root: Path
+) -> None:
     package_target = staging_vendor_root / "lunar_python"
     license_payload = None
     package_files = 0
@@ -140,14 +158,20 @@ def _extract_lunar(sdist: Path, staging_vendor_root: Path, staging_license_root:
         for member in archive.getmembers():
             path = _safe_archive_path(member.name)
             if member.issym() or member.islnk() or member.isdev():
-                raise VendorRefreshError("lunar sdist contains forbidden member type: %s" % member.name)
+                raise VendorRefreshError(
+                    "lunar sdist contains forbidden member type: %s" % member.name
+                )
             if member.isdir():
                 continue
             if not member.isfile():
-                raise VendorRefreshError("lunar sdist contains unsupported member type: %s" % member.name)
+                raise VendorRefreshError(
+                    "lunar sdist contains unsupported member type: %s" % member.name
+                )
             handle = archive.extractfile(member)
             if handle is None:
-                raise VendorRefreshError("cannot read lunar sdist member: %s" % member.name)
+                raise VendorRefreshError(
+                    "cannot read lunar sdist member: %s" % member.name
+                )
             payload = handle.read()
             parts = path.parts
             if len(parts) >= 3 and parts[1] == "lunar_python":
@@ -158,10 +182,16 @@ def _extract_lunar(sdist: Path, staging_vendor_root: Path, staging_license_root:
             elif len(parts) == 2 and parts[1].upper().startswith("LICENSE"):
                 license_payload = payload
     if package_files == 0 or not (package_target / "__init__.py").is_file():
-        raise VendorRefreshError("lunar sdist did not contain expected lunar_python package")
+        raise VendorRefreshError(
+            "lunar sdist did not contain expected lunar_python package"
+        )
     if license_payload is None:
-        raise VendorRefreshError("lunar sdist did not contain a root license file")
-    (staging_license_root / "lunar-python-LICENSE.txt").write_bytes(license_payload)
+        raise VendorRefreshError(
+            "lunar sdist did not contain a root license file"
+        )
+    (staging_license_root / "lunar-python-LICENSE.txt").write_bytes(
+        license_payload
+    )
 
 
 def _zip_member_is_symlink(info: zipfile.ZipInfo) -> bool:
@@ -169,46 +199,80 @@ def _zip_member_is_symlink(info: zipfile.ZipInfo) -> bool:
     return stat.S_ISLNK(mode)
 
 
-def _extract_tzdata(wheel: Path, staging_vendor_root: Path, staging_license_root: Path) -> None:
+def _extract_tzdata(
+    wheel: Path, staging_vendor_root: Path, staging_license_root: Path
+) -> None:
     package_target = staging_vendor_root / "tzdata"
     license_payload = None
     package_files = 0
     zoneinfo_files = 0
     with zipfile.ZipFile(str(wheel), mode="r") as archive:
         for info in archive.infolist():
-            name = info.filename.rstrip("/") if info.filename.endswith("/") else info.filename
+            name = (
+                info.filename.rstrip("/")
+                if info.filename.endswith("/")
+                else info.filename
+            )
             path = _safe_archive_path(name)
             if _zip_member_is_symlink(info):
-                raise VendorRefreshError("tzdata wheel contains symlink: %s" % info.filename)
+                raise VendorRefreshError(
+                    "tzdata wheel contains symlink: %s" % info.filename
+                )
             if info.is_dir():
                 continue
             payload = archive.read(info)
             parts = path.parts
             if parts and parts[0] == "tzdata":
                 if len(parts) == 2 and parts[1] == "__init__.py":
-                    _write_file(package_target, PurePosixPath("__init__.py"), payload)
+                    _write_file(
+                        package_target, PurePosixPath("__init__.py"), payload
+                    )
                     package_files += 1
                 elif len(parts) >= 3 and parts[1] == "zoneinfo":
-                    _write_file(package_target, PurePosixPath(*parts[1:]), payload)
+                    _write_file(
+                        package_target, PurePosixPath(*parts[1:]), payload
+                    )
                     package_files += 1
                     zoneinfo_files += 1
-            elif "dist-info" in parts[0] and any(part.upper().startswith("LICENSE") for part in parts[1:]):
+            elif (
+                parts
+                and "dist-info" in parts[0]
+                and any(
+                    part.upper().startswith("LICENSE") for part in parts[1:]
+                )
+            ):
                 if license_payload is None:
                     license_payload = payload
-    if package_files == 0 or zoneinfo_files == 0 or not (package_target / "__init__.py").is_file():
-        raise VendorRefreshError("tzdata wheel did not contain expected package and zoneinfo resources")
+    if (
+        package_files == 0
+        or zoneinfo_files == 0
+        or not (package_target / "__init__.py").is_file()
+    ):
+        raise VendorRefreshError(
+            "tzdata wheel did not contain expected package and zoneinfo resources"
+        )
     if not (package_target / "zoneinfo" / "__init__.py").is_file():
-        raise VendorRefreshError("tzdata wheel missing tzdata/zoneinfo/__init__.py")
+        raise VendorRefreshError(
+            "tzdata wheel missing tzdata/zoneinfo/__init__.py"
+        )
     if license_payload is None:
-        raise VendorRefreshError("tzdata wheel did not contain a license file")
+        raise VendorRefreshError(
+            "tzdata wheel did not contain a license file"
+        )
     (staging_license_root / "tzdata-LICENSE.txt").write_bytes(license_payload)
 
 
 def _tzdata_versions(init_path: Path) -> Tuple[Optional[str], Optional[str]]:
-    tree = ast.parse(init_path.read_text(encoding="utf-8"), filename=str(init_path))
+    tree = ast.parse(
+        init_path.read_text(encoding="utf-8"), filename=str(init_path)
+    )
     values = {}
     for node in tree.body:
-        if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+        if (
+            isinstance(node, ast.Assign)
+            and len(node.targets) == 1
+            and isinstance(node.targets[0], ast.Name)
+        ):
             name = node.targets[0].id
             if name in ("__version__", "IANA_VERSION"):
                 try:
@@ -218,41 +282,121 @@ def _tzdata_versions(init_path: Path) -> Tuple[Optional[str], Optional[str]]:
     return values.get("__version__"), values.get("IANA_VERSION")
 
 
-def _manifest(lunar_tree: str, tzdata_tree: str) -> Dict[str, object]:
+def _store_artifact(
+    artifact: Path, artifact_root: Path
+) -> Tuple[Sequence[str], Dict[str, str], str]:
+    raw = Path(artifact).read_bytes()
+    compressed = lzma.compress(
+        raw, format=lzma.FORMAT_XZ, preset=ARTIFACT_XZ_PRESET
+    )
+    encoded = base64.b64encode(compressed).decode("ascii")
+    artifact_root.mkdir(parents=True, exist_ok=True)
+    paths = []
+    hashes: Dict[str, str] = {}
+    prefix = artifact.name + ".xz.b64part"
+    for index, offset in enumerate(
+        range(0, len(encoded), ARTIFACT_SHARD_CHARACTERS), start=1
+    ):
+        name = "%s%02d" % (prefix, index)
+        relative = "vendor/artifacts/" + name
+        payload = encoded[
+            offset : offset + ARTIFACT_SHARD_CHARACTERS
+        ].encode("ascii")
+        (artifact_root / name).write_bytes(payload)
+        paths.append(relative)
+        hashes[relative] = _sha256_bytes(payload)
+    return paths, hashes, _sha256_bytes(compressed)
+
+
+def _manifest_row(
+    *,
+    package_name: str,
+    import_namespace: str,
+    version: str,
+    source_repository: str,
+    source_revision: str,
+    source_artifact: str,
+    artifact_sha256: str,
+    vendored_tree_sha256: str,
+    vendored_path: str,
+    license_spdx: str,
+    license_file: str,
+    artifact_shards: Sequence[str],
+    artifact_shard_sha256: Dict[str, str],
+    artifact_storage_sha256: str,
+    iana_version: Optional[str] = None,
+) -> Dict[str, object]:
+    row: Dict[str, object] = {
+        "package_name": package_name,
+        "import_namespace": import_namespace,
+        "version": version,
+        "source_repository": source_repository,
+        "source_revision": source_revision,
+        "source_artifact": source_artifact,
+        "artifact_sha256": artifact_sha256,
+        "artifact_storage_encoding": ARTIFACT_STORAGE_ENCODING,
+        "artifact_compression": ARTIFACT_COMPRESSION,
+        "artifact_storage_sha256": artifact_storage_sha256,
+        "artifact_shards": list(artifact_shards),
+        "artifact_shard_sha256": dict(artifact_shard_sha256),
+        "vendored_tree_sha256": vendored_tree_sha256,
+        "vendored_path": vendored_path,
+        "license_spdx": license_spdx,
+        "license_file": license_file,
+        "bundled": True,
+        "runtime_authority": "bundled",
+        "storage_mode": "artifact_shards_materialized",
+    }
+    if iana_version is not None:
+        row["iana_version"] = iana_version
+    return row
+
+
+def _manifest(
+    lunar_tree: str,
+    tzdata_tree: str,
+    lunar_storage: Tuple[Sequence[str], Dict[str, str], str],
+    tzdata_storage: Tuple[Sequence[str], Dict[str, str], str],
+) -> Dict[str, object]:
+    lunar_paths, lunar_hashes, lunar_storage_sha = lunar_storage
+    tz_paths, tz_hashes, tz_storage_sha = tzdata_storage
     return {
         "schema_version": MANIFEST_SCHEMA_VERSION,
+        "storage_profile": STORAGE_PROFILE,
         "packages": [
-            {
-                "package_name": "lunar-python",
-                "import_namespace": "_metaphysics_lab_vendor.lunar_python",
-                "version": LUNAR_VERSION,
-                "source_repository": LUNAR_SOURCE_REPOSITORY,
-                "source_revision": LUNAR_SOURCE_REVISION,
-                "source_artifact": LUNAR_ARTIFACT,
-                "artifact_sha256": LUNAR_SHA256,
-                "vendored_tree_sha256": lunar_tree,
-                "vendored_path": "_metaphysics_lab_vendor/lunar_python",
-                "license_spdx": "MIT",
-                "license_file": "vendor/licenses/lunar-python-LICENSE.txt",
-                "bundled": True,
-                "runtime_authority": "bundled",
-            },
-            {
-                "package_name": "tzdata",
-                "import_namespace": "_metaphysics_lab_vendor.tzdata",
-                "version": TZDATA_VERSION,
-                "source_repository": TZDATA_SOURCE_REPOSITORY,
-                "source_revision": TZDATA_SOURCE_REVISION,
-                "source_artifact": TZDATA_ARTIFACT,
-                "artifact_sha256": TZDATA_SHA256,
-                "vendored_tree_sha256": tzdata_tree,
-                "vendored_path": "_metaphysics_lab_vendor/tzdata",
-                "license_spdx": "Apache-2.0",
-                "license_file": "vendor/licenses/tzdata-LICENSE.txt",
-                "bundled": True,
-                "runtime_authority": "bundled",
-                "iana_version": TZDATA_IANA_VERSION,
-            },
+            _manifest_row(
+                package_name="lunar-python",
+                import_namespace="_metaphysics_lab_vendor.lunar_python",
+                version=LUNAR_VERSION,
+                source_repository=LUNAR_SOURCE_REPOSITORY,
+                source_revision=LUNAR_SOURCE_REVISION,
+                source_artifact=LUNAR_ARTIFACT,
+                artifact_sha256=LUNAR_SHA256,
+                vendored_tree_sha256=lunar_tree,
+                vendored_path="_metaphysics_lab_vendor/lunar_python",
+                license_spdx="MIT",
+                license_file="vendor/licenses/lunar-python-LICENSE.txt",
+                artifact_shards=lunar_paths,
+                artifact_shard_sha256=lunar_hashes,
+                artifact_storage_sha256=lunar_storage_sha,
+            ),
+            _manifest_row(
+                package_name="tzdata",
+                import_namespace="_metaphysics_lab_vendor.tzdata",
+                version=TZDATA_VERSION,
+                source_repository=TZDATA_SOURCE_REPOSITORY,
+                source_revision=TZDATA_SOURCE_REVISION,
+                source_artifact=TZDATA_ARTIFACT,
+                artifact_sha256=TZDATA_SHA256,
+                vendored_tree_sha256=tzdata_tree,
+                vendored_path="_metaphysics_lab_vendor/tzdata",
+                license_spdx="Apache-2.0",
+                license_file="vendor/licenses/tzdata-LICENSE.txt",
+                artifact_shards=tz_paths,
+                artifact_shard_sha256=tz_hashes,
+                artifact_storage_sha256=tz_storage_sha,
+                iana_version=TZDATA_IANA_VERSION,
+            ),
         ],
     }
 
@@ -260,7 +404,7 @@ def _manifest(lunar_tree: str, tzdata_tree: str) -> Dict[str, object]:
 def _notices() -> str:
     return """# Third-Party Notices
 
-Metaphysics Lab bundles the following unmodified dependency package data under a private runtime namespace.
+Metaphysics Lab bundles the following dependency package data under a private runtime namespace.
 
 ## lunar-python 1.4.8
 
@@ -268,6 +412,7 @@ Metaphysics Lab bundles the following unmodified dependency package data under a
 - Source revision: 000c8a3d74eed098d6256a28fdd51b869324c559
 - Source artifact: lunar_python-1.4.8.tar.gz
 - Artifact SHA256: 3aa11cc73c25e70ddf0ba5bdac7398c03acc9491a3aa512a91c9642973b669d6
+- Repository storage: deterministic XZ, base64 shards
 - License: MIT (see `lunar-python-LICENSE.txt`)
 
 ## tzdata 2026.3 / IANA 2026c
@@ -276,6 +421,7 @@ Metaphysics Lab bundles the following unmodified dependency package data under a
 - Source revision: a44279419071b7aa41ebe7eca301ebb2e759571a
 - Source artifact: tzdata-2026.3-py2.py3-none-any.whl
 - Artifact SHA256: dc096730c87af6cab1b171c9d532be840741ff5d459015e7f6947bd7d7e54931
+- Repository storage: deterministic XZ, base64 shards
 - License: Apache-2.0 (see `tzdata-LICENSE.txt`)
 """
 
@@ -296,70 +442,114 @@ def _replace_tree(source: Path, target: Path) -> None:
         shutil.rmtree(str(backup))
 
 
-def refresh_vendor(repo_root: Path, lunar_sdist: Path, tzdata_wheel: Path) -> dict:
+def refresh_vendor(
+    repo_root: Path, lunar_sdist: Path, tzdata_wheel: Path
+) -> dict:
     repo_root = Path(repo_root).resolve()
-    lunar_sdist = _verified_artifact(Path(lunar_sdist), LUNAR_ARTIFACT, LUNAR_SHA256)
-    tzdata_wheel = _verified_artifact(Path(tzdata_wheel), TZDATA_ARTIFACT, TZDATA_SHA256)
+    lunar_sdist = _verified_artifact(
+        Path(lunar_sdist), LUNAR_ARTIFACT, LUNAR_SHA256
+    )
+    tzdata_wheel = _verified_artifact(
+        Path(tzdata_wheel), TZDATA_ARTIFACT, TZDATA_SHA256
+    )
 
-    with tempfile.TemporaryDirectory(prefix="metaphysics_vendor_refresh_") as temp_dir:
+    with tempfile.TemporaryDirectory(
+        prefix="metaphysics_vendor_refresh_"
+    ) as temp_dir:
         staging = Path(temp_dir)
         private_root = staging / "_metaphysics_lab_vendor"
-        licenses_root = staging / "vendor" / "licenses"
+        vendor_root = staging / "vendor"
+        licenses_root = vendor_root / "licenses"
+        artifacts_root = vendor_root / "artifacts"
         private_root.mkdir(parents=True)
         licenses_root.mkdir(parents=True)
+        artifacts_root.mkdir(parents=True)
         (private_root / "__init__.py").write_text(
             '"""Project-private bundled third-party runtime dependencies."""\n',
             encoding="utf-8",
         )
+
         _extract_lunar(lunar_sdist, private_root, licenses_root)
         _extract_tzdata(tzdata_wheel, private_root, licenses_root)
         _reject_symlinks(private_root)
         _scan_private_imports(private_root)
-        actual_tz_version, actual_iana = _tzdata_versions(private_root / "tzdata" / "__init__.py")
-        if actual_tz_version != TZDATA_VERSION or actual_iana != TZDATA_IANA_VERSION:
+
+        actual_tz_version, actual_iana = _tzdata_versions(
+            private_root / "tzdata" / "__init__.py"
+        )
+        if (
+            actual_tz_version != TZDATA_VERSION
+            or actual_iana != TZDATA_IANA_VERSION
+        ):
             raise VendorRefreshError(
                 "tzdata package metadata mismatch: expected %s/%s, got %r/%r"
-                % (TZDATA_VERSION, TZDATA_IANA_VERSION, actual_tz_version, actual_iana)
+                % (
+                    TZDATA_VERSION,
+                    TZDATA_IANA_VERSION,
+                    actual_tz_version,
+                    actual_iana,
+                )
             )
+
         lunar_tree = _tree_sha256(private_root / "lunar_python")
         tzdata_tree = _tree_sha256(private_root / "tzdata")
-        manifest = _manifest(lunar_tree, tzdata_tree)
-        manifest_dir = staging / "vendor"
-        (manifest_dir / "manifest.json").write_text(
-            json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        lunar_storage = _store_artifact(lunar_sdist, artifacts_root)
+        tzdata_storage = _store_artifact(tzdata_wheel, artifacts_root)
+        manifest = _manifest(
+            lunar_tree, tzdata_tree, lunar_storage, tzdata_storage
+        )
+
+        (vendor_root / "manifest.json").write_text(
+            json.dumps(
+                manifest, ensure_ascii=False, indent=2, sort_keys=True
+            )
+            + "\n",
             encoding="utf-8",
         )
-        (licenses_root / "THIRD_PARTY_NOTICES.md").write_text(_notices(), encoding="utf-8")
+        (licenses_root / "THIRD_PARTY_NOTICES.md").write_text(
+            _notices(), encoding="utf-8"
+        )
+
+        private_stage = staging / "private-final"
+        vendor_stage = staging / "vendor-final"
+        os.replace(str(private_root), str(private_stage))
+        os.replace(str(vendor_root), str(vendor_stage))
 
         target_private = repo_root / "_metaphysics_lab_vendor"
         target_vendor = repo_root / "vendor"
         target_private.parent.mkdir(parents=True, exist_ok=True)
         target_vendor.parent.mkdir(parents=True, exist_ok=True)
-        private_stage = staging / "private-final"
-        vendor_stage = staging / "vendor-final"
-        os.replace(str(private_root), str(private_stage))
-        os.replace(str(manifest_dir), str(vendor_stage))
         _replace_tree(private_stage, target_private)
-        _replace_tree(vendor_stage, target_vendor)
+        try:
+            _replace_tree(vendor_stage, target_vendor)
+        except Exception:
+            raise
+
     return manifest
 
 
-def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Refresh pinned Metaphysics Lab private vendor dependencies")
-    parser.add_argument("--repo-root", default=str(Path(__file__).resolve().parents[1]))
-    parser.add_argument("--lunar-sdist", required=True)
-    parser.add_argument("--tzdata-wheel", required=True)
+def _parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--repo-root",
+        type=Path,
+        default=Path(__file__).resolve().parents[1],
+    )
+    parser.add_argument(
+        "--lunar-sdist", type=Path, required=True
+    )
+    parser.add_argument(
+        "--tzdata-wheel", type=Path, required=True
+    )
     return parser
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
-    args = _build_parser().parse_args(argv)
-    try:
-        manifest = refresh_vendor(Path(args.repo_root), Path(args.lunar_sdist), Path(args.tzdata_wheel))
-    except VendorRefreshError as exc:
-        print("vendor refresh failed: %s" % exc)
-        return 1
-    print(json.dumps(manifest, ensure_ascii=False, sort_keys=True))
+    args = _parser().parse_args(argv)
+    manifest = refresh_vendor(
+        args.repo_root, args.lunar_sdist, args.tzdata_wheel
+    )
+    print(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True))
     return 0
 
 

@@ -1,8 +1,8 @@
 """Materialize pinned private runtime dependencies from committed artifact shards.
 
-Repository storage keeps exact upstream artifacts as checksum-protected base64
-shards.  Runtime materialization recreates the approved private package tree in
-an isolated temporary directory before calendar providers import it.
+Repository storage keeps checksum-protected base64 shards of deterministic XZ
+streams. Materialization validates each storage layer before extracting the
+approved private package tree.
 """
 
 from __future__ import annotations
@@ -12,6 +12,7 @@ import ast
 import base64
 import hashlib
 import io
+import lzma
 import shutil
 import stat
 import sys
@@ -70,20 +71,54 @@ def _artifact_bytes(repo_root: Path, row: Mapping[str, object]) -> bytes:
         try:
             payload = path.read_bytes()
         except OSError as exc:
-            raise VendorMaterializationError("vendor artifact shard is unavailable: %s" % relative) from exc
+            raise VendorMaterializationError(
+                "vendor artifact shard is unavailable: %s" % relative
+            ) from exc
         expected_shard = shard_hashes.get(relative)
         actual_shard = hashlib.sha256(payload).hexdigest()
         if not isinstance(expected_shard, str) or actual_shard != expected_shard:
-            raise VendorMaterializationError("vendor artifact shard digest mismatch: %s" % relative)
+            raise VendorMaterializationError(
+                "vendor artifact shard digest mismatch: %s" % relative
+            )
         try:
             encoded_parts.append(payload.decode("ascii").strip())
         except UnicodeDecodeError as exc:
-            raise VendorMaterializationError("vendor artifact shard is not ASCII: %s" % relative) from exc
+            raise VendorMaterializationError(
+                "vendor artifact shard is not ASCII: %s" % relative
+            ) from exc
 
+    encoding = row.get("artifact_storage_encoding", "base64")
+    if encoding != "base64":
+        raise VendorMaterializationError(
+            "unsupported vendor artifact storage encoding: %r" % (encoding,)
+        )
     try:
-        artifact = base64.b64decode("".join(encoded_parts).encode("ascii"), validate=True)
+        stored = base64.b64decode(
+            "".join(encoded_parts).encode("ascii"), validate=True
+        )
     except Exception as exc:
         raise VendorMaterializationError("vendor artifact base64 is invalid") from exc
+
+    expected_storage = row.get("artifact_storage_sha256")
+    if expected_storage is not None:
+        actual_storage = hashlib.sha256(stored).hexdigest()
+        if not isinstance(expected_storage, str) or actual_storage != expected_storage:
+            raise VendorMaterializationError("vendor artifact storage digest mismatch")
+
+    compression = row.get("artifact_compression", "none")
+    if compression in (None, "none"):
+        artifact = stored
+    elif compression == "xz":
+        try:
+            artifact = lzma.decompress(stored, format=lzma.FORMAT_XZ)
+        except lzma.LZMAError as exc:
+            raise VendorMaterializationError(
+                "vendor artifact XZ stream is invalid"
+            ) from exc
+    else:
+        raise VendorMaterializationError(
+            "unsupported vendor artifact compression: %r" % (compression,)
+        )
 
     expected_artifact = row.get("artifact_sha256")
     actual_artifact = hashlib.sha256(artifact).hexdigest()
@@ -98,9 +133,13 @@ def _extract_lunar(artifact: bytes, private_root: Path) -> None:
         members = archive.getmembers()
         for member in members:
             if not _safe_archive_path(member.name):
-                raise VendorMaterializationError("unsafe lunar archive member: %s" % member.name)
-            if member.issym() or member.islnk():
-                raise VendorMaterializationError("lunar archive links are not allowed: %s" % member.name)
+                raise VendorMaterializationError(
+                    "unsafe lunar archive member: %s" % member.name
+                )
+            if member.issym() or member.islnk() or member.isdev():
+                raise VendorMaterializationError(
+                    "lunar archive links/devices are not allowed: %s" % member.name
+                )
         copied = 0
         for member in members:
             if not member.isfile():
@@ -115,7 +154,9 @@ def _extract_lunar(artifact: bytes, private_root: Path) -> None:
                 continue
             source = archive.extractfile(member)
             if source is None:
-                raise VendorMaterializationError("unable to read lunar archive member")
+                raise VendorMaterializationError(
+                    "unable to read lunar archive member"
+                )
             target = target_root.joinpath(*relative_parts)
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(source.read())
@@ -131,10 +172,14 @@ def _extract_tzdata(artifact: bytes, private_root: Path) -> None:
         copied_zoneinfo = 0
         for info in archive.infolist():
             if not _safe_archive_path(info.filename):
-                raise VendorMaterializationError("unsafe tzdata wheel member: %s" % info.filename)
+                raise VendorMaterializationError(
+                    "unsafe tzdata wheel member: %s" % info.filename
+                )
             mode = (info.external_attr >> 16) & 0o170000
             if mode == stat.S_IFLNK:
-                raise VendorMaterializationError("tzdata wheel links are not allowed: %s" % info.filename)
+                raise VendorMaterializationError(
+                    "tzdata wheel links are not allowed: %s" % info.filename
+                )
             if info.is_dir():
                 continue
             if info.filename == "tzdata/__init__.py":
@@ -149,7 +194,9 @@ def _extract_tzdata(artifact: bytes, private_root: Path) -> None:
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(archive.read(info))
         if not copied_init or copied_zoneinfo == 0:
-            raise VendorMaterializationError("tzdata wheel package resources are missing")
+            raise VendorMaterializationError(
+                "tzdata wheel package resources are missing"
+            )
 
 
 def _validate_python_imports(private_root: Path) -> None:
@@ -158,7 +205,9 @@ def _validate_python_imports(private_root: Path) -> None:
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         except (OSError, UnicodeDecodeError, SyntaxError) as exc:
-            raise VendorMaterializationError("invalid vendored Python source: %s" % path) from exc
+            raise VendorMaterializationError(
+                "invalid vendored Python source: %s" % path
+            ) from exc
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
                 names = [alias.name for alias in node.names]
@@ -167,7 +216,9 @@ def _validate_python_imports(private_root: Path) -> None:
             else:
                 continue
             if any(name.split(".", 1)[0] in forbidden for name in names):
-                raise VendorMaterializationError("vendored source imports a public dependency name: %s" % path)
+                raise VendorMaterializationError(
+                    "vendored source imports a public dependency name: %s" % path
+                )
 
 
 def materialize_private_vendor(repo_root: Path, target_root: Path) -> Path:
@@ -183,8 +234,9 @@ def materialize_private_vendor(repo_root: Path, target_root: Path) -> Path:
     )
 
     try:
-        lunar = bundled_dependency("lunar-python", repo_root / "vendor" / "manifest.json")
-        tzdata = bundled_dependency("tzdata", repo_root / "vendor" / "manifest.json")
+        manifest_path = repo_root / "vendor" / "manifest.json"
+        lunar = bundled_dependency("lunar-python", manifest_path)
+        tzdata = bundled_dependency("tzdata", manifest_path)
         _extract_lunar(_artifact_bytes(repo_root, lunar), private_root)
         _extract_tzdata(_artifact_bytes(repo_root, tzdata), private_root)
         _validate_python_imports(private_root)
@@ -192,7 +244,10 @@ def materialize_private_vendor(repo_root: Path, target_root: Path) -> Path:
             expected = row.get("vendored_tree_sha256")
             actual = _tree_sha256(private_root / package_dir)
             if not isinstance(expected, str) or actual != expected:
-                raise VendorMaterializationError("vendored package tree digest mismatch: %s" % row.get("package_name"))
+                raise VendorMaterializationError(
+                    "vendored package tree digest mismatch: %s"
+                    % row.get("package_name")
+                )
     except Exception:
         shutil.rmtree(str(private_root), ignore_errors=True)
         raise
