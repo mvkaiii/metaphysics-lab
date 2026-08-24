@@ -7,7 +7,9 @@ Legacy schema 1.0 bare nine-file packs remain readable and explicitly migratable
 
 from __future__ import annotations
 
+import hashlib
 import json
+import math
 import re
 from datetime import datetime
 from pathlib import Path
@@ -87,6 +89,8 @@ _LEGACY_SUBJECT_PATTERN = re.compile(r"^[A-Za-z0-9._-]+$")
 _OPAQUE_SUBJECT_PATTERN = re.compile(r"^subj_[0-9a-f]{12,}$")
 _SHORT_ID_PATTERN = re.compile(r"^[0-9A-F]{6,}$")
 _CALIBRATION_STATES = frozenset(("uncalibrated", "basic", "calibrated"))
+_RESERVED_INTERNAL_RECORD_TYPES = frozenset(("historical_calibration_lock",))
+_RECORD_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:@+-]*$")
 
 
 def _mapping(value: object, field_name: str) -> Mapping[str, Any]:
@@ -99,6 +103,60 @@ def _text(value: object, field_name: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise DistributionError("invalid_case_payload", "%s must be a non-empty string" % field_name, {"field": field_name})
     return value.strip()
+
+
+def _record_id(value: object, *, error_code: str = "invalid_case_payload") -> str:
+    if not isinstance(value, str) or value != value.strip() or not _RECORD_ID_PATTERN.fullmatch(value):
+        raise DistributionError(
+            error_code,
+            "record_id must be a canonical safe single-line identifier",
+            {"field": "entry.record_id"},
+        )
+    return value
+
+
+def _legacy_record_id(value: object, *, error_code: str = "invalid_case_markdown") -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise DistributionError(
+            error_code,
+            "legacy record_id must be a non-empty string",
+            {"field": "entry.record_id"},
+        )
+    return value.strip()
+
+
+def _validate_json_value(value: object, *, error_code: str, field: str) -> None:
+    if isinstance(value, float) and not math.isfinite(value):
+        raise DistributionError(
+            error_code,
+            "Case record JSON cannot contain non-finite numbers",
+            {"field": field},
+        )
+    if isinstance(value, Mapping):
+        for key, item in value.items():
+            if isinstance(key, float) and not math.isfinite(key):
+                raise DistributionError(
+                    error_code,
+                    "Case record JSON cannot contain non-finite numbers",
+                    {"field": "%s.<key>" % field},
+                )
+            _validate_json_value(item, error_code=error_code, field="%s.%s" % (field, key))
+    elif isinstance(value, list):
+        for index, item in enumerate(value):
+            _validate_json_value(item, error_code=error_code, field="%s[%d]" % (field, index))
+
+
+def _reject_json_constant(value: str):
+    raise ValueError("non-standard JSON numeric constant: %s" % value)
+
+
+def _json_semantically_equal(left: object, right: object) -> bool:
+    try:
+        return json.dumps(left, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False) == json.dumps(
+            right, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False
+        )
+    except (TypeError, ValueError):
+        return False
 
 
 def _timestamp(value: object, field_name: str) -> str:
@@ -127,8 +185,13 @@ def _identity_from_payload(payload: Mapping[str, object]) -> dict:
         raise DistributionError("invalid_subject_id", "subject_short_id must be uppercase hexadecimal text")
     if not subject_id[5:].upper().startswith(short_id):
         raise DistributionError("invalid_subject_id", "subject_short_id must be derived from subject_id")
-    if label != normalize_filename_label(label):
-        raise DistributionError("invalid_subject_display_name", "filename_label must be normalized")
+    expected_label = normalize_filename_label(display)
+    if label != expected_label:
+        raise DistributionError(
+            "subject_identity_mismatch",
+            "filename_label must equal normalized subject_display_name",
+            {"filename_label": label, "expected_filename_label": expected_label},
+        )
     return {"subject_id": subject_id, "subject_display_name": display, "subject_short_id": short_id, "filename_label": label}
 
 
@@ -397,12 +460,14 @@ def validate_case(payload: Mapping[str, object]) -> dict:
     for canonical in CASE_FILES:
         if canonical not in files:
             continue
-        metadata, _ = parse_front_matter(files[canonical])
+        metadata, body = parse_front_matter(files[canonical])
         missing = [key for key in _REQUIRED_FRONT_MATTER if key not in metadata]
         if missing:
             raise DistributionError("invalid_case_metadata", "Case file is missing required metadata", {"filename": actual_by_canonical[canonical], "missing_fields": missing})
         if metadata["record_type"] != _RECORD_TYPES[canonical]:
             raise DistributionError("case_record_type_mismatch", "Case filename and record_type do not match", {"filename": actual_by_canonical[canonical], "record_type": metadata["record_type"]})
+        if canonical in _TRACKING_FILES:
+            _record_entries(body, legacy_record_ids=metadata["case_schema_version"] == "1.0")
         versions.add(metadata["case_schema_version"])
         contracts.add(metadata["project_contract_version"])
         current_subject = metadata["subject_id"]
@@ -472,6 +537,8 @@ def migrate_case(payload: Mapping[str, object]) -> dict:
         metadata.update(_metadata(canonical, identity, metadata["created_at"], metadata.get("last_modified_by", "ai")))
         metadata["last_updated_at"] = _timestamp(payload.get("updated_at"), "updated_at")
         metadata["legacy_subject_id"] = old_subject
+        if canonical in _TRACKING_FILES:
+            body = _migrate_legacy_tracking_body(body, canonical)
         body = _prefix_title(body, identity["subject_display_name"])
         if canonical == "00_專案索引.md":
             body = _replace_manifest_lines(body, identity, CASE_FILES)
@@ -525,9 +592,68 @@ def rename_case_subject_files(case_files: Mapping[str, object], new_subject_disp
 
 
 def _render_entry(entry: Mapping[str, object]) -> str:
-    record_id = _text(entry.get("record_id"), "entry.record_id")
-    payload = json.dumps(dict(entry), ensure_ascii=False, sort_keys=True, indent=2)
+    record_id = _record_id(entry.get("record_id"))
+    normalized = dict(entry)
+    normalized["record_id"] = record_id
+    _validate_json_value(normalized, error_code="invalid_case_payload", field="entry")
+    try:
+        payload = json.dumps(normalized, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False)
+    except (TypeError, ValueError) as exc:
+        raise DistributionError("invalid_case_payload", "tracking record payload must be standard JSON") from exc
     return "### %s\n\n```json\n%s\n```" % (record_id, payload)
+
+
+def _record_entries(body: str, *, legacy_record_ids: bool = False) -> dict:
+    start, end = body.find(_RECORDS_START), body.find(_RECORDS_END)
+    if start < 0 or end < 0 or end <= start:
+        raise DistributionError("invalid_case_markdown", "tracking Case file is missing record boundary markers")
+    content_start = start + len(_RECORDS_START)
+    current = body[content_start:end].strip()
+    if current == _EMPTY_RECORDS or not current:
+        return {}
+    records = {}
+    parse_record_id = _legacy_record_id if legacy_record_ids else _record_id
+    for chunk in re.split(r"\n\n(?=### )", current):
+        first_line, marker, rest = chunk.partition("\n\n```json\n")
+        if not marker or not first_line.startswith("### ") or not rest.endswith("\n```"):
+            raise DistributionError("invalid_case_markdown", "tracking record block is malformed")
+        record_id = parse_record_id(first_line[4:], error_code="invalid_case_markdown")
+        try:
+            parsed = json.loads(rest[:-4], parse_constant=_reject_json_constant)
+        except (TypeError, ValueError) as exc:
+            raise DistributionError("invalid_case_markdown", "tracking record JSON cannot be parsed") from exc
+        if not isinstance(parsed, Mapping):
+            raise DistributionError("invalid_case_markdown", "tracking record payload must be a mapping")
+        _validate_json_value(parsed, error_code="invalid_case_markdown", field="tracking_record")
+        payload_record_id = parse_record_id(parsed.get("record_id"), error_code="invalid_case_markdown")
+        if payload_record_id != record_id:
+            raise DistributionError("invalid_case_markdown", "tracking record heading does not match payload record_id")
+        if record_id in records:
+            raise DistributionError("invalid_case_markdown", "tracking file contains duplicate record_id", {"record_id": record_id})
+        normalized = dict(parsed)
+        normalized["record_id"] = record_id
+        records[record_id] = normalized
+    return records
+
+
+def _migrated_record_id(canonical: str, legacy_record_id: str) -> str:
+    if legacy_record_id == legacy_record_id.strip() and _RECORD_ID_PATTERN.fullmatch(legacy_record_id):
+        return legacy_record_id
+    digest = hashlib.sha256(legacy_record_id.encode("utf-8")).hexdigest()
+    return "legacy-%s-%s" % (canonical[:2], digest)
+
+
+def _migrate_legacy_tracking_body(body: str, canonical: str) -> str:
+    records = _record_entries(body, legacy_record_ids=True)
+    rendered = []
+    for legacy_id, entry in records.items():
+        normalized = dict(entry)
+        normalized["record_id"] = _migrated_record_id(canonical, legacy_id)
+        rendered.append(_render_entry(normalized))
+    start, end = body.find(_RECORDS_START), body.find(_RECORDS_END)
+    content_start = start + len(_RECORDS_START)
+    content = _EMPTY_RECORDS if not rendered else "\n\n".join(rendered)
+    return body[:content_start] + "\n" + content + "\n" + body[end:]
 
 
 def _append_record(body: str, entry_text: str) -> str:
@@ -586,7 +712,7 @@ def _resolve_requested_canonical(filename: str) -> str:
         raise DistributionError("case_file_set_mismatch", str(exc), {"filename": filename}) from exc
 
 
-def update_case_record(payload: Mapping[str, object]) -> dict:
+def _update_case_record(payload: Mapping[str, object], *, allow_reserved_internal: bool = False) -> dict:
     payload = _mapping(payload, "payload")
     files, actual_by_canonical, _ = _case_files(payload.get("case_files"))
     validation = validate_case({"case_files": payload.get("case_files")})
@@ -601,8 +727,25 @@ def update_case_record(payload: Mapping[str, object]) -> dict:
     if operation != "append":
         raise DistributionError("unsupported_case_mutation", "unsupported Case mutation operation", {"operation": operation})
     entry = _mapping(payload.get("entry"), "entry")
+    record_id = _record_id(entry.get("record_id"))
+    normalized_entry = dict(entry)
+    normalized_entry["record_id"] = record_id
+    _validate_json_value(normalized_entry, error_code="invalid_case_payload", field="entry")
+    entry_subject_id = normalized_entry.get("subject_id")
+    if entry_subject_id is not None and entry_subject_id != validation.get("subject_id"):
+        raise DistributionError(
+            "case_subject_mismatch",
+            "tracking record subject_id must match the authoritative Case subject",
+            {"entry_subject_id": entry_subject_id, "case_subject_id": validation.get("subject_id")},
+        )
+    if normalized_entry.get("record_type") in _RESERVED_INTERNAL_RECORD_TYPES and not allow_reserved_internal:
+        raise DistributionError(
+            "immutable_case_record",
+            "reserved internal Case record types cannot be appended through the public mutation API",
+            {"filename": requested_filename, "record_type": normalized_entry.get("record_type")},
+        )
     if canonical == "05_驗證事件紀錄.md":
-        _validate_05_entry(entry)
+        _validate_05_entry(normalized_entry)
     updated_at = _timestamp(payload.get("updated_at"), "updated_at")
     modified_by = _text(payload.get("last_modified_by", "ai"), "last_modified_by")
     changed = {}
@@ -620,7 +763,26 @@ def update_case_record(payload: Mapping[str, object]) -> dict:
         body = _tracking_body({"05_驗證事件紀錄.md": "驗證事件紀錄", "06_流年追蹤紀錄.md": "流年追蹤紀錄", "07_問事追蹤紀錄.md": "問事追蹤紀錄", "08_重大決策紀錄.md": "重大決策紀錄"}[canonical], identity["subject_display_name"])
         index_actual = actual_by_canonical["00_專案索引.md"]
         changed[index_actual] = _set_index_materialized(files["00_專案索引.md"], canonical, actual_target, updated_at, modified_by)
+    existing_records = _record_entries(body, legacy_record_ids=legacy)
+    if record_id in existing_records:
+        if _json_semantically_equal(existing_records[record_id], normalized_entry):
+            return {"subject_id": validation["subject_id"], "changed_files": {}}
+        raise DistributionError(
+            "duplicate_record_id",
+            "record_id already exists in this Case slot with different content",
+            {"filename": requested_filename, "record_id": record_id},
+        )
     metadata["last_updated_at"], metadata["last_modified_by"] = updated_at, modified_by
-    updated_body = _append_record(body, _render_entry(entry))
+    updated_body = _append_record(body, _render_entry(normalized_entry))
     changed[actual_target] = _rewrite_case_file(metadata, updated_body) if existing else _render_case_file(canonical, metadata, updated_body)
     return {"subject_id": validation["subject_id"], "changed_files": changed}
+
+
+def update_case_record(payload: Mapping[str, object]) -> dict:
+    """Public progressive Case mutation entry point; reserved authority records are blocked."""
+    return _update_case_record(payload, allow_reserved_internal=False)
+
+
+def _append_internal_case_record(payload: Mapping[str, object]) -> dict:
+    """Internal-only append path for runtime-owned immutable authority records."""
+    return _update_case_record(payload, allow_reserved_internal=True)

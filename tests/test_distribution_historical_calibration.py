@@ -9,6 +9,8 @@ from engine.distribution.calibration import (
     lock_historical_calibration,
 )
 
+from tests.historical_authority_helpers import authoritative_finalize, authoritative_lock
+
 
 BASE_FILES = [
     "00_專案索引.md",
@@ -122,9 +124,47 @@ class HistoricalCalibrationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             lock_blind_forecast(bad)
 
+    def test_blind_forecast_rejects_mixed_subject_aware_base_files(self):
+        payload = {
+            "blind_forecast_id": "bf-mixed-subjects",
+            "subject_id": "subj_aaaaaaaaaaaa",
+            "question_type": "流年問事",
+            "question_reference": "2027-work",
+            "locked_at": "2026-08-23T10:30:00+08:00",
+            "source_files_used": [
+                "Kai_AAAAAA_00_專案索引.md",
+                "Other_BBBBBB_01_命盤核心摘要.md",
+                "Kai_AAAAAA_02_命盤資料校驗紀錄.md",
+                "Other_BBBBBB_03_八字結構化資料包.md",
+                "Kai_AAAAAA_04_紫微基礎資料包.md",
+            ],
+            "blind_forecast_payload": {"核心結論": "2027工作責任活躍"},
+        }
+        with self.assertRaises(ValueError):
+            lock_blind_forecast(payload)
+
+    def test_blind_forecast_rejects_subject_id_short_id_mismatch(self):
+        payload = {
+            "blind_forecast_id": "bf-subject-mismatch",
+            "subject_id": "subj_aaaaaaaaaaaa",
+            "question_type": "flow-year",
+            "question_reference": "2027-work",
+            "locked_at": "2026-08-23T10:30:00+08:00",
+            "source_files_used": [
+                "Kai_BBBBBB_00_專案索引.md",
+                "Kai_BBBBBB_01_命盤核心摘要.md",
+                "Kai_BBBBBB_02_命盤資料校驗紀錄.md",
+                "Kai_BBBBBB_03_八字結構化資料包.md",
+                "Kai_BBBBBB_04_紫微基礎資料包.md",
+            ],
+            "blind_forecast_payload": {"summary": "active"},
+        }
+        with self.assertRaises(ValueError):
+            lock_blind_forecast(payload)
+
     def test_historical_lock_binds_exact_selector_selection(self):
         points = [point(2016), point(2018), point(2020), point(2023), point(2019, "control")]
-        result = lock_historical_calibration(
+        result = authoritative_lock(
             {
                 "calibration_id": "HC-2026-001",
                 "subject_id": "case-001",
@@ -142,7 +182,7 @@ class HistoricalCalibrationTests(unittest.TestCase):
         wrong = points[:]
         wrong[0] = point(2017)
         with self.assertRaises(ValueError):
-            lock_historical_calibration(
+            authoritative_lock(
                 {
                     "calibration_id": "HC-2026-002",
                     "subject_id": "case-001",
@@ -162,13 +202,13 @@ class HistoricalCalibrationTests(unittest.TestCase):
             "canonical_test_points": points,
             "locked_at": "2026-08-23T10:31:00+08:00",
         }
-        one = lock_historical_calibration({**base, "supplemental_blind_points": []})
-        two = lock_historical_calibration({**base, "supplemental_blind_points": [point(2021)]})
+        one = authoritative_lock({**base, "supplemental_blind_points": []})
+        two = authoritative_lock({**base, "supplemental_blind_points": [point(2021)]})
         self.assertEqual(one["canonical_selection_digest"], two["canonical_selection_digest"])
         self.assertNotEqual(one["payload_digest"], two["payload_digest"])
 
     def test_finalize_rejects_tampered_locked_payload(self):
-        locked = lock_historical_calibration(
+        locked = authoritative_lock(
             {
                 "calibration_id": "HC-2026-001",
                 "subject_id": "case-001",
@@ -181,7 +221,7 @@ class HistoricalCalibrationTests(unittest.TestCase):
         tampered = copy.deepcopy(locked["locked_payload"])
         tampered["canonical_test_points"][0]["interpretation_text"] = "事後改答案"
         with self.assertRaises(ValueError):
-            finalize_historical_calibration(
+            authoritative_finalize(locked, 
                 {
                     "locked_payload": tampered,
                     "payload_digest": locked["payload_digest"],
@@ -190,7 +230,7 @@ class HistoricalCalibrationTests(unittest.TestCase):
             )
 
     def test_finalize_maps_january_actual_date_to_same_flow_year(self):
-        locked = lock_historical_calibration(
+        locked = authoritative_lock(
             {
                 "calibration_id": "HC-2026-001",
                 "subject_id": "case-001",
@@ -200,7 +240,7 @@ class HistoricalCalibrationTests(unittest.TestCase):
                 "locked_at": "2026-08-23T10:31:00+08:00",
             }
         )
-        result = finalize_historical_calibration(
+        result = authoritative_finalize(locked, 
             {
                 "locked_payload": locked["locked_payload"],
                 "payload_digest": locked["payload_digest"],
@@ -219,7 +259,7 @@ class HistoricalCalibrationTests(unittest.TestCase):
         self.assertEqual(evaluation["offset_flow_years"], 0)
 
     def test_finalize_marks_after_next_lichun_as_shifted(self):
-        locked = lock_historical_calibration(
+        locked = authoritative_lock(
             {
                 "calibration_id": "HC-2026-001",
                 "subject_id": "case-001",
@@ -229,7 +269,7 @@ class HistoricalCalibrationTests(unittest.TestCase):
                 "locked_at": "2026-08-23T10:31:00+08:00",
             }
         )
-        result = finalize_historical_calibration(
+        result = authoritative_finalize(locked, 
             {
                 "locked_payload": locked["locked_payload"],
                 "payload_digest": locked["payload_digest"],
@@ -248,7 +288,7 @@ class HistoricalCalibrationTests(unittest.TestCase):
         self.assertEqual(evaluation["offset_flow_years"], 1)
 
     def test_cannot_recall_is_unscorable_and_creates_no_actual_event(self):
-        locked = lock_historical_calibration(
+        locked = authoritative_lock(
             {
                 "calibration_id": "HC-2026-001",
                 "subject_id": "case-001",
@@ -258,7 +298,7 @@ class HistoricalCalibrationTests(unittest.TestCase):
                 "locked_at": "2026-08-23T10:31:00+08:00",
             }
         )
-        result = finalize_historical_calibration(
+        result = authoritative_finalize(locked, 
             {
                 "locked_payload": locked["locked_payload"],
                 "payload_digest": locked["payload_digest"],
@@ -274,7 +314,7 @@ class HistoricalCalibrationTests(unittest.TestCase):
         points = [
             point(2016), point(2018), point(2020), point(2023, blindness="contaminated"), point(2019, "control")
         ]
-        locked = lock_historical_calibration(
+        locked = authoritative_lock(
             {
                 "calibration_id": "HC-2026-001",
                 "subject_id": "case-001",
@@ -290,7 +330,7 @@ class HistoricalCalibrationTests(unittest.TestCase):
             {"reference_year": 2020, "verification_state": "partial", "actual_event": "C"},
             {"reference_year": 2023, "verification_state": "matched", "actual_event": "D"},
         ]
-        result = finalize_historical_calibration(
+        result = authoritative_finalize(locked, 
             {"locked_payload": locked["locked_payload"], "payload_digest": locked["payload_digest"], "responses": responses}
         )
         self.assertEqual(result["blind_scorable_count"], 3)

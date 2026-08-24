@@ -8,8 +8,13 @@ variant, and blocked conclusions explicit.
 from __future__ import annotations
 
 import json
+import re
+from datetime import date
 from typing import Mapping
 
+from engine.natal.candidates import classify_candidate_facts
+
+from . import natal as distribution_natal
 from .case_pack import (
     BASE_CASE_FILES,
     CASE_FILES,
@@ -31,6 +36,29 @@ _REQUIRED_PARTIAL_BLOCKS = frozenset((
     "single_chart_personalized_forecast",
 ))
 
+_KNOWN_FACT_FIELDS = frozenset((
+    "sex",
+    "birth_date",
+    "birth_place",
+    "resolved_place_label",
+    "timezone",
+    "reported_birth_time",
+    "reported_birth_time_range",
+))
+_TEXT_KNOWN_FACT_FIELDS = frozenset((
+    "sex", "birth_date", "birth_place", "resolved_place_label", "timezone",
+))
+_TIME_TEXT_PATTERN = re.compile(r"^(?:[01]\d|2[0-3]):[0-5]\d$")
+
+
+def _valid_time_text(value: object) -> bool:
+    return isinstance(value, str) and bool(_TIME_TEXT_PATTERN.fullmatch(value))
+
+
+def _time_minutes(value: str) -> int:
+    hour, minute = value.split(":", 1)
+    return int(hour) * 60 + int(minute)
+
 
 def _mapping(value: object, field: str) -> Mapping[str, object]:
     if not isinstance(value, Mapping):
@@ -42,10 +70,58 @@ def _json(value: object) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2)
 
 
+def _json_semantically_equal(left: object, right: object) -> bool:
+    try:
+        return json.dumps(left, ensure_ascii=False, sort_keys=True, separators=(",", ":")) == json.dumps(
+            right, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        )
+    except (TypeError, ValueError):
+        return False
+
+
+def _has_control_characters(value: str) -> bool:
+    return any(ord(char) < 32 or ord(char) == 127 for char in value)
+
+
 def _list_lines(values) -> list:
     if not isinstance(values, (list, tuple)):
         return ["- none"]
     return ["- `%s`" % str(item) for item in values] or ["- none"]
+
+
+def _validate_known_facts(known: Mapping[str, object]) -> None:
+    unexpected_known = sorted(set(known) - _KNOWN_FACT_FIELDS)
+    if unexpected_known:
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "known_facts contains candidate-dependent or unsupported fields",
+            {"unexpected_known_facts": unexpected_known},
+        )
+    for field in _TEXT_KNOWN_FACT_FIELDS:
+        if field in known:
+            item = known[field]
+            if not isinstance(item, str) or not item.strip() or _has_control_characters(item):
+                raise DistributionError(
+                    "invalid_candidate_envelope",
+                    "known_facts text fields must contain non-empty single-line text without control characters",
+                    {"field": field},
+                )
+    birth_date = known.get("birth_date")
+    if isinstance(birth_date, str):
+        try:
+            parsed_date = date.fromisoformat(birth_date)
+        except ValueError as exc:
+            raise DistributionError(
+                "invalid_candidate_envelope",
+                "birth_date must be a valid Gregorian YYYY-MM-DD date",
+                {"birth_date": birth_date},
+            ) from exc
+        if parsed_date.isoformat() != birth_date:
+            raise DistributionError(
+                "invalid_candidate_envelope",
+                "birth_date must use canonical Gregorian YYYY-MM-DD text",
+                {"birth_date": birth_date},
+            )
 
 
 def _validate_envelope(value: object) -> dict:
@@ -59,20 +135,72 @@ def _validate_envelope(value: object) -> dict:
         )
     candidate_count = raw.get("candidate_count")
     candidates = raw.get("candidates")
-    if not isinstance(candidate_count, int) or candidate_count < 1 or not isinstance(candidates, list) or len(candidates) != candidate_count:
-        raise DistributionError("invalid_candidate_envelope", "candidate_count must match the candidate list")
+    if type(candidate_count) is not int or candidate_count < 1 or not isinstance(candidates, list) or len(candidates) != candidate_count:
+        raise DistributionError("invalid_candidate_envelope", "candidate_count must be a true integer matching the candidate list")
     for field in (
         "known_facts", "invariant_bazi_facts", "variant_bazi_facts",
         "invariant_ziwei_facts", "variant_ziwei_facts", "provenance",
     ):
         if not isinstance(raw.get(field), Mapping):
             raise DistributionError("invalid_candidate_envelope", "%s must be a mapping" % field, {"field": field})
+    known = raw["known_facts"]
+    _validate_known_facts(known)
+    reported_time = known.get("reported_birth_time")
+    if reported_time is not None and not _valid_time_text(reported_time):
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "reported_birth_time must be valid HH:MM text or null",
+            {"reported_birth_time": reported_time},
+        )
+    if reported_time is not None:
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "partial Case cannot claim one exact reported birth time",
+            {"reported_birth_time": reported_time},
+        )
+    reported_range = known.get("reported_birth_time_range")
+    if reported_range is not None:
+        if not isinstance(reported_range, (list, tuple)) or len(reported_range) != 2 or any(
+            not _valid_time_text(item) for item in reported_range
+        ):
+            raise DistributionError(
+                "invalid_candidate_envelope",
+                "reported_birth_time_range must be two valid HH:MM values or null",
+            )
+        if _time_minutes(reported_range[1]) < _time_minutes(reported_range[0]):
+            raise DistributionError(
+                "invalid_candidate_envelope",
+                "reported_birth_time_range cannot cross the civil-date boundary in v1",
+            )
+    if precision == "unknown_time" and reported_range is not None:
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "unknown_time candidate envelope cannot claim a reported birth-time range",
+        )
+    if precision == "bounded" and reported_range is None:
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "bounded candidate envelope requires a two-value reported birth-time range",
+        )
     for field in ("allowed_analysis", "blocked_analysis", "boundary_ambiguities"):
         if not isinstance(raw.get(field), list):
             raise DistributionError("invalid_candidate_envelope", "%s must be a list" % field, {"field": field})
+    allowed = raw["allowed_analysis"]
     blocked = raw["blocked_analysis"]
-    if any(not isinstance(item, str) for item in blocked):
-        raise DistributionError("invalid_candidate_envelope", "blocked_analysis must contain string scope identifiers")
+    for field, scopes in (("allowed_analysis", allowed), ("blocked_analysis", blocked)):
+        if any(not isinstance(item, str) or not item.strip() or item != item.strip() for item in scopes):
+            raise DistributionError(
+                "invalid_candidate_envelope",
+                "%s must contain canonical non-empty string scope identifiers" % field,
+                {"field": field},
+            )
+    overlap = sorted(set(allowed) & set(blocked))
+    if overlap:
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "allowed_analysis and blocked_analysis must be mutually exclusive",
+            {"overlapping_analysis": overlap},
+        )
     missing_blocks = sorted(_REQUIRED_PARTIAL_BLOCKS - set(blocked))
     if missing_blocks:
         raise DistributionError(
@@ -82,7 +210,75 @@ def _validate_envelope(value: object) -> dict:
         )
     if raw["provenance"].get("midpoint_used") is not False or raw["provenance"].get("default_time_used") is not False:
         raise DistributionError("invalid_candidate_envelope", "partial Case cannot accept midpoint/default-time candidate provenance")
+    if any(not isinstance(item, Mapping) for item in candidates):
+        raise DistributionError("invalid_candidate_envelope", "candidate entries must be structured mappings")
+    try:
+        classified = classify_candidate_facts(candidates)
+    except (KeyError, TypeError, ValueError) as exc:
+        raise DistributionError("invalid_candidate_envelope", "candidate facts cannot be classified") from exc
+    for field in (
+        "invariant_bazi_facts", "variant_bazi_facts",
+        "invariant_ziwei_facts", "variant_ziwei_facts",
+    ):
+        if not _json_semantically_equal(raw[field], classified[field]):
+            raise DistributionError(
+                "invalid_candidate_envelope",
+                "candidate classification does not match candidate facts",
+                {"field": field},
+            )
     return raw
+
+
+def _canonical_birth_basis(envelope: Mapping[str, object]) -> dict:
+    known = envelope["known_facts"]
+    birth = {
+        "sex": known.get("sex"),
+        "birth_date": known.get("birth_date"),
+        "birth_place": known.get("birth_place"),
+    }
+    if envelope["natal_precision_state"] == "bounded":
+        birth["birth_time_range"] = list(known["reported_birth_time_range"])
+    return birth
+
+
+def _validate_builder_authority(payload: Mapping[str, object], envelope: Mapping[str, object]) -> None:
+    raw_location = payload.get("resolved_location")
+    if raw_location is None:
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "partial Case requires the resolved_location used by the canonical Candidate Envelope builder",
+        )
+    try:
+        location = distribution_natal.resolved_location_from_payload(raw_location)
+    except DistributionError as exc:
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "partial Case resolved_location authority is invalid",
+            {"cause": exc.code},
+        ) from exc
+    known = envelope["known_facts"]
+    if known.get("resolved_place_label") != location.canonical_name or known.get("timezone") != location.timezone:
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "candidate known facts do not match resolved_location authority",
+        )
+    try:
+        rebuilt = distribution_natal.build_candidate_natal({
+            "birth": _canonical_birth_basis(envelope),
+            "resolved_location": raw_location,
+        })
+    except DistributionError as exc:
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "candidate envelope cannot be reproduced by the canonical builder",
+            {"cause": exc.code},
+        ) from exc
+    canonical = rebuilt.get("candidate_envelope")
+    if not isinstance(canonical, Mapping) or not _json_semantically_equal(envelope, canonical):
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "candidate envelope does not match the canonical full-interval builder result",
+        )
 
 
 def _index_body(identity: Mapping[str, str], envelope: Mapping[str, object]) -> str:
@@ -212,6 +408,7 @@ def _ziwei_body(identity: Mapping[str, str], envelope: Mapping[str, object]) -> 
 def export_partial_case_markdown(payload: Mapping[str, object]) -> dict:
     payload = _mapping(payload, "payload")
     envelope = _validate_envelope(payload.get("candidate_envelope"))
+    _validate_builder_authority(payload, envelope)
     identity = _identity_from_payload(payload)
     generated_at = _timestamp(payload.get("generated_at"), "generated_at")
     modified_by = _text(payload.get("last_modified_by", "ai"), "last_modified_by")

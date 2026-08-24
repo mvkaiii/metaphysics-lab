@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from datetime import datetime
 from typing import Mapping, Optional
 
@@ -26,6 +27,13 @@ _RULE_VERSION = "1.0-exp"
 _CONTINUOUS_BAZI_KEYS = frozenset(("decadal_start",))
 _CONTINUOUS_PERIOD_KEYS = frozenset(("start_age_years", "end_age_years", "start_datetime", "end_datetime"))
 _MISSING = object()
+_CANDIDATE_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+
+
+def _candidate_id(value: object) -> str:
+    if not isinstance(value, str) or value != value.strip() or not _CANDIDATE_ID_PATTERN.fullmatch(value):
+        raise ValueError("candidate_id must be a canonical single-line identifier")
+    return value
 
 
 def _minute_text(value: int) -> str:
@@ -190,8 +198,16 @@ def _classify_tree(candidates, key: str):
 
 
 def classify_candidate_facts(candidates) -> dict:
-    if not candidates:
+    if not isinstance(candidates, (list, tuple)) or not candidates:
         raise ValueError("candidate list must not be empty")
+    candidate_ids = set()
+    for candidate in candidates:
+        if not isinstance(candidate, Mapping):
+            raise ValueError("candidate entries must be mappings")
+        candidate_id = _candidate_id(candidate.get("candidate_id"))
+        if candidate_id in candidate_ids:
+            raise ValueError("candidate_id values must be unique")
+        candidate_ids.add(candidate_id)
     invariant_bazi, variant_bazi = _classify_tree(candidates, "bazi")
     invariant_ziwei, variant_ziwei = _classify_tree(candidates, "ziwei")
     return {
@@ -237,15 +253,18 @@ def build_candidate_envelope(birth_payload: Mapping[str, object], resolved_locat
         raise NatalFoundationError("invalid_natal_input", "birth payload must be a mapping")
     if not isinstance(resolved_location, ResolvedBirthPlace):
         raise NatalFoundationError("missing_candidate_location_basis", "candidate envelope requires a resolved birth location")
+    normalized_birth = dict(birth_payload)
+    if normalized_birth.get("birth_time") == "":
+        normalized_birth["birth_time"] = None
     for field in ("sex", "birth_date", "birth_place"):
-        if birth_payload.get(field) in (None, ""):
+        if normalized_birth.get(field) in (None, ""):
             raise NatalFoundationError("missing_required_birth_field", "candidate envelope is missing required birth basis", {"missing_fields": [field]})
-    precision_state, minutes = _uncertainty_minutes(birth_payload)
+    precision_state, minutes = _uncertainty_minutes(normalized_birth)
     rows = []
     failures = []
     for minute in minutes:
         try:
-            rows.append(_build_minute_candidate(birth_payload, resolved_location, minute))
+            rows.append(_build_minute_candidate(normalized_birth, resolved_location, minute))
         except (NatalFoundationError, BirthFoundationError) as exc:
             failures.append({
                 "reported_time": _minute_text(minute),
@@ -264,13 +283,13 @@ def build_candidate_envelope(birth_payload: Mapping[str, object], resolved_locat
         "candidate_time_basis": "material_timing_state",
         "candidate_count": len(candidates),
         "known_facts": {
-            "sex": birth_payload.get("sex"),
-            "birth_date": birth_payload.get("birth_date"),
-            "birth_place": birth_payload.get("birth_place"),
+            "sex": normalized_birth.get("sex"),
+            "birth_date": normalized_birth.get("birth_date"),
+            "birth_place": normalized_birth.get("birth_place"),
             "resolved_place_label": resolved_location.canonical_name,
             "timezone": resolved_location.timezone,
-            "reported_birth_time": birth_payload.get("birth_time"),
-            "reported_birth_time_range": birth_payload.get("birth_time_range"),
+            "reported_birth_time": normalized_birth.get("birth_time"),
+            "reported_birth_time_range": normalized_birth.get("birth_time_range"),
         },
         "candidates": candidates,
         **classified,
