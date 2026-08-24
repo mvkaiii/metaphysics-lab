@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import importlib
 from datetime import date
-from importlib.metadata import PackageNotFoundError, version
 from typing import Protocol
 
-from lunar_python import Solar
+from engine.vendor.manifest import bundled_dependency
 
 from .models import (
     CalendarValidationDecision,
@@ -26,6 +26,7 @@ CAUTION_BOUNDARIES = {
     date(2097, 8, 7): "hko-new-moon-2097-08-07-caution",
 }
 CONFLICT_BOUNDARY_ID = "hko-new-moon-2057-09-28-conflict"
+_PRIVATE_LUNAR_MODULE = "_metaphysics_lab_vendor.lunar_python"
 
 
 class LunarProviderUnsupportedDate(ValueError):
@@ -43,25 +44,42 @@ class LunarCalendarProvider(Protocol):
         ...
 
 
+def _load_private_solar():
+    """Load Solar only from the Project-private vendor namespace."""
+    try:
+        module = importlib.import_module(_PRIVATE_LUNAR_MODULE)
+    except (ImportError, ModuleNotFoundError) as exc:
+        raise LunarProviderFailure("bundled lunar-python provider is unavailable") from exc
+    solar = getattr(module, "Solar", None)
+    if solar is None:
+        raise LunarProviderFailure("bundled lunar-python provider does not export Solar")
+    return solar
+
+
 class LunarPythonProvider:
     def __init__(self) -> None:
         try:
-            installed = version("lunar_python")
-        except PackageNotFoundError as exc:
-            raise LunarProviderFailure("lunar-python package is not installed") from exc
-        if installed != EXPECTED_LUNAR_VERSION:
+            metadata = bundled_dependency("lunar-python")
+        except (KeyError, RuntimeError, ValueError) as exc:
+            raise LunarProviderFailure("bundled lunar-python metadata is unavailable") from exc
+        actual_version = str(metadata.get("version", ""))
+        actual_revision = str(metadata.get("source_revision", ""))
+        if actual_version != EXPECTED_LUNAR_VERSION or actual_revision != LUNAR_SOURCE_REVISION:
             raise LunarProviderFailure(
-                f"expected lunar-python {EXPECTED_LUNAR_VERSION}, got {installed}"
+                "bundled lunar-python metadata does not match the pinned profile"
             )
+        if metadata.get("runtime_authority") != "bundled" or metadata.get("bundled") is not True:
+            raise LunarProviderFailure("lunar-python runtime authority is not bundled")
+        self._solar = _load_private_solar()
         self.metadata = LunarProviderMetadata(
             name="lunar-python",
-            version=installed,
-            source_revision=LUNAR_SOURCE_REVISION,
+            version=actual_version,
+            source_revision=actual_revision,
         )
 
     def convert(self, civil_date: date) -> LunarDate:
         try:
-            lunar = Solar.fromYmd(
+            lunar = self._solar.fromYmd(
                 civil_date.year,
                 civil_date.month,
                 civil_date.day,
