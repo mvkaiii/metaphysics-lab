@@ -5,6 +5,7 @@ from datetime import date
 from typing import Protocol
 
 from engine.vendor.manifest import bundled_dependency
+from engine.vendor.materialize import VendorMaterializationError, ensure_private_vendor_root
 
 from .models import (
     CalendarValidationDecision,
@@ -47,8 +48,9 @@ class LunarCalendarProvider(Protocol):
 def _load_private_solar():
     """Load Solar only from the Project-private vendor namespace."""
     try:
+        ensure_private_vendor_root()
         module = importlib.import_module(_PRIVATE_LUNAR_MODULE)
-    except (ImportError, ModuleNotFoundError) as exc:
+    except (VendorMaterializationError, ImportError, ModuleNotFoundError) as exc:
         raise LunarProviderFailure("bundled lunar-python provider is unavailable") from exc
     solar = getattr(module, "Solar", None)
     if solar is None:
