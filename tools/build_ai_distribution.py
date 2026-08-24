@@ -16,12 +16,10 @@ import argparse
 import base64
 import hashlib
 import json
-import shutil
 import sys
-import tempfile
 import zlib
 from pathlib import Path
-from typing import Dict, Iterable, List, Mapping, Sequence
+from typing import Dict, Iterable, List, Sequence
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(_REPO_ROOT) not in sys.path:
@@ -32,17 +30,25 @@ from engine.distribution.constants import (
     DISTRIBUTION_RUNTIME_VERSION,
     PROJECT_CONTRACT_VERSION,
     RUNTIME_SCHEMA_VERSION,
-    SUPPORTED_ACTIONS,
 )
-from engine.distribution.dependencies import _DEPENDENCIES
-from engine.distribution.manifest import load_capabilities
 
 
-BUILD_FORMAT_VERSION = "1.0"
+BUILD_FORMAT_VERSION = "1.1"
 ARTIFACT_NAMES = (
     "metaphysics_core.md",
     "metaphysics_lab.py",
     "project_instructions.md",
+)
+_FIRST_PARTY_TEXT_PREFIXES = ("engine/", "templates/")
+_SINGLE_BUNDLE_INPUTS = (
+    "vendor/manifest.json",
+    "data/birth_places/registry.v1.json",
+    "data/birth_places/schema.v1.json",
+    "data/birth_places/SOURCES.md",
+)
+_DIRECTORY_BUNDLE_INPUTS = (
+    "_metaphysics_lab_vendor",
+    "vendor/licenses",
 )
 
 _BOOTSTRAP = r'''#!/usr/bin/env python3
@@ -50,9 +56,9 @@ _BOOTSTRAP = r'''#!/usr/bin/env python3
 # GENERATED FILE - DO NOT EDIT
 """Portable Metaphysics Lab runtime bundle.
 
-Generated from the modular repository source. Third-party packages are not
-vendored; runtime-info remains available even when calculation dependencies are
-missing.
+Generated from the modular repository source. Core portable dependencies and
+runtime data, when present in the approved bundle input set, are embedded as
+checksum-protected bytes and loaded from a private temporary runtime root.
 """
 
 from __future__ import annotations
@@ -62,14 +68,12 @@ import atexit
 import base64
 import hashlib
 import importlib
-import importlib.util
 import json
 import shutil
 import sys
 import tempfile
 import zlib
-from importlib import metadata
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 BUILD_FORMAT_VERSION = @@BUILD_FORMAT_VERSION@@
 SOURCE_DIGEST = @@SOURCE_DIGEST@@
@@ -77,9 +81,6 @@ PROJECT_CONTRACT_VERSION = @@PROJECT_CONTRACT_VERSION@@
 RUNTIME_SCHEMA_VERSION = @@RUNTIME_SCHEMA_VERSION@@
 CASE_SCHEMA_VERSION = @@CASE_SCHEMA_VERSION@@
 DISTRIBUTION_RUNTIME_VERSION = @@DISTRIBUTION_RUNTIME_VERSION@@
-_SUPPORTED_ACTIONS = json.loads(@@SUPPORTED_ACTIONS_JSON@@)
-_CAPABILITIES = json.loads(@@CAPABILITIES_JSON@@)
-_DEPENDENCIES = json.loads(@@DEPENDENCIES_JSON@@)
 _SOURCE_FILES = json.loads(@@SOURCE_FILES_JSON@@)
 _PAYLOAD_B64 = @@PAYLOAD_B64@@
 _RUNTIME_ROOT = None
@@ -107,48 +108,41 @@ def _error(action, code, message, details=None):
     }
 
 
-def _version_getter(distribution_name):
+def _validated_record(record, seen):
+    if not isinstance(record, dict):
+        raise RuntimeError("embedded file record must be an object")
+    relative = record.get("path")
+    if not isinstance(relative, str) or not relative:
+        raise RuntimeError("embedded file path must be non-empty text")
+    if "\\" in relative:
+        raise RuntimeError("embedded file path must use POSIX separators: %s" % relative)
+    pure = PurePosixPath(relative)
+    if pure.is_absolute() or any(part in ("", ".", "..") for part in pure.parts):
+        raise RuntimeError("unsafe embedded file path: %s" % relative)
+    canonical = pure.as_posix()
+    if canonical != relative:
+        raise RuntimeError("non-canonical embedded file path: %s" % relative)
+    if canonical in seen:
+        raise RuntimeError("duplicate embedded file path: %s" % canonical)
+    seen.add(canonical)
+
+    if record.get("encoding") != "base64":
+        raise RuntimeError("unsupported embedded file encoding: %s" % canonical)
+    content = record.get("content")
+    expected = record.get("sha256")
+    if not isinstance(content, str) or not isinstance(expected, str):
+        raise RuntimeError("embedded file record is incomplete: %s" % canonical)
     try:
-        return metadata.version(distribution_name)
-    except metadata.PackageNotFoundError:
-        return None
-
-
-def _inspect_dependencies():
-    result = {}
-    for package_name in sorted(_DEPENDENCIES):
-        config = _DEPENDENCIES[package_name]
-        import_name = str(config["import_name"])
-        try:
-            spec = importlib.util.find_spec(import_name)
-        except (ImportError, ModuleNotFoundError, ValueError):
-            spec = None
-        installed = spec is not None
-        version = _version_getter(package_name) if installed else None
-        expected = str(config["expected_version"])
-        result[package_name] = {
-            "package": package_name,
-            "import_name": import_name,
-            "expected_version": expected,
-            "installed": installed,
-            "version": version,
-            "matches_pin": bool(installed and version == expected),
-            "role": str(config["role"]),
-            "required_for": list(config["required_for"]),
-        }
-    return result
-
-
-def runtime_info():
-    return {
-        "project_contract_version": PROJECT_CONTRACT_VERSION,
-        "runtime_schema_version": RUNTIME_SCHEMA_VERSION,
-        "case_schema_version": CASE_SCHEMA_VERSION,
-        "distribution_runtime_version": DISTRIBUTION_RUNTIME_VERSION,
-        "supported_actions": list(_SUPPORTED_ACTIONS),
-        "capabilities": _CAPABILITIES,
-        "external_dependencies": _inspect_dependencies(),
-    }
+        decoded = base64.b64decode(content.encode("ascii"), validate=True)
+    except Exception as exc:
+        raise RuntimeError("invalid embedded base64 content: %s" % canonical) from exc
+    actual = hashlib.sha256(decoded).hexdigest()
+    if actual != expected:
+        raise RuntimeError("embedded file digest mismatch: %s" % canonical)
+    manifest_digest = _SOURCE_FILES.get(canonical)
+    if manifest_digest != expected:
+        raise RuntimeError("embedded source manifest mismatch: %s" % canonical)
+    return canonical, decoded
 
 
 def _cleanup_runtime_root():
@@ -167,22 +161,29 @@ def _ensure_runtime_root():
     if hashlib.sha256(raw).hexdigest() != SOURCE_DIGEST:
         raise RuntimeError("embedded source digest mismatch")
     payload = json.loads(raw.decode("utf-8"))
+    if payload.get("build_format_version") != BUILD_FORMAT_VERSION:
+        raise RuntimeError("embedded build format mismatch")
     records = payload.get("files")
     if not isinstance(records, list):
         raise RuntimeError("embedded source payload is invalid")
 
+    seen = set()
+    decoded_records = [_validated_record(record, seen) for record in records]
+    if set(seen) != set(_SOURCE_FILES):
+        raise RuntimeError("embedded source manifest file set mismatch")
+
     root = Path(tempfile.mkdtemp(prefix="metaphysics_lab_runtime_"))
+    resolved_root = root.resolve()
     try:
-        for record in records:
-            relative = str(record["path"])
-            text = str(record["text"])
-            expected = str(record["sha256"])
-            encoded = text.encode("utf-8")
-            if hashlib.sha256(encoded).hexdigest() != expected:
-                raise RuntimeError("embedded file digest mismatch: %s" % relative)
-            target = root / relative
+        for relative, decoded in decoded_records:
+            target = root.joinpath(*PurePosixPath(relative).parts)
+            resolved_target = target.resolve()
+            try:
+                resolved_target.relative_to(resolved_root)
+            except ValueError as exc:
+                raise RuntimeError("embedded file escaped runtime root: %s" % relative) from exc
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(encoded)
+            target.write_bytes(decoded)
     except Exception:
         shutil.rmtree(str(root), ignore_errors=True)
         raise
@@ -197,9 +198,6 @@ def _ensure_runtime_root():
 def dispatch(action, payload=None):
     if not isinstance(action, str) or not action.strip():
         return _error(str(action), "invalid_action", "action must be a non-empty string")
-    if action == "runtime_info":
-        return _ok(action, runtime_info())
-
     try:
         _ensure_runtime_root()
         runtime = importlib.import_module("engine.distribution.runtime")
@@ -266,43 +264,77 @@ def _normalize_text(text: str) -> str:
     return text.replace("\r\n", "\n").replace("\r", "\n").rstrip() + "\n"
 
 
-def discover_owned_sources(repo_root: Path) -> List[str]:
+def _regular_files_under(root: Path, relative_dir: str) -> Iterable[str]:
+    base = root / relative_dir
+    if not base.exists():
+        return ()
+    if base.is_symlink():
+        raise ValueError("bundle input directory must not be a symlink: %s" % relative_dir)
+    result = []
+    for path in base.rglob("*"):
+        if path.is_symlink():
+            raise ValueError("bundle input must not be a symlink: %s" % path.relative_to(root).as_posix())
+        if path.is_file():
+            result.append(path.relative_to(root).as_posix())
+    return result
+
+
+def discover_bundle_inputs(repo_root: Path) -> List[str]:
     root = Path(repo_root)
     paths = []
     for path in (root / "engine").rglob("*.py"):
+        if path.is_symlink():
+            raise ValueError("bundle input must not be a symlink: %s" % path.relative_to(root).as_posix())
         if path.is_file():
             paths.append(path.relative_to(root).as_posix())
     for path in (root / "templates").rglob("*.tmpl"):
+        if path.is_symlink():
+            raise ValueError("bundle input must not be a symlink: %s" % path.relative_to(root).as_posix())
         if path.is_file():
             paths.append(path.relative_to(root).as_posix())
+    for relative_dir in _DIRECTORY_BUNDLE_INPUTS:
+        paths.extend(_regular_files_under(root, relative_dir))
+    for relative in _SINGLE_BUNDLE_INPUTS:
+        path = root / relative
+        if path.exists():
+            if path.is_symlink() or not path.is_file():
+                raise ValueError("bundle input must be a regular file: %s" % relative)
+            paths.append(relative)
     return sorted(set(paths))
 
 
-def _source_records(repo_root: Path, paths: Sequence[str]) -> List[Dict[str, str]]:
+def discover_owned_sources(repo_root: Path) -> List[str]:
+    """Backward-compatible alias for callers predating build format 1.1."""
+    return discover_bundle_inputs(repo_root)
+
+
+def build_file_record(repo_root: Path, relative_path: str) -> Dict[str, str]:
     root = Path(repo_root)
-    records = []
-    for relative in paths:
-        raw = (root / relative).read_bytes()
+    path = root / relative_path
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("bundle input must be a regular file: %s" % relative_path)
+    raw = path.read_bytes()
+    if relative_path.startswith(_FIRST_PARTY_TEXT_PREFIXES):
         try:
-            text = raw.decode("utf-8")
+            raw = _normalize_text(raw.decode("utf-8")).encode("utf-8")
         except UnicodeDecodeError as exc:
-            raise ValueError("owned runtime source is not UTF-8: %s" % relative) from exc
-        normalized = _normalize_text(text)
-        encoded = normalized.encode("utf-8")
-        records.append(
-            {
-                "path": relative,
-                "sha256": hashlib.sha256(encoded).hexdigest(),
-                "text": normalized,
-            }
-        )
-    return records
+            raise ValueError("first-party runtime source is not UTF-8: %s" % relative_path) from exc
+    return {
+        "path": relative_path,
+        "sha256": hashlib.sha256(raw).hexdigest(),
+        "encoding": "base64",
+        "content": base64.b64encode(raw).decode("ascii"),
+    }
+
+
+def _source_records(repo_root: Path, paths: Sequence[str]) -> List[Dict[str, str]]:
+    return [build_file_record(repo_root, relative) for relative in paths]
 
 
 def _payload(repo_root: Path):
-    paths = discover_owned_sources(repo_root)
+    paths = discover_bundle_inputs(repo_root)
     records = _source_records(repo_root, paths)
-    data = {"files": records}
+    data = {"build_format_version": BUILD_FORMAT_VERSION, "files": records}
     raw = json.dumps(
         data,
         ensure_ascii=False,
@@ -335,9 +367,6 @@ def _compact_json(value) -> str:
 def _render_bundle(repo_root: Path) -> str:
     root = Path(repo_root)
     payload_b64, source_digest, source_files = _payload(root)
-    capabilities = load_capabilities(root / "engine")
-    dependencies = {name: dict(_DEPENDENCIES[name]) for name in sorted(_DEPENDENCIES)}
-
     replacements = {
         "@@BUILD_FORMAT_VERSION@@": repr(BUILD_FORMAT_VERSION),
         "@@SOURCE_DIGEST@@": repr(source_digest),
@@ -345,9 +374,6 @@ def _render_bundle(repo_root: Path) -> str:
         "@@RUNTIME_SCHEMA_VERSION@@": repr(RUNTIME_SCHEMA_VERSION),
         "@@CASE_SCHEMA_VERSION@@": repr(CASE_SCHEMA_VERSION),
         "@@DISTRIBUTION_RUNTIME_VERSION@@": repr(DISTRIBUTION_RUNTIME_VERSION),
-        "@@SUPPORTED_ACTIONS_JSON@@": repr(_compact_json(list(SUPPORTED_ACTIONS))),
-        "@@CAPABILITIES_JSON@@": repr(_compact_json(capabilities)),
-        "@@DEPENDENCIES_JSON@@": repr(_compact_json(dependencies)),
         "@@SOURCE_FILES_JSON@@": repr(_compact_json(source_files)),
         "@@PAYLOAD_B64@@": repr(payload_b64),
     }
