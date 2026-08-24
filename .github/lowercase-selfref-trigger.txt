@@ -1,3 +1,4 @@
 One-time trigger for validated lowercase distribution self-reference migration.
 Rerun after scoping current public docs and excluding historical specs/plans.
 Trigger v1.3.0 Release body and lowercase asset synchronization from immutable notes SHA 807259df.
+Recoverable rerun after case-collision handling was added.
