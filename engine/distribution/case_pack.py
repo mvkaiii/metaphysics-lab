@@ -7,6 +7,7 @@ Legacy schema 1.0 bare nine-file packs remain readable and explicitly migratable
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import re
@@ -638,7 +639,8 @@ def _record_entries(body: str, *, legacy_record_ids: bool = False) -> dict:
 def _migrated_record_id(canonical: str, legacy_record_id: str) -> str:
     if legacy_record_id == legacy_record_id.strip() and _RECORD_ID_PATTERN.fullmatch(legacy_record_id):
         return legacy_record_id
-    return "legacy-%s-%s" % (canonical[:2], legacy_record_id.encode("utf-8").hex())
+    digest = hashlib.sha256(legacy_record_id.encode("utf-8")).hexdigest()
+    return "legacy-%s-%s" % (canonical[:2], digest)
 
 
 def _migrate_legacy_tracking_body(body: str, canonical: str) -> str:
