@@ -1,6 +1,9 @@
+import sys
+import types
 import unittest
 from datetime import date
 from unittest.mock import patch
+
 from engine.calendar.lunar import (
     LunarProviderFailure,
     LunarProviderUnsupportedDate,
@@ -10,18 +13,87 @@ from engine.calendar.lunar import (
 from engine.calendar.models import LunarDate
 
 
-class CalendarLunarTests(unittest.TestCase):
-    def test_known_lunar_new_year(self):
-        self.assertEqual(
-            LunarPythonProvider().convert(date(2025, 1, 29)),
-            LunarDate(2025, 1, 1, False),
-        )
+class _SyntheticLunar:
+    def __init__(self, year, month, day):
+        self._year = year
+        self._month = month
+        self._day = day
 
-    def test_known_2025_leap_sixth_month(self):
-        self.assertEqual(
-            LunarPythonProvider().convert(date(2025, 7, 25)),
-            LunarDate(2025, 6, 1, True),
-        )
+    def getYear(self):
+        return self._year
+
+    def getMonth(self):
+        return self._month
+
+    def getDay(self):
+        return self._day
+
+
+class _SyntheticSolarValue:
+    def __init__(self, lunar):
+        self._lunar = lunar
+
+    def getLunar(self):
+        return self._lunar
+
+
+class _SyntheticPrivateSolar:
+    @staticmethod
+    def fromYmd(year, month, day):
+        return _SyntheticSolarValue(_SyntheticLunar(year, -6 if (month, day) == (7, 25) else 1, 1))
+
+
+PINNED_METADATA = {
+    "package_name": "lunar-python",
+    "version": "1.4.8",
+    "source_revision": "000c8a3d74eed098d6256a28fdd51b869324c559",
+    "bundled": True,
+    "runtime_authority": "bundled",
+}
+
+
+class CalendarLunarTests(unittest.TestCase):
+    def _synthetic_private_provider(self):
+        private = types.ModuleType("_metaphysics_lab_vendor.lunar_python")
+        private.Solar = _SyntheticPrivateSolar
+        public = types.ModuleType("lunar_python")
+        public.Solar = object()
+        modules = {
+            "_metaphysics_lab_vendor.lunar_python": private,
+            "lunar_python": public,
+        }
+        return modules
+
+    def test_private_provider_ignores_preloaded_public_lunar_python(self):
+        modules = self._synthetic_private_provider()
+        with patch.dict(sys.modules, modules, clear=False), patch(
+            "engine.calendar.lunar.bundled_dependency", return_value=PINNED_METADATA
+        ):
+            provider = LunarPythonProvider()
+            self.assertIs(provider._solar, _SyntheticPrivateSolar)
+            self.assertEqual(provider.metadata.version, "1.4.8")
+            self.assertEqual(
+                provider.metadata.source_revision,
+                "000c8a3d74eed098d6256a28fdd51b869324c559",
+            )
+
+    def test_provider_rejects_non_bundled_metadata_even_if_private_module_exists(self):
+        modules = self._synthetic_private_provider()
+        wrong = dict(PINNED_METADATA, runtime_authority="execution_environment")
+        with patch.dict(sys.modules, modules, clear=False), patch(
+            "engine.calendar.lunar.bundled_dependency", return_value=wrong
+        ):
+            with self.assertRaises(LunarProviderFailure):
+                LunarPythonProvider()
+
+    def test_synthetic_private_provider_conversion_contract(self):
+        modules = self._synthetic_private_provider()
+        with patch.dict(sys.modules, modules, clear=False), patch(
+            "engine.calendar.lunar.bundled_dependency", return_value=PINNED_METADATA
+        ):
+            provider = LunarPythonProvider()
+            self.assertEqual(provider.convert(date(2025, 1, 29)), LunarDate(2025, 1, 1, False))
+            self.assertEqual(provider.convert(date(2025, 7, 25)), LunarDate(2025, 6, 1, True))
 
     def test_validated_edges(self):
         self.assertEqual(calendar_validation_for(date(1901, 1, 1)).check.status, "validated")
@@ -44,15 +116,25 @@ class CalendarLunarTests(unittest.TestCase):
             "out_of_validated_range",
         )
 
-    @patch("engine.calendar.lunar.Solar.fromYmd", side_effect=IndexError("unsupported"))
-    def test_provider_unsupported_date(self, _mock):
-        with self.assertRaises(LunarProviderUnsupportedDate):
-            LunarPythonProvider().convert(date(2150, 3, 1))
+    def test_provider_unsupported_date(self):
+        modules = self._synthetic_private_provider()
+        with patch.dict(sys.modules, modules, clear=False), patch(
+            "engine.calendar.lunar.bundled_dependency", return_value=PINNED_METADATA
+        ):
+            provider = LunarPythonProvider()
+            with patch.object(provider._solar, "fromYmd", side_effect=IndexError("unsupported")):
+                with self.assertRaises(LunarProviderUnsupportedDate):
+                    provider.convert(date(2150, 3, 1))
 
-    @patch("engine.calendar.lunar.Solar.fromYmd", side_effect=RuntimeError("boom"))
-    def test_provider_failure(self, _mock):
-        with self.assertRaises(LunarProviderFailure):
-            LunarPythonProvider().convert(date(2026, 8, 21))
+    def test_provider_failure(self):
+        modules = self._synthetic_private_provider()
+        with patch.dict(sys.modules, modules, clear=False), patch(
+            "engine.calendar.lunar.bundled_dependency", return_value=PINNED_METADATA
+        ):
+            provider = LunarPythonProvider()
+            with patch.object(provider._solar, "fromYmd", side_effect=RuntimeError("boom")):
+                with self.assertRaises(LunarProviderFailure):
+                    provider.convert(date(2026, 8, 21))
 
 
 if __name__ == "__main__":
