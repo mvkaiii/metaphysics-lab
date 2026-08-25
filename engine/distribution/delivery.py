@@ -1,7 +1,7 @@
-"""Verified flat ZIP delivery bundles for portable Case Markdown.
+"""Verified dual-format delivery artifacts for portable Case Markdown.
 
-Markdown remains the canonical Project data. ZIP is only a transport envelope
-for hosts where individual Markdown attachments are inconvenient or unreliable.
+Markdown remains the canonical Project data. The same normalized Markdown bytes
+are exposed both as individual download artifacts and inside a verified ZIP.
 """
 
 from __future__ import annotations
@@ -103,6 +103,39 @@ def _normalized_files(value: object) -> dict:
     return normalized
 
 
+def _individual_file_records(files: Mapping[str, bytes]) -> list:
+    records = []
+    for filename in sorted(files):
+        raw = files[filename]
+        encoded = base64.b64encode(raw).decode("ascii")
+        try:
+            if base64.b64decode(encoded, validate=True) != raw:
+                raise ValueError("Markdown base64 roundtrip mismatch")
+        except (ValueError, TypeError) as exc:
+            raise DistributionError(
+                "delivery_markdown_integrity_failed",
+                "individual Markdown artifact failed integrity verification",
+                {"filename": filename},
+            ) from exc
+        records.append(
+            {
+                "filename": filename,
+                "media_type": "text/markdown",
+                "charset": "utf-8",
+                "encoding": "base64",
+                "content_base64": encoded,
+                "sha256": hashlib.sha256(raw).hexdigest(),
+                "size_bytes": len(raw),
+                "status": {
+                    "generated": True,
+                    "integrity_verified": True,
+                    "delivered": "unknown",
+                },
+            }
+        )
+    return records
+
+
 def _zip_bytes(files: Mapping[str, bytes]) -> bytes:
     buffer = io.BytesIO()
     try:
@@ -150,9 +183,10 @@ def _verify_zip(raw: bytes, files: Mapping[str, bytes]) -> None:
 
 
 def build_delivery_bundle(payload: Mapping[str, object]) -> dict:
-    """Build and re-open a deterministic, cross-platform-oriented Markdown ZIP."""
+    """Build verified individual Markdown artifacts and a matching ZIP."""
     request = _payload_mapping(payload)
     files = _normalized_files(request.get("files"))
+    individual_files = _individual_file_records(files)
     raw = _zip_bytes(files)
     _verify_zip(raw, files)
     return {
@@ -164,6 +198,7 @@ def build_delivery_bundle(payload: Mapping[str, object]) -> dict:
         "sha256": hashlib.sha256(raw).hexdigest(),
         "size_bytes": len(raw),
         "members": sorted(files),
+        "individual_files": individual_files,
         "status": {
             "generated": True,
             "integrity_verified": True,
