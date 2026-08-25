@@ -1,6 +1,7 @@
 import sys
 import types
 import unittest
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from unittest.mock import patch
 
@@ -58,6 +59,27 @@ class CalendarTimezoneTests(unittest.TestCase):
                 provider.metadata.source_revision,
                 "a44279419071b7aa41ebe7eca301ebb2e759571a",
             )
+
+    def test_actual_bundled_provider_ignores_public_package_and_environment_metadata(self):
+        public = types.ModuleType("tzdata")
+        public.__version__ = "1900.1"
+        public.IANA_VERSION = "fake"
+        with patch.dict(sys.modules, {"tzdata": public}, clear=False), patch(
+            "importlib.metadata.version", return_value="0.0.fake"
+        ) as environment_version:
+            provider = PinnedTzdataProvider()
+            self.assertEqual(provider.metadata.package_version, "2026.3")
+            self.assertEqual(provider.metadata.tzdb_version, "2026c")
+            self.assertEqual(
+                provider.metadata.source_revision,
+                "a44279419071b7aa41ebe7eca301ebb2e759571a",
+            )
+            zone = provider.zone("Asia/Taipei")
+            self.assertEqual(
+                datetime(2026, 9, 18, 14, 0, tzinfo=zone).utcoffset(),
+                timedelta(hours=8),
+            )
+            environment_version.assert_not_called()
 
     def test_private_provider_rejects_execution_environment_authority(self):
         private = types.ModuleType("_metaphysics_lab_vendor.tzdata")
