@@ -197,13 +197,13 @@ class AIDistributionBundleTests(unittest.TestCase):
         self.assertFalse(deps["geopy"]["installed"])
         self.assertFalse(deps["timezonefinder"]["installed"])
 
-    def test_missing_core_dependency_returns_machine_readable_error(self):
+    def test_bundled_core_dependencies_work_under_python_s(self):
         payload = {"birth": BIRTH, "resolved_location": LOCATION}
+        modular = dispatch("build_natal", payload)
         completed, result = self.bundled_request("build_natal", payload, python_flags=("-S",))
         self.assertEqual(completed.returncode, 0)
-        self.assertFalse(result["ok"])
-        self.assertEqual(result["error"]["code"], "dependency_unavailable")
-        self.assertTrue(result["error"]["details"]["missing_module"])
+        self.assertEqual(result, modular)
+        self.assertTrue(result["ok"], result)
         self.assertNotIn("Traceback", completed.stderr)
 
     def test_unsafe_or_corrupt_records_are_rejected_before_runtime_root_creation(self):
