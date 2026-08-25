@@ -13,6 +13,7 @@ GOVERNANCE = ROOT / "docs" / "資料治理.md"
 ARCHITECTURE = ROOT / "docs" / "架構說明.md"
 CHANGELOG = ROOT / "CHANGELOG.md"
 RELEASE_NOTES = ROOT / "docs" / "發布說明-v1.3.0.md"
+PROJECT_INSTRUCTIONS = ROOT / "dist" / "ai" / "project_instructions.md"
 
 USER_ARTIFACTS = (
     "metaphysics_lab.py",
@@ -91,6 +92,25 @@ class AIDistributionDocsTests(unittest.TestCase):
         self.assertIn("只有第三方排盤", combined)
         self.assertIn("Astralium", combined)
         self.assertIn("可選", combined)
+
+    def test_portable_onboarding_is_birth_data_first_not_astralium_first(self):
+        readme = self.readme
+        project_instructions = PROJECT_INSTRUCTIONS.read_text(encoding="utf-8")
+        for text in (readme, project_instructions):
+            self.assertIn("出生資料", text)
+            self.assertIn("offline registry", text)
+            self.assertIn("不需要網路", text)
+            self.assertIn("不需要額外 Python 套件", text)
+            self.assertIn("Astralium", text)
+            self.assertIn("可選", text)
+        for forbidden in (
+            "AI 應先請你開啟 Astralium",
+            "先請使用者開啟 Astralium",
+            "過渡期首次建立流程",
+            "Portable Offline Natal Pipeline 完成前",
+        ):
+            self.assertNotIn(forbidden, readme)
+            self.assertNotIn(forbidden, project_instructions)
 
     def test_public_examples_are_fictional_and_do_not_use_private_kai_name(self):
         for path in PUBLIC_GUIDES:
