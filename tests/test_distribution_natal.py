@@ -7,7 +7,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from engine.birth.errors import BirthFoundationError
-from engine.birth.models import ResolvedBirthPlace
+from engine.birth.models import GeocodeCandidate, ResolvedBirthPlace
 from engine.distribution.runtime import dispatch
 
 
@@ -42,6 +42,22 @@ def offline_taipei():
         resolution_status="resolved_offline_registry",
         provider_reference="tw-tpe|geonames:1668341",
     )
+
+
+class _SyntheticNetworkProvider:
+    name = "synthetic-network"
+    version = "test-1"
+
+    def geocode(self, query):
+        return (
+            GeocodeCandidate(
+                name="Synthetic Taipei, Taiwan",
+                latitude=25.033,
+                longitude=121.5654,
+                country_code="tw",
+                raw_id="synthetic:1",
+            ),
+        )
 
 
 class DistributionNatalTests(unittest.TestCase):
@@ -109,6 +125,20 @@ class DistributionNatalTests(unittest.TestCase):
         self.assertEqual(location["provider_version"], "1.0")
         self.assertEqual(location["timezone"], "Asia/Taipei")
 
+    def test_birth_only_taipei_uses_committed_offline_registry_end_to_end(self):
+        result = dispatch("build_natal", {"birth": COMPLETE_BIRTH})
+        self.assertTrue(result["ok"], result)
+        data = result["data"]
+        location = data["resolved_location"]
+        project = data["project_natal"]
+        self.assertEqual(location["canonical_name"], "Taipei City")
+        self.assertEqual(location["provider_name"], "metaphysics_lab_offline_registry")
+        self.assertEqual(location["provider_version"], "1.0")
+        self.assertEqual(location["timezone"], "Asia/Taipei")
+        self.assertEqual(set(project["bazi"]["pillars"]), {"year", "month", "day", "hour"})
+        self.assertEqual(len(project["ziwei"]["palaces"]), 12)
+        self.assertIsNotNone(data["normalized_natal"]["project"])
+
     def test_offline_ambiguity_fails_without_network_fallback(self):
         ambiguity = BirthFoundationError(
             "ambiguous_birth_place",
@@ -130,14 +160,33 @@ class DistributionNatalTests(unittest.TestCase):
         self.assertEqual(result["error"]["code"], "ambiguous_birth_place")
 
     def test_offline_miss_without_network_returns_location_not_resolved(self):
-        with patch("engine.distribution.natal.resolve_offline_birth_place", return_value=None):
-            result = dispatch(
-                "build_natal",
-                {"birth": dict(COMPLETE_BIRTH, birth_place="Unsupported Place")},
-            )
+        result = dispatch(
+            "build_natal",
+            {"birth": dict(COMPLETE_BIRTH, birth_place="Unsupported Place")},
+        )
         self.assertFalse(result["ok"])
         self.assertEqual(result["error"]["code"], "location_not_resolved")
         self.assertEqual(result["error"]["details"]["query"], "Unsupported Place")
+
+    def test_offline_miss_with_explicit_network_fallback_preserves_resolved_provenance(self):
+        with patch("engine.distribution.natal._network_provider", return_value=_SyntheticNetworkProvider()):
+            result = dispatch(
+                "build_natal",
+                {
+                    "birth": dict(COMPLETE_BIRTH, birth_place="Unsupported Place"),
+                    "network_location": {"enabled": True, "user_agent": "portable-test"},
+                },
+            )
+        self.assertTrue(result["ok"], result)
+        location = result["data"]["resolved_location"]
+        self.assertEqual(location["canonical_name"], "Synthetic Taipei, Taiwan")
+        self.assertEqual(location["latitude"], 25.033)
+        self.assertEqual(location["longitude"], 121.5654)
+        self.assertEqual(location["timezone"], "Asia/Taipei")
+        self.assertEqual(location["provider_name"], "synthetic-network")
+        self.assertEqual(location["provider_version"], "test-1")
+        self.assertEqual(location["provider_reference"], "synthetic:1")
+        self.assertEqual(location["resolution_status"], "resolved")
 
     def test_build_natal_pre_resolved_path_does_not_require_location_packages(self):
         script = r'''
