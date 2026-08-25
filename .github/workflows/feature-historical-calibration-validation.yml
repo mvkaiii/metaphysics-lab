@@ -54,7 +54,7 @@ jobs:
           )
           text = text.replace(
               '一個 Project 可以管理多人。若有 `命主索引.md`，先確認本次命主；不得預設所有問題都在問 Project 擁有者，也不得混用不同人的四柱、宮位、運限、候選盤或事件。',
-              '一個 Project 可以管理多人。若有 `命主索引.md`，先用 `subject_id` 確認本次命主；不得預設所有問題都在問 Project 擁有者，也不得混用不同人的四柱、宮位、運限、候選盤或事件。',
+              '一個 Project 可以管理多人。若有 `命主索引.md`，先用 `subject_id` 確認本次命主；`subject_display_name` 只作人類可讀名稱，不是 identity authority；不得預設所有問題都在問 Project 擁有者，也不得混用不同人的四柱、宮位、運限、候選盤或事件。',
           )
           path.write_text(text, encoding='utf-8')
           PY
