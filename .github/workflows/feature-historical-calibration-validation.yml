@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   validation:
@@ -41,34 +41,10 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
-      - name: Apply approved Project UX follow-up
-        run: |
-          python tools/apply_project_ux_followup.py
-          python - <<'PY'
-          from pathlib import Path
-          path = Path('core/核心提示詞.md')
-          text = path.read_text(encoding='utf-8')
-          text = text.replace(
-              '1. 先確認性別、Gregorian 出生日期、出生時間、出生地；只追問缺少欄位。',
-              '1. 先確認出生資料：性別、Gregorian 出生日期、出生時間、出生地；只追問缺少欄位。',
-          )
-          text = text.replace(
-              '一個 Project 可以管理多人。若有 `命主索引.md`，先確認本次命主；不得預設所有問題都在問 Project 擁有者，也不得混用不同人的四柱、宮位、運限、候選盤或事件。',
-              '一個 Project 可以管理多人。若有 `命主索引.md`，先用 `subject_id` 確認本次命主；`subject_display_name` 只作人類可讀名稱，不是 identity authority；不得預設所有問題都在問 Project 擁有者，也不得混用不同人的四柱、宮位、運限、候選盤或事件。',
-          )
-          path.write_text(text, encoding='utf-8')
-          PY
-
       - name: Rebuild AI distribution
         run: |
           python tools/build_ai_distribution.py
           python tools/build_ai_distribution.py --check
-
-      - name: Project UX and historical-window focused tests
-        run: |
-          python -m unittest \
-            tests.test_project_ux_contract \
-            tests.test_historical_activation_selector -v
 
       - name: Historical selector and progressive Case focused tests
         run: |
@@ -97,32 +73,12 @@ jobs:
         run: |
           python -m compileall engine tests tools
 
-      - name: Verify transformed tree
+      - name: Verify clean tree
         run: |
-          git diff --check
-          python - <<'PY'
-          from pathlib import Path
-          prompt = Path('core/核心提示詞.md').read_text(encoding='utf-8')
-          generated = Path('dist/ai/project_instructions.md').read_text(encoding='utf-8')
-          assert len(prompt) <= 8000, len(prompt)
-          assert len(generated) <= 8000, len(generated)
-          assert prompt == generated
-          print('project_instructions_chars=', len(generated))
-          print('project_instructions_bytes=', len(generated.encode('utf-8')))
-          PY
-          test ! -e tools/apply_project_ux_followup.py
-          git status --short
-
-      - name: Commit approved Project UX follow-up
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "feat: refine project onboarding and analysis UX"
-          git push origin HEAD:feature/portable-offline-natal-pipeline
+          git diff --exit-code
+          test -z "$(git status --porcelain)"
 
       - name: Upload generated distribution
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: progressive-case-ai-distribution
