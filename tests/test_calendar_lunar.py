@@ -77,6 +77,25 @@ class CalendarLunarTests(unittest.TestCase):
                 "000c8a3d74eed098d6256a28fdd51b869324c559",
             )
 
+    def test_actual_bundled_provider_ignores_public_package_and_environment_metadata(self):
+        public = types.ModuleType("lunar_python")
+        public.Solar = object()
+        public.__version__ = "0.0.fake"
+        with patch.dict(sys.modules, {"lunar_python": public}, clear=False), patch(
+            "importlib.metadata.version", return_value="0.0.fake"
+        ) as environment_version:
+            provider = LunarPythonProvider()
+            self.assertEqual(provider.metadata.version, "1.4.8")
+            self.assertEqual(
+                provider.metadata.source_revision,
+                "000c8a3d74eed098d6256a28fdd51b869324c559",
+            )
+            self.assertEqual(
+                provider.convert(date(2025, 1, 29)),
+                LunarDate(2025, 1, 1, False),
+            )
+            environment_version.assert_not_called()
+
     def test_provider_rejects_non_bundled_metadata_even_if_private_module_exists(self):
         modules = self._synthetic_private_provider()
         wrong = dict(PINNED_METADATA, runtime_authority="execution_environment")
