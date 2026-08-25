@@ -44,6 +44,20 @@ jobs:
       - name: Apply approved Project UX follow-up
         run: |
           python tools/apply_project_ux_followup.py
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('core/核心提示詞.md')
+          text = path.read_text(encoding='utf-8')
+          text = text.replace(
+              '1. 先確認性別、Gregorian 出生日期、出生時間、出生地；只追問缺少欄位。',
+              '1. 先確認出生資料：性別、Gregorian 出生日期、出生時間、出生地；只追問缺少欄位。',
+          )
+          text = text.replace(
+              '一個 Project 可以管理多人。若有 `命主索引.md`，先確認本次命主；不得預設所有問題都在問 Project 擁有者，也不得混用不同人的四柱、宮位、運限、候選盤或事件。',
+              '一個 Project 可以管理多人。若有 `命主索引.md`，先用 `subject_id` 確認本次命主；不得預設所有問題都在問 Project 擁有者，也不得混用不同人的四柱、宮位、運限、候選盤或事件。',
+          )
+          path.write_text(text, encoding='utf-8')
+          PY
 
       - name: Rebuild AI distribution
         run: |
