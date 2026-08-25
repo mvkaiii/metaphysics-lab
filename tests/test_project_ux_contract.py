@@ -113,18 +113,21 @@ class ProjectUXContractTests(unittest.TestCase):
         ):
             self.assertIn(phrase, combined)
 
-    def test_case_delivery_uses_verified_zip_without_claiming_download_success(self):
+    def test_case_delivery_offers_verified_zip_and_individual_markdown_without_claiming_download_success(self):
         combined = self._read(PROJECT_PROMPT) + "\n" + self._read(AI_WORKFLOW) + "\n" + self._read(ANALYSIS_RULES)
         for phrase in (
             "可驗證資料包交付",
             "ZIP",
             "完整性檢查",
             "Markdown 是正式資料",
+            "ZIP 與單獨 `.md`",
+            "同時提供",
+            "個別下載",
+            "同一份 canonical Markdown bytes",
+            "逐 byte 完全相同",
             "不得宣稱下載成功",
-            "重新產生新的 ZIP",
-            "第二次仍無法下載",
+            "重新產生新的附件",
             "檔案傳輸失敗",
-            "不得改用單獨 `.md`",
             "只包含新增或真正變動的 Markdown",
         ):
             self.assertIn(phrase, combined)
