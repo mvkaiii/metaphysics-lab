@@ -83,11 +83,11 @@ Historical Activation Selector 若 unavailable，AI 不得憑感覺自己選 his
 
 ## 可驗證資料包交付
 
-**Markdown 是正式資料；ZIP 只是跨裝置下載與搬運用的傳輸包。**需要把 Case 檔案交給使用者時，不得只把單獨 `.md` 附件當成可下載方案；先呼叫 runtime 的 `build_delivery_bundle`，再把回傳的 ZIP bytes 實際寫入 `.zip` 檔並作為附件提供。只有 runtime 回報 `generated = true` 且 `integrity_verified = true` 才能說「資料包已建立並通過完整性檢查」；**不得宣稱下載成功**，因為是否真的下載到裝置只能由使用者確認。
+**Markdown 是正式資料；ZIP 與單獨 `.md` 都是正常下載方式。**交付 Case 時先呼叫 runtime `build_delivery_bundle`，由**同一份 canonical Markdown bytes**同時建立 ZIP 與個別 Markdown；兩邊內容必須**逐 byte 完全相同**。只有 `generated = true` 且 `integrity_verified = true` 才能提供附件。
 
-首次本命資料包包含 `命主索引.md` 與該命主已建立的 00～04；後續更新包**只包含新增或真正變動的 Markdown**。使用標準 ZIP／DEFLATE、無密碼、無加密、平面檔案結構，不要求使用者另外安裝特定解壓縮 App。
+首次本命交付包含 `命主索引.md` 與該命主 00～04；後續**只包含新增或真正變動的 Markdown**。預設**同時提供**一個 ZIP 下載與每份 `.md` 的**個別下載**附件；不得為兩種格式重新 render。ZIP 使用標準 DEFLATE、無密碼／加密、平面結構。
 
-使用者回報不能下載時，先**重新產生新的 ZIP**並提供新的附件。若**第二次仍無法下載**，明確說明目前是**檔案傳輸失敗**，保留本次資料供稍後重新產包；**不得改用單獨 `.md`** 假裝已解決下載問題，也不得把未驗證或僅有 `.zip` 副檔名的內容交付給使用者。
+AI **不得宣稱下載成功**。使用者回報某種方式無法下載時，用同一批內容**重新產生新的附件**；若 ZIP 與個別 Markdown 都經重新交付仍失敗，明確說明**檔案傳輸失敗**並保留資料供稍後重產。
 
 ## 永久紀錄與底線
 
