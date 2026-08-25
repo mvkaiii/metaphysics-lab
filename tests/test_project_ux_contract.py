@@ -61,6 +61,44 @@ class ProjectUXContractTests(unittest.TestCase):
         ):
             self.assertIn(phrase, rules)
 
+    def test_user_facing_case_language_hides_internal_execution_terms(self):
+        combined = self._read(PROJECT_PROMPT) + "\n" + self._read(AI_WORKFLOW) + "\n" + self._read(ANALYSIS_RULES)
+        for phrase in (
+            "本命基礎檔案",
+            "內部執行預設靜默",
+            "不要向使用者直播",
+            "Base Case",
+            "runtime_info",
+            "subject_id",
+            "materialize",
+        ):
+            self.assertIn(phrase, combined)
+        self.assertIn("對外稱", combined)
+
+    def test_progressive_records_are_never_precreated_and_tracking_needs_real_use(self):
+        combined = self._read(AI_WORKFLOW) + "\n" + self._read(ANALYSIS_RULES)
+        for phrase in (
+            "不得在首次建盤時預先建立 05～08",
+            "05_驗證事件紀錄.md",
+            "完成過去事件校準",
+            "06_流年追蹤紀錄.md",
+            "07_問事追蹤紀錄.md",
+            "08_重大決策紀錄.md",
+            "使用者明確同意保存",
+            "真正有對應紀錄時才建立",
+        ):
+            self.assertIn(phrase, combined)
+
+    def test_existing_case_files_are_replaced_not_duplicated_with_suffixes(self):
+        combined = self._read(PROJECT_PROMPT) + "\n" + self._read(AI_WORKFLOW) + "\n" + self._read(ANALYSIS_RULES)
+        for phrase in (
+            "更新既有檔案時要替換原檔",
+            "命主索引1.md",
+            "不得把副本檔名當正式檔案",
+            "先移除舊版同名檔案再上傳新版",
+        ):
+            self.assertIn(phrase, combined)
+
     def test_annual_analysis_has_overview_then_capability_driven_time_breakdown(self):
         rules = self._read(ANALYSIS_RULES)
         for phrase in (
