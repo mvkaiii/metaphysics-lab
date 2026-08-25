@@ -2,9 +2,9 @@
 
 這份文件保存正式版本與尚未發布變更的技術紀錄。第一次使用 Metaphysics Lab 請先看 `README.md`；一般使用者版 v1.3.0 發布說明見 `docs/發布說明-v1.3.0.md`。
 
-## Unreleased｜Project Contract 1.1 + Case Schema 1.1
+## Unreleased｜Project Contract 1.1 + Case Schema 1.1 + Portable Offline Natal
 
-這批變更已合併進 `main`，但**尚未建立下一個正式 GitHub Release**。目前正式版本仍是 **v1.3.0｜2026-08-23**，既有 Experimental 能力不因合併 main 自動升 Stable。
+Project Contract 1.1 / Case Schema 1.1 的既有批次已合併進 `main`；Portable Offline Natal Pipeline 仍屬 **Unreleased implementation work**，尚未建立下一個正式 GitHub Release。目前正式版本仍是 **v1.3.0｜2026-08-23**，既有 Experimental 能力不因這批變更自動升 Stable。
 
 ### 一般使用者摘要
 
@@ -12,11 +12,26 @@
 - 新 Case 採漸進式建立：先建立基礎資料，需要追蹤時才新增事件、流年、問事與重大決策紀錄。
 - 出生時間未知或只有範圍時，不會自己猜中點或任意時辰；可保留候選狀態，只使用真正一致的資料。
 - 第一次做個人化未來分析時，流程維持「先盲判、再用已確認事件校準」，避免先知道歷史答案再改第一版判斷。
+- 首次建立流程恢復 **Birth Data first**；支援的 offline registry 地點可在不需要網路、不需要額外 Python 套件的環境建立 Project Natal。
+- Astralium 回到**可選** External Natal Source／交叉校驗來源，不是 Project Natal calculation authority，也不是首次建盤必要前置步驟。
 - Legacy Case 1.0 維持可讀與可遷移；不要求使用者破壞性重建舊 Case。
+
+### Portable Offline Natal Pipeline
+
+- Core calendar authority 改為 bundle 內固定 bytes：`lunar-python==1.4.8`、`tzdata==2026.3` / IANA `2026c`；runtime 不以 host/public package metadata 決定 bundled core availability 或版本。
+- 新增有限、版本化的 offline birth-place registry；支援 explicit aliases，unknown fail closed，ambiguous alias 不自動交給網路結果覆蓋。
+- location resolution precedence 固定為：完整 `resolved_location` → offline registry → **explicit opt-in** network fallback。未啟用 network fallback 時，unsupported place 回 `location_not_resolved`。
+- Runtime Schema 升至 `1.1`；AI Distribution Runtime 升至 `1.1-exp`；Build Format 為 `1.1`。
+- Runtime Schema 1.1 明確區分 bundled core 與 execution-environment optional integrations；`geopy` / `timezonefinder` 僅為可選 network location diagnostics／fallback，不是離線 Natal 必要 dependency。
+- single-file bundle 採 byte-oriented base64 records、SOURCE_DIGEST、per-record SHA256、unsafe path pre-write guard、vendor/registry/license preflight 與固定 5 MiB size guard。
+- clean `python -S` qualification 覆蓋 birth-only Taipei、bundled dependency availability、public-package pollution、preloaded `sys.modules` pollution 與 no-network socket guard。
+- modular runtime 與 single-file bundle 對 birth-only Taipei `build_natal` 及 `runtime_info` 做完整 parity qualification。
+- 公開 onboarding 從暫時 Astralium-first 改回 Birth Data first；offline registry coverage 明確標示為有限且版本化。
+- 本批**不修改 v1.3.0 tag / GitHub Release assets，不建立新 release，也不提升任何既有 capability maturity**。
 
 ### 技術紀錄
 
-- Project Contract / Case Schema 升至 `1.1`；Runtime Schema 與 AI Distribution Runtime 維持 `1.0` / `1.0-exp`。
+- Project Contract / Case Schema 維持 `1.1`；Runtime Schema / AI Distribution Runtime 現為 `1.1` / `1.1-exp`。
 - Subject Identity 使用 opaque `subject_id` 作為命主權威識別，顯示名稱與檔名 label 可改但不得改變 identity。
 - 新 Case 採 Progressive Case：第一次建立只產生 `00`～`04` Base Case；`05`～`08` 有實際紀錄時才建立。
 - 新增 Candidate Envelope：完整掃描 unknown / bounded birth-time uncertainty，不使用 midpoint、default time 或 majority voting 製造假精度。
@@ -25,7 +40,7 @@
 - Ziwei yearly context 僅作 `support_only / ranking_authority=false`，不得改 Bazi selection digest。
 - Case record 使用 JSON typed semantics；非標準 `NaN / Infinity / -Infinity` fail closed。
 - Legacy Case 1.0 舊 record ID 仍可讀；遷移到 1.1 時不符合新規則的 ID 會 deterministic remap 為固定長度 safe ID。
-- 本批修正經 post-merge adversarial audit、RED→GREEN regression 與 exact-head immutable CI 驗證後合併 PR #166。
+- Project Contract / Case Schema 既有批次經 post-merge adversarial audit、RED→GREEN regression 與 exact-head immutable CI 驗證後合併 PR #166。
 - 本批不修改 v1.3.0 tag / GitHub Release，也不提升任何既有 capability maturity。
 
 ## v1.3.0｜2026-08-23
