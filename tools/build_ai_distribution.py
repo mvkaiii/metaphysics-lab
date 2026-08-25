@@ -48,6 +48,7 @@ _SINGLE_BUNDLE_INPUTS = (
 )
 _DIRECTORY_BUNDLE_INPUTS = (
     "_metaphysics_lab_vendor",
+    "vendor/artifacts",
     "vendor/licenses",
 )
 
