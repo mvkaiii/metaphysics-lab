@@ -194,6 +194,9 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
             return _ok(action, handler(request))
         if action == "export_case_markdown":
             return _ok(action, _export_case(request))
+        if action == "build_delivery_bundle":
+            from .delivery import build_delivery_bundle
+            return _ok(action, build_delivery_bundle(request))
         if action in ("validate_case", "migrate_case", "update_case_record"):
             from .case_pack import migrate_case, update_case_record, validate_case
             handler = {"validate_case": validate_case, "migrate_case": migrate_case, "update_case_record": update_case_record}[action]
