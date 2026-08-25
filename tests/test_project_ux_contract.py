@@ -32,6 +32,20 @@ class ProjectUXContractTests(unittest.TestCase):
         ):
             self.assertIn(phrase, prompt)
 
+    def test_first_natal_onboarding_requires_subject_display_name_for_files(self):
+        combined = self._read(PROJECT_PROMPT) + "\n" + self._read(AI_WORKFLOW) + "\n" + self._read(ANALYSIS_RULES)
+        for phrase in (
+            "命主稱呼",
+            "必填",
+            "用於檔名",
+            "暱稱／代號",
+            "不一定要真名",
+            "不得使用 Project 擁有者",
+            "不得使用目前聊天者",
+        ):
+            self.assertIn(phrase, combined)
+        self.assertIn("命主稱呼、性別、出生年月日、出生時間、出生地", combined)
+
     def test_post_natal_flow_calibrates_previous_ten_years_and_materializes_markdown(self):
         combined = self._read(ANALYSIS_RULES) + "\n" + self._read(AI_WORKFLOW)
         for phrase in (
