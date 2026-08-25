@@ -46,8 +46,6 @@ def _write_tzdata_wheel(path: Path) -> bytes:
             "tzdata/__init__.py",
             '__version__ = "2026.3"\nIANA_VERSION = "2026c"\n',
         )
-        # Deliberately include an unrelated package-root file. The approved plan
-        # vendors tzdata/__init__.py plus the complete zoneinfo/** resource tree.
         archive.writestr("tzdata/zones", "Asia/Taipei\nAmerica/New_York\n")
         archive.writestr("tzdata/zoneinfo/__init__.py", "")
         archive.writestr("tzdata/zoneinfo/Asia/Taipei", tzif)
@@ -58,68 +56,125 @@ def _write_tzdata_wheel(path: Path) -> bytes:
     return tzif
 
 
+def _write_artifacts(directory: Path, *, forbidden_public_import: bool = False):
+    directory.mkdir(parents=True, exist_ok=True)
+    lunar = directory / LUNAR_NAME
+    tzdata = directory / TZDATA_NAME
+    _write_lunar_sdist(lunar, forbidden_public_import=forbidden_public_import)
+    tzif = _write_tzdata_wheel(tzdata)
+    return lunar, tzdata, tzif
+
+
 class VendorRefreshTests(unittest.TestCase):
-    def test_refresh_preserves_tzdata_init_complete_zoneinfo_bytes_and_licenses(self):
+    def _patched_hashes(self, lunar: Path, tzdata: Path):
+        return (
+            patch.object(vendor_refresh, "LUNAR_SHA256", _sha256(lunar)),
+            patch.object(vendor_refresh, "TZDATA_SHA256", _sha256(tzdata)),
+        )
+
+    def test_materialize_uses_artifact_dir_writes_only_vendor_storage_and_preserves_resources(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             temp = Path(temp_dir)
             repo = temp / "repo"
             repo.mkdir()
-            lunar = temp / LUNAR_NAME
-            tzdata = temp / TZDATA_NAME
-            _write_lunar_sdist(lunar)
-            tzif = _write_tzdata_wheel(tzdata)
+            artifacts = temp / "artifacts"
+            lunar, tzdata, tzif = _write_artifacts(artifacts)
+            lunar_patch, tz_patch = self._patched_hashes(lunar, tzdata)
+            with lunar_patch, tz_patch:
+                manifest = vendor_refresh.materialize_vendor(repo, artifacts)
 
-            with patch.object(vendor_refresh, "LUNAR_SHA256", _sha256(lunar)), patch.object(
-                vendor_refresh, "TZDATA_SHA256", _sha256(tzdata)
-            ):
-                manifest = vendor_refresh.refresh_vendor(repo, lunar, tzdata)
-
-            tz_root = repo / "_metaphysics_lab_vendor" / "tzdata"
-            self.assertIn('__version__ = "2026.3"', (tz_root / "__init__.py").read_text(encoding="utf-8"))
-            self.assertEqual((tz_root / "zoneinfo" / "Asia" / "Taipei").read_bytes(), tzif)
-            self.assertFalse((tz_root / "zones").exists())
-            self.assertTrue((repo / "vendor" / "licenses" / "lunar-python-LICENSE.txt").is_file())
-            self.assertTrue((repo / "vendor" / "licenses" / "tzdata-LICENSE.txt").is_file())
+            self.assertFalse((repo / "_metaphysics_lab_vendor").exists())
             self.assertEqual(
                 json.loads((repo / "vendor" / "manifest.json").read_text(encoding="utf-8")),
                 manifest,
             )
+            self.assertTrue((repo / "vendor" / "licenses" / "lunar-python-LICENSE.txt").is_file())
+            self.assertTrue((repo / "vendor" / "licenses" / "tzdata-LICENSE.txt").is_file())
+            rows = {row["package_name"]: row for row in manifest["packages"]}
+            self.assertRegex(rows["lunar-python"]["vendored_tree_sha256"], r"^[0-9a-f]{64}$")
+            self.assertRegex(rows["tzdata"]["vendored_tree_sha256"], r"^[0-9a-f]{64}$")
+            self.assertEqual(rows["tzdata"]["iana_version"], "2026c")
+            self.assertTrue(tzif.startswith(b"TZif"))
+
+    def test_manifest_has_ordered_artifact_parts_with_exact_counts_and_hashes(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp = Path(temp_dir)
+            repo = temp / "repo"
+            repo.mkdir()
+            artifacts = temp / "artifacts"
+            lunar, tzdata, _ = _write_artifacts(artifacts)
+            lunar_patch, tz_patch = self._patched_hashes(lunar, tzdata)
+            with lunar_patch, tz_patch:
+                manifest = vendor_refresh.materialize_vendor(repo, artifacts)
+
+            for row in manifest["packages"]:
+                parts = row["artifact_parts"]
+                self.assertEqual([part["path"] for part in parts], row["artifact_shards"])
+                for part in parts:
+                    payload = (repo / part["path"]).read_bytes()
+                    self.assertEqual(part["char_count"], len(payload))
+                    self.assertEqual(part["sha256"], hashlib.sha256(payload).hexdigest())
+                    self.assertEqual(row["artifact_shard_sha256"][part["path"]], part["sha256"])
+
+    def test_check_is_non_mutating_and_detects_repository_vendor_drift(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp = Path(temp_dir)
+            repo = temp / "repo"
+            repo.mkdir()
+            artifacts = temp / "artifacts"
+            lunar, tzdata, _ = _write_artifacts(artifacts)
+            lunar_patch, tz_patch = self._patched_hashes(lunar, tzdata)
+            with lunar_patch, tz_patch:
+                vendor_refresh.materialize_vendor(repo, artifacts)
+                before = {p.relative_to(repo).as_posix(): p.read_bytes() for p in (repo / "vendor").rglob("*") if p.is_file()}
+                vendor_refresh.check_vendor(repo, artifacts)
+                after = {p.relative_to(repo).as_posix(): p.read_bytes() for p in (repo / "vendor").rglob("*") if p.is_file()}
+                self.assertEqual(after, before)
+                shard = next((repo / "vendor" / "artifacts").iterdir())
+                shard.write_bytes(shard.read_bytes() + b"drift")
+                with self.assertRaises(vendor_refresh.VendorRefreshError):
+                    vendor_refresh.check_vendor(repo, artifacts)
+                self.assertTrue(shard.read_bytes().endswith(b"drift"))
+
+    def test_cli_supports_artifact_dir_check_and_materialize_modes(self):
+        parser = vendor_refresh._parser()
+        materialize = parser.parse_args(["--artifact-dir", "/tmp/vendor", "--materialize"])
+        check = parser.parse_args(["--artifact-dir", "/tmp/vendor", "--check"])
+        self.assertTrue(materialize.materialize)
+        self.assertFalse(materialize.check)
+        self.assertTrue(check.check)
+        self.assertFalse(check.materialize)
 
     def test_artifact_hash_mismatch_fails_before_replacing_existing_vendor_tree(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             temp = Path(temp_dir)
             repo = temp / "repo"
-            existing = repo / "_metaphysics_lab_vendor"
+            existing = repo / "vendor"
             existing.mkdir(parents=True)
             marker = existing / "keep.txt"
             marker.write_text("keep\n", encoding="utf-8")
-            lunar = temp / LUNAR_NAME
-            tzdata = temp / TZDATA_NAME
-            _write_lunar_sdist(lunar)
-            _write_tzdata_wheel(tzdata)
+            artifacts = temp / "artifacts"
+            lunar, tzdata, _ = _write_artifacts(artifacts)
 
-            with patch.object(vendor_refresh, "LUNAR_SHA256", "0" * 64):
+            with patch.object(vendor_refresh, "LUNAR_SHA256", "0" * 64), patch.object(
+                vendor_refresh, "TZDATA_SHA256", _sha256(tzdata)
+            ):
                 with self.assertRaises(vendor_refresh.VendorRefreshError):
-                    vendor_refresh.refresh_vendor(repo, lunar, tzdata)
+                    vendor_refresh.materialize_vendor(repo, artifacts)
 
             self.assertEqual(marker.read_text(encoding="utf-8"), "keep\n")
-            self.assertFalse((repo / "vendor").exists())
 
     def test_forbidden_public_vendor_import_is_rejected_before_repo_mutation(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             temp = Path(temp_dir)
             repo = temp / "repo"
             repo.mkdir()
-            lunar = temp / LUNAR_NAME
-            tzdata = temp / TZDATA_NAME
-            _write_lunar_sdist(lunar, forbidden_public_import=True)
-            _write_tzdata_wheel(tzdata)
-
-            with patch.object(vendor_refresh, "LUNAR_SHA256", _sha256(lunar)), patch.object(
-                vendor_refresh, "TZDATA_SHA256", _sha256(tzdata)
-            ):
+            artifacts = temp / "artifacts"
+            lunar, tzdata, _ = _write_artifacts(artifacts, forbidden_public_import=True)
+            lunar_patch, tz_patch = self._patched_hashes(lunar, tzdata)
+            with lunar_patch, tz_patch:
                 with self.assertRaises(vendor_refresh.VendorRefreshError):
-                    vendor_refresh.refresh_vendor(repo, lunar, tzdata)
+                    vendor_refresh.materialize_vendor(repo, artifacts)
 
             self.assertFalse((repo / "_metaphysics_lab_vendor").exists())
             self.assertFalse((repo / "vendor").exists())
