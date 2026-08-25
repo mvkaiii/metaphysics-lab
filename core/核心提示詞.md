@@ -95,27 +95,25 @@ Subject rename 必須一次更新 `命主索引.md`、該命主所有已 materia
 
 已有 Astralium、已知四柱或其他 structured external chart 時，建立 External view；Project deterministic result 另存 Project view；兩者經 reconciliation 產生 Resolved view。External / Project raw views 不互相覆寫。
 
-### 2.2.1 過渡期首次建立流程（Portable Offline Natal Pipeline 完成前）
+### 2.2.1 首次建立流程：Birth Data first
 
-在 Portable Offline Natal Pipeline 完成並通過 clean-environment qualification 前，若使用者在尚未建立本命資料的 Project 中說：
+若使用者在尚未建立本命資料的 Project 中說：
 
 > **「開始建立我的命理專案。」**
 
-或提出等義的首次建盤請求，AI 預設採以下過渡流程：
+或提出等義的首次建盤請求，AI 預設採 Birth Data first：
 
-1. **先不要直接用出生資料嘗試建立 Project 原生命盤。**
-2. 先請使用者開啟 Astralium 官方網站：<https://getastralium.com/>。
-3. 請使用者在 Astralium 輸入實際性別、出生日期、出生時間與出生地，分別取得**八字命盤**與**紫微命盤**。
-4. 請使用者把 Astralium 八字與紫微資料貼回 Project；若目前只有其中一份，可以先接收已有資料，不重複要求使用者重做已提供內容。
-5. 收到 Astralium 或其他 structured third-party chart 後，先保存為 **External Natal Source**，保留來源與原始欄位；不得把它冒充 Project 原生盤面。
-6. 再取得目前 `runtime_info`，只有當 runtime capability、dependency 與 location basis 都允許時，才建立 Project deterministic natal view 並做 reconciliation。
-7. 若目前 ChatGPT／Claude execution environment 無法完成 Project 原生計算，必須明確說明 blocked reason，保留 External view 繼續可做的工作；不得假裝 Project 已排盤成功。
+1. 先確認性別、Gregorian 出生日期、出生時間、出生地，只追問缺少欄位。
+2. 取得目前 `runtime_info`，確認 Project Natal 與 location resolution contract。
+3. 若已提供完整 `resolved_location`，直接使用並保留 provenance。
+4. 否則先查 Project 內建、有限且版本化的 **offline registry**。支援的 offline registry 地點可直接建立 Project Natal，**不需要網路**，也**不需要額外 Python 套件**。
+5. offline registry 找不到時預設 fail closed；只有明確啟用 network location resolution 時才可走網路 fallback。offline alias 若 ambiguous，必須直接回報，不得用網路結果偷偷覆蓋 ambiguity。
+6. location basis 唯一且 required inputs 足夠後，建立 Project deterministic natal view；若輸入不足、不唯一或 capability blocked，明確回報 blocked reason，不猜座標、不猜 timezone、不假裝成功。
+7. 若使用者另外提供 Astralium 或其他 structured third-party chart，保存為 **External Natal Source**，再與 Project view 做 reconciliation；不得互相覆寫 raw view。
 
-若使用者明確表示不使用 Astralium，仍可改走出生資料流程，但必須先說明目前過渡期部分 ChatGPT／Claude execution environment 可能因 dependency、network 或 location resolution 條件不足而無法直接完成 Project Natal；遇到不足時 fail closed，不猜座標、不猜 timezone、不假裝成功。
+Astralium 是**可選**的 External Natal Source／交叉校驗來源，不是首次建立 Project 的必要前置步驟，不是 Project Natal calculation authority，也不是永久 runtime dependency。
 
-這是**過渡期 onboarding policy**，不是長期 dependency contract。Astralium 始終屬 External Natal Source，不是 Project Natal calculation authority，也不是永久 runtime dependency。
-
-移除條件固定為：Portable Offline Natal Pipeline 完成、clean-environment qualification 通過，且正式使用文件切回 Birth Data first 後，才移除此 Astralium-first 預設流程；不得只因 runtime 局部可執行就提前取消。
+offline registry 不是全球地理資料庫；coverage 有限且版本化。未支援地點可使用使用者／AI host 已確認的完整 location basis，或由使用者明確選擇啟用 network location resolution。
 
 ## 2.3 出生時間未知或只有範圍
 
