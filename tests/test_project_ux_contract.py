@@ -113,6 +113,22 @@ class ProjectUXContractTests(unittest.TestCase):
         ):
             self.assertIn(phrase, combined)
 
+    def test_case_delivery_uses_verified_zip_without_claiming_download_success(self):
+        combined = self._read(AI_WORKFLOW) + "\n" + self._read(ANALYSIS_RULES)
+        for phrase in (
+            "可驗證資料包交付",
+            "ZIP",
+            "完整性檢查",
+            "Markdown 是正式資料",
+            "不得宣稱下載成功",
+            "重新產生新的 ZIP",
+            "第二次仍無法下載",
+            "檔案傳輸失敗",
+            "不得改用單獨 `.md`",
+            "只包含新增或真正變動的 Markdown",
+        ):
+            self.assertIn(phrase, combined)
+
     def test_annual_analysis_has_overview_then_capability_driven_time_breakdown(self):
         rules = self._read(ANALYSIS_RULES)
         for phrase in (
