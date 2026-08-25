@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import importlib.util
+import tempfile
+from functools import lru_cache
 from importlib import metadata
 from pathlib import Path
 from typing import Callable, Dict, Optional
 
 from engine.vendor.manifest import bundled_dependency
+from engine.vendor.materialize import materialize_private_vendor
 
 
 _DEPENDENCIES = {
@@ -96,14 +99,27 @@ def _repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
+@lru_cache(maxsize=1)
+def _bundled_core_materializes() -> bool:
+    """Validate committed bundled bytes once without importing public packages."""
+    try:
+        with tempfile.TemporaryDirectory(prefix="metaphysics_lab_vendor_check_") as target:
+            materialize_private_vendor(_repo_root(), Path(target))
+    except Exception:
+        return False
+    return True
+
+
 def inspect_bundled_dependencies() -> Dict[str, Dict[str, object]]:
     """Report bundled-core authority without consulting public package state."""
     result: Dict[str, Dict[str, object]] = {}
+    materializes = _bundled_core_materializes()
     for name in _BUNDLED_CORE:
         config = _DEPENDENCIES[name]
+        expected = str(config["expected_version"])
         row = {
             "package": name,
-            "expected_version": str(config["expected_version"]),
+            "expected_version": expected,
             "version": None,
             "bundled": True,
             "available": False,
@@ -117,12 +133,11 @@ def inspect_bundled_dependencies() -> Dict[str, Dict[str, object]]:
         }
         try:
             manifest_row = bundled_dependency(name)
-            vendored_path = manifest_row.get("vendored_path")
-            available = isinstance(vendored_path, str) and (_repo_root() / vendored_path).is_dir()
+            version = manifest_row.get("version")
             row.update(
                 {
-                    "version": manifest_row.get("version"),
-                    "available": bool(available),
+                    "version": version,
+                    "available": bool(materializes and version == expected),
                     "source_revision": manifest_row.get("source_revision"),
                     "artifact_sha256": manifest_row.get("artifact_sha256"),
                     "vendored_tree_sha256": manifest_row.get("vendored_tree_sha256"),
