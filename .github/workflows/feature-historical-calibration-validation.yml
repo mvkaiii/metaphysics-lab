@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   validation:
@@ -72,19 +72,6 @@ jobs:
       - name: Python 3.9 compile check
         run: |
           python -m compileall engine tests tools
-
-      - name: Commit regenerated distribution to feature branch
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        run: |
-          if git diff --quiet -- dist/ai && test -z "$(git status --short -- dist/ai)"; then
-            echo "Distribution already committed"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add dist/ai
-          git commit -m "build: regenerate portable offline AI distribution"
-          git push origin "HEAD:${{ github.head_ref }}"
 
       - name: Verify clean validation tree
         run: |
