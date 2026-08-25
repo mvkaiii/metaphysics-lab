@@ -24,7 +24,7 @@ Python 負責可重現的 deterministic calculation、validation、selection 與
 
 使用者說「開始建立我的命理專案」或提出等義首次建盤請求時：
 
-1. 先確認出生資料：性別、Gregorian 出生日期、出生時間、出生地；只追問缺少欄位。
+1. 先確認首次建立的 5 項必填資料（命主稱呼＋出生資料）：**命主稱呼、性別、出生年月日、出生時間、出生地**；只追問缺少欄位。命主稱呼**用於檔名**，可填暱稱／代號，**不一定要真名**；不得使用 Project 擁有者的名字代填，也不得使用目前聊天者的名字代填。
 2. 可順帶問解讀偏好：① **白話為主（預設）** ② 白話＋命理邏輯。使用者不選也不得阻塞建盤。
 3. 取得 `runtime_info`。
 4. location resolution 順序固定：完整 `resolved_location` → Project 內建有限、版本化的 **offline registry** → 使用者明確啟用的 network fallback → fail closed。
