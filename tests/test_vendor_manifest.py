@@ -1,7 +1,10 @@
 import hashlib
 import json
+import tempfile
 import unittest
 from pathlib import Path
+
+from engine.vendor.materialize import materialize_private_vendor
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -75,21 +78,25 @@ class VendorManifestTests(unittest.TestCase):
         self.assertIn("lunar-python 1.4.8", text)
         self.assertIn("tzdata 2026.3", text)
 
-    def test_manifest_tree_hashes_match_committed_private_package_bytes(self):
+    def test_manifest_tree_hashes_match_materialized_private_package_bytes(self):
         manifest = _load_manifest()
-        for row in manifest["packages"]:
-            root = ROOT / row["vendored_path"]
-            self.assertTrue(root.is_dir(), str(root))
-            self.assertEqual(_tree_sha256(root), row["vendored_tree_sha256"], row["package_name"])
+        with tempfile.TemporaryDirectory() as temp_dir:
+            materialize_private_vendor(ROOT, Path(temp_dir))
+            for row in manifest["packages"]:
+                root = Path(temp_dir) / row["vendored_path"]
+                self.assertTrue(root.is_dir(), str(root))
+                self.assertEqual(_tree_sha256(root), row["vendored_tree_sha256"], row["package_name"])
 
-    def test_tree_hash_is_deterministic_and_path_sensitive(self):
+    def test_tree_hash_is_deterministic_across_materializations(self):
         manifest = _load_manifest()
-        for row in manifest["packages"]:
-            root = ROOT / row["vendored_path"]
-            first = _tree_sha256(root)
-            second = _tree_sha256(root)
-            self.assertEqual(first, second)
-            self.assertEqual(first, row["vendored_tree_sha256"])
+        with tempfile.TemporaryDirectory() as first_dir, tempfile.TemporaryDirectory() as second_dir:
+            materialize_private_vendor(ROOT, Path(first_dir))
+            materialize_private_vendor(ROOT, Path(second_dir))
+            for row in manifest["packages"]:
+                first = _tree_sha256(Path(first_dir) / row["vendored_path"])
+                second = _tree_sha256(Path(second_dir) / row["vendored_path"])
+                self.assertEqual(first, second)
+                self.assertEqual(first, row["vendored_tree_sha256"])
 
 
 if __name__ == "__main__":
