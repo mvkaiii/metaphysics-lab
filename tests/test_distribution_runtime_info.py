@@ -1,6 +1,9 @@
 import importlib
 import importlib.util
+import sys
+import types
 import unittest
+from unittest import mock
 
 
 class DistributionRuntimeInfoTests(unittest.TestCase):
@@ -62,14 +65,47 @@ class DistributionRuntimeInfoTests(unittest.TestCase):
         self.assertEqual(bundled["tzdata"]["expected_version"], "2026.3")
         for value in bundled.values():
             self.assertIs(value["bundled"], True)
+            self.assertIs(value["available"], True)
             self.assertIs(value["runtime_uses_environment_package"], False)
-            self.assertIn("available", value)
 
         optional = data["optional_external_dependencies"]
         self.assertEqual(set(optional), {"geopy", "timezonefinder"})
         for value in optional.values():
             self.assertIn("installed", value)
             self.assertIn("matches_pin", value)
+
+    def test_bundled_core_availability_comes_from_committed_vendor_bytes(self):
+        dependencies = importlib.import_module("engine.distribution.dependencies")
+        manifest = importlib.import_module("engine.vendor.manifest")
+
+        for package_name in ("lunar-python", "tzdata"):
+            manifest_row = manifest.bundled_dependency(package_name)
+            vendored_path = manifest_row.get("vendored_path")
+            if isinstance(vendored_path, str):
+                self.assertFalse(
+                    (dependencies._repo_root() / vendored_path).is_dir(),
+                    "qualification requires no committed private vendor tree",
+                )
+
+        fake_lunar = types.ModuleType("lunar_python")
+        fake_lunar.__version__ = "999.0"
+        fake_tzdata = types.ModuleType("tzdata")
+        fake_tzdata.__version__ = "0.0"
+        with mock.patch.dict(
+            sys.modules,
+            {"lunar_python": fake_lunar, "tzdata": fake_tzdata},
+        ), mock.patch.object(
+            dependencies.metadata,
+            "version",
+            side_effect=AssertionError("bundled authority must not consult host metadata"),
+        ):
+            bundled = dependencies.inspect_bundled_dependencies()
+
+        self.assertEqual(bundled["lunar-python"]["version"], "1.4.8")
+        self.assertEqual(bundled["tzdata"]["version"], "2026.3")
+        for value in bundled.values():
+            self.assertIs(value["available"], True)
+            self.assertIs(value["runtime_uses_environment_package"], False)
 
     def test_runtime_info_exposes_exact_bundled_offline_registry_profile(self):
         runtime = self._runtime()
