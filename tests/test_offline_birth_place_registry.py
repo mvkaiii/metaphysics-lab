@@ -24,6 +24,27 @@ INTERNATIONAL_CANONICAL = {
     "Melbourne",
 }
 
+INTERNATIONAL_TIMEZONES = {
+    "Tokyo": "Asia/Tokyo",
+    "Osaka": "Asia/Tokyo",
+    "Seoul": "Asia/Seoul",
+    "Hong Kong": "Asia/Hong_Kong",
+    "Singapore": "Asia/Singapore",
+    "Kuala Lumpur": "Asia/Kuala_Lumpur",
+    "Bangkok": "Asia/Bangkok",
+    "Beijing": "Asia/Shanghai",
+    "Shanghai": "Asia/Shanghai",
+    "New York City": "America/New_York",
+    "Los Angeles": "America/Los_Angeles",
+    "San Francisco": "America/Los_Angeles",
+    "Vancouver": "America/Vancouver",
+    "Toronto": "America/Toronto",
+    "London": "Europe/London",
+    "Paris": "Europe/Paris",
+    "Sydney": "Australia/Sydney",
+    "Melbourne": "Australia/Melbourne",
+}
+
 
 def _load_registry_json():
     return json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
@@ -70,12 +91,19 @@ class OfflineBirthPlaceRegistryTests(unittest.TestCase):
             if row["country_code"] == "TW":
                 self.assertEqual(row["timezone"], "Asia/Taipei", row["canonical_name"])
 
+    def test_international_records_use_exact_canonical_timezones(self):
+        actual = {
+            row["canonical_name"]: row["timezone"]
+            for row in _load_registry_json()["records"]
+            if row["country_code"] != "TW"
+        }
+        self.assertEqual(actual, INTERNATIONAL_TIMEZONES)
+
     def test_taipei_explicit_aliases_resolve_to_same_record_with_stable_provenance(self):
         from engine.birth.offline_registry import resolve_offline_birth_place
 
         values = ["台北", "臺北", "台北市", "臺北市", "Taipei", "Taipei City"]
         results = [resolve_offline_birth_place(value) for value in values]
-        self.assertTrue(all(result is not None for result in results))
         first = results[0]
         self.assertTrue(all(result.canonical_name == first.canonical_name for result in results))
         self.assertEqual(first.canonical_name, "Taipei City")
@@ -111,11 +139,15 @@ class OfflineBirthPlaceRegistryTests(unittest.TestCase):
         self.assertNotEqual(normalize_birth_place_alias("Taipie"), "taipei")
         self.assertNotEqual(normalize_birth_place_alias("東京"), normalize_birth_place_alias("Tokyo"))
 
-    def test_unlisted_fuzzy_or_implicit_translation_does_not_match(self):
+    def test_unlisted_fuzzy_or_implicit_translation_returns_location_not_resolved(self):
         from engine.birth.offline_registry import resolve_offline_birth_place
 
-        self.assertIsNone(resolve_offline_birth_place("Taipie"))
-        self.assertIsNone(resolve_offline_birth_place("Taipei-ish"))
+        for query in ("Taipie", "Taipei-ish", "東京-ish"):
+            with self.subTest(query=query):
+                with self.assertRaises(BirthFoundationError) as caught:
+                    resolve_offline_birth_place(query)
+                self.assertEqual(caught.exception.code, "location_not_resolved")
+                self.assertEqual(caught.exception.details["query"], query)
 
     def test_committed_short_chiayi_and_hsinchu_aliases_fail_closed(self):
         from engine.birth.offline_registry import resolve_offline_birth_place
