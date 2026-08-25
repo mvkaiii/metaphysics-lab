@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   validation:
@@ -41,25 +41,10 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
-      - name: Apply approved subject-name onboarding change
-        run: |
-          python tools/_maintenance_subject_name_onboarding.py
-
       - name: Rebuild AI distribution
         run: |
           python tools/build_ai_distribution.py
           python tools/build_ai_distribution.py --check
-
-      - name: Subject-name onboarding focused test
-        run: |
-          python -m unittest tests.test_project_ux_contract.ProjectUXContractTests.test_first_natal_onboarding_requires_subject_display_name_for_files -v
-          python - <<'PY'
-          from pathlib import Path
-          p = Path('dist/ai/project_instructions.md')
-          text = p.read_text(encoding='utf-8')
-          print('project_instructions_chars=', len(text))
-          assert len(text) <= 8000
-          PY
 
       - name: Historical selector and progressive Case focused tests
         run: |
@@ -88,19 +73,10 @@ jobs:
         run: |
           python -m compileall engine tests tools
 
-      - name: Verify transformed tree
+      - name: Verify clean tree
         run: |
-          git status --short
-          git diff --check
-          test -n "$(git status --porcelain)"
-
-      - name: Commit approved subject-name onboarding change
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add core/核心提示詞.md core/AI工作流程.md core/命理分析作業規範.md dist/ai/project_instructions.md dist/ai/metaphysics_core.md dist/ai/metaphysics_lab.py
-          git commit -m "fix: require subject name before natal file creation"
-          git push origin HEAD:feature/portable-offline-natal-pipeline
+          git diff --exit-code
+          test -z "$(git status --porcelain)"
 
       - name: Upload generated distribution
         uses: actions/upload-artifact@v4
