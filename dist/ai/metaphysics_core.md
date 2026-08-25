@@ -69,6 +69,17 @@
 - 優先使用 runtime 支援的 pre-resolved input，例如 latitude / longitude / IANA timezone。
 - 不得猜座標、timezone 或第三方資料。
 
+## 2.3 可驗證資料包交付
+
+Markdown 是 Project 內的正式資料；ZIP 只負責讓使用者跨 App／瀏覽器／裝置下載與搬運。需要交付 Case 檔案時：
+
+1. 先取得本次真正要交付的 Markdown mapping。首次本命為 `命主索引.md` 加該命主 00～04；後續只放新增或真正變動的 Markdown。
+2. 呼叫 runtime `build_delivery_bundle`；不得讓 AI 自己宣稱「已打包」或只建立 `.zip` 副檔名。
+3. 只有回傳 `generated = true` 且 `integrity_verified = true`，才把回傳 bytes 寫成實際 ZIP 附件。ZIP 使用標準 DEFLATE、無密碼／加密、平面檔案結構。
+4. 對使用者只說「資料包已建立並通過完整性檢查」；**不得宣稱下載成功**。`delivered` 保持 unknown，實際下載只能由使用者確認。
+5. 使用者第一次回報不能下載時，重新產生新的 ZIP 與新附件，不重貼舊連結。
+6. **第二次仍無法下載**時，明確回報「檔案傳輸失敗」，保留本次資料供稍後重新產包；**不得改用單獨 `.md`** 假裝解決下載問題，也不要求使用者預設安裝第三方解壓縮 App。
+
 ---
 
 # 三、Subject Identity 與第一次建立私人 Case
@@ -97,11 +108,11 @@ AI 依序執行：
 12. 查看 BLOCKING conflict / partial blocked scopes。若仍有 material conflict 或唯一時辰未解，不把高精度單一盤分析當確定基礎。
 13. AI 依 deterministic facts 完成本命解讀；解讀必須標為命理推論，不得寫回盤面事實。
 14. 產生 Base Case Markdown；**Base Case 對外稱「本命基礎檔案」**，聊天中不需要介紹 canonical slot、schema 或 materialize 流程。
-15. 對每一份已建立的 `.md` 提供實際檔案，並告訴使用者加入同一個 Project。
+15. 將 `命主索引.md` 與本次已建立的 00～04 Markdown 交給 `build_delivery_bundle`，只在 ZIP 通過完整性檢查後提供實際下載附件，並請使用者解壓後加入同一個 Project。
 16. 使用者加入後，重新檢查 `命主索引.md`、Case filenames、subject_id、schema 與 `00` manifest 是否一致。
 17. **本命盤建立完成後**且 precision 允許年度校準時，標準下一步就是做**過去 10 年**的過去事件校準；**排除今年，從去年往前**取 10 個 Gregorian label years。例如 2026 年固定校準 2016～2025。
 18. 校準先 lock blind predictions，再讓使用者確認／訂正；不得先看既有事件再改題。
-19. finalize 後由 runtime／Case flow**實際產生**或更新 `05_驗證事件紀錄.md`；首次 materialize 05 時同步更新 00，並把真正變動的 `.md` 以可**下載**檔案交給使用者加入 Project。
+19. finalize 後由 runtime／Case flow**實際產生**或更新 `05_驗證事件紀錄.md`；首次 materialize 05 時同步更新 00，並把真正變動的 Markdown 用 `build_delivery_bundle` 產成通過完整性檢查的更新 ZIP 交給使用者加入 Project。
 20. 使用者若暫時不做校準，可保留 `uncalibrated`，但後續個人化預測必須降權；不得假裝已完成校準。
 
 ## 3.1 Subject-aware filename
@@ -321,7 +332,7 @@ AI **不得只在聊天裡說「已幫你更新紀錄」**。
 3. 保留既有不可覆寫內容與歷史。
 4. 實際產生該檔案新版 `.md`。
 5. 若 progressive file 首次 materialize，同時產生該 subject 新版 00。
-6. 提供實際變動且可下載的檔案，明確說明新增／替換／移除哪份。
+6. 將實際變動的 Markdown 產成通過完整性檢查的 ZIP 下載包，明確說明解壓後要新增／替換／移除哪份。
 7. 沒有變動的 Case Markdown 不要重產。
 
 **更新既有檔案時要替換原檔**，同一 canonical file 在 Project 中只保留一份正式版本。若平台不能直接覆寫，明確請使用者**先移除舊版同名檔案再上傳新版**。不得讓平台自動產生的 `命主索引1.md`、`命主索引(1).md` 或其他數字／copy suffix 成為第二份正式資料；**不得把副本檔名當正式檔案**。若已發現重複檔，先確認 canonical filename 與最新內容，處理完重複檔再繼續，不得同時讀兩份當 authority。
@@ -528,6 +539,12 @@ Rename 必須一次更新 `命主索引.md`、該 subject 所有已 materialize 
 
 Legacy schema 1.0 的完整 bare 9-file Case 可繼續讀取；explicit migration 到 subject-aware 1.1 時不得靠 filename 猜命主顯示名稱。
 
+## 可驗證資料包交付
+
+**Markdown 是正式資料，ZIP 是下載／搬運用的傳輸格式。**正式交付 Case 時必須由 runtime `build_delivery_bundle` 建立標準 DEFLATE ZIP，產生後重新開啟並做完整性檢查；只有 `generated = true` 且 `integrity_verified = true` 才可提供附件。首次本命包包含 `命主索引.md` 與該命主 00～04；後續更新包只包含新增或真正變動的 Markdown。
+
+AI 可以確認 ZIP 已產生且通過驗證，但**不得宣稱下載成功**。若第一次下載失敗，重新產生新的 ZIP；**第二次仍無法下載**則明確標示為**檔案傳輸失敗**並保留資料供稍後重產，**不得改用單獨 `.md`** 當下載備援。ZIP 不加密、不設密碼、不巢狀壓縮，且不把安裝第三方解壓縮 App 當成標準前置條件。
+
 ## 建盤後的過去事件校準
 
 本命盤建立完成後，只要 natal precision 足以支撐年度校準，**下一個標準步驟就是過去事件校準**；不用等到第一次問未來才補做。使用者若暫時不做，可以保留 `uncalibrated`，但後續個人化預測必須明確降權。
@@ -536,7 +553,7 @@ Legacy schema 1.0 的完整 bare 9-file Case 可繼續讀取；explicit migratio
 
 校準仍採 blind-first：Python 固定 canonical sample，AI 先依盤面提出年份與事件領域，再讓使用者確認／訂正；不得先讀答案再改寫預測。
 
-校準 finalize 後不得只在聊天裡摘要。Runtime／Case flow 必須**實際產生**或更新該命主的 `05_驗證事件紀錄.md`；若是首次 materialize 05，同步產生新版 `00_專案索引.md`。AI 必須把真正變動的 Markdown 以可**下載**檔案交給使用者加入同一個 Project；未變動檔案不要重產。
+校準 finalize 後不得只在聊天裡摘要。Runtime／Case flow 必須**實際產生**或更新該命主的 `05_驗證事件紀錄.md`；若是首次 materialize 05，同步產生新版 `00_專案索引.md`。AI 必須把真正變動的 Markdown 交給 `build_delivery_bundle`，以通過完整性檢查的 ZIP 讓使用者下載、解壓後加入同一個 Project；未變動檔案不要重產。
 
 ---
 
