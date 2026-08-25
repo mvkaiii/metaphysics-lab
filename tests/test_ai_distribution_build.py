@@ -126,6 +126,57 @@ class AIDistributionBuildTests(unittest.TestCase):
             self.assertEqual(base64.b64decode(binary_record["content"]), binary)
             self.assertEqual(binary_record["sha256"], hashlib.sha256(binary).hexdigest())
 
+    def test_payload_carries_binary_records_losslessly(self):
+        builder = self.builder()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            target = root / "_metaphysics_lab_vendor" / "tzdata" / "zoneinfo" / "Asia" / "Taipei"
+            target.parent.mkdir(parents=True)
+            binary = b"TZif2\x00\xff\x80\x10\r\n"
+            target.write_bytes(binary)
+
+            encoded, digest, source_files = builder._payload(root)
+            raw = __import__("zlib").decompress(base64.b64decode(encoded.encode("ascii")))
+            self.assertEqual(hashlib.sha256(raw).hexdigest(), digest)
+            payload = json.loads(raw.decode("utf-8"))
+            records = {record["path"]: record for record in payload["files"]}
+            record = records["_metaphysics_lab_vendor/tzdata/zoneinfo/Asia/Taipei"]
+            self.assertEqual(record["encoding"], "base64")
+            self.assertEqual(base64.b64decode(record["content"]), binary)
+            self.assertEqual(record["sha256"], hashlib.sha256(binary).hexdigest())
+            self.assertEqual(source_files[record["path"]], record["sha256"])
+
+    def test_source_digest_covers_vendor_registry_and_license_inputs(self):
+        builder = self.builder()
+        source_paths = builder.discover_bundle_inputs(ROOT)
+        vendor_path = next(path for path in source_paths if path.startswith("vendor/artifacts/"))
+        license_path = next(path for path in source_paths if path.startswith("vendor/licenses/"))
+        mutation_paths = (
+            vendor_path,
+            "data/birth_places/registry.v1.json",
+            license_path,
+        )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            for relative in source_paths:
+                source = ROOT / relative
+                target = root / relative
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(source.read_bytes())
+
+            _, baseline_digest, _ = builder._payload(root)
+            for relative in mutation_paths:
+                with self.subTest(relative=relative):
+                    target = root / relative
+                    original = target.read_bytes()
+                    target.write_bytes(original + b"\nportable-bundle-digest-mutation")
+                    _, mutated_digest, _ = builder._payload(root)
+                    self.assertNotEqual(mutated_digest, baseline_digest)
+                    target.write_bytes(original)
+                    _, restored_digest, _ = builder._payload(root)
+                    self.assertEqual(restored_digest, baseline_digest)
+
     def test_payload_records_are_base64_only_and_digest_covers_binary_safe_json(self):
         builder = self.builder()
         encoded, digest, source_files = builder._payload(ROOT)
