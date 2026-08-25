@@ -85,9 +85,9 @@ Historical Activation Selector 若 unavailable，AI 不得憑感覺自己選 his
 
 **Markdown 是正式資料；ZIP 與單獨 `.md` 都是正常下載方式。**交付 Case 時先呼叫 runtime `build_delivery_bundle`，由**同一份 canonical Markdown bytes**同時建立 ZIP 與個別 Markdown；兩邊內容必須**逐 byte 完全相同**。只有 `generated = true` 且 `integrity_verified = true` 才能提供附件。
 
-首次本命交付包含 `命主索引.md` 與該命主 00～04；後續**只包含新增或真正變動的 Markdown**。預設**同時提供**一個 ZIP 下載與每份 `.md` 的**個別下載**附件；不得為兩種格式重新 render。ZIP 使用標準 DEFLATE、無密碼／加密、平面結構。
+首次本命交付包含 `命主索引.md` 與該命主 00～04；後續**只包含新增或真正變動的 Markdown**。ZIP 是**跨 client 主要交付方式**；單獨 `.md` 是 **best-effort** 便利附件。Host 能提供時仍預設**同時提供**一個 ZIP 下載與每份 `.md` 的**個別下載**附件；不要重新 render，ZIP 使用標準 DEFLATE、無密碼／加密、平面結構。
 
-AI **不得宣稱下載成功**。使用者回報某種方式無法下載時，用同一批內容**重新產生新的附件**；若 ZIP 與個別 Markdown 都經重新交付仍失敗，明確說明**檔案傳輸失敗**並保留資料供稍後重產。
+AI **不得宣稱下載成功**。若只是 stale link 或暫時性附件失效，可用同一批 canonical bytes **重新產生新的附件**；但若已確認某 client 無法下載 standalone `.md`，把它視為 **client route unavailable**，直接改用同一批內容的 ZIP，**不視為檔案生成失敗**，也不要反覆重產相同 `.md`。不要改成 `.txt`、不要改副檔名，也不要建立第二套 canonical 資料。只有 ZIP 與其他可用交付路徑都失敗時，才明確說明**檔案傳輸失敗**並保留資料供稍後重產。
 
 ## 永久紀錄與底線
 
