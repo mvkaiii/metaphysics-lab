@@ -3,11 +3,13 @@ import hashlib
 import importlib
 import importlib.util
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -31,6 +33,27 @@ class AIDistributionBuildTests(unittest.TestCase):
         if spec is None:
             raise AssertionError("tools.build_ai_distribution must exist")
         return importlib.import_module("tools.build_ai_distribution")
+
+    @staticmethod
+    def _copy_distribution_fixture(target: Path) -> None:
+        for relative in ("engine", "templates", "vendor", "data/birth_places", "core"):
+            source = ROOT / relative
+            destination = target / relative
+            shutil.copytree(source, destination)
+
+    def _assert_build_fails_without_artifacts(self, root: Path, expected_error=None):
+        builder = self.builder()
+        output = root / "dist" / "ai"
+        with self.assertRaises(Exception) as caught:
+            builder.build_distribution(root, output)
+        if expected_error is not None:
+            self.assertEqual(str(caught.exception), expected_error)
+        if output.exists():
+            self.assertEqual(
+                [path.name for path in output.iterdir() if path.is_file()],
+                [],
+                "integrity failure must happen before artifact emission",
+            )
 
     def test_same_source_tree_builds_byte_identical_three_artifacts(self):
         builder = self.builder()
@@ -192,6 +215,61 @@ class AIDistributionBuildTests(unittest.TestCase):
             decoded = base64.b64decode(record["content"])
             self.assertEqual(hashlib.sha256(decoded).hexdigest(), record["sha256"])
             self.assertEqual(source_files[record["path"]], record["sha256"])
+
+    def test_vendor_shard_tamper_fails_before_artifact_emission(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            self._copy_distribution_fixture(root)
+            manifest = json.loads((root / "vendor/manifest.json").read_text(encoding="utf-8"))
+            shard = root / manifest["packages"][0]["artifact_shards"][0]
+            original = shard.read_bytes()
+            replacement = b"A" if original[:1] != b"A" else b"B"
+            shard.write_bytes(replacement + original[1:])
+            self._assert_build_fails_without_artifacts(root)
+
+    def test_manifest_tree_hash_tamper_fails_before_artifact_emission(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            self._copy_distribution_fixture(root)
+            manifest_path = root / "vendor/manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["packages"][0]["vendored_tree_sha256"] = "0" * 64
+            manifest_path.write_text(
+                json.dumps(manifest, ensure_ascii=False, sort_keys=True, separators=(",", ":")),
+                encoding="utf-8",
+            )
+            self._assert_build_fails_without_artifacts(root)
+
+    def test_invalid_registry_fails_before_artifact_emission(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            self._copy_distribution_fixture(root)
+            registry = root / "data/birth_places/registry.v1.json"
+            registry.write_bytes(registry.read_bytes() + b"\n{")
+            self._assert_build_fails_without_artifacts(root)
+
+    def test_missing_required_vendor_license_fails_closed(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            self._copy_distribution_fixture(root)
+            manifest = json.loads((root / "vendor/manifest.json").read_text(encoding="utf-8"))
+            license_path = root / manifest["packages"][0]["license_file"]
+            license_path.unlink()
+            self._assert_build_fails_without_artifacts(root, "vendor_license_missing")
+
+    def test_distribution_size_limit_is_fixed_at_five_mib(self):
+        builder = self.builder()
+        self.assertEqual(builder.MAX_BUNDLE_BYTES, 5 * 1024 * 1024)
+        builder.enforce_size_limit("x" * builder.MAX_BUNDLE_BYTES)
+        with self.assertRaisesRegex(RuntimeError, "^distribution_size_limit_exceeded$"):
+            builder.enforce_size_limit("x" * (builder.MAX_BUNDLE_BYTES + 1))
+
+    def test_render_distribution_applies_size_guard_to_generated_script(self):
+        builder = self.builder()
+        oversized = "x" * (5 * 1024 * 1024 + 1)
+        with mock.patch.object(builder, "_render_bundle", return_value=oversized):
+            with self.assertRaisesRegex(RuntimeError, "^distribution_size_limit_exceeded$"):
+                builder.render_distribution(ROOT)
 
     def test_check_mode_detects_drift(self):
         self.builder()
