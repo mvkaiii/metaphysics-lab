@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from engine.vendor.manifest import bundled_dependency, bundled_vendor_manifest
 from engine.vendor.materialize import materialize_private_vendor
 
 
@@ -65,6 +66,40 @@ class VendorManifestTests(unittest.TestCase):
             self.assertIs(row["bundled"], True)
             self.assertEqual(row["runtime_authority"], "bundled")
             self.assertRegex(row["vendored_tree_sha256"], r"^[0-9a-f]{64}$")
+
+    def test_public_manifest_api_returns_recursively_immutable_metadata(self):
+        manifest = bundled_vendor_manifest()
+        with self.assertRaises(TypeError):
+            manifest["schema_version"] = "broken"
+
+        tzdata = bundled_dependency("tzdata")
+        with self.assertRaises(TypeError):
+            tzdata["version"] = "0.0.fake"
+
+        parts = tzdata["artifact_parts"]
+        self.assertIsInstance(parts, tuple)
+        self.assertGreater(len(parts), 0)
+        with self.assertRaises(TypeError):
+            parts[0]["path"] = "vendor/artifacts/fake"
+
+    def test_manifest_loader_rejects_duplicate_packages_and_unsupported_schema(self):
+        original = _load_manifest()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp = Path(temp_dir)
+
+            duplicate = dict(original)
+            duplicate["packages"] = list(original["packages"]) + [dict(original["packages"][0])]
+            duplicate_path = temp / "duplicate.json"
+            duplicate_path.write_text(json.dumps(duplicate), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                bundled_vendor_manifest(duplicate_path)
+
+            unsupported = dict(original)
+            unsupported["schema_version"] = "999"
+            unsupported_path = temp / "unsupported.json"
+            unsupported_path.write_text(json.dumps(unsupported), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                bundled_vendor_manifest(unsupported_path)
 
     def test_vendor_license_files_exist_and_are_nonempty(self):
         manifest = _load_manifest()
