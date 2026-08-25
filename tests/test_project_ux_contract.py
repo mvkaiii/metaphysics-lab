@@ -114,7 +114,7 @@ class ProjectUXContractTests(unittest.TestCase):
             self.assertIn(phrase, combined)
 
     def test_case_delivery_uses_verified_zip_without_claiming_download_success(self):
-        combined = self._read(AI_WORKFLOW) + "\n" + self._read(ANALYSIS_RULES)
+        combined = self._read(PROJECT_PROMPT) + "\n" + self._read(AI_WORKFLOW) + "\n" + self._read(ANALYSIS_RULES)
         for phrase in (
             "可驗證資料包交付",
             "ZIP",
