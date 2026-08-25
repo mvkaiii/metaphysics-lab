@@ -17,23 +17,29 @@ import base64
 import hashlib
 import json
 import sys
+import tempfile
 import zlib
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Dict, Iterable, List, Sequence
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
+from engine.birth.errors import BirthFoundationError
+from engine.birth.offline_registry import load_offline_birth_place_registry
 from engine.distribution.constants import (
     CASE_SCHEMA_VERSION,
     DISTRIBUTION_RUNTIME_VERSION,
     PROJECT_CONTRACT_VERSION,
     RUNTIME_SCHEMA_VERSION,
 )
+from engine.vendor.manifest import bundled_vendor_manifest
+from engine.vendor.materialize import materialize_private_vendor
 
 
 BUILD_FORMAT_VERSION = "1.1"
+MAX_BUNDLE_BYTES = 5 * 1024 * 1024
 ARTIFACT_NAMES = (
     "metaphysics_core.md",
     "metaphysics_lab.py",
@@ -51,6 +57,12 @@ _DIRECTORY_BUNDLE_INPUTS = (
     "vendor/artifacts",
     "vendor/licenses",
 )
+_REQUIRED_REGISTRY_SUPPORT = (
+    "data/birth_places/registry.v1.json",
+    "data/birth_places/schema.v1.json",
+    "data/birth_places/SOURCES.md",
+)
+_REQUIRED_VENDOR_NOTICE = "vendor/licenses/THIRD_PARTY_NOTICES.md"
 
 _BOOTSTRAP = r'''#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
@@ -387,12 +399,69 @@ def _render_bundle(repo_root: Path) -> str:
     return _normalize_text(rendered)
 
 
+def _required_regular_nonempty_file(root: Path, relative: str, *, missing_code: str) -> Path:
+    if not isinstance(relative, str) or not relative or "\\" in relative:
+        raise RuntimeError(missing_code)
+    pure = PurePosixPath(relative)
+    if pure.is_absolute() or pure.as_posix() != relative or any(part in ("", ".", "..") for part in pure.parts):
+        raise RuntimeError(missing_code)
+    target = root.joinpath(*pure.parts)
+    if target.is_symlink() or not target.is_file():
+        raise RuntimeError(missing_code)
+    if not target.read_bytes():
+        raise RuntimeError(missing_code)
+    return target
+
+
+def verify_vendor_inputs(repo_root: Path) -> None:
+    """Fail closed before distribution emission if bundled authorities are invalid."""
+    root = Path(repo_root)
+    manifest_path = root / "vendor" / "manifest.json"
+    try:
+        manifest = bundled_vendor_manifest(path=manifest_path)
+    except (OSError, ValueError, RuntimeError) as exc:
+        raise RuntimeError("vendor_manifest_invalid") from exc
+
+    packages = manifest.get("packages")
+    if not isinstance(packages, tuple) or not packages:
+        raise RuntimeError("vendor_manifest_invalid")
+    for package in packages:
+        license_file = package.get("license_file")
+        if not isinstance(license_file, str):
+            raise RuntimeError("vendor_license_missing")
+        _required_regular_nonempty_file(root, license_file, missing_code="vendor_license_missing")
+    _required_regular_nonempty_file(root, _REQUIRED_VENDOR_NOTICE, missing_code="vendor_license_missing")
+
+    for relative in _REQUIRED_REGISTRY_SUPPORT:
+        _required_regular_nonempty_file(root, relative, missing_code="offline_registry_unavailable")
+    try:
+        load_offline_birth_place_registry(root / "data" / "birth_places" / "registry.v1.json")
+    except BirthFoundationError as exc:
+        raise RuntimeError("offline_registry_invalid") from exc
+
+    try:
+        with tempfile.TemporaryDirectory(prefix="metaphysics_lab_build_vendor_") as temp_dir:
+            materialize_private_vendor(root, Path(temp_dir))
+    except Exception as exc:
+        raise RuntimeError("vendor_integrity_check_failed") from exc
+
+
+def enforce_size_limit(content: str) -> None:
+    if not isinstance(content, str):
+        raise TypeError("distribution content must be text")
+    if len(content.encode("utf-8")) > MAX_BUNDLE_BYTES:
+        raise RuntimeError("distribution_size_limit_exceeded")
+
+
 def render_distribution(repo_root: Path) -> Dict[str, bytes]:
     root = Path(repo_root)
+    verify_vendor_inputs(root)
+    bundle = _render_bundle(root)
+    enforce_size_limit(bundle)
     artifacts = {
         "project_instructions.md": _render_project_instructions(root).encode("utf-8"),
         "metaphysics_core.md": _render_metaphysics_core(root).encode("utf-8"),
-        "metaphysics_lab.py": _render_bundle(root).encode("utf-8"),
+        "metaphysics_lab.py": bundle.encode("utf-8"),
     }
     return {name: artifacts[name] for name in ARTIFACT_NAMES}
 
