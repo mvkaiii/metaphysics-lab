@@ -132,6 +132,19 @@ class ProjectUXContractTests(unittest.TestCase):
         ):
             self.assertIn(phrase, combined)
 
+    def test_case_delivery_treats_zip_as_cross_client_primary_and_markdown_as_best_effort(self):
+        combined = self._read(PROJECT_PROMPT) + "\n" + self._read(AI_WORKFLOW) + "\n" + self._read(ANALYSIS_RULES)
+        for phrase in (
+            "跨 client 主要交付方式",
+            "best-effort",
+            "client route unavailable",
+            "不要重新 render",
+            "不要改成 `.txt`",
+            "不要改副檔名",
+            "不視為檔案生成失敗",
+        ):
+            self.assertIn(phrase, combined)
+
     def test_annual_analysis_has_overview_then_capability_driven_time_breakdown(self):
         rules = self._read(ANALYSIS_RULES)
         for phrase in (
