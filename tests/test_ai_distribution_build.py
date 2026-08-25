@@ -87,6 +87,7 @@ class AIDistributionBuildTests(unittest.TestCase):
         self.assertIn("engine/distribution/runtime.py", paths)
         self.assertIn("templates/case/00_project_index.md.tmpl", paths)
         self.assertIn("data/birth_places/schema.v1.json", paths)
+        self.assertTrue(any(path.startswith("vendor/artifacts/") for path in paths))
         self.assertTrue(all(not path.startswith("tests/") for path in paths))
         self.assertTrue(all(not path.startswith("qualification/") for path in paths))
         self.assertTrue(all(not path.startswith("docs/") for path in paths))
@@ -94,6 +95,7 @@ class AIDistributionBuildTests(unittest.TestCase):
             "engine/",
             "templates/",
             "_metaphysics_lab_vendor/",
+            "vendor/artifacts/",
             "vendor/manifest.json",
             "vendor/licenses/",
             "data/birth_places/registry.v1.json",
@@ -132,6 +134,7 @@ class AIDistributionBuildTests(unittest.TestCase):
         payload = json.loads(raw.decode("utf-8"))
         self.assertEqual(payload["build_format_version"], "1.1")
         self.assertTrue(payload["files"])
+        self.assertTrue(any(record["path"].startswith("vendor/artifacts/") for record in payload["files"]))
         for record in payload["files"]:
             self.assertEqual(record["encoding"], "base64")
             self.assertNotIn("text", record)
