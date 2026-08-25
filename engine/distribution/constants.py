@@ -19,6 +19,7 @@ SUPPORTED_ACTIONS = (
     "lock_historical_calibration",
     "finalize_historical_calibration",
     "export_case_markdown",
+    "build_delivery_bundle",
     "validate_case",
     "migrate_case",
     "update_case_record",
