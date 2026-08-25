@@ -41,6 +41,36 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
+      - name: Generate pinned vendor maintenance candidate
+        run: |
+          rm -rf /tmp/metaphysics-vendor /tmp/metaphysics-vendor-generated
+          mkdir -p /tmp/metaphysics-vendor /tmp/metaphysics-vendor-generated
+          python -m pip download --no-deps --no-binary :all: lunar-python==1.4.8 -d /tmp/metaphysics-vendor
+          python -m pip download --no-deps --only-binary=:all: tzdata==2026.3 -d /tmp/metaphysics-vendor
+          python tools/vendor_refresh.py \
+            --repo-root /tmp/metaphysics-vendor-generated \
+            --lunar-sdist /tmp/metaphysics-vendor/lunar_python-1.4.8.tar.gz \
+            --tzdata-wheel /tmp/metaphysics-vendor/tzdata-2026.3-py2.py3-none-any.whl \
+            > /tmp/metaphysics-vendor-generated/refresh-output.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          manifest = json.loads(Path('/tmp/metaphysics-vendor-generated/vendor/manifest.json').read_text())
+          for row in manifest['packages']:
+              print(row['package_name'], row['artifact_storage_sha256'], row['vendored_tree_sha256'])
+              for path in row['artifact_shards']:
+                  payload = Path('/tmp/metaphysics-vendor-generated') / path
+                  print(path, len(payload.read_bytes()), row['artifact_shard_sha256'][path])
+          PY
+
+      - name: Upload vendor maintenance candidate
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: portable-vendor-maintenance-candidate
+          path: /tmp/metaphysics-vendor-generated/
+          if-no-files-found: error
+
       - name: Rebuild AI distribution
         run: |
           python tools/build_ai_distribution.py
