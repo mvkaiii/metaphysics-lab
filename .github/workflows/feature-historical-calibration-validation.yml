@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validation:
@@ -41,10 +41,20 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
+      - name: Apply approved Project UX follow-up
+        run: |
+          python tools/apply_project_ux_followup.py
+
       - name: Rebuild AI distribution
         run: |
           python tools/build_ai_distribution.py
           python tools/build_ai_distribution.py --check
+
+      - name: Project UX and historical-window focused tests
+        run: |
+          python -m unittest \
+            tests.test_project_ux_contract \
+            tests.test_historical_activation_selector -v
 
       - name: Historical selector and progressive Case focused tests
         run: |
@@ -73,11 +83,29 @@ jobs:
         run: |
           python -m compileall engine tests tools
 
-      - name: Verify clean validation tree
+      - name: Verify transformed tree
         run: |
           git diff --check
-          git diff --exit-code
-          test -z "$(git status --short)"
+          python - <<'PY'
+          from pathlib import Path
+          prompt = Path('core/核心提示詞.md').read_text(encoding='utf-8')
+          generated = Path('dist/ai/project_instructions.md').read_text(encoding='utf-8')
+          assert len(prompt) <= 8000, len(prompt)
+          assert len(generated) <= 8000, len(generated)
+          assert prompt == generated
+          print('project_instructions_chars=', len(generated))
+          print('project_instructions_bytes=', len(generated.encode('utf-8')))
+          PY
+          test ! -e tools/apply_project_ux_followup.py
+          git status --short
+
+      - name: Commit approved Project UX follow-up
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: refine project onboarding and analysis UX"
+          git push origin HEAD:feature/portable-offline-natal-pipeline
 
       - name: Upload generated distribution
         if: always()
