@@ -46,6 +46,34 @@ jobs:
           python tools/build_ai_distribution.py
           python tools/build_ai_distribution.py --check
 
+      - name: Portable offline final focused suite
+        run: |
+          python -m unittest \
+            tests.test_vendor_manifest \
+            tests.test_vendor_import_isolation \
+            tests.test_offline_birth_place_registry \
+            tests.test_distribution_runtime_info \
+            tests.test_distribution_natal \
+            tests.test_ai_distribution_build \
+            tests.test_ai_distribution_bundle \
+            tests.test_ai_distribution_portability -v
+
+      - name: Clean single-file python -S proof
+        run: |
+          python -m unittest tests.test_ai_distribution_portability.AIDistributionPortabilityTests.test_clean_python_s_builds_taipei_natal_from_birth_only -v
+
+      - name: Verify portable bundle size
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('dist/ai/metaphysics_lab.py')
+          size = path.stat().st_size
+          limit = 5 * 1024 * 1024
+          print(f"bundle_bytes={size}")
+          print(f"limit_bytes={limit}")
+          assert size <= limit
+          PY
+
       - name: Historical selector and progressive Case focused tests
         run: |
           python -m unittest \
