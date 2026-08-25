@@ -95,6 +95,10 @@ AI 依序執行：
 13. 產生 Base Case Markdown。
 14. 對每一份已建立的 `.md` 提供實際檔案，並告訴使用者加入同一個 Project。
 15. 使用者加入後，重新檢查 `命主索引.md`、Case filenames、subject_id、schema 與 `00` manifest 是否一致。
+16. **本命盤建立完成後**且 precision 允許年度校準時，標準下一步就是做**過去 10 年**的過去事件校準；**排除今年，從去年往前**取 10 個 Gregorian label years。例如 2026 年固定校準 2016～2025。
+17. 校準先 lock blind predictions，再讓使用者確認／訂正；不得先看既有事件再改題。
+18. finalize 後由 runtime／Case flow**實際產生**或更新 `05_驗證事件紀錄.md`；首次 materialize 05 時同步更新 00，並把真正變動的 `.md` 以可**下載**檔案交給使用者加入 Project。
+19. 使用者若暫時不做校準，可保留 `uncalibrated`，但後續個人化預測必須降權；不得假裝已完成校準。
 
 ## 3.1 Subject-aware filename
 
@@ -236,7 +240,7 @@ finalize calibration
 
 當 runtime 宣告 `historical.activation_selector` 可執行時：
 
-- 由 Python 對最近 10 個已完成的八字立春流年期逐年計算。
+- 由 Python 對排除今年、從去年往前的 10 個 Gregorian label years 逐年計算；例如 2026 年固定為 2016～2025。各 label year 的 technical flow-year period 仍是該年立春至下一年立春。
 - Python 固定選出真正 Top 4 high activation + Bottom 1 control。
 - AI 不得自己挑年份、替換年份、重新排序，亦不得因已知事件改 canonical selection。
 - canonical 年份若已在目前對話或資料中被揭露，只標 `contaminated`；supplemental point 不得取代 canonical point。
@@ -304,7 +308,7 @@ AI **不得只在聊天裡說「已幫你更新紀錄」**。
 3. 保留既有不可覆寫內容與歷史。
 4. 實際產生該檔案新版 `.md`。
 5. 若 progressive file 首次 materialize，同時產生該 subject 新版 00。
-6. 提供實際變動檔案，明確說明新增／替換／移除哪份。
+6. 提供實際變動且可下載的檔案，明確說明新增／替換／移除哪份。
 7. 沒有變動的 Case Markdown 不要重產。
 
 典型對應：05 歷史事件／Historical Calibration；06 年度／月份預測；07 一般具體問事；08 高影響決策；出生資料／reconciliation material change 才視影響更新01～04。
