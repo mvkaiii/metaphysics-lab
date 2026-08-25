@@ -110,15 +110,11 @@ def build_natal(payload: Mapping[str, object]) -> dict:
         try:
             location = resolve_offline_birth_place(query)
         except BirthFoundationError as exc:
-            raise _foundation_error(exc) from exc
-        if location is None:
+            if exc.code != "location_not_resolved":
+                raise _foundation_error(exc) from exc
             provider = _network_provider(payload)
             if provider is None:
-                raise DistributionError(
-                    "location_not_resolved",
-                    "birth place is not available in the offline registry and network resolution is disabled",
-                    {"query": query},
-                )
+                raise _foundation_error(exc) from exc
 
     try:
         if location is not None:
