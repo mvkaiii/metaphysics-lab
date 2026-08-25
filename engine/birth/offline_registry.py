@@ -215,8 +215,15 @@ def _default_registry() -> OfflineBirthPlaceRegistry:
     return load_offline_birth_place_registry()
 
 
-def resolve_offline_birth_place(label: str) -> Optional[ResolvedBirthPlace]:
-    return _default_registry().resolve(label)
+def resolve_offline_birth_place(label: str) -> ResolvedBirthPlace:
+    resolved = _default_registry().resolve(label)
+    if resolved is None:
+        raise BirthFoundationError(
+            "location_not_resolved",
+            "birth place is not available in the offline registry",
+            {"query": label},
+        )
+    return resolved
 
 
 def offline_birth_place_registry_metadata() -> dict:
