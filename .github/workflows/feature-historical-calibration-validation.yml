@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   validation:
@@ -41,36 +41,6 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
-      - name: Generate pinned vendor maintenance candidate
-        run: |
-          rm -rf /tmp/metaphysics-vendor /tmp/metaphysics-vendor-generated
-          mkdir -p /tmp/metaphysics-vendor /tmp/metaphysics-vendor-generated
-          python -m pip download --no-deps --no-binary :all: lunar-python==1.4.8 -d /tmp/metaphysics-vendor
-          python -m pip download --no-deps --only-binary=:all: tzdata==2026.3 -d /tmp/metaphysics-vendor
-          python tools/vendor_refresh.py \
-            --repo-root /tmp/metaphysics-vendor-generated \
-            --lunar-sdist /tmp/metaphysics-vendor/lunar_python-1.4.8.tar.gz \
-            --tzdata-wheel /tmp/metaphysics-vendor/tzdata-2026.3-py2.py3-none-any.whl \
-            > /tmp/metaphysics-vendor-generated/refresh-output.json
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          manifest = json.loads(Path('/tmp/metaphysics-vendor-generated/vendor/manifest.json').read_text())
-          for row in manifest['packages']:
-              print(row['package_name'], row['artifact_storage_sha256'], row['vendored_tree_sha256'])
-              for path in row['artifact_shards']:
-                  payload = Path('/tmp/metaphysics-vendor-generated') / path
-                  print(path, len(payload.read_bytes()), row['artifact_shard_sha256'][path])
-          PY
-
-      - name: Upload vendor maintenance candidate
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: portable-vendor-maintenance-candidate
-          path: /tmp/metaphysics-vendor-generated/
-          if-no-files-found: error
-
       - name: Rebuild AI distribution
         run: |
           python tools/build_ai_distribution.py
@@ -97,33 +67,11 @@ jobs:
 
       - name: Full repository regression
         run: |
-          set -o pipefail
-          python -m unittest discover -s tests -p 'test_*.py' -v 2>&1 | tee /tmp/full-repository-regression.log
-
-      - name: Upload full repository regression log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: full-repository-regression-log
-          path: /tmp/full-repository-regression.log
-          if-no-files-found: error
+          python -m unittest discover -s tests -p 'test_*.py' -v
 
       - name: Python 3.9 compile check
         run: |
           python -m compileall engine tests tools
-
-      - name: Commit regenerated distribution to feature branch
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        run: |
-          if git diff --quiet -- dist/ai && test -z "$(git status --short -- dist/ai)"; then
-            echo "Distribution already committed"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add dist/ai
-          git commit -m "build: regenerate portable offline AI distribution"
-          git push origin "HEAD:${{ github.head_ref }}"
 
       - name: Verify clean validation tree
         run: |
