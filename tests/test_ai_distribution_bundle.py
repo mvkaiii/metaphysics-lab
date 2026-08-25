@@ -95,12 +95,36 @@ class AIDistributionBundleTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
         bundled = json.loads(completed.stdout)
         self.assertEqual(bundled, modular)
+        self.assertEqual(
+            bundled["data"]["bundled_dependencies"],
+            modular["data"]["bundled_dependencies"],
+        )
+        self.assertEqual(
+            bundled["data"]["offline_location_registry"],
+            modular["data"]["offline_location_registry"],
+        )
+        self.assertTrue(bundled["data"]["bundled_dependencies"]["lunar-python"]["available"])
+        self.assertTrue(bundled["data"]["bundled_dependencies"]["tzdata"]["available"])
 
     def test_natal_request_matches_modular_runtime(self):
         payload = {"birth": BIRTH, "resolved_location": LOCATION}
         modular = dispatch("build_natal", payload)
         _, bundled = self.bundled_request("build_natal", payload)
         self.assertEqual(bundled, modular)
+
+    def test_birth_only_taipei_matches_modular_runtime_under_python_s(self):
+        payload = {"birth": BIRTH}
+        modular = dispatch("build_natal", payload)
+        completed, bundled = self.bundled_request("build_natal", payload, python_flags=("-S",))
+        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+        self.assertEqual(bundled, modular)
+        self.assertTrue(bundled["ok"], bundled)
+        self.assertEqual(
+            bundled["data"]["resolved_location"]["provider_name"],
+            "metaphysics_lab_offline_registry",
+        )
+        self.assertEqual(bundled["data"]["resolved_location"]["timezone"], "Asia/Taipei")
+        self.assertEqual(len(bundled["data"]["project_natal"]["ziwei"]["palaces"]), 12)
 
     def test_candidate_envelope_request_matches_modular_runtime_for_bounded_range(self):
         payload = {
