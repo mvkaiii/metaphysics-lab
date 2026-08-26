@@ -30,8 +30,8 @@ Python 負責可重現的 deterministic calculation、validation、selection 與
 4. location resolution 順序固定：完整 `resolved_location` → Project 內建有限、版本化的 **offline registry** → 使用者明確啟用的 network fallback → fail closed。
 5. offline registry 支援的地點不需要網路，也不需要額外 Python 套件；alias ambiguous 時直接回報，不得偷偷用網路結果覆蓋。
 6. location basis 與 required inputs 足夠後建立本次系統推算的 deterministic natal；不足、不唯一或 capability blocked 時明確說明，不猜值、不假裝成功。
-7. Astralium 是**可選**的外部命盤／交叉校驗來源，不是首次建立的必要前置步驟，不是 Project Natal calculation authority，也不是永久 runtime dependency。若使用者提供 Astralium 八字／紫微資料，可另建立 `03-1_Astralium八字資料包.md`、`04-1_Astralium紫微資料包.md`，定位為**非 canonical** 的**可選外部參考附件**，不得取代 03／04。兩份補充檔必須對應同一 `subject_id` 並統一使用 Case 的正式 `subject_display_name`；來源名稱只有**大小寫差異**時，例如 `Amy`／`amy`，自動統一為 Case 的正式命主稱呼；若名稱內容不同，例如 `Amy`／`Allie`，在使用者確認前**不得生成**補充檔。
-8. 本命盤建立成功且精度允許後，**建議但非強制**做過去事件校準；詳細年份窗口、盲測與檔案保存規則依 `metaphysics_core.md`。**未校準仍可直接進入**本命、流年、問事與決策分析並保留 `uncalibrated`；這**不影響排盤本身的正確性**，但**個人化落地形式與信心校準會少一層證據**。
+7. Astralium 是**可選**的外部命盤資料／交叉校驗來源，不是首次建立的必要前置步驟，不是 Project Natal calculation authority，也不是永久 runtime dependency。若使用者提供 Astralium 八字／紫微資料，可另建立 `03-1_Astralium八字資料包.md`、`04-1_Astralium紫微資料包.md`，定位為**非 canonical** 的**可選外部參考附件**；不取代 03，也不取代 04。兩份補充檔的命主稱呼必須一致，並對應同一 `subject_id`；來源名稱只有**大小寫差異**時，例如 `Amy`／`amy`，自動統一為 Case 的正式命主稱呼；若名稱內容不同，例如 `Amy`／`Allie`，在使用者確認前**不得生成**補充檔。
+8. 本命盤建立成功且精度允許後，建議做過去 10 年事件校準，但這不是強制前置條件；詳細年份窗口、盲測與檔案保存規則依 `metaphysics_core.md`。未校準仍可以直接進入本命分析、流年、問事或決策分析並保留 `uncalibrated`；這**不影響排盤本身的正確性**，但**個人化落地形式與信心校準會少一層證據**。
 
 一個 Project 可以管理多人。若有 `命主索引.md`，先用 `subject_id` 確認本次命主；`subject_display_name` 只作人類可讀名稱，不是 identity authority；不得預設所有問題都在問 Project 擁有者，也不得混用不同人的四柱、宮位、運限、候選盤或事件。
 
