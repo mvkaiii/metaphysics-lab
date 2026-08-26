@@ -1,18 +1,18 @@
 # Metaphysics Lab 版本
 
-> `VERSION.md` 是給開發、驗證與版本治理看的**技術版本表**。第一次使用請先看 `README.md` 或 `docs/快速開始.md`；一般使用者版 v1.3.0 發布說明見 `docs/發布說明-v1.3.0.md`。
+> `VERSION.md` 是給開發、驗證與版本治理看的**技術版本表**。第一次使用請先看 `README.md` 或 `docs/快速開始.md`；一般使用者版 v1.4.0 發布說明見 `docs/發布說明-v1.4.0.md`。
 >
-> 本文件的「v1.3.0」區塊保存正式 Release snapshot。已合併 `main`、但尚未成為下一個正式 Release 的 Project Contract / Case Schema 1.1 變更，記錄在 `CHANGELOG.md` 的 Unreleased 區，不回寫改造 v1.3.0 歷史快照。
+> v1.3.0 與更早版本屬歷史 Release snapshot，不因後續 qualification 或文件更新回寫改造。v1.4.0 收斂 v1.3.0 之後已合併到 `main` 的 Project Contract / Case Schema 1.1、Portable Offline Natal、Historical Blind Calibration 與細時間 qualification；release 本身不改變 capability maturity。
 
 ## 最新正式發布
 
-- Metaphysics Lab Core：**v1.3.0**
-- 發布日期：**2026-08-23**
-- Release baseline：`main` post-merge verified + v1.3.0 release gate
+- Metaphysics Lab Core：**v1.4.0**
+- 發布日期：**2026-08-26**
+- Release baseline：v1.4.0 release-preparation gate；正式 Git tag 應在 release 文件 merge、`main` regression 驗證完成後建立
 
 主要元件：
 
-- 命理推導計算規則：v1.2
+- 命理推導計算規則：v1.4
 - 八字時間推導引擎：v1.0.0
 - 紫微流月定位引擎：v1.0.0
 - 紫微流日定位引擎：v1.0.0-exp
@@ -23,16 +23,19 @@
 - Natal Foundation：v1.0-exp
 - Ziwei Fine Cycle：v1.0-exp
 - Ziwei Flowing Stars：v1.0-exp
-- AI Distribution Runtime：v1.0-exp
-- Project Contract：v1.0
-- Case Schema：v1.0
+- Historical Activation Selector：v1.0-exp
+- AI Distribution Runtime：v1.1-exp
+- Runtime Schema：v1.1
+- Build Format：v1.1
+- Project Contract：v1.1
+- Case Schema：v1.1
 - 問事追蹤制度：v1.0
 
 ---
 
-## v1.3.0 Capability 狀態
+## v1.4.0 Capability 狀態
 
-目前執行能力的權威來源是 `runtime_info`。以下是本次正式 release snapshot；release 本身不改變 capability maturity。
+目前執行能力的權威來源是 `runtime_info`。以下是本次正式 release snapshot；**release 本身不改變 capability maturity**。
 
 | Capability / Layer | Implementation | Maturity | Routing / Role |
 |---|---|---|---|
@@ -42,6 +45,7 @@
 | `ziwei.natal_chart` | implemented | experimental | on_demand |
 | `natal.reconciliation` | implemented | stable | on_demand |
 | `natal.markdown_export` | implemented | stable | on_demand |
+| `historical.activation_selector` | implemented | experimental | on_demand |
 | `ziwei.flow_month_palaces` | implemented | stable | default |
 | `ziwei.flow_day_palaces` | implemented | experimental | on_demand |
 | `ziwei.flow_hour_palaces` | implemented | experimental | on_demand |
@@ -60,18 +64,42 @@
 
 ---
 
-## v1.3.0 Qualification / Regression Baseline
+## v1.4.0 Distribution / Contract Snapshot
 
-### AI Distribution Pack / main acceptance
+v1.4.0 正式收斂下列 distribution / data contract：
 
 ```text
-Focused AI Distribution   56/56 PASS
-Deterministic build check       PASS
-Full repository           488/488 PASS
-Python 3.9 compileall            PASS
+Project Contract          1.1
+Case Schema               1.1
+Runtime Schema            1.1
+AI Distribution Runtime   1.1-exp
+Build Format              1.1
 ```
 
-### Natal Foundation private aggregate qualification
+Project Contract 1.1 / Case Schema 1.1 的重點：
+
+- 使用 opaque `subject_id` 與 subject-aware filenames，降低多人 Case 混用風險。
+- 新 Case 採 Progressive Case：`00`～`04` 為 Base Case；`05`～`08` 有實際紀錄才 materialize。
+- Legacy Case 1.0 保持 readable；升級不要求破壞性重建或強制 rename。
+- Candidate Envelope 對 unknown / bounded birth-time uncertainty 不使用 midpoint、default time 或 majority voting 製造假精度。
+- Historical Blind Calibration 先建立可重現的 canonical selection 與 blind lock，再使用已確認事件校準。
+- 一般使用者回答將內部 calibration state 與工程實作詞翻成白話；只有明確要求技術檢查時才展開 schema / validator / raw field 等細節。
+
+Portable Offline Natal：
+
+- bundled core 固定 `lunar-python==1.4.8`。
+- bundled timezone data 固定 `tzdata==2026.3` / IANA `2026c`。
+- 內建有限、版本化的 offline birth-place registry。
+- location precedence：完整 `resolved_location` → offline registry → explicit opt-in network fallback。
+- offline registry miss 預設 fail closed；ambiguous alias 不讓網路結果偷偷覆蓋。
+- single-file bundle 使用固定 source digest、per-record SHA256、preflight 與 5 MiB size guard。
+- clean `python -S`、no-network、public-package pollution 與 modular ↔ bundled parity 已納入 qualification / regression。
+
+---
+
+## v1.4.0 Qualification Snapshot
+
+### Natal Foundation
 
 ```text
 Bazi private case       PASS：6 direct matches / 3 explicit profile differences / 0 unexpected mismatch
@@ -81,7 +109,13 @@ promotion_allowed       false
 
 單一 private case 不構成 capability promotion 依據；`bazi.natal_chart` 與 `ziwei.natal_chart` 仍為 Experimental。
 
-### Ziwei Fine Cycle
+### Bazi Flow Day / Hour
+
+現有八字流日／流時公式沒有因 qualification 被改寫。公開 qualification 已鎖定代表日期、23:00 early-Zi、Gregorian transition、五鼠遁、連續日、DST responsibility 與 modular ↔ generated runtime parity；qualification PASS 不等於命理預測正確性的證明。
+
+### Ziwei Fine Cycle Day / Hour
+
+現有 `ziwei-fine-cycle-lunar-late-zi-v1` / `late_zi_forward-v1` 維持：
 
 ```text
 pinned lunar-lite 1d104fff...   18/18 PASS
@@ -89,7 +123,23 @@ pinned iztro 814b77e6...        integration PASS
 Astralium fine-cycle             PENDING
 ```
 
-`leap_twelfth_month_second_half` 目前只有 synthetic internal coverage，仍為 not externally qualified。
+另有 pinned `lunar-python==1.4.8` 的流日／流時 qualification，覆蓋 late-Zi、五鼠遁、Gregorian transition、DST responsibility 與 modular ↔ generated runtime parity。Fine Cycle stem / transformations / flying 仍是 Experimental / On-demand。
+
+### Ziwei Month Boundary
+
+v1.4.0 納入 PR #175 已合併的月層 qualification：
+
+```text
+month-oracle checks              86
+unexpected mismatch              0
+ordinary lunar months            72 cases
+real leap day15/day16            14 cases / 7 leap-month years
+ordinal 13 -> next year month 1  10/10 property PASS
+```
+
+`leap_twelfth_month_second_half` 已不再只有 synthetic internal coverage：pinned `lunar-python==1.4.8` 對真實 1574 閏十二月顯示 day 15 為 `丁丑`，下一個實際農曆月為 1575 正月 `戊寅`，Project day 16 effective month source 亦為 `戊寅`。
+
+Pinned lunar-lite 對閏十二月下半月本身仍有 direct-runtime oracle 限制；這個來源限制保留，不冒充已由 lunar-lite 直接驗證。Astralium fine-cycle 仍為 `PENDING`，也不因此 promotion。
 
 ### Ziwei Flowing Stars
 
@@ -117,9 +167,28 @@ Private Astralium raw chart、raw birth input、完整住址與 normalized priva
 
 ---
 
+## v1.4.0 Release Acceptance Gate
+
+正式 tag 前必須在 release candidate exact head / merged `main` 上重新確認：
+
+```text
+Bazi flow-time qualification --check       PASS
+Ziwei flow-time qualification --check      PASS
+Ziwei month-boundary qualification --check PASS
+Deterministic distribution build/check     PASS
+Focused historical/progressive suite       PASS
+Full repository regression                 PASS
+Python 3.9 compileall                       PASS
+Clean validation tree                      PASS
+```
+
+實際最終 test count、workflow run 與 artifact digest 以 release-preparation PR 的最終驗證紀錄為準；不得在驗證前預填成功數字。
+
+---
+
 ## AI Distribution Pack
 
-v1.3.0 正式提供 mobile-first AI release surface：
+v1.4.0 正式提供 mobile-first AI release surface：
 
 ```text
 dist/ai/metaphysics_lab.py
@@ -129,9 +198,9 @@ dist/ai/project_instructions.md
 
 一般使用者不需要理解 repo modules。前兩個檔案上傳到 ChatGPT / Claude Project，`project_instructions.md` 內容貼入 Project Instructions；完整分析若平台提供，可優先使用較高推理強度模式。
 
-Runtime 更新預設只替換 `metaphysics_lab.py`。Project Contract 或 Case Schema 只有在明確 migration 通知時才同步。
+從 v1.3.0 升級到 v1.4.0 時，由於 Project Contract / Case Schema 已正式進到 1.1，Release 說明要求同步三個發行檔；既有私人 Case 不應因此清空或破壞性重建。
 
-AI Distribution Runtime 目前版本仍為 `1.0-exp`；本次 GitHub Release 不把它或任何 experimental metaphysics capability 自動升 Stable。
+AI Distribution Runtime 目前版本為 `1.1-exp`；正式 GitHub Release 不把它或任何 experimental metaphysics capability 自動升 Stable。
 
 ---
 
@@ -175,6 +244,13 @@ AI Distribution Runtime 目前版本仍為 `1.0-exp`；本次 GitHub Release 不
 ---
 
 ## 歷史版本
+
+### v1.3.0｜2026-08-23
+
+- 把本命建立、Ziwei Fine Cycle / Flowing Stars 與 AI Distribution Pack 收斂成正式 release baseline。
+- v1.3.0 發布當時 AI Distribution Runtime 為 `1.0-exp`，Project Contract / Case Schema 為 `1.0`。
+- v1.3.0 發布當時 `leap_twelfth_month_second_half` 仍只有 synthetic internal coverage；這是歷史 snapshot，後續 v1.4.0 qualification 不回寫改造當時證據。
+- 一般使用者版歷史發布說明：`docs/發布說明-v1.3.0.md`。
 
 ### v1.2.0｜2026-08-21
 
