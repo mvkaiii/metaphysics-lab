@@ -1,0 +1,80 @@
+name: v1.4.0-published-release-verify
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    env:
+      TARGET_SHA: 9065fec2a71a1ba07c8e6b7ef2106599d2d28a85
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 9065fec2a71a1ba07c8e6b7ef2106599d2d28a85
+          fetch-depth: 0
+
+      - name: Verify published metadata and body
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$TARGET_SHA"
+          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/v1.4.0" > /tmp/release.json
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          data = json.loads(Path('/tmp/release.json').read_text(encoding='utf-8'))
+          assert data['tag_name'] == 'v1.4.0'
+          assert data['target_commitish'] == os.environ['TARGET_SHA']
+          assert data['name'] == 'Metaphysics Lab v1.4.0'
+          assert data['draft'] is False
+          assert data['prerelease'] is False
+          expected_assets = {
+              'metaphysics_lab.py': 'sha256:10e8018e7a98d5a31beebf30477a097fb11094b17290bc6da05fb8c719c6db06',
+              'metaphysics_core.md': 'sha256:d0a779598e2f2805abf03f86bcb626db1c69fbf45c0315204f80cf9ab25e2e9e',
+              'project_instructions.md': 'sha256:99de687d57229f52a84bfafd9f1e0d48b1bcdd32899cb0f84a319c3130e72179',
+          }
+          assets = {item['name']: item.get('digest') for item in data['assets']}
+          assert assets == expected_assets, (assets, expected_assets)
+          canonical = Path('docs/發布說明-v1.4.0.md').read_text(encoding='utf-8')
+          assert data['body'] == canonical
+          print('release metadata/body/assets digest: PASS')
+          PY
+
+      - name: Verify exact tag target
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag_sha="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/v1.4.0" --jq '.object.sha')"
+          test "$tag_sha" = "$TARGET_SHA"
+          echo "tag target: $tag_sha"
+
+      - name: Download and compare published assets byte-for-byte
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/v1.4.0-assets
+          gh release download v1.4.0 --dir /tmp/v1.4.0-assets
+          cmp dist/ai/metaphysics_lab.py /tmp/v1.4.0-assets/metaphysics_lab.py
+          cmp dist/ai/metaphysics_core.md /tmp/v1.4.0-assets/metaphysics_core.md
+          cmp dist/ai/project_instructions.md /tmp/v1.4.0-assets/project_instructions.md
+          sha256sum \
+            /tmp/v1.4.0-assets/metaphysics_lab.py \
+            /tmp/v1.4.0-assets/metaphysics_core.md \
+            /tmp/v1.4.0-assets/project_instructions.md
+
+      - name: Verify v1.4.0 is latest release
+        shell: bash
+        run: |
+          set -euo pipefail
+          latest_tag="$(gh api "repos/${GITHUB_REPOSITORY}/releases/latest" --jq '.tag_name')"
+          test "$latest_tag" = 'v1.4.0'
+          echo "latest release: $latest_tag"
