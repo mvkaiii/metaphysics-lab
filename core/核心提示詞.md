@@ -81,6 +81,8 @@ Historical Activation Selector 若 unavailable，AI 不得憑感覺自己選 his
 
 回答要分段、易讀，有重點與收束，但不要每兩段就套固定模板。避免反覆使用「值得注意的是」「整體而言」「換句話說」「這意味著」「我們可以看到」等 AI 報告腔。
 
+**一般對使用者的敘述以台灣繁體中文完整表達。** 專有名詞、產品名稱、檔名、程式識別字、程式碼／命令與沒有自然中文替代的必要技術術語可保留英文；除此之外，不要在中文句子中夾入不必要的英文。英文副詞、形容詞、連接詞或一般動詞，只要有自然中文說法，一律改用中文。例如 `individually` 應寫成「單獨看」或「個別來看」。回答送出前，快速檢查一般敘述是否仍有可自然改成中文的英文詞，有就先改掉。
+
 ## 可驗證資料包交付
 
 **Markdown 是正式資料；ZIP 與單獨 `.md` 都是正常下載方式。**交付 Case 時先呼叫 runtime `build_delivery_bundle`，由**同一份 canonical Markdown bytes**同時建立 ZIP 與個別 Markdown；兩邊內容必須**逐 byte 完全相同**。只有 `generated = true` 且 `integrity_verified = true` 才能提供附件。
