@@ -52,6 +52,8 @@ class ZiweiPhase2BDocumentationTests(unittest.TestCase):
             self.assertIn(needle, historical)
         self.assertIn('leap_twelfth_month_second_half', historical)
         self.assertIn('not externally qualified', historical)
+        self.assertIn('86 month-oracle checks', self.rules)
+        self.assertIn('0 mismatch', self.rules)
         self.assertNotIn('Astralium fine-cycle             PASS', historical)
 
     def test_readme_delegates_dynamic_phase2b_state_to_runtime(self):
@@ -68,11 +70,11 @@ class ZiweiPhase2BDocumentationTests(unittest.TestCase):
     def test_changelog_has_phase2b_inside_v130_before_v120(self):
         self.assertIn('### Phase 2B｜Ziwei Fine Cycle Stem Resolver v1', self.changelog)
         self.assertIn('## v1.3.0｜2026-08-23', self.changelog)
-        self.assertLess(self.changelog.index('### Phase 2B｜Ziwei Fine Cycle Stem Resolver v1'), self.changelog.index('## v1.2.0｜2026-08-21'))
+        self.assertLess(self.changelog.index('### Phase 2B｜Ziwei Fine Cycle Stem Resolver v1', self.changelog.index('## v1.3.0｜2026-08-23')), self.changelog.index('## v1.2.0｜2026-08-21'))
         self.assertNotIn('## Unreleased｜Phase 2B', self.changelog)
 
-    def test_version_release_identity_is_v130_without_promotion(self):
-        self.assertIn('Metaphysics Lab Core：**v1.3.0**', self.version)
+    def test_version_release_identity_is_v140_without_promotion(self):
+        self.assertIn('Metaphysics Lab Core：**v1.4.0**', self.version)
         self.assertIn('Ziwei Fine Cycle：v1.0-exp', self.version)
         self.assertIn('紫微流月／流日／流時 stem | implemented | experimental | on_demand', self.version)
         self.assertNotIn('Fine Cycle Stem Resolver = implemented / stable / default', self.version)

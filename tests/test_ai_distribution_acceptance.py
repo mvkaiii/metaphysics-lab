@@ -70,14 +70,14 @@ class AIDistributionAcceptanceTests(unittest.TestCase):
         self.assertEqual(caps["historical.activation_selector"]["maturity"], "experimental")
         self.assertEqual(caps["historical.activation_selector"]["routing"], "on_demand")
 
-    def test_formal_release_identity_is_v1_3_0(self):
+    def test_formal_release_identity_is_v1_4_0(self):
         text = (ROOT / "VERSION.md").read_text(encoding="utf-8")
-        self.assertIn("Metaphysics Lab Core：**v1.3.0**", text)
-        self.assertIn("發布日期：**2026-08-23**", text)
+        self.assertIn("Metaphysics Lab Core：**v1.4.0**", text)
+        self.assertIn("發布日期：**2026-08-26**", text)
         self.assertIn("AI Distribution Pack", text)
-        self.assertIn("AI Distribution Runtime：v1.0-exp", text)
+        self.assertIn("AI Distribution Runtime：v1.1-exp", text)
         self.assertIn("release 本身不改變 capability maturity", text)
-        self.assertNotRegex(text, r"最新正式發布[\s\S]{0,100}v1\.2\.0")
+        self.assertNotRegex(text, r"最新正式發布[\s\S]{0,100}v1\.3\.0")
 
     def test_distribution_contains_no_private_case_payload_files(self):
         self.assertEqual({path.name for path in DIST.iterdir()}, EXPECTED_ARTIFACTS)
