@@ -170,9 +170,14 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
         return _ok(action, runtime_info())
     request = {} if payload is None else payload
     try:
-        if action in ("subject.create_identity", "subject.registry_validate", "subject.rename"):
-            from .subjects import create_subject_identity, rename_subject, validate_subject_registry
-            handler = {"subject.create_identity": create_subject_identity, "subject.registry_validate": validate_subject_registry, "subject.rename": rename_subject}[action]
+        if action in ("subject.create_identity", "subject.registry_validate", "subject.rename", "subject.prepare_astralium_references"):
+            from .subjects import create_subject_identity, prepare_astralium_references, rename_subject, validate_subject_registry
+            handler = {
+                "subject.create_identity": create_subject_identity,
+                "subject.registry_validate": validate_subject_registry,
+                "subject.rename": rename_subject,
+                "subject.prepare_astralium_references": prepare_astralium_references,
+            }[action]
             return _ok(action, handler(request))
         if action == "build_natal":
             from .natal import build_natal
