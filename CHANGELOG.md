@@ -1,10 +1,10 @@
 # 變更紀錄
 
-這份文件保存正式版本與尚未發布變更的技術紀錄。第一次使用 Metaphysics Lab 請先看 `README.md`；一般使用者版 v1.3.0 發布說明見 `docs/發布說明-v1.3.0.md`。
+這份文件保存正式版本與尚未發布變更的技術紀錄。第一次使用 Metaphysics Lab 請先看 `README.md`；一般使用者版 v1.4.0 發布說明見 `docs/發布說明-v1.4.0.md`。
 
-## Unreleased｜Project Contract 1.1 + Case Schema 1.1 + Portable Offline Natal
+## v1.4.0｜2026-08-26
 
-Project Contract 1.1 / Case Schema 1.1 的既有批次已合併進 `main`；Portable Offline Natal Pipeline 仍屬 **Unreleased implementation work**，尚未建立下一個正式 GitHub Release。目前正式版本仍是 **v1.3.0｜2026-08-23**，既有 Experimental 能力不因這批變更自動升 Stable。
+v1.4.0 正式收斂 v1.3.0 之後已合併到 `main` 的 Project Contract / Case Schema 1.1、Portable Offline Natal、Historical Blind Calibration、Bazi / Ziwei 細時間 qualification 與一般使用者語言邊界。**本版不因發版提升任何既有 capability maturity，也不改寫歷史 v1.3.0 qualification snapshot。**
 
 ### 一般使用者摘要
 
@@ -12,36 +12,87 @@ Project Contract 1.1 / Case Schema 1.1 的既有批次已合併進 `main`；Port
 - 新 Case 採漸進式建立：先建立基礎資料，需要追蹤時才新增事件、流年、問事與重大決策紀錄。
 - 出生時間未知或只有範圍時，不會自己猜中點或任意時辰；可保留候選狀態，只使用真正一致的資料。
 - 第一次做個人化未來分析時，流程維持「先盲判、再用已確認事件校準」，避免先知道歷史答案再改第一版判斷。
-- 首次建立流程恢復 **Birth Data first**；支援的 offline registry 地點可在不需要網路、不需要額外 Python 套件的環境建立 Project Natal。
-- Astralium 回到**可選** External Natal Source／交叉校驗來源，不是 Project Natal calculation authority，也不是首次建盤必要前置步驟。
+- 首次建立流程採 **Birth Data first**；支援的 offline registry 地點可在不需要網路、不需要額外 Python 套件的環境建立 Project Natal。
+- Astralium 是**可選** External Natal Source／交叉校驗來源，不是 Project Natal calculation authority，也不是首次建盤必要前置步驟。
 - Legacy Case 1.0 維持可讀與可遷移；不要求使用者破壞性重建舊 Case。
+- 一般回答新增 user-facing language boundary：內部 calibration state、validator、schema、migration、raw JSON field 等工程詞不直接當作一般使用者結論；除非使用者明確要求技術檢查。
+- 紫微月層與流日／流時、八字流日／流時新增可重現 qualification；其中閏十二月下半月已獲 pinned lunar-python 的實際月序 continuity 支持。
+
+### Project Contract 1.1 / Case Schema 1.1
+
+- Project Contract / Case Schema 正式為 `1.1`；Runtime Schema 為 `1.1`，AI Distribution Runtime 為 `1.1-exp`，Build Format 為 `1.1`。
+- Subject Identity 使用 opaque `subject_id` 作為命主權威識別，顯示名稱與檔名 label 可改但不得改變 identity。
+- 新 Case 採 Progressive Case：第一次建立只產生 `00`～`04` Base Case；`05`～`08` 有實際紀錄時才建立。
+- Candidate Envelope 完整掃描 unknown / bounded birth-time uncertainty，不使用 midpoint、default time 或 majority voting 製造假精度。
+- Case record 使用 JSON typed semantics；非標準 `NaN / Infinity / -Infinity` fail closed。
+- Legacy Case 1.0 舊 record ID 仍可讀；遷移到 1.1 時不符合新規則的 ID 會 deterministic remap 為固定長度 safe ID。
+- Project Contract / Case Schema 既有批次經 post-merge adversarial audit、RED→GREEN regression 與 exact-head immutable CI 驗證後合併 PR #166。
+
+### Historical Blind Calibration
+
+- 新增 `historical.activation_selector`：`implemented / experimental / on_demand / 1.0-exp`。
+- Selector 使用最近 10 個已完整結束的立春流年期，canonical selection 固定為 Top 4 High + Bottom 1 Control；已知事件與對話內容不能改 canonical selection。
+- Ziwei yearly context 僅作 `support_only / ranking_authority=false`，不得改 Bazi selection digest。
+- 第一次校準仍採先鎖盲判、後收事件；歷史 ground truth 不得回流改寫同一次 selector truth。
+- 一般使用者校準狀態固定白話化；例如 `basic` 對外說「已完成初步校準」，不直接暴露內部 state code。
 
 ### Portable Offline Natal Pipeline
 
 - Core calendar authority 改為 bundle 內固定 bytes：`lunar-python==1.4.8`、`tzdata==2026.3` / IANA `2026c`；runtime 不以 host/public package metadata 決定 bundled core availability 或版本。
 - 新增有限、版本化的 offline birth-place registry；支援 explicit aliases，unknown fail closed，ambiguous alias 不自動交給網路結果覆蓋。
 - location resolution precedence 固定為：完整 `resolved_location` → offline registry → **explicit opt-in** network fallback。未啟用 network fallback 時，unsupported place 回 `location_not_resolved`。
-- Runtime Schema 升至 `1.1`；AI Distribution Runtime 升至 `1.1-exp`；Build Format 為 `1.1`。
 - Runtime Schema 1.1 明確區分 bundled core 與 execution-environment optional integrations；`geopy` / `timezonefinder` 僅為可選 network location diagnostics／fallback，不是離線 Natal 必要 dependency。
 - single-file bundle 採 byte-oriented base64 records、SOURCE_DIGEST、per-record SHA256、unsafe path pre-write guard、vendor/registry/license preflight 與固定 5 MiB size guard。
 - clean `python -S` qualification 覆蓋 birth-only Taipei、bundled dependency availability、public-package pollution、preloaded `sys.modules` pollution 與 no-network socket guard。
 - modular runtime 與 single-file bundle 對 birth-only Taipei `build_natal` 及 `runtime_info` 做完整 parity qualification。
-- 公開 onboarding 從暫時 Astralium-first 改回 Birth Data first；offline registry coverage 明確標示為有限且版本化。
-- 本批**不修改 v1.3.0 tag / GitHub Release assets，不建立新 release，也不提升任何既有 capability maturity**。
+- 公開 onboarding 採 Birth Data first；offline registry coverage 明確標示為有限且版本化。
 
-### 技術紀錄
+### Bazi Flow Day / Hour qualification
 
-- Project Contract / Case Schema 維持 `1.1`；Runtime Schema / AI Distribution Runtime 現為 `1.1` / `1.1-exp`。
-- Subject Identity 使用 opaque `subject_id` 作為命主權威識別，顯示名稱與檔名 label 可改但不得改變 identity。
-- 新 Case 採 Progressive Case：第一次建立只產生 `00`～`04` Base Case；`05`～`08` 有實際紀錄時才建立。
-- 新增 Candidate Envelope：完整掃描 unknown / bounded birth-time uncertainty，不使用 midpoint、default time 或 majority voting 製造假精度。
-- 新增 Historical Blind Calibration 與 `historical.activation_selector`；selector 為 `implemented / experimental / on_demand / 1.0-exp`。
-- Selector 使用最近 10 個已完整結束的立春流年期，canonical selection 固定為 Top 4 High + Bottom 1 Control；已知事件與對話內容不能改 canonical selection。
-- Ziwei yearly context 僅作 `support_only / ranking_authority=false`，不得改 Bazi selection digest。
-- Case record 使用 JSON typed semantics；非標準 `NaN / Infinity / -Infinity` fail closed。
-- Legacy Case 1.0 舊 record ID 仍可讀；遷移到 1.1 時不符合新規則的 ID 會 deterministic remap 為固定長度 safe ID。
-- Project Contract / Case Schema 既有批次經 post-merge adversarial audit、RED→GREEN regression 與 exact-head immutable CI 驗證後合併 PR #166。
-- 本批不修改 v1.3.0 tag / GitHub Release，也不提升任何既有 capability maturity。
+- 既有 production 八字流日／流時公式未修改。
+- qualification 覆蓋 deterministic day samples、23:00 early-Zi、Gregorian transition、五鼠遁、連續日、DST responsibility 與 modular ↔ generated runtime parity。
+- qualification PASS 只代表指定公開 oracle / property / integration evidence 對得上，不宣稱命理預測準確率。
+
+### Ziwei Flow Day / Hour qualification
+
+- 既有 `ziwei-fine-cycle-lunar-late-zi-v1` / `late_zi_forward-v1` production formula 未修改。
+- qualification 覆蓋 deterministic day samples、22:59 / 23:00 / 23:59 / 00:00 late-Zi boundary、五鼠遁、Gregorian transition、DST responsibility 與 modular ↔ generated runtime parity。
+- Fine Cycle stem / transformations / flying 維持 `implemented / experimental / on_demand / 1.0-exp`。
+
+### Ziwei Month-Layer qualification
+
+- 新增 pinned `lunar-python==1.4.8` month-continuity qualification：**86 month-oracle checks、0 mismatch**。
+- ordinary lunar months：72 cases。
+- real leap-month day 15 / day 16：14 cases across 7 leap-month years。
+- ordinal 13 → next lunar-year month 1：10/10 property PASS。
+- `leap_twelfth_month_second_half` 不再只有 synthetic internal coverage；真實 1574 閏十二月 day 15 為 `丁丑`，下一個實際農曆月為 1575 正月 `戊寅`，Project day 16 effective month source 亦為 `戊寅`。
+- pinned lunar-lite 對閏十二月下半月仍有 direct-runtime oracle limitation；這個來源限制保留，不把 lunar-python continuity 說成 lunar-lite 自己直接驗證。
+- 相鄰 regression 鎖住一般換月、農曆跨年、閏月 15→16、23:00 不獨立換月、DST responsibility、same local civil time 不 fork、downstream source reuse 與 modular ↔ generated runtime parity。
+- Astralium fine-cycle 維持 `PENDING`；沒有 maturity promotion。
+
+### User-facing language boundary
+
+- Project Instructions 固定將 `uncalibrated / basic / calibrated / scorable / unscorable` 轉成一般使用者白話。
+- `runtime validator`、schema、migration、raw JSON field name 與 harmless internal field-name difference 不在一般回答直播。
+- 若內部差異實際影響結果，回答必須說明實際後果與需要採取的行動，而不是只丟工程術語。
+- 此行為有 repository UX regression test 鎖定。
+
+### v1.4.0 release acceptance
+
+正式 tag 前必須在 release candidate exact head / merged `main` 重新通過：
+
+```text
+Bazi flow-time qualification --check       PASS
+Ziwei flow-time qualification --check      PASS
+Ziwei month-boundary qualification --check PASS
+Deterministic distribution build/check     PASS
+Focused historical/progressive suite       PASS
+Full repository regression                 PASS
+Python 3.9 compileall                       PASS
+Clean validation tree                      PASS
+```
+
+最終 test count、workflow run 與 artifact digest 以 release-preparation PR 的 exact-head verification 為準；驗證前不預填成功數字。
 
 ## v1.3.0｜2026-08-23
 
