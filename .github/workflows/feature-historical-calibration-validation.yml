@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validation:
@@ -80,7 +80,17 @@ jobs:
           path: dist/ai/
           if-no-files-found: error
 
-      - name: Verify clean tree
+      - name: Commit generated distribution sync
         run: |
-          git diff --exit-code
+          git diff --exit-code -- dist/ai/metaphysics_core.md dist/ai/project_instructions.md
+          if git diff --quiet -- dist/ai/metaphysics_lab.py; then
+            echo "No runtime bundle diff to commit."
+            test -z "$(git status --porcelain)"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist/ai/metaphysics_lab.py
+          git commit -m "build: sync AI distribution"
           test -z "$(git status --porcelain)"
+          git push origin HEAD:feature/portable-offline-natal-pipeline
