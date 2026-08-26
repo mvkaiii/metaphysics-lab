@@ -105,6 +105,25 @@ class ProjectUXContractTests(unittest.TestCase):
         ):
             self.assertIn(phrase, rules)
 
+    def test_user_facing_calibration_status_hides_engineering_terms(self):
+        combined = self._read(PROJECT_PROMPT) + "\n" + self._read(AI_WORKFLOW) + "\n" + self._read(ANALYSIS_RULES)
+        for phrase in (
+            "內部校準狀態碼不得直接當成使用者結論",
+            "`uncalibrated` →「尚未完成歷史事件校準」",
+            "`basic` →「已完成初步校準」",
+            "`calibrated` →「已完成較完整校準」",
+            "`scorable` →「可正式評估」",
+            "`unscorable` →「目前資料不足以正式評估」",
+            "runtime validator",
+            "schema",
+            "migration",
+            "除非使用者明確要求技術檢查",
+            "不影響資料使用的純內部欄位名稱差異",
+            "正常回答省略",
+            "目前已完成初步校準",
+        ):
+            self.assertIn(phrase, combined)
+
     def test_user_facing_prose_uses_taiwan_traditional_chinese_without_unnecessary_english(self):
         combined = self._read(PROJECT_PROMPT) + "\n" + self._read(AI_WORKFLOW) + "\n" + self._read(ANALYSIS_RULES)
         for phrase in (

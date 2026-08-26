@@ -1,0 +1,109 @@
+{
+  "checks_count": 86,
+  "coverage": {
+    "adjacent_integration_boundaries": {
+      "qualification": "tests/test_ziwei_month_boundary_qualification.py owns lunar month/year transitions, 23:00 neutrality, DST responsibility, monthly source reuse, and generated-runtime parity"
+    },
+    "leap_month_boundaries": {
+      "boundary_days": [
+        15,
+        16
+      ],
+      "cases": 14,
+      "vectors": [
+        {
+          "leap_month": 10,
+          "lunar_year": 1984
+        },
+        {
+          "leap_month": 9,
+          "lunar_year": 2014
+        },
+        {
+          "leap_month": 6,
+          "lunar_year": 2017
+        },
+        {
+          "leap_month": 4,
+          "lunar_year": 2020
+        },
+        {
+          "leap_month": 2,
+          "lunar_year": 2023
+        },
+        {
+          "leap_month": 11,
+          "lunar_year": 2033
+        },
+        {
+          "leap_month": 12,
+          "lunar_year": 1574
+        }
+      ]
+    },
+    "leap_twelfth_month_second_half": {
+      "historical_lunar_year": 1574,
+      "oracle_following_ganzhi": "戊寅",
+      "oracle_following_month": 1,
+      "oracle_following_year": 1575,
+      "oracle_leap_month": -12,
+      "project_day15_ganzhi": "丁丑",
+      "project_day16_effective_month": 1,
+      "project_day16_ganzhi": "戊寅",
+      "qualified": true
+    },
+    "ordinal_13_to_next_year_month_1_property": {
+      "cases": 10,
+      "failures": [],
+      "passed": true,
+      "year_stems": 10
+    },
+    "ordinary_months": {
+      "cases": 72,
+      "months_per_year": 12,
+      "years": [
+        1901,
+        1984,
+        2000,
+        2023,
+        2033,
+        2099
+      ]
+    }
+  },
+  "maturity_promotion": false,
+  "mismatch_count": 0,
+  "mismatches": [],
+  "oracle": {
+    "month_api": "LunarMonth.getGanZhi + LunarMonth.next(1)",
+    "package": "lunar-python",
+    "runtime_authority": false,
+    "source_revision": "000c8a3d74eed098d6256a28fdd51b869324c559",
+    "version": "1.4.8"
+  },
+  "phase2b_lunar_lite_anchor": {
+    "cases_checked": 18,
+    "cases_matched": 18,
+    "direct_runtime_limit": {
+      "branch_table_entries": 12,
+      "case": "leap_twelfth_month_second_half",
+      "direct_oracle_usable": false,
+      "leap_twelfth_second_half_index": 12,
+      "normal_month_index_expression": "abs(lunarMonth) - 1 + fixLeap",
+      "reason": "index 12 is outside a 12-entry zero-based monthly branch table"
+    },
+    "package_version": "0.2.8",
+    "source_name": "SylarLong/lunar-lite",
+    "source_revision": "1d104fffa31609e9f112898cc57545827e8d57ae",
+    "status": "PASS"
+  },
+  "project_profile": {
+    "late_zi_month_rule": "23:00 does not independently advance the month layer",
+    "month_boundary": "lunar month; leap days 1-15 original month, day 16+ next effective month",
+    "profile_id": "ziwei-fine-cycle-lunar-late-zi-v1",
+    "rule_version": "1.0-exp"
+  },
+  "qualification": "ziwei_month_boundary",
+  "result": "PASS",
+  "schema_version": "1.0"
+}
