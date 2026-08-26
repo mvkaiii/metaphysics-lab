@@ -97,9 +97,9 @@ class ZiweiPhase2CDocsTests(unittest.TestCase):
         self.assertNotIn("## Unreleased｜Phase 2C Ziwei Flowing Stars", text)
         self.assertNotIn("ziwei.flowing_stars = implemented / stable", text)
 
-    def test_release_identity_is_v130_without_flowing_star_promotion(self):
+    def test_release_identity_is_v140_without_flowing_star_promotion(self):
         text = _read("VERSION.md")
-        self.assertIn("Metaphysics Lab Core：**v1.3.0**", text)
+        self.assertIn("Metaphysics Lab Core：**v1.4.0**", text)
         self.assertIn("Ziwei Flowing Stars：v1.0-exp", text)
         self.assertIn("`ziwei.flowing_stars` | implemented | experimental | on_demand", text)
         self.assertIn("Astralium flowing-stars            PENDING", text)
