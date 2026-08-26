@@ -106,7 +106,7 @@ class ProjectUXContractTests(unittest.TestCase):
             self.assertIn(phrase, rules)
 
     def test_user_facing_calibration_status_hides_engineering_terms(self):
-        combined = self._read(AI_WORKFLOW) + "\n" + self._read(ANALYSIS_RULES)
+        combined = self._read(PROJECT_PROMPT) + "\n" + self._read(AI_WORKFLOW) + "\n" + self._read(ANALYSIS_RULES)
         for phrase in (
             "內部校準狀態碼不得直接當成使用者結論",
             "`uncalibrated` →「尚未完成歷史事件校準」",
