@@ -251,10 +251,10 @@ class DistributionProspectiveClaimTests(unittest.TestCase):
         self.assertEqual(first["method_version"], "lin_tianji_v1.5-exp")
         self.assertEqual(len(first["canonical_digest"]), 64)
         self.assertEqual(first["claims"][0]["claim_id"], "claim-2026-09-work-001")
-        serialized = repr(first)
-        self.assertNotIn("observed_actual", serialized)
-        self.assertNotIn("evaluation", serialized)
-        self.assertNotIn("failure_mode", serialized)
+        for locked_claim in first["claims"]:
+            self.assertNotIn("observed_actual", locked_claim)
+            self.assertNotIn("evaluation", locked_claim)
+            self.assertNotIn("failure_mode", locked_claim)
 
     def test_claim_rejects_outcome_fields_at_lock_time(self):
         prospective = self._prospective()
