@@ -1,0 +1,77 @@
+{
+  "coverage": {
+    "consecutive_day_property": {
+      "pairs": 730
+    },
+    "day_samples": {
+      "cases": 268,
+      "end": "2050-12-31",
+      "start": "1980-01-01",
+      "step_days": 97
+    },
+    "dst_responsibility": {
+      "owner": "Calendar Resolver",
+      "qualification": "tests/test_ziwei_flow_time_qualification.py verifies nonexistent/ambiguous local time handling before Ziwei fine-cycle resolution"
+    },
+    "five_rat_matrix": {
+      "cases": 120,
+      "day_stems": 10,
+      "hour_branches": 12
+    },
+    "generated_runtime_parity": {
+      "qualification": "tests/test_ziwei_flow_time_qualification.py compares modular and generated daily/hourly forecast context at ordinary and 23:xx inputs"
+    },
+    "gregorian_transitions": {
+      "cases": 13
+    },
+    "late_zi_boundary": {
+      "cases": 16,
+      "local_times": [
+        "22:59",
+        "23:00",
+        "23:59",
+        "00:00 next civil day"
+      ],
+      "zones": [
+        "Asia/Taipei",
+        "Asia/Tokyo",
+        "America/New_York",
+        "Europe/London"
+      ]
+    }
+  },
+  "maturity_promotion": false,
+  "mismatch_count": 0,
+  "mismatches": [],
+  "oracle": {
+    "eight_char_sect": 1,
+    "package": "lunar-python",
+    "runtime_authority": false,
+    "sect_alignment": "comparison only: sect 1 forwards day/hour at 23:00, matching the Project profile's day/hour behavior",
+    "source_revision": "000c8a3d74eed098d6256a28fdd51b869324c559",
+    "version": "1.4.8"
+  },
+  "phase2b_external_anchor": {
+    "cases_checked": 18,
+    "cases_matched": 18,
+    "package_version": "0.2.8",
+    "required_external_coverage": [
+      "late_zi_day_hour",
+      "regular_day_hour"
+    ],
+    "source_name": "SylarLong/lunar-lite",
+    "source_revision": "1d104fffa31609e9f112898cc57545827e8d57ae",
+    "status": "PASS"
+  },
+  "project_profile": {
+    "calendar_resolver_role": "neutral civil/timezone/DST authority; does not pre-apply Ziwei metaphysical day rollover",
+    "day_boundary": "late_zi_forward-v1",
+    "day_rule": "23:00 forwards Ziwei effective date exactly once",
+    "hour_rule": "Five Rat stem from effective Ziwei day stem + CalendarContext hour branch",
+    "profile_id": "ziwei-fine-cycle-lunar-late-zi-v1",
+    "rule_version": "1.0-exp"
+  },
+  "qualification": "ziwei_flow_day_hour",
+  "result": "PASS",
+  "schema_version": "1.0"
+}
