@@ -12,7 +12,8 @@ UPDATE = ROOT / "docs" / "更新與版本同步.md"
 GOVERNANCE = ROOT / "docs" / "資料治理.md"
 ARCHITECTURE = ROOT / "docs" / "架構說明.md"
 CHANGELOG = ROOT / "CHANGELOG.md"
-RELEASE_NOTES = ROOT / "docs" / "發布說明-v1.3.0.md"
+RELEASE_NOTES = ROOT / "docs" / "發布說明-v1.4.0.md"
+HISTORICAL_V130_RELEASE_NOTES = ROOT / "docs" / "發布說明-v1.3.0.md"
 PROJECT_INSTRUCTIONS = ROOT / "dist" / "ai" / "project_instructions.md"
 
 USER_ARTIFACTS = (
@@ -139,26 +140,28 @@ class AIDistributionDocsTests(unittest.TestCase):
         self.assertNotIn("ziwei.flowing_stars` 仍 planned", self.update)
         self.assertNotIn("ziwei.flowing_stars       planned", self.update)
 
-    def test_changelog_has_plain_language_v1_3_0_summary_before_technical_history(self):
-        head = self.changelog[:9000]
-        self.assertIn("## v1.3.0｜2026-08-23", head)
+    def test_changelog_has_plain_language_v1_4_0_summary_before_technical_history(self):
+        head = self.changelog[:10000]
+        self.assertIn("## v1.4.0｜2026-08-26", head)
         self.assertIn("一般使用者摘要", head)
         self.assertIn("Astralium", head)
-        self.assertIn("metaphysics_lab.py", head)
-        self.assertIn("GitHub Release", head)
+        self.assertIn("metaphysics_lab.py", RELEASE_NOTES.read_text(encoding="utf-8"))
+        self.assertIn("GitHub Release", self.changelog)
+        self.assertIn("## v1.3.0｜2026-08-23", self.changelog)
 
-    def test_repo_has_canonical_plain_language_v1_3_0_release_note_source(self):
+    def test_repo_has_canonical_plain_language_v1_4_0_release_note_source(self):
         self.assertTrue(RELEASE_NOTES.exists())
         text = RELEASE_NOTES.read_text(encoding="utf-8")
-        self.assertIn("Metaphysics Lab v1.3.0", text)
+        self.assertIn("Metaphysics Lab v1.4.0", text)
         self.assertIn("下載區", text)
         for name in USER_ARTIFACTS:
             self.assertIn(name, text)
         for label in USER_LABELS:
             self.assertIn(label, text)
-        self.assertIn("只有出生資料", text)
-        self.assertIn("出生資料 + Astralium", text)
-        self.assertIn("只有第三方排盤", text)
+        self.assertIn("Birth Data first", text)
+        self.assertIn("Astralium", text)
+        self.assertIn("可選", text)
+        self.assertTrue(HISTORICAL_V130_RELEASE_NOTES.exists())
 
 
 if __name__ == "__main__":
