@@ -399,6 +399,67 @@ def _index_body(chart, identity: Mapping[str, str], materialized, calibration_st
     return "\n".join(lines)
 
 
+def _astralium_reference_metadata(identity: Mapping[str, str], created_at: str, modified_by: str, source_name: str) -> dict:
+    return {
+        "case_schema_version": CASE_SCHEMA_VERSION,
+        "project_contract_version": PROJECT_CONTRACT_VERSION,
+        "record_type": "external_natal_reference",
+        "subject_id": identity["subject_id"],
+        "subject_display_name": identity["subject_display_name"],
+        "subject_short_id": identity["subject_short_id"],
+        "filename_label": identity["filename_label"],
+        "created_at": created_at,
+        "last_updated_at": created_at,
+        "last_modified_by": modified_by,
+        "runtime_version_if_applicable": DISTRIBUTION_RUNTIME_VERSION,
+        "source_classification": "External natal reference",
+        "mutation_policy": "external_source_refresh_only",
+        "canonical": "false",
+        "external_source_name": source_name,
+    }
+
+
+def _astralium_reference_body(display_name: str, title: str, facts: Mapping[str, object], source: Mapping[str, object]) -> str:
+    facts_json = json.dumps(facts, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False)
+    source_json = json.dumps(source, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False)
+    return (
+        "# %s｜%s\n\n"
+        "## 資料分類\n\n"
+        "此檔只保存 Astralium／第三方實際提供的 External natal reference，不包含 Project 原生盤面或 Resolved selection。\n\n"
+        "## External facts\n\n```json\n%s\n```\n\n"
+        "## Source provenance\n\n```json\n%s\n```\n"
+    ) % (display_name, title, facts_json, source_json)
+
+
+def _append_astralium_reference_files(files: dict, payload: Mapping[str, object], chart, identity: Mapping[str, str], generated_at: str, modified_by: str) -> None:
+    if chart.external is None or payload.get("external_subject_display_name") is None:
+        return
+    external = chart.external.to_dict()
+    source = external.get("source", {})
+    source_name = str(source.get("source_name", "")).strip()
+    if source_name.casefold() != "astralium":
+        return
+    external_name = _text(payload.get("external_subject_display_name"), "external_subject_display_name")
+    official_name = identity["subject_display_name"]
+    if external_name.casefold() != official_name.casefold():
+        raise DistributionError(
+            "external_subject_name_mismatch",
+            "external natal reference subject does not match the Case subject",
+            {"case_subject_display_name": official_name, "external_subject_display_name": external_name},
+        )
+    metadata = _astralium_reference_metadata(identity, generated_at, modified_by, source_name)
+    reference_specs = (
+        ("bazi", "03-1_Astralium八字資料包.md", "Astralium八字資料包"),
+        ("ziwei", "04-1_Astralium紫微資料包.md", "Astralium紫微資料包"),
+    )
+    for source_kind, suffix, title in reference_specs:
+        facts = external.get(source_kind, {})
+        if not facts:
+            continue
+        filename = "%s_%s_%s" % (identity["filename_label"], identity["subject_short_id"], suffix)
+        files[filename] = render_front_matter(metadata) + _astralium_reference_body(official_name, title, facts, source)
+
+
 def export_case_markdown(payload: Mapping[str, object]) -> dict:
     payload = _mapping(payload, "payload")
     chart = _normalized_model(payload.get("normalized_natal"))
@@ -418,6 +479,7 @@ def export_case_markdown(payload: Mapping[str, object]) -> dict:
     for canonical in BASE_CASE_FILES:
         actual = canonical_case_filename(identity, canonical)
         files[actual] = _render_case_file(canonical, _metadata(canonical, identity, generated_at, modified_by), bodies[canonical])
+    _append_astralium_reference_files(files, payload, chart, identity, generated_at, modified_by)
     return {"subject_id": identity["subject_id"], "subject": identity, "files": files}
 
 
