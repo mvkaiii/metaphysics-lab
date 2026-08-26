@@ -5,6 +5,7 @@ on:
     branches:
       - feature/progressive-case-historical-calibration
       - fix/postmerge-audit-161-165
+      - 'feature/lin-tianji-*'
   pull_request:
     branches:
       - main
