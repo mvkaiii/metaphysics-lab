@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PROJECT_PROMPT = ROOT / "core" / "核心提示詞.md"
 ANALYSIS_RULES = ROOT / "core" / "命理分析作業規範.md"
 AI_WORKFLOW = ROOT / "core" / "AI工作流程.md"
+DATA_GUIDE = ROOT / "docs" / "命盤資料準備指南.md"
 
 
 class ProjectUXContractTests(unittest.TestCase):
@@ -46,16 +47,45 @@ class ProjectUXContractTests(unittest.TestCase):
             self.assertIn(phrase, combined)
         self.assertIn("命主稱呼、性別、出生年月日、出生時間、出生地", combined)
 
-    def test_post_natal_flow_calibrates_previous_ten_years_and_materializes_markdown(self):
+    def test_post_natal_flow_recommends_previous_ten_years_and_materializes_markdown_when_used(self):
         combined = self._read(ANALYSIS_RULES) + "\n" + self._read(AI_WORKFLOW)
         for phrase in (
             "本命盤建立完成後",
             "過去 10 年",
             "排除今年",
             "從去年往前",
+            "建議但非強制",
             "05_驗證事件紀錄.md",
             "實際產生",
             "下載",
+        ):
+            self.assertIn(phrase, combined)
+
+    def test_astralium_optional_supplement_files_keep_subject_identity(self):
+        combined = self._read(PROJECT_PROMPT) + "\n" + self._read(AI_WORKFLOW) + "\n" + self._read(ANALYSIS_RULES) + "\n" + self._read(DATA_GUIDE)
+        for phrase in (
+            "03-1_Astralium八字資料包.md",
+            "04-1_Astralium紫微資料包.md",
+            "非 canonical",
+            "可選外部參考附件",
+            "subject_display_name",
+            "大小寫差異",
+            "Case 的正式命主稱呼",
+            "Amy",
+            "amy",
+            "Allie",
+            "不得生成",
+        ):
+            self.assertIn(phrase, combined)
+
+    def test_historical_calibration_is_recommended_not_required_for_future_analysis(self):
+        combined = self._read(PROJECT_PROMPT) + "\n" + self._read(AI_WORKFLOW) + "\n" + self._read(ANALYSIS_RULES) + "\n" + self._read(DATA_GUIDE)
+        for phrase in (
+            "建議但非強制",
+            "未校準仍可直接進入",
+            "uncalibrated",
+            "不影響排盤本身的正確性",
+            "個人化落地形式與信心校準會少一層證據",
         ):
             self.assertIn(phrase, combined)
 
