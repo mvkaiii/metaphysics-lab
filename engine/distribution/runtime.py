@@ -6,6 +6,9 @@ from datetime import datetime
 from typing import Mapping, Optional
 from zoneinfo import ZoneInfo
 
+from engine.birth.errors import BirthFoundationError
+from engine.birth.offline_registry import offline_birth_place_registry_metadata
+
 from .constants import (
     CASE_SCHEMA_VERSION,
     DISTRIBUTION_RUNTIME_VERSION,
@@ -13,7 +16,11 @@ from .constants import (
     RUNTIME_SCHEMA_VERSION,
     SUPPORTED_ACTIONS,
 )
-from .dependencies import inspect_external_dependencies
+from .dependencies import (
+    inspect_bundled_dependencies,
+    inspect_external_dependencies,
+    inspect_optional_external_dependencies,
+)
 from .errors import DistributionError
 from .manifest import load_capabilities
 
@@ -29,6 +36,23 @@ def _error(action: str, code: str, message: str, details: Optional[Mapping[str, 
     }
 
 
+def _offline_location_registry_info() -> dict:
+    try:
+        metadata = dict(offline_birth_place_registry_metadata())
+    except BirthFoundationError:
+        return {
+            "version": None,
+            "record_count": 0,
+            "coverage_profile": None,
+            "source_profiles": [],
+            "bundled": False,
+            "available": False,
+        }
+    metadata["bundled"] = True
+    metadata["available"] = True
+    return metadata
+
+
 def runtime_info() -> dict:
     return {
         "project_contract_version": PROJECT_CONTRACT_VERSION,
@@ -37,6 +61,13 @@ def runtime_info() -> dict:
         "distribution_runtime_version": DISTRIBUTION_RUNTIME_VERSION,
         "supported_actions": list(SUPPORTED_ACTIONS),
         "capabilities": load_capabilities(),
+        "dependency_authority": {
+            "calendar_core": "bundled",
+            "network_location": "execution_environment_optional",
+        },
+        "bundled_dependencies": inspect_bundled_dependencies(),
+        "optional_external_dependencies": inspect_optional_external_dependencies(),
+        "offline_location_registry": _offline_location_registry_info(),
         "external_dependencies": inspect_external_dependencies(),
     }
 
@@ -139,9 +170,14 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
         return _ok(action, runtime_info())
     request = {} if payload is None else payload
     try:
-        if action in ("subject.create_identity", "subject.registry_validate", "subject.rename"):
-            from .subjects import create_subject_identity, rename_subject, validate_subject_registry
-            handler = {"subject.create_identity": create_subject_identity, "subject.registry_validate": validate_subject_registry, "subject.rename": rename_subject}[action]
+        if action in ("subject.create_identity", "subject.registry_validate", "subject.rename", "subject.prepare_astralium_references"):
+            from .subjects import create_subject_identity, prepare_astralium_references, rename_subject, validate_subject_registry
+            handler = {
+                "subject.create_identity": create_subject_identity,
+                "subject.registry_validate": validate_subject_registry,
+                "subject.rename": rename_subject,
+                "subject.prepare_astralium_references": prepare_astralium_references,
+            }[action]
             return _ok(action, handler(request))
         if action == "build_natal":
             from .natal import build_natal
@@ -163,6 +199,9 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
             return _ok(action, handler(request))
         if action == "export_case_markdown":
             return _ok(action, _export_case(request))
+        if action == "build_delivery_bundle":
+            from .delivery import build_delivery_bundle
+            return _ok(action, build_delivery_bundle(request))
         if action in ("validate_case", "migrate_case", "update_case_record"):
             from .case_pack import migrate_case, update_case_record, validate_case
             handler = {"validate_case": validate_case, "migrate_case": migrate_case, "update_case_record": update_case_record}[action]

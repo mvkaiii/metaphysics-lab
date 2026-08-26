@@ -20,24 +20,27 @@ Metaphysics Lab 是一套把**命盤計算**和**AI 命理解讀**分開的命�
 
 > **「開始建立我的命理專案。」**
 
-### 目前建議的首次建立流程（過渡期）
+### 首次建立流程：Birth Data first
 
-在 **Portable Offline Natal Pipeline** 完成並通過正式驗證前，第一次建立命理 Project 時，**建議優先先取得 Astralium 的八字與紫微命盤，再貼回 Project**。
+AI 先確認建立完整本命所需的出生資料，只追問缺少欄位：
 
-這是目前的過渡期建議流程，目的是避免不同 ChatGPT／Claude Python sandbox 缺少必要套件、無法連網或無法可靠解析出生地時，使用者只輸入出生年月日時與出生地就直接遇到錯誤。
+- 性別
+- Gregorian 出生日期
+- 出生時間
+- 出生地
 
-建議流程：
+目前 single-file runtime 已內建固定版本的核心曆法 dependency 與有限、版本化的 **offline registry**。出生地若命中支援的 offline registry 記錄，可以直接建立 Project Natal，**不需要網路**，也**不需要額外 Python 套件**。
 
-1. 完成上面 3 個檔案的 Project 設定。
-2. 對 AI 說：**「開始建立我的命理專案。」**
-3. AI 應先請你開啟 Astralium 官方網站：<https://getastralium.com/>。
-4. 在 Astralium 輸入你的性別、出生日期、出生時間與出生地，分別取得**八字命盤**與**紫微命盤**。
-5. 把 Astralium 產出的八字與紫微資料貼回 Project；若目前只有其中一份，也可以先貼已有的資料。
-6. Metaphysics Lab 會先把這些資料保存為 **External Natal Source**，再依目前 runtime 能力進行 Project 原生計算、交叉校驗與後續分析。
+出生地解析順序固定：
 
-如果目前的 AI 執行環境無法完成 Project 原生本命計算，系統必須保留 Astralium 原始資料並明確標示來源，**不得假裝已完成 Project 原生計算**。
+1. 若使用者／AI host 已提供完整 `resolved_location`，直接使用並保留 provenance。
+2. 否則先查 Project 內建 offline registry。
+3. offline registry 找不到時，預設 fail closed；只有明確啟用 network location resolution 時才使用網路 fallback。
+4. offline alias 若有多個候選，直接回報 ambiguity，不用網路結果偷偷覆蓋。
 
-Astralium 仍然不是 Metaphysics Lab 的永久必要依賴。等 Portable Offline Natal Pipeline 完成並通過 clean-environment qualification 後，正式主要流程會再回到「只有出生資料即可建立 Project 原生命盤」，Astralium 則回到可選的交叉校驗來源。
+offline registry 不是全球地理資料庫；它的 coverage 有限且版本化。未支援地點可以提供已確認的座標＋IANA timezone，或明確選擇啟用 network location resolution。
+
+Astralium 仍然可以提供八字／紫微第三方排盤，但現在回到**可選的 External Natal Source／交叉校驗來源**，不是首次建立 Project 的必要前置步驟，也不是 Project Natal calculation authority。
 
 完整命盤、流年、合盤或重大決策需要較多推理；如果你使用的平台提供**較高推理強度**或深度思考模式，可以優先使用。
 
@@ -53,9 +56,9 @@ Astralium 仍然不是 Metaphysics Lab 的永久必要依賴。等 Portable Offl
 
 目前建議依下面順序使用：
 
-1. **推薦：出生資料 + Astralium**：先提供出生資料，並貼上 Astralium 八字／紫微命盤。現階段這是最穩定的首次建立方式，也能留下後續 Project Natal reconciliation 與 qualification 所需的 External 基準資料。
-2. **只有第三方排盤**：只有 Astralium、其他排盤網站、命理軟體或命理師提供的結構化命盤，也可以先保存與分析；系統不會因此假裝已完成 Project 原生計算。
-3. **只有出生資料**：Metaphysics Lab 的正式產品方向仍是由性別、出生日期、出生時間與出生地建立 Project 原生八字／紫微命盤；但在 Portable Offline Natal Pipeline 完成前，不保證所有 ChatGPT／Claude 執行環境都能直接完成這條流程。
+1. **只有出生資料**：提供性別、出生日期、出生時間與出生地。支援的 offline registry 地點可直接建立 Project 原生八字／紫微命盤；不需要網路，也不需要額外 Python 套件。
+2. **出生資料 + Astralium**：若手上已有 Astralium 八字／紫微命盤，可以一起提供，作為 External Natal Source 與 Project Natal 做 reconciliation／交叉校驗。
+3. **只有第三方排盤**：只有 Astralium、其他排盤網站、命理軟體或命理師提供的結構化命盤，也可以先保存與分析；系統不會因此假裝已完成 Project 原生計算。
 
 第三方排盤與 Project 自己計算的結果會分開保存；有差異就明確標示，不會為了讓兩邊看起來一致而互相覆寫。
 

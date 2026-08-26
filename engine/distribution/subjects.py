@@ -23,6 +23,10 @@ _SUBJECTS_END = "<!-- subjects:end -->"
 _FORBIDDEN_FILENAME_CHARS_RE = re.compile(r"[/\\:*?\"<>|]+")
 _WHITESPACE_RE = re.compile(r"\s+")
 _HYPHEN_RE = re.compile(r"-+")
+_ASTRALIUM_REFERENCE_FILES = {
+    "bazi": "03-1_Astralium八字資料包.md",
+    "ziwei": "04-1_Astralium紫微資料包.md",
+}
 
 
 def _mapping(value: object, field: str) -> Mapping[str, object]:
@@ -210,6 +214,62 @@ def create_subject_identity(payload: Mapping[str, object]) -> dict:
         "subjects": list(registry["subjects"]) + [identity],
     }
     return {"identity": identity, "registry_markdown": render_subject_registry(updated)}
+
+
+def prepare_astralium_references(payload: Mapping[str, object]) -> dict:
+    """Validate optional Astralium supplement identity and prepare safe filenames."""
+    payload = _mapping(payload, "payload")
+    subject = _validate_subject_entry(payload.get("subject"))
+    sources = _mapping(payload.get("sources"), "sources")
+    if not sources:
+        raise DistributionError(
+            "invalid_payload",
+            "sources must contain at least one Astralium reference",
+            {"field": "sources"},
+        )
+    unknown = sorted(set(sources) - set(_ASTRALIUM_REFERENCE_FILES))
+    if unknown:
+        raise DistributionError(
+            "invalid_payload",
+            "sources contains unsupported Astralium reference kinds",
+            {"unsupported_source_kinds": unknown},
+        )
+
+    official_name = subject["subject_display_name"]
+    prepared = {}
+    for source_kind in ("bazi", "ziwei"):
+        if source_kind not in sources:
+            continue
+        source = _mapping(sources[source_kind], "sources.%s" % source_kind)
+        source_name = _text(source.get("subject_display_name"), "sources.%s.subject_display_name" % source_kind)
+        if source_name.casefold() != official_name.casefold():
+            raise DistributionError(
+                "external_subject_mismatch",
+                "Astralium reference subject does not match the Case subject",
+                {
+                    "source_kind": source_kind,
+                    "case_subject_display_name": official_name,
+                    "source_subject_display_name": source_name,
+                },
+            )
+        canonical = _ASTRALIUM_REFERENCE_FILES[source_kind]
+        prepared[source_kind] = {
+            "subject_id": subject["subject_id"],
+            "subject_display_name": official_name,
+            "subject_short_id": subject["subject_short_id"],
+            "filename_label": subject["filename_label"],
+            "filename": "%s_%s_%s" % (subject["filename_label"], subject["subject_short_id"], canonical),
+            "source_classification": "External natal reference",
+            "canonical": False,
+        }
+    return {
+        "subject_id": subject["subject_id"],
+        "subject_display_name": official_name,
+        "subject_short_id": subject["subject_short_id"],
+        "filename_label": subject["filename_label"],
+        "canonical": False,
+        "files": prepared,
+    }
 
 
 def rename_subject(payload: Mapping[str, object]) -> dict:

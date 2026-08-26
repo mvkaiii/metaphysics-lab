@@ -1,8 +1,14 @@
+import base64
+import hashlib
+import importlib.util
 import json
 import subprocess
 import sys
+import tempfile
 import unittest
+import zlib
 from pathlib import Path
+from unittest import mock
 
 from engine.distribution.runtime import dispatch
 
@@ -49,6 +55,31 @@ class AIDistributionBundleTests(unittest.TestCase):
             raise AssertionError(completed.stdout + completed.stderr) from exc
         return completed, result
 
+    @staticmethod
+    def _load_fresh_generated_bundle():
+        from tools import build_ai_distribution as builder
+
+        temp_dir = tempfile.TemporaryDirectory()
+        output = Path(temp_dir.name)
+        builder.build_distribution(ROOT, output)
+        path = output / "metaphysics_lab.py"
+        spec = importlib.util.spec_from_file_location("metaphysics_lab_test_bundle", path)
+        if spec is None or spec.loader is None:
+            temp_dir.cleanup()
+            raise AssertionError("generated bundle could not be imported")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return temp_dir, module
+
+    @staticmethod
+    def _set_embedded_records(module, records):
+        payload = {"build_format_version": "1.1", "files": records}
+        raw = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        module._PAYLOAD_B64 = base64.b64encode(zlib.compress(raw, level=9)).decode("ascii")
+        module.SOURCE_DIGEST = hashlib.sha256(raw).hexdigest()
+        module._SOURCE_FILES = {record["path"]: record["sha256"] for record in records}
+        module._RUNTIME_ROOT = None
+
     @classmethod
     def setUpClass(cls):
         if not BUNDLE.exists():
@@ -64,12 +95,36 @@ class AIDistributionBundleTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
         bundled = json.loads(completed.stdout)
         self.assertEqual(bundled, modular)
+        self.assertEqual(
+            bundled["data"]["bundled_dependencies"],
+            modular["data"]["bundled_dependencies"],
+        )
+        self.assertEqual(
+            bundled["data"]["offline_location_registry"],
+            modular["data"]["offline_location_registry"],
+        )
+        self.assertTrue(bundled["data"]["bundled_dependencies"]["lunar-python"]["available"])
+        self.assertTrue(bundled["data"]["bundled_dependencies"]["tzdata"]["available"])
 
     def test_natal_request_matches_modular_runtime(self):
         payload = {"birth": BIRTH, "resolved_location": LOCATION}
         modular = dispatch("build_natal", payload)
         _, bundled = self.bundled_request("build_natal", payload)
         self.assertEqual(bundled, modular)
+
+    def test_birth_only_taipei_matches_modular_runtime_under_python_s(self):
+        payload = {"birth": BIRTH}
+        modular = dispatch("build_natal", payload)
+        completed, bundled = self.bundled_request("build_natal", payload, python_flags=("-S",))
+        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+        self.assertEqual(bundled, modular)
+        self.assertTrue(bundled["ok"], bundled)
+        self.assertEqual(
+            bundled["data"]["resolved_location"]["provider_name"],
+            "metaphysics_lab_offline_registry",
+        )
+        self.assertEqual(bundled["data"]["resolved_location"]["timezone"], "Asia/Taipei")
+        self.assertEqual(len(bundled["data"]["project_natal"]["ziwei"]["palaces"]), 12)
 
     def test_candidate_envelope_request_matches_modular_runtime_for_bounded_range(self):
         payload = {
@@ -166,14 +221,44 @@ class AIDistributionBundleTests(unittest.TestCase):
         self.assertFalse(deps["geopy"]["installed"])
         self.assertFalse(deps["timezonefinder"]["installed"])
 
-    def test_missing_core_dependency_returns_machine_readable_error(self):
+    def test_bundled_core_dependencies_work_under_python_s(self):
         payload = {"birth": BIRTH, "resolved_location": LOCATION}
+        modular = dispatch("build_natal", payload)
         completed, result = self.bundled_request("build_natal", payload, python_flags=("-S",))
         self.assertEqual(completed.returncode, 0)
-        self.assertFalse(result["ok"])
-        self.assertEqual(result["error"]["code"], "dependency_unavailable")
-        self.assertTrue(result["error"]["details"]["missing_module"])
+        self.assertEqual(result, modular)
+        self.assertTrue(result["ok"], result)
         self.assertNotIn("Traceback", completed.stderr)
+
+    def test_unsafe_or_corrupt_records_are_rejected_before_runtime_root_creation(self):
+        safe_bytes = b"print('safe')\n"
+        safe_digest = hashlib.sha256(safe_bytes).hexdigest()
+        safe_content = base64.b64encode(safe_bytes).decode("ascii")
+        cases = [
+            [
+                {"path": "/tmp/escape.py", "sha256": safe_digest, "encoding": "base64", "content": safe_content}
+            ],
+            [
+                {"path": "../escape.py", "sha256": safe_digest, "encoding": "base64", "content": safe_content}
+            ],
+            [
+                {"path": "engine/a.py", "sha256": safe_digest, "encoding": "base64", "content": safe_content},
+                {"path": "engine/a.py", "sha256": safe_digest, "encoding": "base64", "content": safe_content},
+            ],
+            [
+                {"path": "engine/a.py", "sha256": "0" * 64, "encoding": "base64", "content": safe_content}
+            ],
+        ]
+        for records in cases:
+            with self.subTest(records=records):
+                temp_dir, module = self._load_fresh_generated_bundle()
+                try:
+                    self._set_embedded_records(module, records)
+                    with mock.patch.object(module.tempfile, "mkdtemp", side_effect=AssertionError("must validate before writes")):
+                        with self.assertRaises(RuntimeError):
+                            module._ensure_runtime_root()
+                finally:
+                    temp_dir.cleanup()
 
 
 if __name__ == "__main__":

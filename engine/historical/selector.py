@@ -45,22 +45,23 @@ def _aware_datetime(value: object, field: str) -> datetime:
 
 
 def completed_flow_year_periods(as_of_datetime: str, timezone: str, count: int = 10) -> tuple[dict, ...]:
+    """Return calibration periods for the previous Gregorian label years.
+
+    The public name is retained for compatibility. Calibration labels exclude
+    the current Gregorian year even before LiChun; each label still uses its
+    LiChun-to-next-LiChun technical flow-year period for deterministic evidence.
+    """
     if not isinstance(count, int) or isinstance(count, bool) or count < 1:
         raise ValueError("count must be a positive integer")
     if not isinstance(timezone, str) or not timezone.strip():
         raise ValueError("timezone must be a non-empty IANA timezone")
     zone = ZoneInfo(timezone.strip())
     as_of = _aware_datetime(as_of_datetime, "as_of_datetime").astimezone(zone)
-    this_lichun = solar_term_time(as_of.year, "立春", zone)
-    current_label = as_of.year if as_of >= this_lichun else as_of.year - 1
-    last_completed = current_label - 1
-    labels = range(last_completed - count + 1, last_completed + 1)
+    labels = range(as_of.year - count, as_of.year)
     periods = []
     for label in labels:
         start = solar_term_time(label, "立春", zone)
         end = solar_term_time(label + 1, "立春", zone)
-        if end > as_of:
-            raise AssertionError("completed-flow-year window included an unfinished period")
         pillar = flow_year_pillar(start + timedelta(seconds=1))
         periods.append({
             "label_year": label,

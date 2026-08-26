@@ -1,6 +1,9 @@
 import importlib
 import importlib.util
+import sys
+import types
 import unittest
+from unittest import mock
 
 
 class DistributionRuntimeInfoTests(unittest.TestCase):
@@ -20,11 +23,12 @@ class DistributionRuntimeInfoTests(unittest.TestCase):
         result = runtime.dispatch("runtime_info", {})
         self.assertTrue(result["ok"])
         self.assertEqual(result["action"], "runtime_info")
-        self.assertEqual(result["runtime_version"], "1.0-exp")
+        self.assertEqual(result["runtime_version"], "1.1-exp")
         data = result["data"]
         self.assertEqual(data["project_contract_version"], "1.1")
-        self.assertEqual(data["runtime_schema_version"], "1.0")
+        self.assertEqual(data["runtime_schema_version"], "1.1")
         self.assertEqual(data["case_schema_version"], "1.1")
+        self.assertEqual(data["distribution_runtime_version"], "1.1-exp")
         for action in (
             "runtime_info",
             "prepare_historical_calibration",
@@ -46,16 +50,87 @@ class DistributionRuntimeInfoTests(unittest.TestCase):
         self.assertEqual(historical["rule_version"], "1.0-exp")
         self.assertEqual(historical["profile_id"], "historical-activation-bazi-v1")
 
-    def test_runtime_info_reports_all_pinned_external_dependencies_without_importing_them(self):
+    def test_runtime_info_separates_bundled_core_from_optional_external_dependencies(self):
         runtime = self._runtime()
         data = runtime.dispatch("runtime_info", {})["data"]
-        dependencies = data["external_dependencies"]
-        self.assertEqual(set(dependencies), {"lunar-python", "tzdata", "geopy", "timezonefinder"})
-        self.assertEqual(dependencies["lunar-python"]["expected_version"], "1.4.8")
-        for value in dependencies.values():
+        self.assertEqual(data["dependency_authority"]["calendar_core"], "bundled")
+        self.assertEqual(
+            data["dependency_authority"]["network_location"],
+            "execution_environment_optional",
+        )
+
+        bundled = data["bundled_dependencies"]
+        self.assertEqual(set(bundled), {"lunar-python", "tzdata"})
+        self.assertEqual(bundled["lunar-python"]["expected_version"], "1.4.8")
+        self.assertEqual(bundled["tzdata"]["expected_version"], "2026.3")
+        for value in bundled.values():
+            self.assertIs(value["bundled"], True)
+            self.assertIs(value["available"], True)
+            self.assertIs(value["runtime_uses_environment_package"], False)
+
+        optional = data["optional_external_dependencies"]
+        self.assertEqual(set(optional), {"geopy", "timezonefinder"})
+        for value in optional.values():
             self.assertIn("installed", value)
             self.assertIn("matches_pin", value)
-            self.assertIn("required_for", value)
+
+    def test_bundled_core_availability_comes_from_committed_vendor_bytes(self):
+        dependencies = importlib.import_module("engine.distribution.dependencies")
+        manifest = importlib.import_module("engine.vendor.manifest")
+
+        for package_name in ("lunar-python", "tzdata"):
+            manifest_row = manifest.bundled_dependency(package_name)
+            vendored_path = manifest_row.get("vendored_path")
+            if isinstance(vendored_path, str):
+                self.assertFalse(
+                    (dependencies._repo_root() / vendored_path).is_dir(),
+                    "qualification requires no committed private vendor tree",
+                )
+
+        fake_lunar = types.ModuleType("lunar_python")
+        fake_lunar.__version__ = "999.0"
+        fake_tzdata = types.ModuleType("tzdata")
+        fake_tzdata.__version__ = "0.0"
+        with mock.patch.dict(
+            sys.modules,
+            {"lunar_python": fake_lunar, "tzdata": fake_tzdata},
+        ), mock.patch.object(
+            dependencies.metadata,
+            "version",
+            side_effect=AssertionError("bundled authority must not consult host metadata"),
+        ):
+            bundled = dependencies.inspect_bundled_dependencies()
+
+        self.assertEqual(bundled["lunar-python"]["version"], "1.4.8")
+        self.assertEqual(bundled["tzdata"]["version"], "2026.3")
+        for value in bundled.values():
+            self.assertIs(value["available"], True)
+            self.assertIs(value["runtime_uses_environment_package"], False)
+
+    def test_runtime_info_exposes_exact_bundled_offline_registry_profile(self):
+        runtime = self._runtime()
+        info = runtime.dispatch("runtime_info", {})["data"]["offline_location_registry"]
+        self.assertEqual(info["version"], "1.0")
+        self.assertEqual(info["record_count"], 40)
+        self.assertEqual(
+            info["coverage_profile"],
+            "taiwan-admin1-plus-explicit-major-cities-v1",
+        )
+        self.assertEqual(info["source_profiles"], ["geonames-curated-2026-08-24"])
+        self.assertIs(info["bundled"], True)
+        self.assertIs(info["available"], True)
+        self.assertNotIn("records", info)
+        self.assertNotIn("aliases", info)
+
+    def test_legacy_external_dependency_view_is_diagnostic_only(self):
+        runtime = self._runtime()
+        dependencies = runtime.dispatch("runtime_info", {})["data"]["external_dependencies"]
+        self.assertEqual(set(dependencies), {"lunar-python", "tzdata", "geopy", "timezonefinder"})
+        for value in dependencies.values():
+            self.assertIs(value["deprecated"], True)
+            self.assertEqual(value["authority"], "diagnostic_only")
+            self.assertIn("installed", value)
+            self.assertIn("matches_pin", value)
 
     def test_dependency_status_can_report_missing_optional_location_packages(self):
         dependencies = importlib.import_module("engine.distribution.dependencies")

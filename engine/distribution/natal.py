@@ -11,6 +11,7 @@ from typing import Mapping, Optional
 
 from engine.birth.errors import BirthFoundationError
 from engine.birth.models import ResolvedBirthPlace
+from engine.birth.offline_registry import resolve_offline_birth_place
 from engine.natal.candidates import build_candidate_envelope
 from engine.natal.errors import NatalFoundationError
 from engine.natal.external import import_external_natal
@@ -90,6 +91,17 @@ def _network_provider(payload: Mapping[str, object]):
     return NominatimLocationProvider(user_agent=user_agent.strip())
 
 
+def _resolve_network_location(birth_place, provider) -> ResolvedBirthPlace:
+    try:
+        from engine.birth.location import resolve_birth_place
+    except (ImportError, ModuleNotFoundError) as exc:
+        raise DistributionError("location_dependency_unavailable", "network location resolution dependencies are unavailable") from exc
+    try:
+        return resolve_birth_place(birth_place, provider)
+    except BirthFoundationError as exc:
+        raise _foundation_error(exc) from exc
+
+
 def build_natal(payload: Mapping[str, object]) -> dict:
     payload = _require_mapping(payload, "payload")
     birth_payload = _require_mapping(payload.get("birth", {}), "birth")
@@ -97,33 +109,32 @@ def build_natal(payload: Mapping[str, object]) -> dict:
     if not resolution.ok or resolution.input is None:
         details = resolution.to_dict()
         raise DistributionError(resolution.error_code or "birth_input_unresolved", "birth input is not precise enough for a full natal build", details)
+
     raw_location = payload.get("resolved_location")
     location: Optional[ResolvedBirthPlace] = None
-    provider = None
+
     if raw_location is not None:
         location = resolved_location_from_payload(raw_location)
     else:
-        provider = _network_provider(payload)
-        if provider is None:
-            raise DistributionError("location_resolution_required", "build_natal requires a pre-resolved location or explicitly enabled network resolution", {"required_fields": list(_REQUIRED_LOCATION_FIELDS)})
+        query = resolution.input.birth_place.label
+        try:
+            location = resolve_offline_birth_place(query)
+        except BirthFoundationError as exc:
+            if exc.code != "location_not_resolved":
+                raise _foundation_error(exc) from exc
+            provider = _network_provider(payload)
+            if provider is None:
+                raise _foundation_error(exc) from exc
+            location = _resolve_network_location(resolution.input.birth_place, provider)
+
     try:
-        if location is not None:
-            project = build_project_natal(resolution.input, resolved_location=location)
-            serialized_location = location.to_dict()
-        else:
-            project = build_project_natal(resolution.input, provider)
-            serialized_location = {
-                "canonical_name": project.birth.get("resolved_place_label"),
-                "timezone": project.birth.get("timezone"),
-                "provider_name": project.time_basis.get("location_provider"),
-                "provider_version": project.time_basis.get("location_provider_version"),
-            }
+        project = build_project_natal(resolution.input, resolved_location=location)
         normalized = build_normalized_natal(project=project)
     except (NatalFoundationError, BirthFoundationError) as exc:
         raise _foundation_error(exc) from exc
     return {
         "input_resolution": resolution.to_dict(),
-        "resolved_location": serialized_location,
+        "resolved_location": location.to_dict(),
         "project_natal": project.to_dict(),
         "normalized_natal": normalized.to_dict(),
     }

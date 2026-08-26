@@ -67,12 +67,23 @@ https://getastralium.com/
 
 ## 五、怎麼放進私人 Project
 
-可以把第三方原始資料另存成清楚標示來源的 Markdown，例如：
+若 Astralium 八字／紫微要作為長期可查的外部參考，建議使用 Case-aware 的可選附件名稱：
 
 ```text
-八字_原始資料_Astralium.md
-紫微_原始資料_Astralium.md
+<filename_label>_<SUBJECT_SHORT_ID>_03-1_Astralium八字資料包.md
+<filename_label>_<SUBJECT_SHORT_ID>_04-1_Astralium紫微資料包.md
 ```
+
+例如虛構命主 Alex：
+
+```text
+Alex_7F3A2C_03-1_Astralium八字資料包.md
+Alex_7F3A2C_04-1_Astralium紫微資料包.md
+```
+
+這兩份是**非 canonical** 的**可選外部參考附件**，不取代 Project 的 03／04，也不新增 Case Schema slot。只提供八字就只建立 03-1；只提供紫微就只建立 04-1。
+
+兩份附件必須指向同一 `subject_id`，並統一使用 Case 的正式 `subject_display_name`。若來源命主名稱只有**大小寫差異**，例如 `Amy` 與 `amy`，自動統一採用 **Case 的正式命主稱呼**；如果 Case 是 `Amy`、來源卻寫 `Allie`，在使用者確認／修正前**不得生成**附件，避免把不同命主資料混在一起。
 
 檔案開頭可以記：
 
@@ -80,7 +91,8 @@ https://getastralium.com/
 來源：Astralium
 網址：https://getastralium.com/
 產出日期：YYYY-MM-DD
-命主：私人標籤
+命主：Case 的正式命主稱呼
+subject_id：對應 Case subject_id
 時間口徑：來源實際設定
 ```
 
@@ -125,9 +137,9 @@ Astralium raw chart 不會因為進入 Project 就變成 **Project 原生盤面*
 
 ## 八、Historical Blind Calibration
 
-建立 Base Case 後可以先做本命分析。第一次進入個人化未來趨勢、流年或重大決策時，若需要 Historical Blind Calibration，應先完成未受歷史答案污染的 Stage 1，再讓使用者驗證事件。
+建立 Base Case 後可以直接做本命或未來分析。Historical Blind Calibration 是**建議但非強制**的個人化證據補強；`uncalibrated` **不影響排盤本身的正確性**，但個人化落地形式與信心校準會少一層證據。
 
-其中：
+若使用者選擇校準，仍應先完成未受歷史答案污染的 Stage 1，再讓使用者驗證事件：
 
 - `blind_prediction`＝命理推論
 - `user_confirmed_actual`＝**已驗證事件**

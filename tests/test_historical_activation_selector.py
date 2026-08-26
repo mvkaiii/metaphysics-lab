@@ -58,15 +58,15 @@ class HistoricalActivationSelectorTests(unittest.TestCase):
         many_tier2 = ActivationRankVector(0, 0, False, 9, 99, 99, 99)
         self.assertGreater(tier1.as_sort_key(2020), many_tier2.as_sort_key(2025))
 
-    def test_completed_window_uses_last_ten_finished_lichun_periods(self):
+    def test_reference_window_uses_previous_ten_gregorian_label_years(self):
         periods = completed_flow_year_periods("2026-08-23T10:27:00+08:00", "Asia/Taipei")
         self.assertEqual([item["label_year"] for item in periods], list(range(2016, 2026)))
         self.assertTrue(all(item["period_start"] < item["period_end"] for item in periods))
         self.assertTrue(all("T" in item["period_start"] for item in periods))
 
-    def test_january_as_of_excludes_unfinished_current_flow_year(self):
+    def test_january_reference_window_still_excludes_current_gregorian_year(self):
         periods = completed_flow_year_periods("2026-01-15T12:00:00+08:00", "Asia/Taipei")
-        self.assertEqual([item["label_year"] for item in periods], list(range(2015, 2025)))
+        self.assertEqual([item["label_year"] for item in periods], list(range(2016, 2026)))
 
     def test_tier1_detects_sui_yun_and_suppresses_lower_repeats(self):
         evidence = build_year_evidence(

@@ -73,14 +73,12 @@ jobs:
         run: |
           python -m compileall engine tests tools
 
-      - name: Verify clean validation tree
+      - name: Verify clean tree
         run: |
-          git diff --check
           git diff --exit-code
-          test -z "$(git status --short)"
+          test -z "$(git status --porcelain)"
 
       - name: Upload generated distribution
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: progressive-case-ai-distribution
