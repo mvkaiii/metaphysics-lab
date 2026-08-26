@@ -49,6 +49,10 @@ jobs:
         run: |
           python tools/build_ziwei_flow_time_qualification.py --check
 
+      - name: Generate Ziwei month-boundary qualification evidence
+        run: |
+          python tools/build_ziwei_month_boundary_qualification.py
+
       - name: Rebuild AI distribution
         run: |
           python tools/build_ai_distribution.py
