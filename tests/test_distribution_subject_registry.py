@@ -67,6 +67,48 @@ class SubjectRegistryTests(unittest.TestCase):
         self.assertIn("Eric", renamed["data"]["registry_markdown"])
         self.assertNotIn('"subject_display_name": "小明"', renamed["data"]["registry_markdown"])
 
+    def test_astralium_reference_names_are_normalized_to_case_display_name(self):
+        with mock.patch("engine.distribution.subjects.secrets.token_hex", return_value="7f3a2c91d4e8"):
+            created = self.create("Amy")
+        identity = created["data"]["identity"]
+        result = dispatch(
+            "subject.prepare_astralium_references",
+            {
+                "subject": identity,
+                "sources": {
+                    "bazi": {"subject_display_name": "amy"},
+                    "ziwei": {"subject_display_name": "AMY"},
+                },
+            },
+        )
+        self.assertTrue(result["ok"], result)
+        self.assertEqual(result["data"]["subject_id"], identity["subject_id"])
+        self.assertEqual(result["data"]["subject_display_name"], "Amy")
+        self.assertEqual(result["data"]["files"]["bazi"]["subject_display_name"], "Amy")
+        self.assertEqual(result["data"]["files"]["ziwei"]["subject_display_name"], "Amy")
+        self.assertEqual(result["data"]["files"]["bazi"]["filename"], "Amy_7F3A2C_03-1_Astralium八字資料包.md")
+        self.assertEqual(result["data"]["files"]["ziwei"]["filename"], "Amy_7F3A2C_04-1_Astralium紫微資料包.md")
+        self.assertFalse(result["data"]["canonical"])
+
+    def test_astralium_reference_rejects_materially_different_subject_name(self):
+        with mock.patch("engine.distribution.subjects.secrets.token_hex", return_value="7f3a2c91d4e8"):
+            created = self.create("Amy")
+        result = dispatch(
+            "subject.prepare_astralium_references",
+            {
+                "subject": created["data"]["identity"],
+                "sources": {
+                    "bazi": {"subject_display_name": "Amy"},
+                    "ziwei": {"subject_display_name": "Allie"},
+                },
+            },
+        )
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["error"]["code"], "external_subject_mismatch")
+        self.assertEqual(result["error"]["details"]["case_subject_display_name"], "Amy")
+        self.assertEqual(result["error"]["details"]["source_subject_display_name"], "Allie")
+        self.assertEqual(result["error"]["details"]["source_kind"], "ziwei")
+
     def test_registry_rejects_duplicate_subject_id_or_short_id(self):
         bad = """---\nregistry_schema_version: 1.0\n---\n# 命主索引\n\n<!-- subjects:start -->\n```json\n{\"subjects\":[{\"subject_id\":\"subj_aaaaaaaaaaaa\",\"subject_short_id\":\"AAAAAA\",\"subject_display_name\":\"A\",\"filename_label\":\"A\",\"status\":\"active\"},{\"subject_id\":\"subj_aaaaaaaaaaaa\",\"subject_short_id\":\"BBBBBB\",\"subject_display_name\":\"B\",\"filename_label\":\"B\",\"status\":\"active\"}]}\n```\n<!-- subjects:end -->\n"""
         result = dispatch("subject.registry_validate", {"registry_markdown": bad})
