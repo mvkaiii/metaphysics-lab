@@ -5,6 +5,7 @@ on:
     branches:
       - feature/progressive-case-historical-calibration
       - fix/postmerge-audit-161-165
+      - 'feature/lin-tianji-*'
   pull_request:
     branches:
       - main
@@ -68,6 +69,8 @@ jobs:
             tests.test_distribution_historical_integrity \
             tests.test_distribution_historical_support \
             tests.test_distribution_case_pack \
+            tests.test_distribution_blind_sources \
+            tests.test_distribution_blind_source_bundle_parity \
             tests.test_distribution_partial_case \
             tests.test_postmerge_audit_regressions \
             tests.test_second_round_adversarial_regressions \

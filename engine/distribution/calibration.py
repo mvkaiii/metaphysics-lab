@@ -11,8 +11,9 @@ from zoneinfo import ZoneInfo
 from engine.bazi.calendar import solar_term_time
 from engine.historical.selection_integrity import verify_selection_result
 
+from .blind_sources import validate_blind_source_case
 from .case_identity import parse_case_filename
-from .case_pack import BASE_CASE_FILES, CASE_FILES, set_case_calibration_status, update_case_record, validate_case
+from .case_pack import BASE_CASE_FILES, CASE_FILES, set_case_calibration_status, update_case_record
 from .errors import DistributionError
 from .historical_lock_authority import load_historical_lock, persist_historical_lock
 
@@ -95,8 +96,8 @@ def _canonical_case_sources(sources, subject_id=None, source_case_files=None) ->
                 "source_case_files must contain exactly the selected blind Base Case files",
                 {"actual_sources": actual, "provided_sources": sorted(str(key) for key in source_case_files)},
             )
-        validation = validate_case({"case_files": source_case_files})
         resolved_subject = str(subject_id or "")
+        validation = validate_blind_source_case(source_case_files, resolved_subject)
         if validation.get("subject_id") != resolved_subject:
             raise DistributionError(
                 "blind_source_violation",
