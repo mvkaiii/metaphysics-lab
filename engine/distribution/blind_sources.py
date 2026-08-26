@@ -84,6 +84,7 @@ def validate_blind_source_case(case_files: Mapping[str, object], subject_id: str
 
     versions = set()
     contracts = set()
+    subject = None
     identity = None
     display_name = None
     resolved_subject = str(subject_id or "")
@@ -106,6 +107,20 @@ def validate_blind_source_case(case_files: Mapping[str, object], subject_id: str
 
         versions.add(metadata["case_schema_version"])
         contracts.add(metadata["project_contract_version"])
+        current_subject = metadata["subject_id"]
+        if subject is None:
+            subject = current_subject
+        elif current_subject != subject:
+            raise DistributionError(
+                "case_subject_mismatch",
+                "all blind Base Case files must belong to the same subject_id",
+                {
+                    "filename": actual_by_canonical[canonical],
+                    "expected_subject_id": subject,
+                    "actual_subject_id": current_subject,
+                },
+            )
+
         current_identity = _identity_from_metadata(metadata)
         parsed = parsed_by_canonical[canonical]
         if (
