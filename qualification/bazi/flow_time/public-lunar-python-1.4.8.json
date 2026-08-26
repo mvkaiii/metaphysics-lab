@@ -1,0 +1,62 @@
+{
+  "coverage": {
+    "consecutive_day_property": {
+      "pairs": 730
+    },
+    "day_samples": {
+      "cases": 268,
+      "end": "2050-12-31",
+      "start": "1980-01-01",
+      "step_days": 97
+    },
+    "dst_responsibility": {
+      "owner": "Calendar Resolver",
+      "qualification": "tests/test_bazi_flow_time_qualification.py verifies nonexistent/ambiguous local time handling before Bazi flow-time calculation"
+    },
+    "early_zi_boundary": {
+      "cases": 16,
+      "local_times": [
+        "22:59",
+        "23:00",
+        "23:59",
+        "00:00 next civil day"
+      ],
+      "zones": [
+        "Asia/Taipei",
+        "Asia/Tokyo",
+        "America/New_York",
+        "Europe/London"
+      ]
+    },
+    "five_rat_matrix": {
+      "cases": 120,
+      "day_stems": 10,
+      "hour_branches": 12
+    },
+    "generated_runtime_parity": {
+      "qualification": "tests/test_bazi_flow_time_qualification.py compares modular and generated resolve_forecast_context for ordinary and 23:xx inputs"
+    },
+    "gregorian_transitions": {
+      "cases": 13
+    }
+  },
+  "maturity_promotion": false,
+  "mismatch_count": 0,
+  "mismatches": [],
+  "oracle": {
+    "eight_char_sect": 1,
+    "package": "lunar-python",
+    "sect_meaning": "late-Zi day is counted as next day",
+    "source_revision": "000c8a3d74eed098d6256a28fdd51b869324c559",
+    "version": "1.4.8"
+  },
+  "project_profile": {
+    "day_formula": "offset = Gregorian effective civil date JDN - 11",
+    "day_rollover": "23:00 early-Zi",
+    "engine": "Project Bazi Calendar Engine",
+    "hour_formula": "(day_stem_index mod 5 * 2 + hour_branch_index) mod 10"
+  },
+  "qualification": "bazi_flow_day_hour",
+  "result": "PASS",
+  "schema_version": "1.0"
+}
