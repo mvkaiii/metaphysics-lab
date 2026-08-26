@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validation:
@@ -58,6 +58,17 @@ jobs:
         run: |
           python tools/build_ai_distribution.py
           python tools/build_ai_distribution.py --check
+
+      - name: Commit exact generated Phase 0 distribution
+        if: github.event_name == 'push' && github.ref_name == 'feature/lin-tianji-phase0-blind-lock' && github.actor != 'github-actions[bot]'
+        run: |
+          test "$(git status --porcelain | awk '{print $2}')" = "dist/ai/metaphysics_lab.py"
+          echo "3d03e31b813fb625cadcd035df6da139c12a92a49b00077536df655fb1d994f3  dist/ai/metaphysics_lab.py" | sha256sum --check --strict
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist/ai/metaphysics_lab.py
+          git commit -m "build: refresh Phase 0 AI distribution"
+          git push origin HEAD:feature/lin-tianji-phase0-blind-lock
 
       - name: Historical selector and progressive Case focused tests
         run: |
