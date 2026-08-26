@@ -45,9 +45,9 @@ jobs:
         run: |
           python tools/build_bazi_flow_time_qualification.py --check
 
-      - name: Generate Ziwei flow-day/hour qualification evidence
+      - name: Ziwei flow-day/hour qualification evidence
         run: |
-          python tools/build_ziwei_flow_time_qualification.py
+          python tools/build_ziwei_flow_time_qualification.py --check
 
       - name: Rebuild AI distribution
         run: |
