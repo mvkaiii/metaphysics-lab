@@ -125,12 +125,14 @@ class DocumentationContractConsistencyTests(unittest.TestCase):
         self.assertIn("partial", text)
         self.assertIn("subject_id", text)
 
-    def test_future_guidance_does_not_skip_historical_calibration_gate(self):
+    def test_future_guidance_allows_uncalibrated_use_with_explicit_confidence_caveat(self):
         text = (ROOT / "docs" / "命盤資料準備指南.md").read_text(encoding="utf-8")
         self.assertIn("Historical Blind Calibration", text)
-        self.assertIn("本命分析", text)
-        self.assertIn("未來", text)
-        self.assertNotIn("就可以開始本命與流年問事", text)
+        self.assertIn("建議但非強制", text)
+        self.assertIn("未校準仍可直接進入", text)
+        self.assertIn("不影響排盤本身的正確性", text)
+        self.assertIn("個人化落地形式與信心校準會少一層證據", text)
+        self.assertNotIn("必須先完成校準才能", text)
 
 
 if __name__ == "__main__":
