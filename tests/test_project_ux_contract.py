@@ -75,6 +75,22 @@ class ProjectUXContractTests(unittest.TestCase):
         ):
             self.assertIn(phrase, rules)
 
+    def test_user_facing_prose_uses_taiwan_traditional_chinese_without_unnecessary_english(self):
+        combined = self._read(PROJECT_PROMPT) + "\n" + self._read(AI_WORKFLOW) + "\n" + self._read(ANALYSIS_RULES)
+        for phrase in (
+            "一般對使用者的敘述以台灣繁體中文完整表達",
+            "不必要的英文",
+            "英文副詞、形容詞、連接詞或一般動詞",
+            "有自然中文說法",
+            "一律改用中文",
+            "專有名詞、產品名稱、檔名、程式識別字",
+            "回答送出前",
+            "檢查一般敘述",
+            "individually",
+            "單獨看",
+        ):
+            self.assertIn(phrase, combined)
+
     def test_user_facing_case_language_hides_internal_execution_terms(self):
         combined = self._read(PROJECT_PROMPT) + "\n" + self._read(AI_WORKFLOW) + "\n" + self._read(ANALYSIS_RULES)
         for phrase in (
