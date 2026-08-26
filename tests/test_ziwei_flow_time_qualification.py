@@ -145,13 +145,11 @@ class ZiweiFlowTimeQualificationTests(unittest.TestCase):
             "2026-11-01T01:30:00",
             "America/New_York",
             "-04:00",
-            timezone_provider=TEST_ZONE_PROVIDER,
         )
         second = resolve_calendar(
             "2026-11-01T01:30:00",
             "America/New_York",
             "-05:00",
-            timezone_provider=TEST_ZONE_PROVIDER,
         )
         self.assertTrue(first.ok, first)
         self.assertTrue(second.ok, second)
