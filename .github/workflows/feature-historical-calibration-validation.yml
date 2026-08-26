@@ -41,6 +41,10 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
+      - name: Bazi flow-day/hour qualification evidence
+        run: |
+          python tools/build_bazi_flow_time_qualification.py --check
+
       - name: Rebuild AI distribution
         run: |
           python tools/build_ai_distribution.py
