@@ -8,6 +8,7 @@ from engine.distribution.evidence import (
     ZIWEI_PALACE_MAPPING,
     build_evidence_features,
 )
+from engine.distribution.errors import DistributionError
 
 
 class DistributionEvidenceTests(unittest.TestCase):
@@ -108,6 +109,16 @@ class DistributionEvidenceTests(unittest.TestCase):
             },
         }
 
+    @staticmethod
+    def canonical_bytes(value):
+        return json.dumps(
+            value,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        ).encode("utf-8")
+
     def test_mapping_profile_uses_general_project_structural_labels(self):
         self.assertEqual(MAPPING_PROFILE, "lin_tianji_domain_v1-exp")
         self.assertEqual(
@@ -177,6 +188,37 @@ class DistributionEvidenceTests(unittest.TestCase):
             self.assertNotIn("score", feature)
             self.assertNotIn("rank", feature)
             self.assertNotIn("probability", feature)
+
+    def test_builder_is_byte_deterministic_and_preserves_feature_order(self):
+        source = self.context()
+        first = build_evidence_features(source, target_scope="yearly")
+        second = build_evidence_features(source, target_scope="yearly")
+
+        self.assertEqual(self.canonical_bytes(first), self.canonical_bytes(second))
+        self.assertEqual(
+            [feature["feature_id"] for feature in first["features"]],
+            [feature["feature_id"] for feature in second["features"]],
+        )
+
+    def test_missing_or_unsupported_scope_is_explicitly_blocked(self):
+        missing_declaration = self.context()
+        del missing_declaration["confidence_constraints"]["ziwei_requested_scopes"]
+        with self.assertRaises(DistributionError) as caught:
+            build_evidence_features(missing_declaration, target_scope="yearly")
+        self.assertEqual(caught.exception.code, "evidence_scope_blocked")
+        self.assertEqual(caught.exception.details["reason"], "missing_requested_scopes")
+
+        with self.assertRaises(DistributionError) as caught:
+            build_evidence_features(self.context(), target_scope="natal")
+        self.assertEqual(caught.exception.code, "evidence_scope_blocked")
+        self.assertEqual(caught.exception.details["target_scope"], "natal")
+
+        missing_materialized_scope = self.context()
+        del missing_materialized_scope["ziwei"]["monthly"]
+        with self.assertRaises(DistributionError) as caught:
+            build_evidence_features(missing_materialized_scope, target_scope="yearly")
+        self.assertEqual(caught.exception.code, "evidence_scope_blocked")
+        self.assertEqual(caught.exception.details["scope"], "monthly")
 
 
 if __name__ == "__main__":
