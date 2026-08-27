@@ -191,6 +191,13 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
         if action == "resolve_forecast_context":
             from .forecast import resolve_forecast_context
             return _ok(action, resolve_forecast_context(request))
+        if action in ("resolve_query_anchor", "lock_prospective_forecast"):
+            from .prospective import lock_prospective_forecast, resolve_query_anchor
+            handler = {
+                "resolve_query_anchor": resolve_query_anchor,
+                "lock_prospective_forecast": lock_prospective_forecast,
+            }[action]
+            return _ok(action, handler(request))
         if action == "prepare_historical_calibration":
             return _ok(action, _prepare_historical_calibration(request))
         if action in ("lock_blind_forecast", "lock_historical_calibration", "finalize_historical_calibration"):

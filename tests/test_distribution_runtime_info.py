@@ -35,6 +35,8 @@ class DistributionRuntimeInfoTests(unittest.TestCase):
             "lock_blind_forecast",
             "lock_historical_calibration",
             "finalize_historical_calibration",
+            "resolve_query_anchor",
+            "lock_prospective_forecast",
         ):
             self.assertIn(action, data["supported_actions"])
 
@@ -49,6 +51,18 @@ class DistributionRuntimeInfoTests(unittest.TestCase):
         self.assertEqual(historical["routing"], "on_demand")
         self.assertEqual(historical["rule_version"], "1.0-exp")
         self.assertEqual(historical["profile_id"], "historical-activation-bazi-v1")
+
+        prospective = data["capabilities"]["distribution.prospective_forecast_governance"]
+        self.assertEqual(prospective["implementation"], "implemented")
+        self.assertEqual(prospective["maturity"], "experimental")
+        self.assertEqual(prospective["routing"], "on_demand")
+        self.assertEqual(prospective["rule_version"], "lin_tianji_v1.5-exp")
+
+        evidence = data["capabilities"]["distribution.evidence_engine"]
+        self.assertEqual(evidence["implementation"], "unimplemented")
+        self.assertEqual(evidence["maturity"], "experimental")
+        self.assertEqual(evidence["routing"], "on_demand")
+        self.assertEqual(evidence["rule_version"], "lin_tianji_v1.5-exp")
 
     def test_runtime_info_separates_bundled_core_from_optional_external_dependencies(self):
         runtime = self._runtime()
