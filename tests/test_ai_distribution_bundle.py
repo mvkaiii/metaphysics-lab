@@ -152,6 +152,52 @@ class AIDistributionBundleTests(unittest.TestCase):
         _, bundled = self.bundled_request("resolve_forecast_context", payload)
         self.assertEqual(bundled, modular)
 
+    def test_query_anchor_request_matches_modular_runtime(self):
+        payload = {
+            "query_anchor_at": "2026-08-26T17:00:00+08:00",
+            "query_timezone": "Asia/Taipei",
+            "target_start": "2026-08-01T00:00:00+08:00",
+            "target_end": "2026-12-31T23:59:59+08:00",
+            "question_reference": "bundle-prospective-anchor",
+        }
+        modular = dispatch("resolve_query_anchor", payload)
+        self.assertTrue(modular["ok"], modular)
+        _, bundled = self.bundled_request("resolve_query_anchor", payload)
+        self.assertEqual(bundled, modular)
+
+    def test_prospective_forecast_lock_matches_modular_runtime(self):
+        anchor_payload = {
+            "query_anchor_at": "2026-08-26T17:00:00+08:00",
+            "query_timezone": "Asia/Taipei",
+            "target_start": "2026-08-01T00:00:00+08:00",
+            "target_end": "2026-12-31T23:59:59+08:00",
+            "question_reference": "bundle-prospective-lock",
+        }
+        anchor = dispatch("resolve_query_anchor", anchor_payload)["data"]
+        claim = {
+            "claim_id": "claim-2026-09-work-001",
+            "forecast_window": {"start": "2026-09-01T00:00:00+08:00", "end": "2026-09-30T23:59:59+08:00"},
+            "primary_domain": "工作",
+            "event_family": "職責變動",
+            "prediction": "9 月內出現可被正式記錄的工作職責調整。",
+            "matched_if": "正式職稱、管理範圍或書面職責至少一項在預測窗內改變。",
+            "not_matched_if": "預測窗結束時，上述三項均未發生正式改變。",
+            "evidence_layers": ["bazi.yearly", "ziwei.yearly"],
+            "evidence_time_scales": ["yearly"],
+            "capability_maturity": "stable",
+            "confidence": "medium",
+            "knowledge_cutoff_at": anchor["knowledge_cutoff_at"],
+            "evaluation_eligibility": "clean_scorable",
+            "contamination_state": "clean_prospective",
+            "method_version": "lin_tianji_v1.5-exp",
+        }
+        payload = {"anchor": anchor, "claims": [claim]}
+        modular = dispatch("lock_prospective_forecast", payload)
+        self.assertTrue(modular["ok"], modular)
+        _, bundled = self.bundled_request("lock_prospective_forecast", payload)
+        self.assertEqual(bundled, modular)
+        self.assertEqual(len(modular["data"]["canonical_digest"]), 64)
+
     def test_case_export_matches_modular_runtime(self):
         payload = {
             "normalized_natal": self.normalized,
