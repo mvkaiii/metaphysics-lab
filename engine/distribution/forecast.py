@@ -14,8 +14,9 @@ from datetime import date, datetime
 from enum import Enum
 from typing import Any, Mapping, Sequence
 
-from engine.bazi.calendar import project_derived
+from engine.bazi.calendar import project_derived, solar_term_time, ten_god
 from engine.calendar import resolve_calendar
+from engine.calendar.sexagenary import is_valid_sexagenary_pair
 from engine.ziwei.fine_cycle import build_fine_cycle_layer
 from engine.ziwei.fine_cycle_stems import (
     resolve_day_stem,
@@ -38,6 +39,7 @@ from .errors import DistributionError
 
 
 _ALLOWED_SCOPES = ("decadal", "yearly", "monthly", "daily", "hourly")
+_BAZI_COMPONENTS = ("year", "month", "day", "hour")
 _FINE_RESOLVERS = {
     "monthly": resolve_month_stem,
     "daily": resolve_day_stem,
@@ -249,6 +251,167 @@ def _resolve_target(payload: Mapping[str, Any]):
     return resolution.context
 
 
+def _aware_bazi_datetime(value: object, field_name: str) -> datetime:
+    if not isinstance(value, str) or not value.strip():
+        raise DistributionError(
+            "forecast_basis_blocked",
+            "stored Bazi decadal datetime must be a non-empty ISO datetime",
+            {"reason": "invalid_bazi_decadal_periods", "field": field_name},
+        )
+    try:
+        parsed = datetime.fromisoformat(value.strip())
+    except ValueError as exc:
+        raise DistributionError(
+            "forecast_basis_blocked",
+            "stored Bazi decadal datetime is invalid",
+            {"reason": "invalid_bazi_decadal_periods", "field": field_name},
+        ) from exc
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise DistributionError(
+            "forecast_basis_blocked",
+            "stored Bazi decadal datetime must include timezone offset",
+            {"reason": "invalid_bazi_decadal_periods", "field": field_name},
+        )
+    return parsed
+
+
+def _validate_bazi_pillar(value: object, field_name: str) -> str:
+    if not isinstance(value, str) or len(value) != 2 or not is_valid_sexagenary_pair(value[0], value[1]):
+        raise DistributionError(
+            "forecast_basis_blocked",
+            "stored Bazi pillar is invalid",
+            {"reason": "invalid_bazi_decadal_periods", "field": field_name},
+        )
+    return value
+
+
+def _parsed_bazi_decadal_periods(bazi: Mapping[str, Any]) -> list[tuple[Mapping[str, Any], datetime, datetime]]:
+    rows = bazi.get("decadal_periods")
+    if not isinstance(rows, (list, tuple)):
+        raise DistributionError(
+            "forecast_basis_blocked",
+            "Project Bazi decadal periods are missing",
+            {"reason": "missing_bazi_decadal_periods"},
+        )
+    parsed = []
+    for position, row in enumerate(rows):
+        if not isinstance(row, Mapping):
+            raise DistributionError(
+                "forecast_basis_blocked",
+                "stored Bazi decadal period must be a mapping",
+                {"reason": "invalid_bazi_decadal_periods", "position": position},
+            )
+        index = row.get("index")
+        if isinstance(index, bool) or not isinstance(index, int) or index < 1:
+            raise DistributionError(
+                "forecast_basis_blocked",
+                "stored Bazi decadal index is invalid",
+                {"reason": "invalid_bazi_decadal_periods", "position": position},
+            )
+        _validate_bazi_pillar(row.get("pillar"), "decadal_periods[%d].pillar" % position)
+        start = _aware_bazi_datetime(row.get("start_datetime"), "decadal_periods[%d].start_datetime" % position)
+        end = _aware_bazi_datetime(row.get("end_datetime"), "decadal_periods[%d].end_datetime" % position)
+        if start >= end:
+            raise DistributionError(
+                "forecast_basis_blocked",
+                "stored Bazi decadal period has a non-positive window",
+                {"reason": "invalid_bazi_decadal_periods", "position": position},
+            )
+        parsed.append((row, start, end))
+    return parsed
+
+
+def _select_bazi_current_decadal(bazi: Mapping[str, Any], target_dt: datetime) -> dict | None:
+    if target_dt.tzinfo is None or target_dt.utcoffset() is None:
+        raise DistributionError(
+            "forecast_basis_blocked",
+            "Bazi decadal selection requires an aware target datetime",
+            {"reason": "invalid_forecast_target"},
+        )
+    day_master = bazi.get("day_master")
+    if not isinstance(day_master, str) or len(day_master) != 1:
+        raise DistributionError(
+            "forecast_basis_blocked",
+            "Project Bazi day master is missing or invalid",
+            {"reason": "missing_project_bazi_facts", "required_fields": ["day_master"]},
+        )
+    matches = [
+        (row, start, end)
+        for row, start, end in _parsed_bazi_decadal_periods(bazi)
+        if start <= target_dt < end
+    ]
+    if len(matches) > 1:
+        raise DistributionError(
+            "forecast_basis_blocked",
+            "multiple stored Bazi decadal periods cover the target datetime",
+            {"reason": "overlapping_bazi_decadal_periods"},
+        )
+    if not matches:
+        return None
+    row, start, end = matches[0]
+    pillar = _validate_bazi_pillar(row.get("pillar"), "current_decadal.pillar")
+    try:
+        decadal_ten_god = ten_god(day_master, pillar[0])
+    except (TypeError, ValueError) as exc:
+        raise DistributionError(
+            "forecast_basis_blocked",
+            "stored Bazi decadal pillar cannot be interpreted against the day master",
+            {"reason": "invalid_bazi_decadal_periods"},
+        ) from exc
+    return {
+        "index": int(row["index"]),
+        "pillar": pillar,
+        "start_datetime": start.isoformat(),
+        "end_datetime": end.isoformat(),
+        "ten_god": decadal_ten_god,
+    }
+
+
+def _bazi_flow_year_window(target_dt: datetime) -> tuple[datetime, datetime]:
+    current_lichun = solar_term_time(target_dt.year, "立春", target_dt.tzinfo)
+    label_year = target_dt.year if target_dt >= current_lichun else target_dt.year - 1
+    return (
+        solar_term_time(label_year, "立春", target_dt.tzinfo),
+        solar_term_time(label_year + 1, "立春", target_dt.tzinfo),
+    )
+
+
+def _bazi_structural_context(bazi: Mapping[str, Any], target_dt: datetime) -> dict:
+    day_master = bazi.get("day_master")
+    pillars = bazi.get("pillars")
+    if not isinstance(day_master, str) or not day_master.strip():
+        raise DistributionError(
+            "forecast_basis_blocked",
+            "Project Bazi day master is missing",
+            {"reason": "missing_project_bazi_facts", "required_fields": ["day_master"]},
+        )
+    if not isinstance(pillars, Mapping) or set(pillars) != set(_BAZI_COMPONENTS):
+        raise DistributionError(
+            "forecast_basis_blocked",
+            "Project Bazi natal pillars are missing or incomplete",
+            {"reason": "missing_project_bazi_facts", "required_fields": ["pillars"]},
+        )
+    natal_pillars = {
+        component: _validate_bazi_pillar(pillars[component], "pillars.%s" % component)
+        for component in _BAZI_COMPONENTS
+    }
+    parsed_periods = _parsed_bazi_decadal_periods(bazi)
+    current = _select_bazi_current_decadal(bazi, target_dt)
+    flow_start, flow_end = _bazi_flow_year_window(target_dt)
+    boundaries = sorted({
+        boundary.isoformat()
+        for _row, start, end in parsed_periods
+        for boundary in (start, end)
+        if flow_start <= boundary < flow_end
+    })
+    return {
+        "day_master": day_master,
+        "natal_pillars": natal_pillars,
+        "current_decadal": current,
+        "decadal_boundaries_in_flow_year": boundaries,
+    }
+
+
 def _materialized_scope(flowing_layer, palaces: Sequence[ZiweiPalaceRecord]) -> list[dict]:
     records = materialize_flowing_star_layer(flowing_layer, palaces)
     return _json_safe(records)
@@ -375,10 +538,12 @@ def resolve_forecast_context(payload: Mapping[str, object]) -> dict:
 
     bazi = _mapping(project.get("bazi"), "normalized_natal.project.bazi")
     try:
+        target_dt = context.normalized_time.local_datetime
         bazi_context = project_derived(
-            context.normalized_time.local_datetime,
+            target_dt,
             str(bazi["day_master"]),
         )
+        bazi_context["structural_context"] = _bazi_structural_context(bazi, target_dt)
         ziwei = {}
         for scope in scopes:
             if scope in _FINE_RESOLVERS:
