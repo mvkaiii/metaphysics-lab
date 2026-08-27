@@ -7,27 +7,15 @@ from typing import Mapping, Sequence
 from zoneinfo import ZoneInfo
 
 from engine.bazi.calendar import flow_year_pillar, solar_term_time
+from engine.bazi.structural_relations import detect_structural_relations
 
 from .models import ActivationEvidence, ActivationRankVector
-from .relations import (
-    BREAK_PAIRS,
-    CLASH_PAIRS,
-    COMBINATION_PAIRS,
-    FULL_PUNISHMENT_SETS,
-    HARM_PAIRS,
-    PAIR_PUNISHMENTS,
-    SELF_PUNISHMENTS,
-    STEM_COMBINATION_PAIRS,
-    THREE_HARMONY_SETS,
-    THREE_MEETING_SETS,
-)
 
 PROFILE_ID = "historical-activation-bazi-v1"
 RULE_VERSION = "1.0-exp"
 _FORBIDDEN_HINTS = frozenset((
     "preferred_years", "known_event_years", "event_keywords", "manual_rank_override",
 ))
-_COMPONENTS = ("year", "month", "day", "hour")
 
 
 def _canonical_digest(value: object) -> str:
@@ -72,10 +60,6 @@ def completed_flow_year_periods(as_of_datetime: str, timezone: str, count: int =
     return tuple(periods)
 
 
-def _pair(left: str, right: str) -> frozenset[str]:
-    return frozenset((left, right))
-
-
 def _evidence(
     label_year: int,
     tier: int,
@@ -105,43 +89,6 @@ def _evidence(
     )
 
 
-def _full_patterns(flow_branch: str, existing: set[str], patterns, family: str, label_year: int):
-    result = []
-    for pattern in patterns:
-        if flow_branch not in pattern or pattern <= existing:
-            continue
-        if pattern - {flow_branch} <= existing:
-            result.append(
-                _evidence(label_year, 1, family, "pattern", "-".join(sorted(pattern)), tuple(pattern))
-            )
-    return result
-
-
-def _partial_patterns(flow_branch: str, existing: set[str], patterns, family: str, label_year: int, completed):
-    completed_sets = {frozenset(item.participants) for item in completed}
-    result = []
-    for pattern in patterns:
-        if flow_branch not in pattern or pattern in completed_sets:
-            continue
-        if pattern <= existing:
-            continue
-        members = (pattern & existing) | {flow_branch}
-        if len(members) >= 2:
-            result.append(
-                _evidence(label_year, 2, family, "pattern", "-".join(sorted(pattern)), tuple(pattern))
-            )
-    return result
-
-
-def _punishment_pair(flow_branch: str, target_branch: str) -> bool:
-    if flow_branch == target_branch and flow_branch in SELF_PUNISHMENTS:
-        return True
-    pair = _pair(flow_branch, target_branch)
-    if pair in PAIR_PUNISHMENTS:
-        return True
-    return any(pair <= pattern for pattern in FULL_PUNISHMENT_SETS)
-
-
 def build_year_evidence(
     *,
     label_year: int,
@@ -150,120 +97,26 @@ def build_year_evidence(
     decadal_pillar: str,
     decadal_boundary: bool,
 ) -> tuple[ActivationEvidence, ...]:
-    if not isinstance(flow_year_pillar, str) or len(flow_year_pillar) != 2:
-        raise ValueError("flow_year_pillar must be a two-character pillar")
-    if not isinstance(decadal_pillar, str) or len(decadal_pillar) != 2:
-        raise ValueError("decadal_pillar must be a two-character pillar")
-    if any(component not in natal_pillars for component in _COMPONENTS):
-        raise ValueError("natal_pillars must contain year/month/day/hour")
-    flow_stem, flow_branch = flow_year_pillar[0], flow_year_pillar[1]
-    dec_stem, dec_branch = decadal_pillar[0], decadal_pillar[1]
-    natal = {component: str(natal_pillars[component]) for component in _COMPONENTS}
-    existing_branches = {pillar[1] for pillar in natal.values()} | {dec_branch}
-
-    evidence = []
-    suppressed_branch = set()
-    suppressed_stem = set()
-
-    if decadal_boundary:
-        evidence.append(_evidence(label_year, 1, "decadal_boundary", "cycle", "decadal", (flow_year_pillar,)))
-
-    if flow_year_pillar == decadal_pillar:
-        evidence.append(_evidence(
-            label_year, 1, "sui_yun_bing_lin", "decadal", "pillar", (flow_year_pillar, decadal_pillar)
-        ))
-        suppressed_branch.add(("decadal", "pillar"))
-        suppressed_stem.add(("decadal", "pillar"))
-
-    for component, pillar in natal.items():
-        if len(pillar) != 2:
-            raise ValueError("natal pillar must contain stem+branch")
-        if flow_year_pillar == pillar:
-            evidence.append(_evidence(
-                label_year, 1, "natal_pillar_repeat", "natal", component, (flow_year_pillar, pillar)
-            ))
-            suppressed_branch.add(("natal", component))
-            suppressed_stem.add(("natal", component))
-
-    targets = [("natal", component, pillar) for component, pillar in natal.items()]
-    targets.append(("decadal", "pillar", decadal_pillar))
-
-    for layer, component, pillar in targets:
-        target_stem, target_branch = pillar[0], pillar[1]
-        branch_pair = _pair(flow_branch, target_branch)
-        if branch_pair in CLASH_PAIRS:
-            evidence.append(_evidence(
-                label_year, 1,
-                "branch_clash_natal" if layer == "natal" else "branch_clash_decadal",
-                layer, component, (flow_branch, target_branch),
-            ))
-
-    full_harmony = _full_patterns(
-        flow_branch, existing_branches, THREE_HARMONY_SETS, "completes_three_harmony", label_year
+    """Translate neutral Bazi structural truth into the legacy activation contract."""
+    relations = detect_structural_relations(
+        scope="yearly",
+        target_pillar=flow_year_pillar,
+        natal_pillars=natal_pillars,
+        decadal_pillar=decadal_pillar,
+        decadal_boundary=decadal_boundary,
     )
-    full_meeting = _full_patterns(
-        flow_branch, existing_branches, THREE_MEETING_SETS, "completes_three_meeting", label_year
-    )
-    full_punishment = _full_patterns(
-        flow_branch, existing_branches, FULL_PUNISHMENT_SETS, "completes_three_punishment", label_year
-    )
-    evidence.extend(full_harmony)
-    evidence.extend(full_meeting)
-    evidence.extend(full_punishment)
-
-    evidence.extend(_partial_patterns(
-        flow_branch, existing_branches, THREE_HARMONY_SETS, "partial_three_harmony", label_year, full_harmony
-    ))
-    evidence.extend(_partial_patterns(
-        flow_branch, existing_branches, THREE_MEETING_SETS, "partial_three_meeting", label_year, full_meeting
-    ))
-
-    completed_punishment_sets = {frozenset(item.participants) for item in full_punishment}
-    for layer, component, pillar in targets:
-        target_stem, target_branch = pillar[0], pillar[1]
-        branch_pair = _pair(flow_branch, target_branch)
-        if branch_pair in COMBINATION_PAIRS:
-            evidence.append(_evidence(
-                label_year, 2, "branch_six_harmony", layer, component, (flow_branch, target_branch)
-            ))
-        if _punishment_pair(flow_branch, target_branch):
-            relevant_full = any(
-                flow_branch in pattern and target_branch in pattern and pattern in completed_punishment_sets
-                for pattern in FULL_PUNISHMENT_SETS
-            )
-            if not relevant_full:
-                evidence.append(_evidence(
-                    label_year, 2, "branch_punishment_support", layer, component, (flow_branch, target_branch)
-                ))
-        if flow_branch == target_branch and (layer, component) not in suppressed_branch:
-            evidence.append(_evidence(
-                label_year, 2, "branch_repeat", layer, component, (flow_branch, target_branch)
-            ))
-        if _pair(flow_stem, target_stem) in STEM_COMBINATION_PAIRS:
-            evidence.append(_evidence(
-                label_year, 2, "stem_combination", layer, component, (flow_stem, target_stem)
-            ))
-        if branch_pair in HARM_PAIRS:
-            evidence.append(_evidence(
-                label_year, 3, "branch_harm", layer, component, (flow_branch, target_branch)
-            ))
-        if branch_pair in BREAK_PAIRS:
-            evidence.append(_evidence(
-                label_year, 3, "branch_break", layer, component, (flow_branch, target_branch)
-            ))
-        if flow_stem == target_stem and (layer, component) not in suppressed_stem:
-            evidence.append(_evidence(
-                label_year, 3, "stem_repeat", layer, component, (flow_stem, target_stem)
-            ))
-
-    unique = {}
-    for item in evidence:
-        key = (
-            item.tier, item.relation_family, item.target_layer,
-            item.target_component, tuple(item.participants),
+    evidence = tuple(
+        _evidence(
+            label_year,
+            row.tier,
+            row.relation_family,
+            row.target_layer,
+            row.target_component,
+            row.participants,
         )
-        unique[key] = item
-    return tuple(sorted(unique.values(), key=lambda item: item.evidence_id))
+        for row in relations
+    )
+    return tuple(sorted(evidence, key=lambda item: item.evidence_id))
 
 
 def rank_evidence(evidence: Sequence[ActivationEvidence]) -> ActivationRankVector:
