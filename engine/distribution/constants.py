@@ -17,6 +17,7 @@ SUPPORTED_ACTIONS = (
     "resolve_forecast_context",
     "resolve_query_anchor",
     "lock_prospective_forecast",
+    "rank_evidence",
     "prepare_historical_calibration",
     "lock_blind_forecast",
     "lock_historical_calibration",
