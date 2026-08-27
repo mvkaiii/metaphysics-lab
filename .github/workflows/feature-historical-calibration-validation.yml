@@ -66,6 +66,7 @@ jobs:
             tests.test_distribution_evidence \
             tests.test_distribution_evidence_audit \
             tests.test_distribution_evidence_ranker \
+            tests.test_distribution_evidence_runtime \
             tests.test_distribution_forecast \
             tests.test_historical_activation_relations \
             tests.test_historical_activation_selector \
