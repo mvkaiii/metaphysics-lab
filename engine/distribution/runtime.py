@@ -142,6 +142,36 @@ def _prepare_historical_calibration(payload: Mapping[str, object]) -> dict:
     return result
 
 
+def _rank_evidence_summary(payload: Mapping[str, object]) -> dict:
+    from .capabilities import get_capability
+    from .evidence_ranker import detect_local_spike, rank_evidence
+
+    if not isinstance(payload, Mapping):
+        raise DistributionError(
+            "invalid_evidence_ranking",
+            "rank_evidence payload must be a mapping",
+            {"type": type(payload).__name__},
+        )
+
+    ranking = rank_evidence(
+        payload.get("features"),
+        target_scope=payload.get("target_scope"),
+        parent_ranking=payload.get("parent_ranking"),
+    )
+    parent_ranking = payload.get("parent_ranking")
+    local_windows = [] if parent_ranking is None else detect_local_spike(parent_ranking, ranking)
+    capability = get_capability("distribution.evidence_engine")
+    return {
+        "capability_id": capability["id"],
+        "maturity": capability["maturity"],
+        "routing": capability["routing"],
+        "rule_version": capability["rule_version"],
+        "ranking_authority": capability["ranking_authority"],
+        "ranking": ranking,
+        "local_windows": local_windows,
+    }
+
+
 def _export_case(request: Mapping[str, object]) -> dict:
     has_full = request.get("normalized_natal") is not None
     has_partial = request.get("candidate_envelope") is not None
@@ -198,6 +228,8 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
                 "lock_prospective_forecast": lock_prospective_forecast,
             }[action]
             return _ok(action, handler(request))
+        if action == "rank_evidence":
+            return _ok(action, _rank_evidence_summary(request))
         if action == "prepare_historical_calibration":
             return _ok(action, _prepare_historical_calibration(request))
         if action in ("lock_blind_forecast", "lock_historical_calibration", "finalize_historical_calibration"):

@@ -37,6 +37,7 @@ class DistributionRuntimeInfoTests(unittest.TestCase):
             "finalize_historical_calibration",
             "resolve_query_anchor",
             "lock_prospective_forecast",
+            "rank_evidence",
         ):
             self.assertIn(action, data["supported_actions"])
 
@@ -59,7 +60,7 @@ class DistributionRuntimeInfoTests(unittest.TestCase):
         self.assertEqual(prospective["rule_version"], "lin_tianji_v1.5-exp")
 
         evidence = data["capabilities"]["distribution.evidence_engine"]
-        self.assertEqual(evidence["implementation"], "unimplemented")
+        self.assertEqual(evidence["implementation"], "implemented")
         self.assertEqual(evidence["maturity"], "experimental")
         self.assertEqual(evidence["routing"], "on_demand")
         self.assertEqual(evidence["rule_version"], "lin_tianji_v1.5-exp")
