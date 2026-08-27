@@ -144,6 +144,52 @@ class DistributionCasePackTests(unittest.TestCase):
                 self.assertTrue(result["ok"], result)
                 self.assertEqual(set(result["data"]["changed_files"]), {actual("00_專案索引.md"), actual(slot)})
 
+    def test_case_1_1_round_trips_prospective_forecast_lock_without_schema_change(self):
+        from engine.distribution.prospective import lock_prospective_forecast, resolve_query_anchor
+
+        anchor = resolve_query_anchor({
+            "query_anchor_at": "2026-08-26T17:00:00+08:00",
+            "query_timezone": "Asia/Taipei",
+            "target_start": "2026-08-01T00:00:00+08:00",
+            "target_end": "2026-12-31T23:59:59+08:00",
+            "question_reference": "case-1.1-prospective-roundtrip",
+        })
+        claim = {
+            "claim_id": "claim-2026-09-work-001",
+            "forecast_window": {"start": "2026-09-01T00:00:00+08:00", "end": "2026-09-30T23:59:59+08:00"},
+            "primary_domain": "工作",
+            "event_family": "職責變動",
+            "prediction": "9 月內出現可被正式記錄的工作職責調整。",
+            "matched_if": "正式職稱、管理範圍或書面職責至少一項在預測窗內改變。",
+            "not_matched_if": "預測窗結束時，上述三項均未發生正式改變。",
+            "evidence_layers": ["bazi.yearly", "ziwei.yearly"],
+            "evidence_time_scales": ["yearly"],
+            "capability_maturity": "stable",
+            "confidence": "medium",
+            "knowledge_cutoff_at": anchor["knowledge_cutoff_at"],
+            "evaluation_eligibility": "clean_scorable",
+            "contamination_state": "clean_prospective",
+            "method_version": "lin_tianji_v1.5-exp",
+        }
+        locked = lock_prospective_forecast({"anchor": anchor, "claims": [claim]})
+
+        exported = self.export()
+        result = self.append(
+            exported["data"]["files"],
+            "06_流年追蹤紀錄.md",
+            {"record_id": "prospective-lock-001", "prospective_forecast_lock": locked},
+        )
+        self.assertTrue(result["ok"], result)
+        files = dict(exported["data"]["files"])
+        files.update(result["data"]["changed_files"])
+
+        validated = dispatch("validate_case", {"case_files": files})
+        self.assertTrue(validated["ok"], validated)
+        self.assertEqual(validated["data"]["case_schema_version"], "1.1")
+        tracking = files[actual("06_流年追蹤紀錄.md")]
+        self.assertIn(locked["canonical_digest"], tracking)
+        self.assertIn("lin_tianji_v1.5-exp", tracking)
+
     def test_blind_forecast_replacement_is_rejected(self):
         exported = self.export()
         appended = self.append(exported["data"]["files"], "06_流年追蹤紀錄.md", {"record_id": "forecast-001", "blind_forecast": "第一版"})
