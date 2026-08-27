@@ -15,14 +15,14 @@ _CAPABILITIES = {
     },
     "distribution.evidence_engine": {
         "id": "distribution.evidence_engine",
-        "implementation": "unimplemented",
+        "implementation": "implemented",
         "maturity": "experimental",
         "routing": "on_demand",
         "rule_version": "lin_tianji_v1.5-exp",
-        "module": "engine.distribution.evidence",
+        "module": "engine.distribution.evidence_ranker",
         "dependencies": ("distribution.prospective_forecast_governance",),
         "output_classification": "Project 推導盤面",
-        "ranking_authority": False,
+        "ranking_authority": True,
     },
 }
 
