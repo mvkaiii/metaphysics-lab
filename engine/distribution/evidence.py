@@ -276,6 +276,7 @@ def _bazi_features(
         provenance = {
             "adapter": "engine.distribution.evidence:bazi_ten_god",
             "mapping_profile": MAPPING_PROFILE,
+            "source_record": dict(bazi),
             "engine": bazi.get("engine"),
             "version": bazi.get("version"),
             "classification": bazi.get("classification"),

@@ -64,6 +64,7 @@ jobs:
           python -m unittest \
             tests.test_distribution_evidence_models \
             tests.test_distribution_evidence \
+            tests.test_distribution_evidence_audit \
             tests.test_distribution_forecast \
             tests.test_historical_activation_relations \
             tests.test_historical_activation_selector \
