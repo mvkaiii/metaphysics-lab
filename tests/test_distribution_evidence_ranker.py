@@ -15,6 +15,7 @@ from engine.distribution.evidence_policy import (
     TIMING_TRIGGER_CAP,
 )
 from engine.distribution.evidence_ranker import (
+    detect_local_spike,
     evaluate_feature_eligibility,
     rank_evidence,
 )
@@ -314,6 +315,120 @@ class EvidenceRankerTests(unittest.TestCase):
         second = rank_evidence(features, target_scope="yearly")
         self.assertEqual(self.canonical_bytes(first), self.canonical_bytes(second))
         self.assertEqual(first["ranking_digest"], second["ranking_digest"])
+
+    def test_yearly_weak_monthly_strong_is_local_spike_without_mutating_parent(self):
+        parent = rank_evidence(
+            [self.feature("year-weak", strength_class="weak")],
+            target_scope="yearly",
+        )
+        child = rank_evidence(
+            [
+                self.feature(
+                    "month-strong",
+                    scope="monthly",
+                    reference_window={"scope": "monthly", "reference": "fixture"},
+                    strength_class="strong",
+                )
+            ],
+            target_scope="monthly",
+            parent_ranking=parent,
+        )
+        parent_before = self.canonical_bytes(parent)
+        child_before = self.canonical_bytes(child)
+
+        windows = detect_local_spike(parent, child)
+
+        self.assertEqual(len(windows), 1)
+        window = windows[0]
+        self.assertTrue(window["local_spike"])
+        self.assertEqual(window["window_type"], "local_spike")
+        self.assertEqual(window["primary_domain"], "career")
+        self.assertEqual(window["parent_ranking_digest"], parent["ranking_digest"])
+        self.assertEqual(window["child_ranking_digest"], child["ranking_digest"])
+        self.assertEqual(self.canonical_bytes(parent), parent_before)
+        self.assertEqual(self.canonical_bytes(child), child_before)
+
+    def test_day_only_spike_with_weak_parent_cannot_claim_major_event_specificity(self):
+        year = rank_evidence(
+            [self.feature("year-weak", strength_class="weak")],
+            target_scope="yearly",
+        )
+        month = rank_evidence(
+            [
+                self.feature(
+                    "month-weak",
+                    scope="monthly",
+                    reference_window={"scope": "monthly", "reference": "fixture"},
+                    strength_class="weak",
+                )
+            ],
+            target_scope="monthly",
+            parent_ranking=year,
+        )
+        day = rank_evidence(
+            [
+                self.feature(
+                    "day-strong-a",
+                    scope="daily",
+                    reference_window={"scope": "daily", "reference": "fixture"},
+                    strength_class="strong",
+                    dependency_family="dep:day-a",
+                ),
+                self.feature(
+                    "day-strong-b",
+                    system="ziwei",
+                    source_family="fixture.ziwei",
+                    scope="daily",
+                    reference_window={"scope": "daily", "reference": "fixture"},
+                    strength_class="strong",
+                    dependency_family="dep:day-b",
+                ),
+            ],
+            target_scope="daily",
+            parent_ranking=month,
+        )
+        self.assertEqual(day["domains"][0]["allowed_specificity"], "concrete_event")
+
+        windows = detect_local_spike(month, day)
+
+        self.assertEqual(len(windows), 1)
+        window = windows[0]
+        self.assertTrue(window["local_spike"])
+        self.assertEqual(window["source_allowed_specificity"], "concrete_event")
+        self.assertEqual(window["allowed_specificity"], "event_family")
+        self.assertTrue(window["specificity_capped"])
+        self.assertNotIn(
+            window["allowed_specificity"],
+            ("concrete_event", "highly_specific_event"),
+        )
+
+    def test_yearly_strong_monthly_same_direction_is_active_window_not_local_spike(self):
+        parent = rank_evidence(
+            [self.feature("year-strong", strength_class="strong")],
+            target_scope="yearly",
+        )
+        child = rank_evidence(
+            [
+                self.feature(
+                    "month-strong",
+                    scope="monthly",
+                    reference_window={"scope": "monthly", "reference": "fixture"},
+                    strength_class="strong",
+                )
+            ],
+            target_scope="monthly",
+            parent_ranking=parent,
+        )
+
+        windows = detect_local_spike(parent, child)
+
+        self.assertEqual(len(windows), 1)
+        window = windows[0]
+        self.assertFalse(window["local_spike"])
+        self.assertEqual(window["window_type"], "active_window")
+        self.assertEqual(window["primary_domain"], "career")
+        self.assertEqual(window["parent_ranking_digest"], parent["ranking_digest"])
+        self.assertEqual(window["child_ranking_digest"], child["ranking_digest"])
 
 
 if __name__ == "__main__":
