@@ -15,6 +15,8 @@ SUPPORTED_ACTIONS = (
     "natal.candidate_envelope",
     "reconcile_natal",
     "resolve_forecast_context",
+    "resolve_query_anchor",
+    "lock_prospective_forecast",
     "prepare_historical_calibration",
     "lock_blind_forecast",
     "lock_historical_calibration",
