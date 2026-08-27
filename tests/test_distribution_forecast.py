@@ -1,6 +1,9 @@
 import copy
+import hashlib
+import json
 import unittest
 
+from engine.distribution.evidence import build_evidence_features
 from engine.distribution.runtime import dispatch
 
 
@@ -20,6 +23,16 @@ RESOLVED_TAIPEI = {
     "provider_version": "user-confirmed",
     "provider_reference": None,
 }
+
+
+def canonical_bytes(value):
+    return json.dumps(
+        value,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    ).encode("utf-8")
 
 
 class DistributionForecastTests(unittest.TestCase):
@@ -66,6 +79,34 @@ class DistributionForecastTests(unittest.TestCase):
         self.assertEqual(data["provenance"]["target_calendar_resolutions"], 1)
         self.assertNotIn("interpretation", data)
         self.assertNotIn("advice", data)
+
+    def test_evidence_extraction_preserves_forecast_truth_and_is_deterministic(self):
+        result = self.forecast(
+            "2026-09-15T14:30:00",
+            ["yearly", "monthly", "daily", "hourly"],
+        )
+        self.assertTrue(result["ok"], result)
+        context = result["data"]
+
+        before_bytes = canonical_bytes(context)
+        before_digest = hashlib.sha256(before_bytes).hexdigest()
+        first = build_evidence_features(context, target_scope="yearly")
+        after_bytes = canonical_bytes(context)
+        after_digest = hashlib.sha256(after_bytes).hexdigest()
+        second = build_evidence_features(context, target_scope="yearly")
+
+        self.assertEqual(before_bytes, after_bytes)
+        self.assertEqual(before_digest, after_digest)
+        self.assertEqual(first["source_context_digest"], before_digest)
+        self.assertEqual(canonical_bytes(first), canonical_bytes(second))
+        self.assertEqual(
+            [feature["feature_id"] for feature in first["features"]],
+            [feature["feature_id"] for feature in second["features"]],
+        )
+        self.assertEqual(
+            {feature["scope"] for feature in first["features"]},
+            {"yearly", "monthly", "daily", "hourly"},
+        )
 
     def test_late_zi_daily_hourly_use_fine_cycle_boundary_while_calendar_stays_neutral(self):
         result = self.forecast("2026-09-15T23:30:00", ["daily", "hourly"])
