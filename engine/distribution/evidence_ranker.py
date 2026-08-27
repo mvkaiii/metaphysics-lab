@@ -17,6 +17,7 @@ from .evidence_policy import (
     INDEPENDENT_CONVERGENCE_BONUS,
     MODIFIER_CAP,
     POLICY_VERSION,
+    SPECIFICITY_LEVELS,
     STABLE_FACTOR_NUM,
     TARGET_SCOPE_BASE,
     TIMING_TRIGGER_CAP,
@@ -35,6 +36,10 @@ _ROLE_ORDER = {
     "target_evidence": 3,
     "modifier": 2,
     "timing_trigger": 1,
+}
+_FINE_SPIKE_SPECIFICITY_CAP = {
+    "daily": "event_family",
+    "hourly": "event_family",
 }
 
 
@@ -336,3 +341,154 @@ def rank_evidence(
     }
     payload["ranking_digest"] = _canonical_digest(payload)
     return payload
+
+
+def _validated_ranking_snapshot(value: object, label: str) -> Mapping[str, object]:
+    if not isinstance(value, Mapping):
+        _raise(
+            "invalid_evidence_ranking",
+            f"{label} ranking must be a mapping",
+            {"type": type(value).__name__},
+        )
+
+    scope = _validate_target_scope(value.get("target_scope"))
+    policy_version = _validate_policy_version(value.get("policy_version"))
+    digest = value.get("ranking_digest")
+    if not isinstance(digest, str) or not digest:
+        _raise(
+            "invalid_evidence_ranking",
+            f"{label} ranking must include ranking_digest",
+        )
+
+    digest_payload = dict(value)
+    digest_payload.pop("ranking_digest", None)
+    actual_digest = _canonical_digest(digest_payload)
+    if actual_digest != digest:
+        _raise(
+            "invalid_evidence_ranking",
+            f"{label} ranking digest does not match payload",
+            {"expected_digest": digest, "actual_digest": actual_digest},
+        )
+
+    domains = value.get("domains")
+    if not isinstance(domains, list) or any(not isinstance(item, Mapping) for item in domains):
+        _raise(
+            "invalid_evidence_ranking",
+            f"{label} ranking domains must be a list of mappings",
+        )
+
+    for domain in domains:
+        if domain.get("target_strength_class") not in _STRENGTH_ORDER:
+            _raise(
+                "invalid_evidence_ranking",
+                f"{label} ranking contains invalid target strength",
+                {"primary_domain": domain.get("primary_domain")},
+            )
+        if domain.get("allowed_specificity") not in SPECIFICITY_LEVELS:
+            _raise(
+                "invalid_evidence_ranking",
+                f"{label} ranking contains invalid specificity",
+                {"primary_domain": domain.get("primary_domain")},
+            )
+
+    return {
+        "scope": scope,
+        "policy_version": policy_version,
+        "ranking_digest": digest,
+        "domains": domains,
+    }
+
+
+def _capped_specificity(source: str, cap: str | None) -> tuple[str, bool]:
+    if cap is None:
+        return source, False
+    source_index = SPECIFICITY_LEVELS.index(source)
+    cap_index = SPECIFICITY_LEVELS.index(cap)
+    if source_index <= cap_index:
+        return source, False
+    return cap, True
+
+
+def detect_local_spike(
+    parent_ranking: Mapping[str, object],
+    child_ranking: Mapping[str, object],
+) -> list[dict]:
+    """Compare adjacent/coarser rankings without rewriting either ranking.
+
+    A strong child domain over an absent/weak parent is a local spike.  A
+    same-direction child domain over a moderate/strong parent is an active
+    window instead.  Daily/hourly local spikes are capped at event-family
+    specificity so a fine-layer activation cannot become a major-event claim.
+    """
+
+    parent = _validated_ranking_snapshot(parent_ranking, "parent")
+    child = _validated_ranking_snapshot(child_ranking, "child")
+    parent_scope = parent["scope"]
+    child_scope = child["scope"]
+    if _SCOPE_ORDER.index(child_scope) <= _SCOPE_ORDER.index(parent_scope):
+        _raise(
+            "evidence_rank_scope_blocked",
+            "child ranking must be finer than parent ranking for local-spike detection",
+            {"parent_scope": parent_scope, "child_scope": child_scope},
+        )
+
+    parent_domains = {
+        item["primary_domain"]: item
+        for item in parent["domains"]
+        if isinstance(item.get("primary_domain"), str)
+    }
+    windows = []
+    for child_domain in child["domains"]:
+        domain = child_domain.get("primary_domain")
+        if not isinstance(domain, str) or not domain:
+            _raise(
+                "invalid_evidence_ranking",
+                "child ranking domain must have a primary_domain",
+            )
+        parent_domain = parent_domains.get(domain)
+        child_strength = child_domain["target_strength_class"]
+        parent_strength = (
+            parent_domain["target_strength_class"]
+            if parent_domain is not None
+            else "unspecified"
+        )
+
+        local_spike = (
+            child_strength == "strong"
+            and parent_strength in {"unspecified", "weak"}
+        )
+        if not local_spike and parent_domain is None:
+            continue
+
+        window_type = "local_spike" if local_spike else "active_window"
+        source_specificity = child_domain["allowed_specificity"]
+        specificity_cap = (
+            _FINE_SPIKE_SPECIFICITY_CAP.get(child_scope)
+            if local_spike
+            else None
+        )
+        allowed_specificity, specificity_capped = _capped_specificity(
+            source_specificity,
+            specificity_cap,
+        )
+
+        windows.append(
+            {
+                "primary_domain": domain,
+                "window_type": window_type,
+                "local_spike": local_spike,
+                "parent_scope": parent_scope,
+                "child_scope": child_scope,
+                "parent_rank": None if parent_domain is None else parent_domain.get("rank"),
+                "child_rank": child_domain.get("rank"),
+                "parent_strength_class": parent_strength,
+                "child_strength_class": child_strength,
+                "source_allowed_specificity": source_specificity,
+                "allowed_specificity": allowed_specificity,
+                "specificity_capped": specificity_capped,
+                "parent_ranking_digest": parent["ranking_digest"],
+                "child_ranking_digest": child["ranking_digest"],
+            }
+        )
+
+    return windows
