@@ -4,13 +4,14 @@ on:
   push:
     branches:
       - feature/lin-tianji-phase2-evidence-feature-foundation
+    paths:
+      - .github/workflows/phase2-task22-one-shot-dist-sync.yml
 
 permissions:
   contents: write
 
 jobs:
   sync:
-    if: github.event.head_commit.message == 'chore(ci): one-shot Phase 2.2 distribution sync'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sync ref
