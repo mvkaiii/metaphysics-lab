@@ -62,11 +62,11 @@ jobs:
       - name: Upload rebuilt distribution snapshot
         uses: actions/upload-artifact@v4
         with:
-          name: phase5-rebuilt-ai-distribution-${{ github.sha }}
+          name: phase6-rebuilt-ai-distribution-${{ github.sha }}
           path: dist/ai/
           if-no-files-found: error
 
-      - name: Historical selector, personalization, interpretation, and progressive Case focused tests
+      - name: Historical selector, personalization, interpretation, prospective evaluation, and progressive Case focused tests
         run: |
           python -m unittest \
             tests.test_bazi_structural_relations \
@@ -99,6 +99,8 @@ jobs:
             tests.test_distribution_blind_sources \
             tests.test_distribution_blind_source_bundle_parity \
             tests.test_distribution_prospective \
+            tests.test_distribution_prospective_evaluation \
+            tests.test_distribution_prospective_evaluation_comparison \
             tests.test_distribution_partial_case \
             tests.test_postmerge_audit_regressions \
             tests.test_second_round_adversarial_regressions \
