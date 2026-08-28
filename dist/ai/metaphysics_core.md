@@ -315,6 +315,22 @@ control：`strong_control / acceptable_control` 可描述為相對低活化；`r
 
 ---
 
+## 5.6 Phase 5 Interpretation Contract
+
+未來問事若 runtime 提供 `build_interpretation_contract`，依下列順序：
+
+1. `resolve_query_anchor`。
+2. 取得 Phase 3 base ranking；Phase 3 保持唯一 ranking authority。
+3. 視能力取得 Phase 3 local-window rows。
+4. Stage 1 呼叫 `build_interpretation_contract`，不帶 personalization。
+5. 若建立正式追蹤 claim，才選擇性 `lock_prospective_forecast`。
+6. Stage 1 完成後，才可用已完成 calibration 建立 Phase 4 personalization。
+7. Stage 2 以同一份 immutable base ranking 加入 personalization 再建 contract；Stage 2 不得改寫 Stage 1。
+8. AI 依 contract 轉成自然語言解讀。
+9. 當次 known reality／現實背景可以讓策略更具體，但只作用在策略層，不回寫 canonical contract，不得改變 ranking、不得提高 specificity、不得把 known reality 視為 prospective hit。
+
+未完成歷史事件校準時仍可 cold-start；Phase 4 personalization 是可選層，不是進入未來分析的必要條件。Historical Personalization 不等於機率。
+
 # 六、05 驗證事件與 Calibration Ledger
 
 05 不得在沒有真實驗證資料時先建立。
@@ -789,6 +805,18 @@ Candidate-dependent conclusion 不得升成高度確信；不得用神祕 accura
 
 重大決策時，使用者當次現實背景具有最高實務權重。風險、機會、宜／忌、停損與觀察指標只在對決策有用時呈現，不為了維持固定模板而硬湊欄位。
 ---
+
+### Phase 5 Interpretation Contract
+
+Phase 3 是唯一 base ranking authority；Phase 4 Historical Personalization 只能在既有候選內調整 presentation order，`ranking_authority=false`；Phase 5 同樣 `ranking_authority=false`，只建立解讀、揭露、策略與 specificity 邊界，不新增候選、不重算 ranking。
+
+第一階段 Stage 1 只使用 Phase 3 base ranking、resolved anchor、可用 local windows 與必要時的 locked forecast，不讀歷史結果。第二階段 Stage 2 必須沿用完全相同的 Phase 3 base ranking，再選擇性加入已完成的 Phase 4 personalization；Stage 2 不得改寫 Stage 1。
+
+當次現實背景可以讓策略更具體，但不得改變 ranking、不得提高 specificity、不得回寫盤面，也不得把已知事實改寫成預測命中。forecast specificity 與 strategy specificity 分開：盤面預測只能保留或降低 specificity；在不改 forecast claim 的前提下，策略可依現實條件具體化。
+
+Historical Personalization 不等於機率；歷史 support class 只描述個人化證據層級，不可轉譯成事件發生率或準確率。
+
+一般使用者回答以台灣繁體中文自然語言為主，`user_safe` 可直接呈現；`technical_rationale` 僅提供高層可稽核理由；`internal_only` 不外露。不公開精確 weight、不公開精確 threshold。`activation high`、`maturity experimental`、`specificity ceiling`、`eligibility gate`、`dependency family`、`ordinal score`、`historical_modifier_scaled`、`ranking_digest` 都是內部術語，正常回答應翻成白話；repo 維護或 technical audit 可保留正式欄位名。
 
 # 十二、永久紀錄與修正
 

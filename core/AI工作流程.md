@@ -314,6 +314,22 @@ control：`strong_control / acceptable_control` 可描述為相對低活化；`r
 
 ---
 
+## 5.6 Phase 5 Interpretation Contract
+
+未來問事若 runtime 提供 `build_interpretation_contract`，依下列順序：
+
+1. `resolve_query_anchor`。
+2. 取得 Phase 3 base ranking；Phase 3 保持唯一 ranking authority。
+3. 視能力取得 Phase 3 local-window rows。
+4. Stage 1 呼叫 `build_interpretation_contract`，不帶 personalization。
+5. 若建立正式追蹤 claim，才選擇性 `lock_prospective_forecast`。
+6. Stage 1 完成後，才可用已完成 calibration 建立 Phase 4 personalization。
+7. Stage 2 以同一份 immutable base ranking 加入 personalization 再建 contract；Stage 2 不得改寫 Stage 1。
+8. AI 依 contract 轉成自然語言解讀。
+9. 當次 known reality／現實背景可以讓策略更具體，但只作用在策略層，不回寫 canonical contract，不得改變 ranking、不得提高 specificity、不得把 known reality 視為 prospective hit。
+
+未完成歷史事件校準時仍可 cold-start；Phase 4 personalization 是可選層，不是進入未來分析的必要條件。Historical Personalization 不等於機率。
+
 # 六、05 驗證事件與 Calibration Ledger
 
 05 不得在沒有真實驗證資料時先建立。
