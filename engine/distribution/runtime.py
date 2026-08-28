@@ -142,6 +142,28 @@ def _prepare_historical_calibration(payload: Mapping[str, object]) -> dict:
     return result
 
 
+def _interpret_structural_summary(payload: Mapping[str, object]) -> dict:
+    if not isinstance(payload, Mapping):
+        raise DistributionError(
+            "invalid_structural_interpretation_payload",
+            "structural interpretation payload must be a mapping",
+            {"type": type(payload).__name__},
+        )
+    allowed = {"forecast_context", "target_scope"}
+    unknown = sorted(set(payload) - allowed)
+    if unknown:
+        raise DistributionError(
+            "invalid_structural_interpretation_payload",
+            "structural interpretation payload contains unknown fields",
+            {"unknown_fields": unknown},
+        )
+    from .structural_interpretation import interpret_structural_evidence
+    return interpret_structural_evidence(
+        payload.get("forecast_context"),
+        payload.get("target_scope"),
+    )
+
+
 def _rank_evidence_summary(payload: Mapping[str, object]) -> dict:
     from .capabilities import get_capability
     from .evidence_ranker import detect_local_spike, rank_evidence
@@ -228,6 +250,8 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
                 "lock_prospective_forecast": lock_prospective_forecast,
             }[action]
             return _ok(action, handler(request))
+        if action == "interpret_structural_evidence":
+            return _ok(action, _interpret_structural_summary(request))
         if action == "rank_evidence":
             return _ok(action, _rank_evidence_summary(request))
         if action == "prepare_historical_calibration":
