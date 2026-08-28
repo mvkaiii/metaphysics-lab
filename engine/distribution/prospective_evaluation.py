@@ -214,3 +214,71 @@ def evaluate_locked_claim(payload: Mapping[str, object]) -> dict:
         "claim": claim,
         "evaluation": evaluation,
     }
+
+
+def build_method_comparison(records: object) -> dict:
+    """Build comparison metadata with one denominator per exact method label.
+
+    This intentionally does not compute an accuracy rate, pool methods into a
+    shared denominator, or infer that one method is superior to another.
+    """
+    if not isinstance(records, (list, tuple)) or not records:
+        raise _invalid("comparison records must be a non-empty sequence")
+
+    groups = {}
+    method_order = []
+    for index, record in enumerate(records):
+        if not isinstance(record, Mapping):
+            raise _invalid("comparison record must be a mapping", record_index=index)
+
+        claim = record.get("claim")
+        evaluation = record.get("evaluation")
+        if not isinstance(claim, Mapping) or not isinstance(evaluation, Mapping):
+            raise _invalid(
+                "comparison record requires claim and evaluation mappings",
+                record_index=index,
+            )
+
+        method_version = _text(
+            claim.get("method_version"),
+            f"records[{index}].claim.method_version",
+        )
+        verification_state = _text(
+            evaluation.get("verification_state"),
+            f"records[{index}].evaluation.verification_state",
+        )
+        if verification_state not in VERIFICATION_STATES:
+            raise _invalid(
+                "unsupported verification_state",
+                record_index=index,
+                verification_state=verification_state,
+            )
+
+        scorable = evaluation.get("scorable")
+        if type(scorable) is not bool:
+            raise _invalid("comparison record scorable must be boolean", record_index=index)
+        if scorable and verification_state == "cannot_recall":
+            raise _invalid("cannot_recall comparison record cannot be scorable", record_index=index)
+
+        if method_version not in groups:
+            groups[method_version] = {
+                "method_version": method_version,
+                "clean_scorable_count": 0,
+                "matched_count": 0,
+                "partial_count": 0,
+                "not_matched_count": 0,
+            }
+            method_order.append(method_version)
+
+        if scorable:
+            group = groups[method_version]
+            group["clean_scorable_count"] += 1
+            group[f"{verification_state}_count"] += 1
+
+    return {
+        "status": "comparison_metadata",
+        "comparison_boundary": "separate_method_denominators",
+        "pooled_accuracy_denominator": None,
+        "superiority_claim_status": "not_established",
+        "methods": [groups[method] for method in method_order],
+    }
