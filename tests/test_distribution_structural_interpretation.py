@@ -6,6 +6,24 @@ from engine.distribution.structural_interpretation import interpret_structural_e
 from engine.distribution.runtime import dispatch
 
 
+SYNTHETIC_BIRTH = {
+    "sex": "female",
+    "birth_date": "1990-05-17",
+    "birth_time": "10:20",
+    "birth_place": "台北市",
+}
+
+RESOLVED_TAIPEI = {
+    "canonical_name": "Taipei City, Taiwan",
+    "latitude": 25.033,
+    "longitude": 121.5654,
+    "timezone": "Asia/Taipei",
+    "provider_name": "ai_host",
+    "provider_version": "synthetic-test",
+    "provider_reference": None,
+}
+
+
 class StructuralInterpretationTests(unittest.TestCase):
     def context(self, *, cross_system_career=False):
         yearly_palace = "官祿宮" if cross_system_career else "財帛宮"
@@ -129,6 +147,51 @@ class StructuralInterpretationTests(unittest.TestCase):
         ]
         self.assertEqual({item["system"] for item in career}, {"bazi", "ziwei"})
         self.assertEqual(len({item["dependency_family"] for item in career}), 2)
+
+    def test_zero_history_pipeline_produces_nonempty_ranked_baseline(self):
+        natal = dispatch(
+            "build_natal",
+            {
+                "birth": SYNTHETIC_BIRTH,
+                "resolved_location": RESOLVED_TAIPEI,
+            },
+        )
+        self.assertTrue(natal["ok"], natal)
+
+        forecast = dispatch(
+            "resolve_forecast_context",
+            {
+                "normalized_natal": natal["data"]["normalized_natal"],
+                "target": {
+                    "civil_datetime": "2027-08-18T14:30:00",
+                    "timezone": "Asia/Taipei",
+                },
+                "requested_scopes": ["yearly", "monthly"],
+            },
+        )
+        self.assertTrue(forecast["ok"], forecast)
+
+        interpreted = dispatch(
+            "interpret_structural_evidence",
+            {
+                "forecast_context": forecast["data"],
+                "target_scope": "yearly",
+            },
+        )
+        self.assertTrue(interpreted["ok"], interpreted)
+        self.assertTrue(interpreted["data"]["features"])
+        self.assertNotIn("historical_records", interpreted["data"])
+
+        ranked = dispatch(
+            "rank_evidence",
+            {
+                "features": interpreted["data"]["features"],
+                "target_scope": "yearly",
+            },
+        )
+        self.assertTrue(ranked["ok"], ranked)
+        self.assertTrue(ranked["data"]["ranking"]["opened_domains"])
+        self.assertIn("ranking_digest", ranked["data"]["ranking"])
 
 
 if __name__ == "__main__":
