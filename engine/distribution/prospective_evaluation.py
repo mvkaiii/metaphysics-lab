@@ -17,6 +17,29 @@ from .prospective import lock_prospective_forecast
 
 
 VERIFICATION_STATES = frozenset({"matched", "partial", "not_matched", "cannot_recall"})
+FAILURE_MODES = frozenset(
+    {
+        "ai_compliance_failure",
+        "specification_ambiguity",
+        "deterministic_or_algorithm_failure",
+        "metaphysical_signal_failure",
+    }
+)
+NO_FAILURE_MODE = "none"
+_FAILURE_EVIDENCE_FIELDS = frozenset(
+    {
+        "rule_violation",
+        "specification_ambiguity",
+        "algorithm_mismatch",
+        "signal_miss",
+    }
+)
+_FAILURE_MODE_EVIDENCE_FIELD = {
+    "ai_compliance_failure": "rule_violation",
+    "specification_ambiguity": "specification_ambiguity",
+    "deterministic_or_algorithm_failure": "algorithm_mismatch",
+    "metaphysical_signal_failure": "signal_miss",
+}
 
 _REQUIRED_FIELDS = frozenset(
     {
@@ -27,7 +50,7 @@ _REQUIRED_FIELDS = frozenset(
         "evaluated_at",
     }
 )
-_OPTIONAL_FIELDS = frozenset({"notes"})
+_OPTIONAL_FIELDS = frozenset({"notes", "failure_mode", "failure_evidence"})
 _LOCK_FIELDS = frozenset({"status", "method_version", "anchor", "claims", "canonical_digest"})
 
 
@@ -50,6 +73,57 @@ def _aware_iso(value: object, field: str) -> str:
     if parsed.tzinfo is None or parsed.utcoffset() is None:
         raise _invalid(f"{field} must be timezone-aware", field=field)
     return parsed.isoformat()
+
+
+def _empty_failure_evidence() -> dict:
+    return {
+        "rule_violation": False,
+        "specification_ambiguity": False,
+        "algorithm_mismatch": False,
+        "signal_miss": False,
+    }
+
+
+def _failure_attribution(payload: Mapping[str, object], verification_state: str) -> tuple[str, dict]:
+    raw_mode = payload.get("failure_mode", NO_FAILURE_MODE)
+    failure_mode = _text(raw_mode, "failure_mode")
+    if failure_mode != NO_FAILURE_MODE and failure_mode not in FAILURE_MODES:
+        raise _invalid("unsupported failure_mode", failure_mode=failure_mode)
+
+    raw_evidence = payload.get("failure_evidence")
+    if raw_evidence is None:
+        failure_evidence = _empty_failure_evidence()
+    else:
+        if not isinstance(raw_evidence, Mapping) or set(raw_evidence) != _FAILURE_EVIDENCE_FIELDS:
+            raise _invalid(
+                "failure_evidence fields do not match the fixed taxonomy",
+                required_fields=sorted(_FAILURE_EVIDENCE_FIELDS),
+            )
+        if any(type(raw_evidence[field]) is not bool for field in _FAILURE_EVIDENCE_FIELDS):
+            raise _invalid("failure_evidence values must be booleans")
+        failure_evidence = {
+            field: raw_evidence[field]
+            for field in ("rule_violation", "specification_ambiguity", "algorithm_mismatch", "signal_miss")
+        }
+
+    if verification_state == "not_matched" and failure_mode == NO_FAILURE_MODE:
+        raise _invalid("not_matched evaluation requires an explicit failure_mode")
+
+    if failure_mode == NO_FAILURE_MODE:
+        if any(failure_evidence.values()):
+            raise _invalid("failure_evidence cannot identify a failure when failure_mode is none")
+        return failure_mode, failure_evidence
+
+    expected_field = _FAILURE_MODE_EVIDENCE_FIELD[failure_mode]
+    true_fields = [field for field, value in failure_evidence.items() if value]
+    if true_fields != [expected_field]:
+        raise _invalid(
+            "failure_evidence must identify exactly the selected failure_mode",
+            failure_mode=failure_mode,
+            expected_evidence_field=expected_field,
+            true_evidence_fields=true_fields,
+        )
+    return failure_mode, failure_evidence
 
 
 def _verified_locked_forecast(value: object) -> dict:
@@ -76,9 +150,10 @@ def _verified_locked_forecast(value: object) -> dict:
 def evaluate_locked_claim(payload: Mapping[str, object]) -> dict:
     """Verify one locked claim and append an explicit evaluation block.
 
-    The caller supplies the verification state.  This function deliberately
-    does not parse ``matched_if``, ``not_matched_if`` or ``observed_actual``
-    to infer a different outcome.
+    The caller supplies the verification state and, when a failure is
+    identified, its explicit attribution.  This function deliberately does
+    not parse ``matched_if``, ``not_matched_if`` or ``observed_actual`` to
+    infer either outcome or failure mode.
     """
     if not isinstance(payload, Mapping):
         raise _invalid("prospective evaluation payload must be a mapping")
@@ -106,6 +181,7 @@ def evaluate_locked_claim(payload: Mapping[str, object]) -> dict:
 
     observed_actual = _text(payload.get("observed_actual"), "observed_actual")
     evaluated_at = _aware_iso(payload.get("evaluated_at"), "evaluated_at")
+    failure_mode, failure_evidence = _failure_attribution(payload, verification_state)
 
     clean_eligible = (
         claim.get("contamination_state") == "clean_prospective"
@@ -126,6 +202,8 @@ def evaluate_locked_claim(payload: Mapping[str, object]) -> dict:
         "evaluated_at": evaluated_at,
         "scorable": scorable,
         "score_exclusion_reason": exclusion_reason,
+        "failure_mode": failure_mode,
+        "failure_evidence": failure_evidence,
     }
     if "notes" in payload:
         evaluation["notes"] = _text(payload.get("notes"), "notes")
