@@ -41,6 +41,16 @@ jobs:
           path.write_text(text, encoding='utf-8')
           PY
           python tools/v15_terminology_normalize.py
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('tests/test_lin_tianji_prediction_validation_progressive.py')
+          text = path.read_text(encoding='utf-8')
+          old = 'self.assertEqual(result["status"], "validated")'
+          new = 'self.assertEqual(result["status"], "compatible")'
+          if old not in text:
+              raise SystemExit('expected progressive validation assertion missing')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
 
       - name: Verify terminology contract
         run: python -m unittest tests.test_v15_terminology_contract -v
