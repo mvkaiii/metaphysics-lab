@@ -46,6 +46,17 @@ _CAPABILITIES = {
         "output_classification": "Historical personalization metadata",
         "ranking_authority": False,
     },
+    "distribution.interpretation_contract": {
+        "id": "distribution.interpretation_contract",
+        "implementation": "implemented",
+        "maturity": "experimental",
+        "routing": "on_demand",
+        "rule_version": "lin_tianji_interpretation_contract_v1-exp",
+        "module": "engine.distribution.interpretation_contract",
+        "dependencies": ("distribution.evidence_engine",),
+        "output_classification": "Interpretation contract metadata",
+        "ranking_authority": False,
+    },
 }
 
 

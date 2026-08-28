@@ -40,6 +40,7 @@ class DistributionRuntimeInfoTests(unittest.TestCase):
             "interpret_structural_evidence",
             "rank_evidence",
             "personalize_ranking",
+            "build_interpretation_contract",
         ):
             self.assertIn(action, data["supported_actions"])
 
@@ -85,6 +86,17 @@ class DistributionRuntimeInfoTests(unittest.TestCase):
         )
         self.assertFalse(personalization["ranking_authority"])
         self.assertEqual(personalization["dependencies"], ["distribution.evidence_engine"])
+
+        interpretation = data["capabilities"]["distribution.interpretation_contract"]
+        self.assertEqual(interpretation["implementation"], "implemented")
+        self.assertEqual(interpretation["maturity"], "experimental")
+        self.assertEqual(interpretation["routing"], "on_demand")
+        self.assertEqual(
+            interpretation["rule_version"],
+            "lin_tianji_interpretation_contract_v1-exp",
+        )
+        self.assertFalse(interpretation["ranking_authority"])
+        self.assertEqual(interpretation["dependencies"], ["distribution.evidence_engine"])
 
     def test_runtime_info_separates_bundled_core_from_optional_external_dependencies(self):
         runtime = self._runtime()
