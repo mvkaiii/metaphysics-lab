@@ -194,6 +194,28 @@ def _rank_evidence_summary(payload: Mapping[str, object]) -> dict:
     }
 
 
+def _personalize_ranking_summary(payload: Mapping[str, object]) -> dict:
+    if not isinstance(payload, Mapping):
+        raise DistributionError(
+            "invalid_historical_personalization",
+            "personalize_ranking payload must be a mapping",
+        )
+    allowed = {"base_ranking", "historical_calibration_status", "historical_records"}
+    unknown = sorted(set(payload) - allowed)
+    if unknown:
+        raise DistributionError(
+            "invalid_historical_personalization",
+            "personalize_ranking payload contains unknown fields",
+            {"unknown_fields": unknown},
+        )
+    from .historical_personalization import personalize_ranking
+    return personalize_ranking(
+        payload.get("base_ranking"),
+        payload.get("historical_calibration_status"),
+        payload.get("historical_records"),
+    )
+
+
 def _export_case(request: Mapping[str, object]) -> dict:
     has_full = request.get("normalized_natal") is not None
     has_partial = request.get("candidate_envelope") is not None
@@ -254,6 +276,8 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
             return _ok(action, _interpret_structural_summary(request))
         if action == "rank_evidence":
             return _ok(action, _rank_evidence_summary(request))
+        if action == "personalize_ranking":
+            return _ok(action, _personalize_ranking_summary(request))
         if action == "prepare_historical_calibration":
             return _ok(action, _prepare_historical_calibration(request))
         if action in ("lock_blind_forecast", "lock_historical_calibration", "finalize_historical_calibration"):

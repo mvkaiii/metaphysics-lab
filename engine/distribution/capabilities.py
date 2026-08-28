@@ -35,6 +35,17 @@ _CAPABILITIES = {
         "output_classification": "Project 推導盤面",
         "ranking_authority": True,
     },
+    "distribution.historical_personalization": {
+        "id": "distribution.historical_personalization",
+        "implementation": "implemented",
+        "maturity": "experimental",
+        "routing": "on_demand",
+        "rule_version": "lin_tianji_historical_personalization_v1-exp",
+        "module": "engine.distribution.historical_personalization",
+        "dependencies": ("distribution.evidence_engine",),
+        "output_classification": "Historical personalization metadata",
+        "ranking_authority": False,
+    },
 }
 
 

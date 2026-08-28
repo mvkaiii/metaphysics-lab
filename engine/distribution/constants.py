@@ -19,6 +19,7 @@ SUPPORTED_ACTIONS = (
     "lock_prospective_forecast",
     "interpret_structural_evidence",
     "rank_evidence",
+    "personalize_ranking",
     "prepare_historical_calibration",
     "lock_blind_forecast",
     "lock_historical_calibration",
