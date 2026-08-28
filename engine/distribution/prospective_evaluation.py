@@ -191,6 +191,13 @@ def evaluate_locked_claim(payload: Mapping[str, object]) -> dict:
 
     observed_actual = _text(payload.get("observed_actual"), "observed_actual")
     evaluated_at = _aware_iso(payload.get("evaluated_at"), "evaluated_at")
+    forecast_window_end = datetime.fromisoformat(claim["forecast_window"]["end"])
+    if datetime.fromisoformat(evaluated_at) < forecast_window_end:
+        raise _invalid(
+            "prospective evaluation cannot be finalized before forecast_window.end",
+            evaluated_at=evaluated_at,
+            forecast_window_end=forecast_window_end.isoformat(),
+        )
     failure_mode, failure_evidence = _failure_attribution(payload, verification_state)
 
     clean_eligible = (
