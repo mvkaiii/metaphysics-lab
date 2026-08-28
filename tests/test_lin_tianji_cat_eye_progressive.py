@@ -18,7 +18,7 @@ class CatEyeProgressiveIsolationTests(unittest.TestCase):
         self.assertTrue(built["ok"], built)
         exported = dispatch("export_case_markdown", {
             "normalized_natal": built["data"]["normalized_natal"],
-            "subject_id": "subj_cateye000001", "subject_display_name": "Synthetic", "subject_short_id": "CATEYE",
+            "subject_id": "subj_ca7e1e000001", "subject_display_name": "Synthetic", "subject_short_id": "CA7E1E",
             "filename_label": "Synthetic", "generated_at": "2026-08-29T00:00:00+08:00", "last_modified_by": "ai",
         })
         self.assertTrue(exported["ok"], exported)
