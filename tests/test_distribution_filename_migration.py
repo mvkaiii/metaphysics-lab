@@ -49,7 +49,7 @@ class DistributionFilenameMigrationTests(unittest.TestCase):
             for legacy in LEGACY_FILENAMES:
                 self.assertNotIn(legacy, text, str(path))
 
-    def test_distributed_assets_self_reference_current_lowercase_filenames(self):
+    def test_distributed_assets_use_current_names_when_referenced(self):
         rendered = build_ai_distribution.render_distribution(ROOT)
         combined = (
             rendered["metaphysics_core.md"].decode("utf-8")
@@ -57,7 +57,7 @@ class DistributionFilenameMigrationTests(unittest.TestCase):
             + rendered["project_instructions.txt"].decode("utf-8")
         )
         self.assertIn("metaphysics_core.md", combined)
-        self.assertIn("project_instructions.txt", combined)
+        self.assertNotIn("project_instructions.md", combined)
         for legacy in LEGACY_FILENAMES:
             self.assertNotIn(legacy, combined)
 
