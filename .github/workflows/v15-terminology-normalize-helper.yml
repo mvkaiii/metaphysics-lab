@@ -25,7 +25,17 @@ jobs:
           python-version: '3.9'
 
       - name: Apply terminology normalization
-        run: python tools/v15_terminology_normalize.py
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('tools/v15_terminology_normalize.py')
+          text = path.read_text(encoding='utf-8')
+          redundant = '        "tests/fixtures/lin_tianji_cat_eye.v1.json": "tests/fixtures/lin_tianji_prediction_validation.v1.json",\n'
+          if redundant not in text:
+              raise SystemExit('expected normalizer line missing')
+          path.write_text(text.replace(redundant, '', 1), encoding='utf-8')
+          PY
+          python tools/v15_terminology_normalize.py
 
       - name: Verify terminology contract
         run: python -m unittest tests.test_v15_terminology_contract -v
