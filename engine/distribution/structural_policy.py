@@ -22,6 +22,37 @@ BAZI_TEN_GOD_MAPPING = {
     "正印": {"primary_domain": "learning_support", "event_family_support": ("formal_learning", "institutional_support")},
 }
 
+ZIWEI_PALACE_MAPPING = {
+    "命宮": {"primary_domain": "self", "event_family_support": ("identity_direction",)},
+    "兄弟宮": {"primary_domain": "peers", "event_family_support": ("peer_relations",)},
+    "夫妻宮": {"primary_domain": "partnership", "event_family_support": ("close_partnership",)},
+    "子女宮": {"primary_domain": "children_creation", "event_family_support": ("children_creation",)},
+    "財帛宮": {"primary_domain": "finance", "event_family_support": ("income_assets",)},
+    "疾厄宮": {"primary_domain": "health", "event_family_support": ("health_load",)},
+    "遷移宮": {"primary_domain": "mobility_external", "event_family_support": ("movement_external",)},
+    "交友宮": {"primary_domain": "social_network", "event_family_support": ("social_network",)},
+    "官祿宮": {"primary_domain": "career", "event_family_support": ("career_role",)},
+    "田宅宮": {"primary_domain": "home_property", "event_family_support": ("home_property",)},
+    "福德宮": {"primary_domain": "wellbeing", "event_family_support": ("inner_wellbeing",)},
+    "父母宮": {"primary_domain": "family_support", "event_family_support": ("family_support",)},
+}
+
+FLOWING_STAR_CATEGORY_FAMILY = {
+    "soft": "support_or_coordination",
+    "lucun": "resource_accumulation",
+    "tough": "pressure_or_friction",
+    "tianma": "movement_or_change",
+    "flower": "relationship_visibility",
+    "helper": "support_or_resolution",
+}
+
+TRANSFORMATION_FAMILY = {
+    "祿": "resource_or_attraction",
+    "權": "responsibility_or_control",
+    "科": "recognition_or_mediation",
+    "忌": "constraint_or_friction",
+}
+
 RELATION_STRENGTH = {
     "decadal_boundary": "strong",
     "sui_yun_bing_lin": "strong",
