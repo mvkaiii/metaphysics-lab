@@ -1,6 +1,7 @@
 import hashlib
 import importlib.util
 import io
+import json
 import unittest
 import zipfile
 from pathlib import Path
@@ -15,6 +16,20 @@ EXPECTED_ASSETS = (
     "project_instructions.txt",
 )
 EXPECTED_ZIP_MEMBERS = sorted(EXPECTED_ASSETS)
+SANDBOX_SCRIPT = ROOT / "docs" / "release" / "v1.5.0-isolated-sandbox-script.md"
+SANDBOX_FIXTURE = ROOT / "tests" / "fixtures" / "v1.5.0-isolated-sandbox-fixture.v1.json"
+SANDBOX_EVIDENCE = ROOT / "docs" / "release" / "v1.5.0-isolated-sandbox-conversation-validation.md"
+SANDBOX_VALIDATOR = ROOT / "tools" / "validate_v15_sandbox_evidence.py"
+SANDBOX_RUBRICS = (
+    "temporal_ownership_pass",
+    "specificity_pass",
+    "calibration_narrowing_pass",
+    "cutoff_contamination_pass",
+    "experimental_ceiling_pass",
+    "natural_language_pass",
+    "algorithm_disclosure_pass",
+    "strategy_forecast_separation_pass",
+)
 
 
 class V15ReleaseContractTests(unittest.TestCase):
@@ -126,7 +141,76 @@ class V15ReleaseContractTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 module.render_user_package(root)
 
-    def test_release_workflow_publishes_only_after_v15_gates(self):
+    def test_isolated_sandbox_test_kit_is_versioned_fixed_and_private_free(self):
+        self.assertTrue(SANDBOX_SCRIPT.is_file(), "fixed C.2 prompt script is missing")
+        self.assertTrue(SANDBOX_FIXTURE.is_file(), "synthetic C.2 fixture is missing")
+        script = SANDBOX_SCRIPT.read_text(encoding="utf-8")
+        fixture_text = SANDBOX_FIXTURE.read_text(encoding="utf-8")
+        fixture = json.loads(fixture_text)
+
+        self.assertEqual(fixture["fixture_version"], "v1.5.0-isolated-sandbox-fixture.v1")
+        self.assertEqual(fixture["classification"], "synthetic_test_case")
+        self.assertEqual(fixture["subject"]["display_name"], "Mina")
+        self.assertEqual(fixture["target_year"], 2027)
+        self.assertEqual(len(fixture["historical_event_ledger"]), 10)
+        self.assertEqual([row["year"] for row in fixture["historical_event_ledger"]], list(range(2016, 2026)))
+
+        for required in (
+            "script_version: v1.5.0-isolated-sandbox-script.v1",
+            "年度總覽",
+            "月份拆解",
+            "某日",
+            "某時",
+            "已知現實背景",
+            "Historical Calibration",
+            "精確權重",
+            "一定會發生",
+        ) + SANDBOX_RUBRICS:
+            self.assertIn(required, script)
+
+        combined = script + "\n" + fixture_text
+        self.assertNotIn("Kai", combined)
+        self.assertNotIn("1984-03-13", combined)
+        self.assertIn("fictional", combined.lower())
+
+    def test_isolated_sandbox_evidence_template_is_fail_closed_until_real_run(self):
+        self.assertTrue(SANDBOX_EVIDENCE.is_file())
+        text = SANDBOX_EVIDENCE.read_text(encoding="utf-8")
+        self.assertIn("schema_version: v1.5.0-isolated-sandbox-evidence.v1", text)
+        self.assertIn("status: PENDING", text)
+        self.assertNotIn("status: PASS", text)
+        for key in (
+            "tested_release_candidate_sha",
+            "tested_distribution_digest",
+            "tested_user_package_sha256",
+            "script_sha256",
+            "fixture_sha256",
+            "sandbox_run_id",
+            "sandbox_environment",
+            "executed_at",
+        ):
+            self.assertIn(f"{key}: PENDING", text)
+        for rubric in SANDBOX_RUBRICS:
+            self.assertIn(f"- {rubric}: PENDING", text)
+
+    def test_sandbox_evidence_validator_rejects_pending_template(self):
+        self.assertTrue(SANDBOX_VALIDATOR.is_file(), "sandbox evidence validator is missing")
+        spec = importlib.util.spec_from_file_location("validate_v15_sandbox_evidence_test", SANDBOX_VALIDATOR)
+        self.assertIsNotNone(spec)
+        self.assertIsNotNone(spec.loader)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        report = module.validate_evidence(
+            root=ROOT,
+            evidence_path=SANDBOX_EVIDENCE,
+            current_sha="f" * 40,
+        )
+        self.assertEqual(report["status"], "PENDING", report)
+        self.assertFalse(report["release_allowed"], report)
+        self.assertIn("evidence_status_not_pass", report["errors"])
+
+    def test_release_workflow_uses_structured_sandbox_evidence_validator(self):
         workflow = ROOT / ".github" / "workflows" / "release-v1.5.yml"
         self.assertTrue(workflow.is_file(), "v1.5 release workflow is missing")
         text = workflow.read_text(encoding="utf-8")
@@ -136,6 +220,9 @@ class V15ReleaseContractTests(unittest.TestCase):
         self.assertIn("build_release_package.py", text)
         self.assertIn("project_instructions.txt", text)
         self.assertIn("Metaphysics-Lab-v1.5.0-User-Package.zip", text)
+        self.assertIn("validate_v15_sandbox_evidence.py", text)
+        self.assertIn("--current-sha \"$GITHUB_SHA\"", text)
+        self.assertNotIn("grep -q 'status: PASS'", text)
         self.assertIn("gh release create", text)
 
 
