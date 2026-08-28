@@ -2,6 +2,17 @@
 
 這份文件保存正式版本與尚未發布變更的技術紀錄。第一次使用 Metaphysics Lab 請先看 `README.md`；一般使用者版 v1.4.0 發布說明見 `docs/發布說明-v1.4.0.md`。
 
+## Unreleased｜林氏天機 Phase 5 Interpretation Contract
+
+- 新增 `distribution.interpretation_contract` / `build_interpretation_contract`，固定 profile `lin_tianji_interpretation_contract_v1-exp`，`ranking_authority=false`。
+- Phase 3 `lin_tianji_rank_v1-exp` 維持唯一 base ranking authority；Phase 5 不重算 score、rank、maturity、specificity 或事件機率，也不新增或刪除 domain / event-family candidates。
+- Phase 4 Historical Personalization 維持 presentation-only；Phase 5 可驗證 personalization、local windows 與 locked forecast，但不得回寫上游 authority。
+- Local-window boundary 只能保留或降低 forecast specificity；另將 forecast specificity 與 strategy specificity 分開，現實背景只可讓策略更具體。
+- Stage 1 blind / locked forecast 不得被 Stage 2 改寫；known reality 不得被包裝成 prospective hit。
+- 一般使用者輸出以台灣繁體中文自然語言為主；engineering weights、thresholds、digests 與內部 explanation metadata 預設不外露。
+- 新增 deterministic `interpretation_contract_digest`、runtime capability/action 與 modular ↔ portable bundle parity qualification。
+- 本階段不提升任何既有 capability maturity、不新增命理公式，也不把 historical support、activation 或 ordinal modifier 包裝成 probability / accuracy。
+
 ## Unreleased｜林氏天機 Phase 4 Historical Personalization
 
 - 新增 `distribution.historical_personalization`：`implemented / experimental / on_demand`，profile `lin_tianji_historical_personalization_v1-exp`，`ranking_authority=false`。

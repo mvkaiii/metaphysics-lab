@@ -216,6 +216,37 @@ def _personalize_ranking_summary(payload: Mapping[str, object]) -> dict:
     )
 
 
+def _build_interpretation_contract_summary(payload: Mapping[str, object]) -> dict:
+    if not isinstance(payload, Mapping):
+        raise DistributionError(
+            "invalid_interpretation_contract",
+            "build_interpretation_contract payload must be a mapping",
+        )
+    allowed = {
+        "base_ranking",
+        "anchor",
+        "personalization",
+        "local_windows",
+        "locked_forecast",
+    }
+    unknown = sorted(set(payload) - allowed)
+    missing = sorted({"base_ranking", "anchor"} - set(payload))
+    if unknown or missing:
+        raise DistributionError(
+            "invalid_interpretation_contract",
+            "interpretation contract payload fields do not match the fixed contract",
+            {"unknown_fields": unknown, "missing_fields": missing},
+        )
+    from .interpretation_contract import build_interpretation_contract
+    return build_interpretation_contract(
+        payload.get("base_ranking"),
+        payload.get("anchor"),
+        personalization=payload.get("personalization"),
+        local_windows=payload.get("local_windows"),
+        locked_forecast=payload.get("locked_forecast"),
+    )
+
+
 def _export_case(request: Mapping[str, object]) -> dict:
     has_full = request.get("normalized_natal") is not None
     has_partial = request.get("candidate_envelope") is not None
@@ -278,6 +309,8 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
             return _ok(action, _rank_evidence_summary(request))
         if action == "personalize_ranking":
             return _ok(action, _personalize_ranking_summary(request))
+        if action == "build_interpretation_contract":
+            return _ok(action, _build_interpretation_contract_summary(request))
         if action == "prepare_historical_calibration":
             return _ok(action, _prepare_historical_calibration(request))
         if action in ("lock_blind_forecast", "lock_historical_calibration", "finalize_historical_calibration"):

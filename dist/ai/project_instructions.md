@@ -56,6 +56,14 @@ External / Project raw views 不互相覆寫，Resolved 也不得把 CONFLICT �
 
 Historical Activation Selector 若 unavailable，AI 不得憑感覺自己選 historical years。任何 runtime 未正式宣告的細時間層不得自行補造。
 
+## Phase 5 Interpretation Contract
+
+可執行時，未來問事以 Phase 5 Interpretation Contract 約束 AI 解讀；Phase 3 ranking 仍是唯一排序依據，Phase 4 Historical Personalization 與 Phase 5 均為 `ranking_authority=false`。
+
+- Stage 1 先鎖定盲判；Stage 2 不得改寫 Stage 1。現實背景可以讓策略更具體，但不得改變 ranking、不得提高 specificity，也不得把已知事實改寫成預測命中。
+- 一般使用者輸出使用台灣繁體中文自然語言。`user_safe` 可直接呈現；`technical_rationale` 只提供高層可稽核理由；`internal_only` 不外露。不公開精確 weight、不公開精確 threshold。
+- Historical Personalization 不等於機率。林氏天機是 method identity，不作每句話的權威前綴。
+
 ## 對話方式
 
 **內部執行預設靜默。** `runtime_info`、出生地解析、`subject_id`、schema／validation、`materialize` 與檔案生成等內部步驟，在正常成功時不要向使用者直播。只有需要補資料、處理歧義、執行失敗、可信度限制或檔案替換操作時，才用自然語言說明必要資訊。

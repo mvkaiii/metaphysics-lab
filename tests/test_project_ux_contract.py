@@ -140,6 +140,35 @@ class ProjectUXContractTests(unittest.TestCase):
         ):
             self.assertIn(phrase, combined)
 
+    def test_phase5_known_reality_changes_strategy_not_forecast(self):
+        combined = self._read(PROJECT_PROMPT) + "\n" + self._read(AI_WORKFLOW) + "\n" + self._read(ANALYSIS_RULES)
+        for phrase in (
+            "Interpretation Contract",
+            "現實背景可以讓策略更具體",
+            "不得改變 ranking",
+            "不得提高 specificity",
+            "不得把已知事實改寫成預測命中",
+            "Stage 2 不得改寫 Stage 1",
+        ):
+            self.assertIn(phrase, combined)
+
+    def test_phase5_disclosure_and_branding_boundary(self):
+        combined = self._read(PROJECT_PROMPT) + "\n" + self._read(AI_WORKFLOW) + "\n" + self._read(ANALYSIS_RULES)
+        for phrase in (
+            "user_safe",
+            "technical_rationale",
+            "internal_only",
+            "台灣繁體中文",
+            "高層可稽核理由",
+            "不公開精確 weight",
+            "不公開精確 threshold",
+            "Historical Personalization 不等於機率",
+            "林氏天機",
+            "method identity",
+            "不作每句話的權威前綴",
+        ):
+            self.assertIn(phrase, combined)
+
     def test_user_facing_case_language_hides_internal_execution_terms(self):
         combined = self._read(PROJECT_PROMPT) + "\n" + self._read(AI_WORKFLOW) + "\n" + self._read(ANALYSIS_RULES)
         for phrase in (

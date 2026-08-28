@@ -73,6 +73,41 @@ class AIContractDocsTests(unittest.TestCase):
         self.assertIn("替換", workflow)
         self.assertIn("不能執行 Python", workflow)
 
+    def test_phase5_user_safe_disclosure_translates_internal_engineering_terms(self):
+        combined = "\n".join((
+            self._read(CORE_PROMPT),
+            self._read(ANALYSIS_RULES),
+            self._read(AI_WORKFLOW),
+        ))
+        for phrase in (
+            "activation high",
+            "maturity experimental",
+            "specificity ceiling",
+            "eligibility gate",
+            "dependency family",
+            "ordinal score",
+            "historical_modifier_scaled",
+            "ranking_digest",
+            "repo 維護",
+            "technical audit",
+            "內部術語",
+        ):
+            self.assertIn(phrase, combined)
+
+    def test_phase5_technical_governance_preserves_ranking_authority(self):
+        rules = (ROOT / "core" / "命理推導計算規則.md").read_text(encoding="utf-8")
+        for phrase in (
+            "lin_tianji_interpretation_contract_v1-exp",
+            "Phase 3",
+            "唯一 base ranking authority",
+            "ranking_authority=false",
+            "PRIMARY_DOMAIN_DISPLAY_LIMIT = 3",
+            "不得建立第二套 maturity / specificity",
+            "known reality",
+            "不得改寫 prospective hit",
+        ):
+            self.assertIn(phrase, rules)
+
 
 if __name__ == "__main__":
     unittest.main()
