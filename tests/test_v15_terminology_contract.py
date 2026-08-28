@@ -62,6 +62,21 @@ class V15TerminologyContractTests(unittest.TestCase):
             for token in retired:
                 self.assertNotIn(token, text, "%s still contains %r" % (relative, token))
 
+    def test_release_surface_validator_does_not_reuse_sandbox_black_box_symbols(self):
+        for relative in (
+            "tools/run_v15_release_surface_validation.py",
+            "tests/test_v15_release_surface_validation.py",
+        ):
+            text = (ROOT / relative).read_text(encoding="utf-8")
+            self.assertNotIn("black_box", text, relative)
+            self.assertNotIn("black-box", text, relative)
+        runner = (ROOT / "tools" / "run_v15_release_surface_validation.py").read_text(encoding="utf-8")
+        test = (ROOT / "tests" / "test_v15_release_surface_validation.py").read_text(encoding="utf-8")
+        self.assertNotIn('"rubric"', runner)
+        self.assertIn('"checks"', runner)
+        self.assertIn('report["checks"]', test)
+        self.assertIn("test_all_release_surface_checks_pass", test)
+
     def test_current_user_docs_prefer_user_package_and_current_terms(self):
         for relative in ("README.md", "docs/快速開始.md", "docs/安裝到ChatGPT-Project.md"):
             text = (ROOT / relative).read_text(encoding="utf-8")
