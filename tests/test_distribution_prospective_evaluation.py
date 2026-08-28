@@ -123,6 +123,32 @@ class DistributionProspectiveEvaluationTests(unittest.TestCase):
                     evaluation.evaluate_locked_claim(self._payload(tampered))
                 self.assertEqual(caught.exception.code, "invalid_prospective_evaluation")
 
+    def test_evaluation_rejects_scoring_before_forecast_window_closes(self):
+        evaluation = self._evaluation()
+        cases = (
+            {
+                "verification_state": "matched",
+                "observed_actual": "9 月 12 日已出現符合 matched_if 的事件，但預測窗尚未結束。",
+            },
+            {
+                "verification_state": "not_matched",
+                "observed_actual": "截至 9 月 15 日尚未出現事件，但預測窗尚未結束。",
+                "failure_mode": "metaphysical_signal_failure",
+                "failure_evidence": self._failure_evidence(signal_miss=True),
+            },
+        )
+
+        for overrides in cases:
+            with self.subTest(verification_state=overrides["verification_state"]):
+                with self.assertRaises(DistributionError) as caught:
+                    evaluation.evaluate_locked_claim(
+                        self._payload(
+                            evaluated_at="2026-09-15T09:00:00+08:00",
+                            **overrides,
+                        )
+                    )
+                self.assertEqual(caught.exception.code, "invalid_prospective_evaluation")
+
     def test_contaminated_claim_can_be_described_but_is_not_clean_scorable(self):
         evaluation = self._evaluation()
         locked = self._locked(
