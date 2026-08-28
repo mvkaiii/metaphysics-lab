@@ -1,7 +1,7 @@
 """Deterministic Phase 4 historical-personalization boundary.
 
 Phase 4 consumes an immutable Phase 3 ranking snapshot plus finalized,
-machine-readable Historical Calibration records.  It never rewrites the base
+machine-readable Historical Calibration records. It never rewrites the base
 ranking and never interprets free-text event descriptions.
 """
 
@@ -9,16 +9,20 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections import Counter
+from collections import Counter, defaultdict
 from typing import Mapping, Sequence
 
 from .errors import DistributionError
 from .evidence_policy import SPECIFICITY_LEVELS
 from .historical_personalization_policy import (
     BASE_RANKING_POLICY_VERSION,
+    MIN_ELIGIBLE_SAMPLES,
     PERSONALIZATION_PROFILE_VERSION,
+    bounded_modifier,
+    evidence_unit,
     normalize_domain_id,
     normalize_event_family_id,
+    support_class,
 )
 
 
@@ -140,6 +144,7 @@ def _normalize_historical_records(records: object, base_domain_map: Mapping[str,
     normalized = []
     excluded = Counter()
     seen_record_ids = set()
+    authoritative_years = set()
     eligible_count = 0
     control_count = 0
     timing_counts = Counter()
@@ -161,7 +166,12 @@ def _normalize_historical_records(records: object, base_domain_map: Mapping[str,
                     "record_id": record_id,
                     "record_type": record_type,
                     "source_order": source_order,
-                    "eligibility": {"general_score_eligible": False, "reasons": ["unsupported_record_type"]},
+                    "eligibility": {
+                        "general_score_eligible": False,
+                        "score_authority": False,
+                        "domain_score_eligible": False,
+                        "reasons": ["unsupported_record_type"],
+                    },
                 }
             )
             continue
@@ -228,8 +238,35 @@ def _normalize_historical_records(records: object, base_domain_map: Mapping[str,
             control_count += 1
 
         general_score_eligible = not reasons
+        score_authority = False
         if general_score_eligible:
-            eligible_count += 1
+            if predicted_flow_year in authoritative_years:
+                reasons.append("duplicate_reference_year")
+                excluded["duplicate_reference_year"] += 1
+            else:
+                authoritative_years.add(predicted_flow_year)
+                score_authority = True
+                eligible_count += 1
+
+        domain_score_eligible = score_authority
+        if domain_score_eligible:
+            if len(canonical_domains) == 0:
+                domain_score_eligible = False
+                if "unmapped_domain" not in reasons:
+                    reasons.append("unmapped_domain")
+            elif len(canonical_domains) != 1:
+                domain_score_eligible = False
+                reasons.append("ambiguous_multi_domain")
+                excluded["ambiguous_multi_domain"] += 1
+            elif canonical_domains[0] not in base_domain_map:
+                domain_score_eligible = False
+                reasons.append("domain_not_in_base")
+                excluded["domain_not_in_base"] += 1
+            elif domain_status == "unscorable":
+                domain_score_eligible = False
+                reasons.append("unscorable_domain")
+                excluded["unscorable_domain"] += 1
+
         timing_counts[timing_status] += 1
 
         normalized.append(
@@ -254,6 +291,8 @@ def _normalize_historical_records(records: object, base_domain_map: Mapping[str,
                 "boundary_ambiguity": boundary_ambiguity,
                 "eligibility": {
                     "general_score_eligible": general_score_eligible,
+                    "score_authority": score_authority,
+                    "domain_score_eligible": domain_score_eligible,
                     "reasons": reasons,
                     "mapped_to_current_base_domain": any(
                         domain in base_domain_map for domain in canonical_domains
@@ -270,12 +309,27 @@ def _normalize_historical_records(records: object, base_domain_map: Mapping[str,
     }
 
 
+def _aggregate_domain_support(normalized_records):
+    aggregate = defaultdict(lambda: {"support_units": 0, "record_ids": []})
+    for record in normalized_records:
+        eligibility = record.get("eligibility", {})
+        if not eligibility.get("domain_score_eligible"):
+            continue
+        domain = record["canonical_domains"][0]
+        unit = evidence_unit(record["domain_status"])
+        if unit is None:
+            continue
+        aggregate[domain]["support_units"] += unit
+        aggregate[domain]["record_ids"].append(record["record_id"])
+    return aggregate
+
+
 def personalize_ranking(
     base_ranking: Mapping[str, object],
     historical_calibration_status: str,
     historical_records: Sequence[object],
 ) -> dict:
-    """Return the Phase 4 no-op foundation without rewriting Phase 3 truth."""
+    """Apply bounded historical domain personalization after immutable Phase 3 ranking."""
 
     base = _validate_base_ranking(base_ranking)
     if historical_calibration_status not in _CALIBRATION_STATUSES:
@@ -292,19 +346,37 @@ def personalize_ranking(
     }
     historical_source_digest = _canonical_digest(source_identity)
 
+    domain_support = _aggregate_domain_support(normalized)
+    personalization_enabled = historical_calibration_status != "uncalibrated"
+    any_qualified_domain = False
     domains = []
     for row in base["domains"]:
+        domain_id = row["primary_domain"]
+        support = domain_support.get(domain_id, {"support_units": 0, "record_ids": []})
+        record_ids = list(support["record_ids"])
+        eligible_count = len(record_ids)
+        if personalization_enabled:
+            modifier = bounded_modifier(support["support_units"], eligible_count)
+            domain_class = support_class(modifier, eligible_count)
+            supporting_record_ids = record_ids
+            if eligible_count >= MIN_ELIGIBLE_SAMPLES:
+                any_qualified_domain = True
+        else:
+            modifier = 0
+            domain_class = "insufficient"
+            supporting_record_ids = []
+
         base_families = list(row["event_families"])
         domains.append(
             {
-                "primary_domain": row["primary_domain"],
+                "primary_domain": domain_id,
                 "base_rank": row["rank"],
                 "base_ordinal_score_scaled": row["ordinal_score_scaled"],
-                "historical_modifier_scaled": 0,
-                "personalized_ordering_score_scaled": row["ordinal_score_scaled"],
+                "historical_modifier_scaled": modifier,
+                "personalized_ordering_score_scaled": row["ordinal_score_scaled"] + modifier,
                 "personalized_rank": row["rank"],
-                "historical_support_class": "insufficient",
-                "supporting_record_ids": [],
+                "historical_support_class": domain_class,
+                "supporting_record_ids": supporting_record_ids,
                 "base_event_families": base_families,
                 "personalized_event_family_order": list(base_families),
                 "preferred_event_families": [],
@@ -313,15 +385,36 @@ def personalize_ranking(
             }
         )
 
-    no_op_reasons = []
-    if not historical_records:
-        no_op_reasons.append("no_history")
-    if historical_calibration_status == "uncalibrated":
-        no_op_reasons.append("uncalibrated")
-    if historical_records and audit["eligible_record_count"] == 0:
-        no_op_reasons.append("no_eligible_history")
-    if audit["eligible_record_count"] and historical_calibration_status != "uncalibrated":
-        no_op_reasons.append("insufficient_history")
+    if personalization_enabled and any_qualified_domain:
+        domains.sort(
+            key=lambda item: (
+                -item["personalized_ordering_score_scaled"],
+                item["base_rank"],
+                item["primary_domain"],
+            )
+        )
+        for personalized_rank, row in enumerate(domains, start=1):
+            row["personalized_rank"] = personalized_rank
+        personalization_status = "applied"
+        no_op_reasons = []
+    else:
+        domains.sort(key=lambda item: item["base_rank"])
+        for row in domains:
+            row["personalized_rank"] = row["base_rank"]
+        personalization_status = "no_op"
+        no_op_reasons = []
+        if not historical_records:
+            no_op_reasons.append("no_history")
+        if historical_calibration_status == "uncalibrated":
+            no_op_reasons.append("uncalibrated")
+        if historical_records and audit["eligible_record_count"] == 0:
+            no_op_reasons.append("no_eligible_history")
+        if (
+            historical_calibration_status != "uncalibrated"
+            and audit["eligible_record_count"] > 0
+            and not any_qualified_domain
+        ):
+            no_op_reasons.append("insufficient_history")
 
     result = {
         "profile_version": PERSONALIZATION_PROFILE_VERSION,
@@ -330,7 +423,7 @@ def personalize_ranking(
         "base_ranking_digest": base["ranking_digest"],
         "historical_source_digest": historical_source_digest,
         "historical_calibration_status": historical_calibration_status,
-        "personalization_status": "no_op",
+        "personalization_status": personalization_status,
         "no_op_reasons": no_op_reasons,
         "eligible_record_count": audit["eligible_record_count"],
         "excluded_record_counts": audit["excluded_record_counts"],
