@@ -75,6 +75,16 @@ def _aware_iso(value: object, field: str) -> str:
     return parsed.isoformat()
 
 
+def _sha256_digest(value: object, field: str) -> str:
+    if (
+        not isinstance(value, str)
+        or len(value) != 64
+        or any(character not in "0123456789abcdef" for character in value)
+    ):
+        raise _invalid(f"{field} must be a lowercase SHA-256 digest", field=field)
+    return value
+
+
 def _empty_failure_evidence() -> dict:
     return {
         "rule_violation": False,
@@ -230,6 +240,12 @@ def build_method_comparison(records: object) -> dict:
     for index, record in enumerate(records):
         if not isinstance(record, Mapping):
             raise _invalid("comparison record must be a mapping", record_index=index)
+        if record.get("status") != "evaluated":
+            raise _invalid("comparison record must have evaluated status", record_index=index)
+        _sha256_digest(
+            record.get("locked_forecast_digest"),
+            f"records[{index}].locked_forecast_digest",
+        )
 
         claim = record.get("claim")
         evaluation = record.get("evaluation")
