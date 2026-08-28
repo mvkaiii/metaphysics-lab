@@ -105,7 +105,20 @@ class DistributionForecastTests(unittest.TestCase):
         )
         self.assertEqual(
             {feature["scope"] for feature in first["features"]},
-            {"yearly", "monthly", "daily", "hourly"},
+            {"decadal", "yearly", "monthly", "daily", "hourly"},
+        )
+        bazi_decadal = [
+            feature
+            for feature in first["features"]
+            if feature["system"] == "bazi" and feature["scope"] == "decadal"
+        ]
+        self.assertEqual(len(bazi_decadal), 1)
+        self.assertEqual(bazi_decadal[0]["role"], "modifier")
+        self.assertFalse(
+            any(
+                feature["system"] == "ziwei" and feature["scope"] == "decadal"
+                for feature in first["features"]
+            )
         )
 
     def test_late_zi_daily_hourly_use_fine_cycle_boundary_while_calendar_stays_neutral(self):
