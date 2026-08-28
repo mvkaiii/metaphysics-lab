@@ -368,28 +368,78 @@ def _validate_local_windows(value: object, base: Mapping[str, object]) -> list:
         return []
     if isinstance(value, (str, bytes)) or not isinstance(value, Sequence):
         _raise("local_windows must be a sequence")
-    base_domains = {row["primary_domain"] for row in base["domains"]}
+
+    scope_order = ("major_cycle", "decadal", "yearly", "monthly", "daily", "hourly")
+    base_by_domain = {row["primary_domain"]: row for row in base["domains"]}
     normalized = []
     for raw in value:
         if not isinstance(raw, Mapping) or set(raw) != _LOCAL_WINDOW_FIELDS:
             _raise("local window fields do not match the Phase 3 contract")
         row = dict(raw)
         domain = row.get("primary_domain")
-        if domain not in base_domains:
+        if domain not in base_by_domain:
             _raise("local window cannot create a domain absent from base ranking", {"primary_domain": domain})
+
         window_type = row.get("window_type")
         if window_type not in {"local_spike", "active_window"}:
             _raise("unsupported local window type", {"window_type": window_type})
         if row.get("local_spike") is not (window_type == "local_spike"):
             _raise("local_spike flag must agree with window_type")
+
+        parent_digest = row.get("parent_ranking_digest")
+        if (
+            not isinstance(parent_digest, str)
+            or len(parent_digest) != 64
+            or any(character not in "0123456789abcdef" for character in parent_digest)
+        ):
+            _raise("local window parent digest must be a lowercase SHA-256 digest")
         if row.get("child_ranking_digest") != base["ranking_digest"]:
             _raise("local window child digest must match supplied base ranking")
+
+        child_scope = row.get("child_scope")
+        parent_scope = row.get("parent_scope")
+        if child_scope != base["target_scope"]:
+            _raise(
+                "local window child scope must match supplied base ranking target scope",
+                {"child_scope": child_scope, "target_scope": base["target_scope"]},
+            )
+        if parent_scope not in scope_order or child_scope not in scope_order:
+            _raise(
+                "local window scopes are unsupported",
+                {"parent_scope": parent_scope, "child_scope": child_scope},
+            )
+        if scope_order.index(child_scope) <= scope_order.index(parent_scope):
+            _raise(
+                "local window parent scope must be coarser than child scope",
+                {"parent_scope": parent_scope, "child_scope": child_scope},
+            )
+
         source_specificity = row.get("source_allowed_specificity")
         allowed_specificity = row.get("allowed_specificity")
         if source_specificity not in SPECIFICITY_LEVELS or allowed_specificity not in SPECIFICITY_LEVELS:
             _raise("local window specificity is invalid")
+        if source_specificity != base_by_domain[domain]["allowed_specificity"]:
+            _raise(
+                "local window source specificity must match supplied base domain",
+                {
+                    "primary_domain": domain,
+                    "source_allowed_specificity": source_specificity,
+                    "base_allowed_specificity": base_by_domain[domain]["allowed_specificity"],
+                },
+            )
         if not _specificity_is_no_more_permissive(allowed_specificity, source_specificity):
             _raise("local window cannot raise specificity", {"primary_domain": domain})
+
+        specificity_capped = row.get("specificity_capped")
+        if not isinstance(specificity_capped, bool):
+            _raise("local window specificity_capped must be boolean", {"primary_domain": domain})
+        expected_capped = allowed_specificity != source_specificity
+        if specificity_capped is not expected_capped:
+            _raise(
+                "local window specificity_capped must match source and allowed specificity",
+                {"primary_domain": domain},
+            )
+
         normalized.append(row)
     return normalized
 

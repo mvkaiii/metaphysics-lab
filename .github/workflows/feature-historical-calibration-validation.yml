@@ -90,6 +90,7 @@ jobs:
             tests.test_distribution_historical_personalization_runtime \
             tests.test_distribution_historical_personalization_bundle \
             tests.test_distribution_interpretation_contract \
+            tests.test_distribution_interpretation_contract_local_window_validation \
             tests.test_distribution_interpretation_contract_runtime \
             tests.test_distribution_interpretation_contract_bundle \
             tests.test_project_ux_contract \
