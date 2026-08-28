@@ -18,9 +18,9 @@ class DistributionEvidenceAuditRegressionTests(unittest.TestCase):
                 "timezone": "Asia/Taipei",
                 "day_rollover": "23:00 子初換日",
                 "year": "丙午",
-                "month": "丁酉",
-                "day": "庚寅",
-                "time": "癸未",
+                "month": "甲申",
+                "day": "己亥",
+                "time": "壬辰",
                 "solar_term_boundary_caution_minutes": 120,
                 "boundary_warning": None,
                 "ten_gods": {
@@ -29,20 +29,48 @@ class DistributionEvidenceAuditRegressionTests(unittest.TestCase):
                     "day": "偏印",
                     "time": "傷官",
                 },
+                "structural_context": {
+                    "day_master": "辛",
+                    "natal_pillars": {
+                        "year": "甲子",
+                        "month": "戊午",
+                        "day": "辛酉",
+                        "hour": "壬子",
+                    },
+                    "current_decadal": {
+                        "index": 4,
+                        "pillar": "丙寅",
+                        "start_datetime": "2020-01-01T00:00:00+08:00",
+                        "end_datetime": "2030-01-01T00:00:00+08:00",
+                        "ten_god": "正官",
+                    },
+                    "decadal_boundaries_in_flow_year": [],
+                },
             },
             "ziwei": {
                 "decadal": {
                     "scope": "decadal",
                     "reference": decadal_reference,
                     "classification": "Project 推導盤面",
-                    "maturity": "stable",
+                    "maturity": "experimental",
                     "flowing_star_layer": {
+                        "placements": [
+                            {
+                                "base_star": "祿存",
+                                "category": "lucun",
+                                "scope": "decadal",
+                                "target_branch": "午",
+                                "sequence": 1,
+                            }
+                        ],
+                        "validation": "validated",
+                        "maturity": "experimental",
                         "source": {
                             "reference": decadal_reference,
                             "validation_status": "validated",
                             "source_profile": "flowing-star-v1",
                             "rule_version": "1-exp",
-                        }
+                        },
                     },
                     "materialized_flowing_stars": [
                         {
@@ -62,12 +90,23 @@ class DistributionEvidenceAuditRegressionTests(unittest.TestCase):
                     "classification": "Project 推導盤面",
                     "maturity": "experimental",
                     "flowing_star_layer": {
+                        "placements": [
+                            {
+                                "base_star": "天魁",
+                                "category": "soft",
+                                "scope": "yearly",
+                                "target_branch": "子",
+                                "sequence": 1,
+                            }
+                        ],
+                        "validation": "validated",
+                        "maturity": "experimental",
                         "source": {
                             "reference": yearly_reference,
                             "validation_status": "validated",
                             "source_profile": "flowing-star-v1",
                             "rule_version": "1-exp",
-                        }
+                        },
                     },
                     "materialized_flowing_stars": [
                         {
@@ -95,9 +134,9 @@ class DistributionEvidenceAuditRegressionTests(unittest.TestCase):
             },
         }
 
-    def test_bazi_provenance_preserves_detached_raw_source_record(self):
+    def test_bazi_structural_provenance_is_traceable_and_output_is_detached(self):
         source = self.context()
-        before = copy.deepcopy(source["bazi"])
+        before = copy.deepcopy(source)
 
         result = build_evidence_features(source, target_scope="yearly")
         yearly = next(
@@ -106,15 +145,18 @@ class DistributionEvidenceAuditRegressionTests(unittest.TestCase):
             if item["system"] == "bazi" and item["scope"] == "yearly"
         )
 
-        raw_record = yearly["provenance"]["source_record"]
-        self.assertEqual(raw_record, before)
-        self.assertEqual(raw_record["day_rollover"], "23:00 子初換日")
-        self.assertEqual(raw_record["solar_term_boundary_caution_minutes"], 120)
+        provenance = yearly["provenance"]
+        self.assertEqual(provenance["structural_profile"], "lin_tianji_bazi_structural_v1-exp")
+        self.assertEqual(provenance["semantic_profile"], "lin_tianji_domain_v2-exp")
+        self.assertEqual(provenance["source_context_digest"], result["source_context_digest"])
+        self.assertIsInstance(provenance["canonical_relations"], list)
+        self.assertNotIn("source_record", provenance)
 
-        raw_record["day_rollover"] = "mutated-output"
-        self.assertEqual(source["bazi"]["day_rollover"], "23:00 子初換日")
+        yearly["reference_window"]["pillar"] = "mutated-output"
+        self.assertEqual(source, before)
+        self.assertEqual(source["bazi"]["year"], "丙午")
 
-    def test_decadal_evidence_is_modifier_for_yearly_target(self):
+    def test_decadal_ziwei_evidence_is_modifier_for_yearly_target(self):
         result = build_evidence_features(self.context(), target_scope="yearly")
         decadal = [
             item
@@ -126,6 +168,7 @@ class DistributionEvidenceAuditRegressionTests(unittest.TestCase):
         self.assertEqual(decadal[0]["role"], "modifier")
         self.assertEqual(decadal[0]["qualification_status"], "qualified")
         self.assertEqual(decadal[0]["primary_domain"], "career")
+        self.assertIn("resource_accumulation", decadal[0]["event_family_support"])
 
 
 if __name__ == "__main__":
