@@ -13,6 +13,17 @@ _CAPABILITIES = {
         "output_classification": "Forecast governance metadata",
         "ranking_authority": False,
     },
+    "distribution.structural_interpretation": {
+        "id": "distribution.structural_interpretation",
+        "implementation": "implemented",
+        "maturity": "experimental",
+        "routing": "on_demand",
+        "rule_version": "lin_tianji_structural_v1-exp",
+        "module": "engine.distribution.structural_interpretation",
+        "dependencies": ("distribution.prospective_forecast_governance",),
+        "output_classification": "Project 推導盤面",
+        "ranking_authority": False,
+    },
     "distribution.evidence_engine": {
         "id": "distribution.evidence_engine",
         "implementation": "implemented",
