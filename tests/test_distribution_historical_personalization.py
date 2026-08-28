@@ -40,6 +40,13 @@ class HistoricalPersonalizationTests(unittest.TestCase):
             target_scope="yearly",
         )
 
+    def career_only_base(self):
+        return rank_evidence([self.feature("career")], target_scope="yearly")
+
+    @staticmethod
+    def domain(result, domain_id):
+        return next(row for row in result["domains"] if row["primary_domain"] == domain_id)
+
     def record(
         self,
         year,
@@ -81,6 +88,16 @@ class HistoricalPersonalizationTests(unittest.TestCase):
                 "actual_date": "%04d-06-01" % year,
             },
         }
+
+    def missed_record(self, year, **overrides):
+        payload = {
+            "verification_state": "not_matched",
+            "domain_status": "missed",
+            "event_form_status": "missed",
+            "timing_status": "missed",
+        }
+        payload.update(overrides)
+        return self.record(year, **payload)
 
     def test_tampered_base_ranking_digest_fails_closed(self):
         base = self.base_ranking()
@@ -140,6 +157,134 @@ class HistoricalPersonalizationTests(unittest.TestCase):
             self.assertEqual(output_row["historical_modifier_scaled"], 0)
         self.assertEqual(result["personalization_status"], "no_op")
         self.assertTrue(result["personalization_digest"])
+
+    def test_contaminated_cannot_recall_and_control_do_not_score(self):
+        rows = [
+            self.record(2018, blindness="contaminated"),
+            self.record(
+                2019,
+                verification_state="cannot_recall",
+                domain_status="unscorable",
+                event_form_status="unscorable",
+                timing_status="unscorable",
+            ),
+            self.record(2020, role="control"),
+        ]
+        result = personalize_ranking(self.base_ranking(), "basic", rows)
+        self.assertEqual(result["eligible_record_count"], 0)
+        self.assertTrue(all(row["historical_modifier_scaled"] == 0 for row in result["domains"]))
+        self.assertEqual(result["control_audit"]["record_count"], 1)
+        self.assertEqual(result["personalization_status"], "no_op")
+
+    def test_same_year_only_first_valid_blind_high_activation_scores(self):
+        rows = [
+            self.record(2020, record_id="A", blindness="contaminated"),
+            self.record(2020, record_id="B", domain_status="matched"),
+            self.missed_record(2020, record_id="C"),
+            self.record(2021, record_id="D", domain_status="matched"),
+        ]
+        result = personalize_ranking(self.base_ranking(), "basic", rows)
+        career = self.domain(result, "career")
+        self.assertEqual(career["supporting_record_ids"], ["B", "D"])
+        self.assertEqual(result["excluded_record_counts"]["duplicate_reference_year"], 1)
+        self.assertEqual(career["historical_modifier_scaled"], 2)
+
+    def test_multi_domain_aggregate_match_does_not_split_votes(self):
+        rows = [
+            self.record(2020, domains=["career", "finance"]),
+            self.record(2021, domains=["career", "finance"]),
+        ]
+        result = personalize_ranking(self.base_ranking(), "basic", rows)
+        self.assertEqual(result["excluded_record_counts"]["ambiguous_multi_domain"], 2)
+        self.assertTrue(all(row["historical_modifier_scaled"] == 0 for row in result["domains"]))
+        self.assertEqual(result["personalization_status"], "no_op")
+
+    def test_history_cannot_create_domain_absent_from_base(self):
+        rows = [
+            self.record(2020, domains=["health"]),
+            self.record(2021, domains=["health"]),
+        ]
+        result = personalize_ranking(self.career_only_base(), "basic", rows)
+        self.assertEqual([row["primary_domain"] for row in result["domains"]], ["career"])
+        self.assertEqual(result["excluded_record_counts"]["domain_not_in_base"], 2)
+        self.assertEqual(result["personalization_status"], "no_op")
+
+    def test_two_matches_apply_positive_modifier_without_rewriting_base(self):
+        base = self.base_ranking()
+        result = personalize_ranking(
+            base,
+            "basic",
+            [self.record(2020), self.record(2021)],
+        )
+        career = self.domain(result, "career")
+        base_career = self.domain(base, "career")
+        self.assertEqual(career["historical_modifier_scaled"], 2)
+        self.assertEqual(
+            career["personalized_ordering_score_scaled"],
+            base_career["ordinal_score_scaled"] + 2,
+        )
+        self.assertEqual(career["base_ordinal_score_scaled"], base_career["ordinal_score_scaled"])
+        self.assertEqual(career["allowed_specificity"], base_career["allowed_specificity"])
+        self.assertEqual(result["base_ranking_digest"], base["ranking_digest"])
+        self.assertEqual(result["personalization_status"], "applied")
+
+    def test_one_sample_is_insufficient_and_no_op(self):
+        result = personalize_ranking(self.base_ranking(), "basic", [self.record(2020)])
+        career = self.domain(result, "career")
+        self.assertEqual(career["historical_modifier_scaled"], 0)
+        self.assertEqual(career["historical_support_class"], "insufficient")
+        self.assertEqual(result["personalization_status"], "no_op")
+
+    def test_two_misses_apply_negative_modifier_and_many_samples_stay_bounded(self):
+        negative = [self.missed_record(2020), self.missed_record(2021)]
+        result = personalize_ranking(self.base_ranking(), "basic", negative)
+        self.assertEqual(self.domain(result, "career")["historical_modifier_scaled"], -2)
+
+        positive_many = [
+            self.record(1900 + index, record_id="P%03d" % index)
+            for index in range(100)
+        ]
+        negative_many = [
+            self.missed_record(2100 + index, record_id="N%03d" % index)
+            for index in range(100)
+        ]
+        self.assertEqual(
+            self.domain(personalize_ranking(self.base_ranking(), "basic", positive_many), "career")[
+                "historical_modifier_scaled"
+            ],
+            2,
+        )
+        self.assertEqual(
+            self.domain(personalize_ranking(self.base_ranking(), "basic", negative_many), "career")[
+                "historical_modifier_scaled"
+            ],
+            -2,
+        )
+
+    def test_matched_and_missed_are_mixed_without_probability_semantics(self):
+        result = personalize_ranking(
+            self.base_ranking(),
+            "basic",
+            [self.record(2020), self.missed_record(2021)],
+        )
+        career = self.domain(result, "career")
+        self.assertEqual(career["historical_modifier_scaled"], 0)
+        self.assertEqual(career["historical_support_class"], "mixed")
+        self.assertEqual(result["personalization_status"], "applied")
+
+    def test_uncalibrated_forces_no_op_even_with_many_matching_records(self):
+        base = self.base_ranking()
+        result = personalize_ranking(
+            base,
+            "uncalibrated",
+            [self.record(2020), self.record(2021), self.record(2022)],
+        )
+        self.assertEqual(result["personalization_status"], "no_op")
+        self.assertEqual(
+            [row["primary_domain"] for row in result["domains"]],
+            [row["primary_domain"] for row in base["domains"]],
+        )
+        self.assertTrue(all(row["historical_modifier_scaled"] == 0 for row in result["domains"]))
 
 
 if __name__ == "__main__":
