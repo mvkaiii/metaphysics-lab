@@ -210,6 +210,15 @@ class V15ReleaseContractTests(unittest.TestCase):
         self.assertFalse(report["release_allowed"], report)
         self.assertIn("evidence_status_not_pass", report["errors"])
 
+    def test_validation_workflow_artifact_names_follow_checked_out_validation_sha(self):
+        workflow = ROOT / ".github" / "workflows" / "lin-tianji-v1.5-validation.yml"
+        self.assertTrue(workflow.is_file(), "v1.5 validation workflow is missing")
+        text = workflow.read_text(encoding="utf-8")
+        validation_sha_expression = "${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}"
+        self.assertGreaterEqual(text.count(validation_sha_expression), 3)
+        self.assertNotIn("lin-tianji-v1.5-rebuilt-ai-distribution-${{ github.sha }}", text)
+        self.assertNotIn("lin-tianji-v1.5-ai-distribution-${{ github.sha }}", text)
+
     def test_release_workflow_uses_structured_sandbox_evidence_validator(self):
         workflow = ROOT / ".github" / "workflows" / "release-v1.5.yml"
         self.assertTrue(workflow.is_file(), "v1.5 release workflow is missing")
