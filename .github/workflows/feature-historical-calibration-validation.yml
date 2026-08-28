@@ -59,9 +59,20 @@ jobs:
           python tools/build_ai_distribution.py
           python tools/build_ai_distribution.py --check
 
+      - name: Upload rebuilt distribution snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase35-rebuilt-ai-distribution-${{ github.sha }}
+          path: dist/ai/
+          if-no-files-found: error
+
       - name: Historical selector and progressive Case focused tests
         run: |
           python -m unittest \
+            tests.test_bazi_structural_relations \
+            tests.test_distribution_bazi_structural_interpretation \
+            tests.test_distribution_ziwei_structural_interpretation \
+            tests.test_distribution_structural_interpretation \
             tests.test_distribution_evidence_models \
             tests.test_distribution_evidence \
             tests.test_distribution_evidence_audit \
