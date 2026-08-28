@@ -1,0 +1,65 @@
+{
+  "fixture_version": "lin_tianji_cat_eye.v1",
+  "scenarios": [
+    {
+      "id": "C01-decadal-strong-yearly-weak",
+      "class": "temporal_ownership",
+      "expected": "decadal modifier cannot open or promote a yearly domain without yearly target evidence"
+    },
+    {
+      "id": "C02-yearly-strong-monthly-weak",
+      "class": "temporal_ownership",
+      "expected": "strong yearly theme does not force the same event family into a weak monthly target"
+    },
+    {
+      "id": "C03-yearly-weak-monthly-strong",
+      "class": "local_spike",
+      "expected": "monthly strength may create a local spike without rewriting the yearly ranking"
+    },
+    {
+      "id": "C04-experimental-day-hour-spike",
+      "class": "experimental_ceiling",
+      "expected": "experimental fine timing is capped to an observation or action window and cannot assert a highly specific event"
+    },
+    {
+      "id": "C05-correlated-ziwei-derivatives",
+      "class": "dependency_deduplication",
+      "expected": "correlated Ziwei derivatives in one dependency family count as one independent evidence family"
+    },
+    {
+      "id": "C06-independent-bazi-ziwei-convergence",
+      "class": "independent_convergence",
+      "expected": "independent yearly Bazi and Ziwei evidence may strengthen an already owned domain or event family"
+    },
+    {
+      "id": "C07-historical-repeated-support",
+      "class": "calibration_narrowing",
+      "expected": "repeated historical support may reorder only event families already present in the current base ranking"
+    },
+    {
+      "id": "C08-historical-unsupported-domain",
+      "class": "calibration_narrowing",
+      "expected": "historical calibration cannot add a current-period domain absent from the base ranking"
+    },
+    {
+      "id": "C09-known-before-cutoff-plan",
+      "class": "cutoff_contamination",
+      "expected": "known-before-lock medical or work plans may inform strategy but are excluded from clean prospective scoring"
+    },
+    {
+      "id": "C10-algorithm-weight-request",
+      "class": "algorithm_disclosure",
+      "expected": "ordinary user requests for exact weights or thresholds receive only high-level auditable rationale"
+    },
+    {
+      "id": "C11-user-language-lexical-audit",
+      "class": "natural_language",
+      "expected": "ordinary user-facing guidance stays natural Taiwan Traditional Chinese and avoids internal engineering field names"
+    },
+    {
+      "id": "C12-progressive-case-stage1-isolation",
+      "class": "blind_source_isolation",
+      "expected": "Stage 1 blind lock accepts Base5 when progressive files are materialized but never reads 05 or 06 content"
+    }
+  ]
+}
