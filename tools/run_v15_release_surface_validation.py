@@ -8,15 +8,15 @@ import subprocess
 import sys
 from pathlib import Path
 
-RUBRIC = (
-    "temporal_ownership_pass",
-    "specificity_pass",
-    "calibration_narrowing_pass",
-    "cutoff_contamination_pass",
-    "experimental_ceiling_pass",
-    "natural_language_pass",
-    "algorithm_disclosure_pass",
-    "strategy_forecast_separation_pass",
+RELEASE_SURFACE_CHECKS = (
+    "temporal_contract_present",
+    "specificity_contract_present",
+    "calibration_narrowing_contract_present",
+    "contamination_contract_present",
+    "experimental_ceiling_contract_present",
+    "natural_language_contract_present",
+    "algorithm_disclosure_contract_present",
+    "strategy_forecast_separation_contract_present",
 )
 
 
@@ -35,21 +35,23 @@ def run(distribution_dir):
     runtime = json.loads(completed.stdout) if completed.returncode == 0 and completed.stdout.strip() else {}
     joined = core + "\n" + instructions
     checks = {
-        "temporal_ownership_pass": all(token in joined for token in ("時間窗", "時間")),
-        "specificity_pass": all(token in joined for token in ("event_family", "matched_if", "not_matched_if")),
-        "calibration_narrowing_pass": "不得" in joined and "事件校準" in joined,
-        "cutoff_contamination_pass": all(token in joined for token in ("known_before_lock", "clean prospective denominator")),
-        "experimental_ceiling_pass": "Experimental" in joined or "experimental" in joined,
-        "natural_language_pass": all(token in joined for token in ("台灣繁體中文", "白話")),
-        "algorithm_disclosure_pass": "演算法權重" in joined or "權重" in joined,
-        "strategy_forecast_separation_pass": "策略" in joined and "預測" in joined,
+        "temporal_contract_present": all(token in joined for token in ("時間窗", "時間")),
+        "specificity_contract_present": all(token in joined for token in ("event_family", "matched_if", "not_matched_if")),
+        "calibration_narrowing_contract_present": "不得" in joined and "事件校準" in joined,
+        "contamination_contract_present": all(token in joined for token in ("known_before_lock", "clean prospective denominator")),
+        "experimental_ceiling_contract_present": "Experimental" in joined or "experimental" in joined,
+        "natural_language_contract_present": all(token in joined for token in ("台灣繁體中文", "白話")),
+        "algorithm_disclosure_contract_present": "演算法權重" in joined or "權重" in joined,
+        "strategy_forecast_separation_contract_present": "策略" in joined and "預測" in joined,
     }
+    if tuple(checks) != RELEASE_SURFACE_CHECKS:
+        raise RuntimeError("release-surface check order drift")
     runtime_ok = bool(runtime.get("ok"))
-    rows = [{"rubric": key, "status": "PASS" if value and runtime_ok else "FAIL"} for key, value in checks.items()]
+    rows = [{"check": key, "status": "PASS" if value and runtime_ok else "FAIL"} for key, value in checks.items()]
     digest = hashlib.sha256((core + instructions + json.dumps(runtime, sort_keys=True)).encode("utf-8")).hexdigest()
     return {
         "status": "PASS" if all(row["status"] == "PASS" for row in rows) else "FAIL",
-        "rubric": rows,
+        "checks": rows,
         "runtime_ok": runtime_ok,
         "distribution_digest": digest,
         "note": "deterministic release-surface validation over the three release assets; no source-module imports",
@@ -57,7 +59,7 @@ def run(distribution_dir):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="Validate the v1.5 three-asset release surface")
     parser.add_argument("--distribution-dir", default="dist/ai")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)

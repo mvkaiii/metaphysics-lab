@@ -70,14 +70,18 @@ class AIDistributionAcceptanceTests(unittest.TestCase):
         self.assertEqual(caps["historical.activation_selector"]["maturity"], "experimental")
         self.assertEqual(caps["historical.activation_selector"]["routing"], "on_demand")
 
-    def test_formal_release_identity_is_v1_5_0(self):
+    def test_formal_release_remains_v1_4_0_while_v1_5_is_release_candidate(self):
         text = (ROOT / "VERSION.md").read_text(encoding="utf-8")
-        self.assertIn("Metaphysics Lab Core：**v1.5.0**", text)
-        self.assertIn("發布日期：**2026-08-29**", text)
+        formal = text.split("## 目前發行候選", 1)[0]
+        candidate = text.split("## 目前發行候選", 1)[1].split("主要元件：", 1)[0]
+        self.assertIn("Metaphysics Lab Core：**v1.4.0**", formal)
+        self.assertIn("發布日期：**2026-08-26**", formal)
+        self.assertIn("**v1.5.0 Release Candidate**", candidate)
+        self.assertIn("PENDING_FINAL_QUALIFICATION", candidate)
         self.assertIn("AI Distribution Pack", text)
         self.assertIn("AI Distribution Runtime：v1.1-exp", text)
         self.assertIn("release 本身不改變 capability maturity", text)
-        self.assertNotRegex(text, r"最新正式發布[\s\S]{0,100}v1\.3\.0")
+        self.assertNotRegex(formal, r"最新正式發布[\s\S]{0,100}v1\.3\.0")
 
     def test_distribution_contains_no_private_case_payload_files(self):
         self.assertEqual({path.name for path in DIST.iterdir()}, EXPECTED_ARTIFACTS)

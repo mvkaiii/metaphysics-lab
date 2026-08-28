@@ -21,6 +21,11 @@ USER_ARTIFACTS = (
     "metaphysics_core.md",
     "project_instructions.txt",
 )
+V140_USER_ARTIFACTS = (
+    "metaphysics_lab.py",
+    "metaphysics_core.md",
+    "project_instructions.md",
+)
 USER_LABELS = (
     "命理計算程式",
     "命理分析核心規則",
@@ -58,8 +63,9 @@ class AIDistributionDocsTests(unittest.TestCase):
             self.assertIn(label, head)
         self.assertIn("下載區", head)
         self.assertIn("GitHub 顯示為 Assets", head)
-        self.assertIn("不需要下載 Source code", head)
-        self.assertIn("不需要解壓縮", head)
+        self.assertIn("Metaphysics-Lab-v1.5.0-User-Package.zip", head)
+        self.assertIn("解壓縮", head)
+        self.assertIn("不要下載 GitHub 自動產生的 Source code", head)
         self.assertIn(STARTUP, head)
         self.assertIn("較高推理", head)
         self.assertNotIn("Draft PR #160", head)
@@ -154,8 +160,9 @@ class AIDistributionDocsTests(unittest.TestCase):
         text = RELEASE_NOTES.read_text(encoding="utf-8")
         self.assertIn("Metaphysics Lab v1.4.0", text)
         self.assertIn("下載區", text)
-        for name in USER_ARTIFACTS:
+        for name in V140_USER_ARTIFACTS:
             self.assertIn(name, text)
+        self.assertNotIn("project_instructions.txt", text)
         for label in USER_LABELS:
             self.assertIn(label, text)
         self.assertIn("Birth Data first", text)
