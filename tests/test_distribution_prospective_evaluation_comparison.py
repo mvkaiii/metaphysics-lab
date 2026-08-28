@@ -101,6 +101,32 @@ class DistributionProspectiveEvaluationComparisonTests(unittest.TestCase):
             self.assertNotIn("accuracy", method)
             self.assertNotIn("accuracy_rate", method)
 
+    def test_comparison_requires_evaluated_status_and_sha256_lock_digest(self):
+        evaluation = self._evaluation()
+        invalid_records = []
+
+        draft = self._record("lin_tianji_v1.5-exp", "matched")
+        draft["status"] = "draft"
+        invalid_records.append([draft])
+
+        missing_digest = self._record("lin_tianji_v1.5-exp", "matched")
+        missing_digest.pop("locked_forecast_digest")
+        invalid_records.append([missing_digest])
+
+        malformed_digest = self._record("lin_tianji_v1.5-exp", "matched")
+        malformed_digest["locked_forecast_digest"] = "not-a-sha256"
+        invalid_records.append([malformed_digest])
+
+        uppercase_digest = self._record("lin_tianji_v1.5-exp", "matched")
+        uppercase_digest["locked_forecast_digest"] = "A" * 64
+        invalid_records.append([uppercase_digest])
+
+        for records in invalid_records:
+            with self.subTest(records=records):
+                with self.assertRaises(DistributionError) as caught:
+                    evaluation.build_method_comparison(records)
+                self.assertEqual(caught.exception.code, "invalid_prospective_evaluation")
+
     def test_comparison_rejects_malformed_records_fail_closed(self):
         evaluation = self._evaluation()
         invalid_records = (
