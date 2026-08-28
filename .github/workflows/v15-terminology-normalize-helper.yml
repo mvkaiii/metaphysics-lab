@@ -65,8 +65,8 @@ jobs:
 
       - name: Remove one-shot normalization helper
         run: |
-          git rm .github/workflows/v15-terminology-normalize-helper.yml
-          git rm tools/v15_terminology_normalize.py
+          git rm -f .github/workflows/v15-terminology-normalize-helper.yml
+          git rm -f tools/v15_terminology_normalize.py
 
       - name: Commit normalized release candidate
         run: |
