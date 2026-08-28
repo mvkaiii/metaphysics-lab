@@ -47,10 +47,12 @@ jobs:
       - name: Run v1.5 發行面驗證
         run: python tools/run_v15_release_surface_validation.py --json
 
-      - name: Require isolated sandbox conversation validation evidence
+      - name: Validate isolated sandbox conversation evidence
         run: |
-          test -f docs/release/v1.5.0-isolated-sandbox-conversation-validation.md
-          grep -q 'status: PASS' docs/release/v1.5.0-isolated-sandbox-conversation-validation.md
+          python tools/validate_v15_sandbox_evidence.py \
+            --evidence docs/release/v1.5.0-isolated-sandbox-conversation-validation.md \
+            --current-sha "$GITHUB_SHA" \
+            --json
 
       - name: Full repository regression
         run: python -m unittest discover -s tests -p 'test_*.py'
