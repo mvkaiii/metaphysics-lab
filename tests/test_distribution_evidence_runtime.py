@@ -32,6 +32,95 @@ def _feature(feature_id, **overrides):
     return payload
 
 
+def _structural_context():
+    return {
+        "bazi": {
+            "engine": "Project Bazi Calendar Engine",
+            "version": "1.0.0",
+            "classification": "Project 推導盤面",
+            "reference_engine": "synthetic",
+            "datetime": "2026-09-15T14:30:00+08:00",
+            "timezone": "Asia/Taipei",
+            "year": "甲子",
+            "month": "乙酉",
+            "day": "丁亥",
+            "time": "丁未",
+            "ten_gods": {
+                "year": "正官",
+                "month": "偏財",
+                "day": "正官",
+                "time": "正印",
+            },
+            "boundary_warning": None,
+            "structural_context": {
+                "day_master": "辛",
+                "natal_pillars": {
+                    "year": "甲子",
+                    "month": "戊午",
+                    "day": "辛酉",
+                    "hour": "壬子",
+                },
+                "current_decadal": {
+                    "index": 4,
+                    "pillar": "丙寅",
+                    "start_datetime": "2020-01-01T00:00:00+08:00",
+                    "end_datetime": "2030-01-01T00:00:00+08:00",
+                    "ten_god": "正官",
+                },
+                "decadal_boundaries_in_flow_year": [],
+            },
+        },
+        "calendar_context_summary": {},
+        "ziwei": {
+            "yearly": {
+                "scope": "yearly",
+                "reference": "甲子",
+                "classification": "Project 推導盤面",
+                "maturity": "experimental",
+                "flowing_star_layer": {
+                    "placements": [
+                        {
+                            "base_star": "天魁",
+                            "category": "soft",
+                            "scope": "yearly",
+                            "target_branch": "午",
+                            "sequence": 1,
+                        }
+                    ],
+                    "validation": "validated",
+                    "maturity": "experimental",
+                    "source": {
+                        "reference": "甲子",
+                        "validation_status": "validated",
+                    },
+                },
+                "materialized_flowing_stars": [
+                    {
+                        "base_star": "天魁",
+                        "display_name": "流天魁",
+                        "target_branch": "午",
+                        "natal_palace": "官祿宮",
+                        "scope_palace": "官祿宮",
+                        "scope": "yearly",
+                        "source_reference": "甲子",
+                    }
+                ],
+                "source_resolution_count": 1,
+            }
+        },
+        "provenance": {
+            "classification": "Project 推導盤面",
+            "orchestrated_by": "synthetic-runtime-test",
+        },
+        "confidence_constraints": {
+            "blocking_conflict_count": 0,
+            "project_natal_maturity": "stable",
+            "ziwei_requested_scopes": ["yearly"],
+            "experimental_time_layers_must_be_downweighted": True,
+        },
+    }
+
+
 def _bundle_request(action, payload):
     request = json.dumps({"action": action, "payload": payload}, ensure_ascii=False)
     completed = subprocess.run(
@@ -47,6 +136,18 @@ def _bundle_request(action, payload):
 
 
 class EvidenceRuntimeActionTests(unittest.TestCase):
+    def test_structural_interpretation_is_experimental_on_demand_portable_action(self):
+        info = dispatch("runtime_info", {})
+        self.assertTrue(info["ok"], info)
+        self.assertIn("interpret_structural_evidence", info["data"]["supported_actions"])
+        capability = info["data"]["capabilities"]["distribution.structural_interpretation"]
+        self.assertEqual(capability["implementation"], "implemented")
+        self.assertEqual(capability["maturity"], "experimental")
+        self.assertEqual(capability["routing"], "on_demand")
+        self.assertEqual(capability["rule_version"], "lin_tianji_structural_v1-exp")
+        self.assertFalse(capability["ranking_authority"])
+        self.assertFalse(should_run_by_default("distribution.structural_interpretation"))
+
     def test_rank_evidence_is_experimental_on_demand_portable_action(self):
         info = dispatch("runtime_info", {})
         self.assertTrue(info["ok"], info)
@@ -200,6 +301,21 @@ class EvidenceRuntimeActionTests(unittest.TestCase):
             json.dumps(parent, ensure_ascii=False, sort_keys=True, separators=(",", ":")),
             parent_bytes,
         )
+
+    def test_portable_bundle_matches_modular_structural_interpretation(self):
+        payload = {
+            "forecast_context": _structural_context(),
+            "target_scope": "yearly",
+        }
+        modular = dispatch("interpret_structural_evidence", payload)
+        bundled = _bundle_request("interpret_structural_evidence", payload)
+        self.assertEqual(bundled, modular)
+        self.assertTrue(modular["ok"], modular)
+        self.assertEqual(
+            modular["data"]["mapping_profile_version"],
+            "lin_tianji_domain_v2-exp",
+        )
+        self.assertTrue(modular["data"]["features"])
 
     def test_portable_bundle_matches_modular_ranked_evidence_summary(self):
         payload = {
