@@ -68,6 +68,17 @@ class DistributionProspectiveEvaluationTests(unittest.TestCase):
         payload.update(overrides)
         return payload
 
+    @staticmethod
+    def _failure_evidence(**overrides):
+        evidence = {
+            "rule_violation": False,
+            "specification_ambiguity": False,
+            "algorithm_mismatch": False,
+            "signal_miss": False,
+        }
+        evidence.update(overrides)
+        return evidence
+
     def test_evaluation_preserves_locked_claim_and_appends_explicit_result(self):
         evaluation = self._evaluation()
         locked = self._locked()
@@ -148,10 +159,92 @@ class DistributionProspectiveEvaluationTests(unittest.TestCase):
             self._payload(
                 verification_state="not_matched",
                 observed_actual="雖然發生別的工作事件，但 matched_if 定義的正式職責變動沒有發生。",
+                failure_mode="metaphysical_signal_failure",
+                failure_evidence=self._failure_evidence(signal_miss=True),
             )
         )
 
         self.assertEqual(result["evaluation"]["verification_state"], "not_matched")
+        self.assertEqual(result["evaluation"]["failure_mode"], "metaphysical_signal_failure")
+        self.assertTrue(result["evaluation"]["failure_evidence"]["signal_miss"])
+
+    def test_normal_matched_or_partial_evaluation_preserves_none_failure_mode(self):
+        evaluation = self._evaluation()
+
+        for verification_state in ("matched", "partial"):
+            with self.subTest(verification_state=verification_state):
+                result = evaluation.evaluate_locked_claim(
+                    self._payload(verification_state=verification_state)
+                )
+                self.assertEqual(result["evaluation"]["failure_mode"], "none")
+                self.assertEqual(
+                    result["evaluation"]["failure_evidence"],
+                    self._failure_evidence(),
+                )
+
+    def test_not_matched_requires_explicit_failure_mode(self):
+        evaluation = self._evaluation()
+
+        with self.assertRaises(DistributionError) as caught:
+            evaluation.evaluate_locked_claim(
+                self._payload(
+                    verification_state="not_matched",
+                    observed_actual="預測邊界內沒有發生正式職責變動。",
+                )
+            )
+
+        self.assertEqual(caught.exception.code, "invalid_prospective_evaluation")
+
+    def test_failure_mode_requires_matching_evidence_category(self):
+        evaluation = self._evaluation()
+        cases = (
+            ("ai_compliance_failure", self._failure_evidence(rule_violation=True)),
+            ("specification_ambiguity", self._failure_evidence(specification_ambiguity=True)),
+            ("deterministic_or_algorithm_failure", self._failure_evidence(algorithm_mismatch=True)),
+            ("metaphysical_signal_failure", self._failure_evidence(signal_miss=True)),
+        )
+
+        for failure_mode, failure_evidence in cases:
+            with self.subTest(failure_mode=failure_mode):
+                result = evaluation.evaluate_locked_claim(
+                    self._payload(
+                        verification_state="not_matched",
+                        observed_actual="人工審核確認此筆屬於明確失敗案例。",
+                        failure_mode=failure_mode,
+                        failure_evidence=failure_evidence,
+                    )
+                )
+                self.assertEqual(result["evaluation"]["failure_mode"], failure_mode)
+                self.assertEqual(result["evaluation"]["failure_evidence"], failure_evidence)
+
+    def test_failure_mode_rejects_unsupported_or_mismatched_evidence(self):
+        evaluation = self._evaluation()
+        invalid_cases = (
+            {
+                "failure_mode": "interpretation_failure",
+                "failure_evidence": self._failure_evidence(rule_violation=True),
+            },
+            {
+                "failure_mode": "metaphysical_signal_failure",
+                "failure_evidence": self._failure_evidence(algorithm_mismatch=True),
+            },
+            {
+                "failure_mode": "ai_compliance_failure",
+                "failure_evidence": self._failure_evidence(rule_violation=True, signal_miss=True),
+            },
+        )
+
+        for overrides in invalid_cases:
+            with self.subTest(overrides=overrides):
+                with self.assertRaises(DistributionError) as caught:
+                    evaluation.evaluate_locked_claim(
+                        self._payload(
+                            verification_state="not_matched",
+                            observed_actual="人工審核確認失敗。",
+                            **overrides,
+                        )
+                    )
+                self.assertEqual(caught.exception.code, "invalid_prospective_evaluation")
 
 
 if __name__ == "__main__":
