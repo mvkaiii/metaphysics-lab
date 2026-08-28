@@ -1,0 +1,53 @@
+name: Phase35 Generated Artifact Bridge
+
+on:
+  push:
+    branches:
+      - feature/lin-tianji-phase3.5-cold-start-structural-interpretation
+
+permissions:
+  contents: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact feature SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Rebuild exact generated distribution
+        run: |
+          python tools/build_ai_distribution.py
+          python tools/build_ai_distribution.py --check
+
+      - name: Publish generated tree to temporary ref
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp_index="$(mktemp)"
+          trap 'rm -f "$tmp_index"' EXIT
+          export GIT_INDEX_FILE="$tmp_index"
+          git read-tree "${GITHUB_SHA}^{tree}"
+          git add dist/ai/metaphysics_lab.py dist/ai/metaphysics_core.md dist/ai/project_instructions.md
+          git rm --cached --ignore-unmatch .github/workflows/phase35-generated-artifact-bridge.yml
+          tree_sha="$(git write-tree)"
+          commit_sha="$(printf '%s\n' 'build: stage phase35 generated artifacts' | git commit-tree "$tree_sha" -p "$GITHUB_SHA")"
+          temp_ref="phase35-generated-snapshot-${GITHUB_SHA:0:12}"
+          git push origin "$commit_sha:refs/heads/$temp_ref"
+          echo "temp_ref=$temp_ref"
+          echo "tree_sha=$tree_sha"
+          echo "commit_sha=$commit_sha"
