@@ -94,6 +94,20 @@ class AIContractDocsTests(unittest.TestCase):
         ):
             self.assertIn(phrase, combined)
 
+    def test_phase5_technical_governance_preserves_ranking_authority(self):
+        rules = (ROOT / "core" / "命理推導計算規則.md").read_text(encoding="utf-8")
+        for phrase in (
+            "lin_tianji_interpretation_contract_v1-exp",
+            "Phase 3",
+            "唯一 base ranking authority",
+            "ranking_authority=false",
+            "PRIMARY_DOMAIN_DISPLAY_LIMIT = 3",
+            "不得建立第二套 maturity / specificity",
+            "known reality",
+            "不得改寫 prospective hit",
+        ):
+            self.assertIn(phrase, rules)
+
 
 if __name__ == "__main__":
     unittest.main()
