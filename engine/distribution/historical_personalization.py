@@ -170,6 +170,7 @@ def _normalize_historical_records(records: object, base_domain_map: Mapping[str,
                         "general_score_eligible": False,
                         "score_authority": False,
                         "domain_score_eligible": False,
+                        "event_family_score_eligible": False,
                         "reasons": ["unsupported_record_type"],
                     },
                 }
@@ -248,6 +249,12 @@ def _normalize_historical_records(records: object, base_domain_map: Mapping[str,
                 score_authority = True
                 eligible_count += 1
 
+        single_base_domain = (
+            score_authority
+            and len(canonical_domains) == 1
+            and canonical_domains[0] in base_domain_map
+        )
+
         domain_score_eligible = score_authority
         if domain_score_eligible:
             if len(canonical_domains) == 0:
@@ -266,6 +273,28 @@ def _normalize_historical_records(records: object, base_domain_map: Mapping[str,
                 domain_score_eligible = False
                 reasons.append("unscorable_domain")
                 excluded["unscorable_domain"] += 1
+
+        event_family_score_eligible = single_base_domain
+        if event_family_score_eligible:
+            if len(canonical_families) == 0:
+                event_family_score_eligible = False
+                if "unmapped_event_family" not in reasons:
+                    reasons.append("unmapped_event_family")
+            elif len(canonical_families) != 1:
+                event_family_score_eligible = False
+                reasons.append("ambiguous_multi_family")
+                excluded["ambiguous_multi_family"] += 1
+            else:
+                domain_id = canonical_domains[0]
+                base_families = base_domain_map[domain_id]["event_families"]
+                if canonical_families[0] not in base_families:
+                    event_family_score_eligible = False
+                    reasons.append("event_family_not_in_base")
+                    excluded["event_family_not_in_base"] += 1
+                elif event_form_status == "unscorable":
+                    event_family_score_eligible = False
+                    reasons.append("unscorable_event_family")
+                    excluded["unscorable_event_family"] += 1
 
         timing_counts[timing_status] += 1
 
@@ -293,6 +322,7 @@ def _normalize_historical_records(records: object, base_domain_map: Mapping[str,
                     "general_score_eligible": general_score_eligible,
                     "score_authority": score_authority,
                     "domain_score_eligible": domain_score_eligible,
+                    "event_family_score_eligible": event_family_score_eligible,
                     "reasons": reasons,
                     "mapped_to_current_base_domain": any(
                         domain in base_domain_map for domain in canonical_domains
@@ -324,12 +354,49 @@ def _aggregate_domain_support(normalized_records):
     return aggregate
 
 
+def _aggregate_event_family_support(normalized_records):
+    aggregate = defaultdict(lambda: {"support_units": 0, "record_ids": []})
+    for record in normalized_records:
+        eligibility = record.get("eligibility", {})
+        if not eligibility.get("event_family_score_eligible"):
+            continue
+        domain = record["canonical_domains"][0]
+        family = record["canonical_event_families"][0]
+        unit = evidence_unit(record["event_form_status"])
+        if unit is None:
+            continue
+        aggregate[(domain, family)]["support_units"] += unit
+        aggregate[(domain, family)]["record_ids"].append(record["record_id"])
+    return aggregate
+
+
+def _personalize_event_families(domain_id, base_families, family_support, enabled):
+    if not enabled:
+        return list(base_families), [], [], False
+
+    family_rows = []
+    any_qualified = False
+    for base_index, family in enumerate(base_families):
+        support = family_support.get((domain_id, family), {"support_units": 0, "record_ids": []})
+        eligible_count = len(support["record_ids"])
+        modifier = bounded_modifier(support["support_units"], eligible_count)
+        if eligible_count >= MIN_ELIGIBLE_SAMPLES:
+            any_qualified = True
+        family_rows.append((family, modifier, base_index))
+
+    family_rows.sort(key=lambda item: (-item[1], item[2], item[0]))
+    order = [item[0] for item in family_rows]
+    preferred = [item[0] for item in family_rows if item[1] > 0]
+    deprioritized = [item[0] for item in family_rows if item[1] < 0]
+    return order, preferred, deprioritized, any_qualified
+
+
 def personalize_ranking(
     base_ranking: Mapping[str, object],
     historical_calibration_status: str,
     historical_records: Sequence[object],
 ) -> dict:
-    """Apply bounded historical domain personalization after immutable Phase 3 ranking."""
+    """Apply bounded historical personalization after immutable Phase 3 ranking."""
 
     base = _validate_base_ranking(base_ranking)
     if historical_calibration_status not in _CALIBRATION_STATUSES:
@@ -347,8 +414,10 @@ def personalize_ranking(
     historical_source_digest = _canonical_digest(source_identity)
 
     domain_support = _aggregate_domain_support(normalized)
+    family_support = _aggregate_event_family_support(normalized)
     personalization_enabled = historical_calibration_status != "uncalibrated"
     any_qualified_domain = False
+    any_qualified_family = False
     domains = []
     for row in base["domains"]:
         domain_id = row["primary_domain"]
@@ -367,6 +436,20 @@ def personalize_ranking(
             supporting_record_ids = []
 
         base_families = list(row["event_families"])
+        (
+            personalized_family_order,
+            preferred_families,
+            deprioritized_families,
+            qualified_family,
+        ) = _personalize_event_families(
+            domain_id,
+            base_families,
+            family_support,
+            personalization_enabled,
+        )
+        if qualified_family:
+            any_qualified_family = True
+
         domains.append(
             {
                 "primary_domain": domain_id,
@@ -378,14 +461,17 @@ def personalize_ranking(
                 "historical_support_class": domain_class,
                 "supporting_record_ids": supporting_record_ids,
                 "base_event_families": base_families,
-                "personalized_event_family_order": list(base_families),
-                "preferred_event_families": [],
-                "deprioritized_event_families": [],
+                "personalized_event_family_order": personalized_family_order,
+                "preferred_event_families": preferred_families,
+                "deprioritized_event_families": deprioritized_families,
                 "allowed_specificity": row["allowed_specificity"],
             }
         )
 
-    if personalization_enabled and any_qualified_domain:
+    personalization_applied = personalization_enabled and (
+        any_qualified_domain or any_qualified_family
+    )
+    if personalization_applied:
         domains.sort(
             key=lambda item: (
                 -item["personalized_ordering_score_scaled"],
@@ -413,6 +499,7 @@ def personalize_ranking(
             historical_calibration_status != "uncalibrated"
             and audit["eligible_record_count"] > 0
             and not any_qualified_domain
+            and not any_qualified_family
         ):
             no_op_reasons.append("insufficient_history")
 
