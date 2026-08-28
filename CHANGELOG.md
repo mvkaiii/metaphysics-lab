@@ -2,6 +2,19 @@
 
 這份文件保存正式版本與尚未發布變更的技術紀錄。第一次使用 Metaphysics Lab 請先看 `README.md`；一般使用者版 v1.4.0 發布說明見 `docs/發布說明-v1.4.0.md`。
 
+## Unreleased｜林氏天機 Phase 4 Historical Personalization
+
+- 新增 `distribution.historical_personalization`：`implemented / experimental / on_demand`，profile `lin_tianji_historical_personalization_v1-exp`，`ranking_authority=false`。
+- Phase 4 僅在 Phase 3 `lin_tianji_rank_v1-exp` base ranking 完成後運作；不得修改 `EvidenceFeature`、base ordinal score、specificity ceiling 或 `base_ranking_digest`。
+- 歷史來源限定為 finalized Historical Calibration 的結構化欄位；實際事件自由文字、盲判 hypothesis、研究筆記不進 scoring，也不進 personalization source identity / digest。
+- Domain personalization 只可重排 Phase 3 已打開的 domain；history 不得建立新 domain。每個 domain 至少 2 筆 eligible samples 才啟動，ordinal modifier 固定 bounded `-2..+2`。
+- Event-family personalization 只可在該 domain 的既有 base candidates 內重排；不得新增或刪除 family，也不得提高 `allowed_specificity`。
+- 同一 flow year 只讓第一筆有效 blind high-activation record 投票；contaminated、cannot-recall、control、multi-domain / multi-family aggregate、unmapped 與 unscorable material 不灌票。
+- 無歷史、未校準或資料不足時保持 deterministic no-op，完整退回 Phase 3.5 + Phase 3 cold-start ordering。
+- Runtime 新增 `personalize_ranking` action，payload 採 closed contract；未知 training/research 欄位 fail closed。
+- 新增 modular ↔ portable bundle parity tests，鎖定 `base_ranking_digest` 與 `personalization_digest` 一致性。
+- 本階段不提升任何既有 capability maturity，也不把 historical match 包裝成事件機率或預測準確率。
+
 ## v1.4.0｜2026-08-26
 
 v1.4.0 正式收斂 v1.3.0 之後已合併到 `main` 的 Project Contract / Case Schema 1.1、Portable Offline Natal、Historical Blind Calibration、Bazi / Ziwei 細時間 qualification 與一般使用者語言邊界。**本版不因發版提升任何既有 capability maturity，也不改寫歷史 v1.3.0 qualification snapshot。**
