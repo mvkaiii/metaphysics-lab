@@ -1,5 +1,5 @@
 {
-  "fixture_version": "lin_tianji_cat_eye.v1",
+  "fixture_version": "lin_tianji_prediction_validation.v1",
   "scenarios": [
     {
       "id": "C01-decadal-strong-yearly-weak",

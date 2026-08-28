@@ -25,7 +25,7 @@ def run(distribution_dir):
     expected = {"metaphysics_lab.py", "metaphysics_core.md", "project_instructions.txt"}
     actual = {path.name for path in root.iterdir() if path.is_file()}
     if actual != expected:
-        raise ValueError("black-box release asset set mismatch")
+        raise ValueError("release-surface asset set mismatch")
     core = (root / "metaphysics_core.md").read_text(encoding="utf-8")
     instructions = (root / "project_instructions.txt").read_text(encoding="utf-8")
     completed = subprocess.run(
@@ -52,7 +52,7 @@ def run(distribution_dir):
         "rubric": rows,
         "runtime_ok": runtime_ok,
         "distribution_digest": digest,
-        "note": "deterministic black-box contract harness over the three release assets; no source-module imports",
+        "note": "deterministic release-surface validation over the three release assets; no source-module imports",
     }
 
 

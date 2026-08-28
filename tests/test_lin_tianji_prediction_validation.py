@@ -7,8 +7,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-FIXTURE = ROOT / "tests" / "fixtures" / "lin_tianji_cat_eye.v1.json"
-RUNNER = ROOT / "tools" / "run_lin_tianji_cat_eye.py"
+FIXTURE = ROOT / "tests" / "fixtures" / "lin_tianji_prediction_validation.v1.json"
+RUNNER = ROOT / "tools" / "run_lin_tianji_prediction_validation.py"
 EXPECTED_IDS = [
     "C01-decadal-strong-yearly-weak",
     "C02-yearly-strong-monthly-weak",
@@ -27,19 +27,19 @@ EXPECTED_IDS = [
 
 def load_runner():
     if not RUNNER.is_file():
-        raise AssertionError("cat-eye runner is missing")
-    spec = importlib.util.spec_from_file_location("lin_tianji_cat_eye_test_runner", RUNNER)
+        raise AssertionError("prediction-validation runner is missing")
+    spec = importlib.util.spec_from_file_location("lin_tianji_prediction_validation_test_runner", RUNNER)
     if spec is None or spec.loader is None:
-        raise AssertionError("cat-eye runner cannot be imported")
+        raise AssertionError("prediction-validation runner cannot be imported")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
 
 
-class LinTianJiCatEyeTests(unittest.TestCase):
+class LinTianJiPredictionValidationTests(unittest.TestCase):
     def test_fixture_contains_exact_required_scenario_classes(self):
         payload = json.loads(FIXTURE.read_text(encoding="utf-8"))
-        self.assertEqual(payload["fixture_version"], "lin_tianji_cat_eye.v1")
+        self.assertEqual(payload["fixture_version"], "lin_tianji_prediction_validation.v1")
         self.assertEqual([row["id"] for row in payload["scenarios"]], EXPECTED_IDS)
         self.assertEqual(len(payload["scenarios"]), 12)
         serialized = json.dumps(payload, ensure_ascii=False).lower()
@@ -68,7 +68,7 @@ class LinTianJiCatEyeTests(unittest.TestCase):
         )
         self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
         report = json.loads(completed.stdout)
-        self.assertEqual(report["fixture_version"], "lin_tianji_cat_eye.v1")
+        self.assertEqual(report["fixture_version"], "lin_tianji_prediction_validation.v1")
         self.assertEqual(report["status"], "PASS")
         self.assertEqual(report["scenario_count"], 12)
         self.assertEqual(report["failed_count"], 0)

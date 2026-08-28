@@ -41,11 +41,16 @@ jobs:
           python tools/build_ai_distribution.py
           python tools/build_ai_distribution.py --check
 
-      - name: Run 林氏天機 deterministic cat-eye
-        run: python tools/run_lin_tianji_cat_eye.py --json
+      - name: Run 林氏天機預測驗證
+        run: python tools/run_lin_tianji_prediction_validation.py --json
 
-      - name: Run three-asset black-box contract gate
-        run: python tools/run_v15_sandbox_black_box.py --json
+      - name: Run v1.5 發行面驗證
+        run: python tools/run_v15_release_surface_validation.py --json
+
+      - name: Require isolated sandbox conversation validation evidence
+        run: |
+          test -f docs/release/v1.5.0-isolated-sandbox-conversation-validation.md
+          grep -q 'status: PASS' docs/release/v1.5.0-isolated-sandbox-conversation-validation.md
 
       - name: Full repository regression
         run: python -m unittest discover -s tests -p 'test_*.py'

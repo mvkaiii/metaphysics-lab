@@ -25,7 +25,7 @@ SCENARIO_TESTS = {
     "C09-known-before-cutoff-plan": ("tests.test_distribution_prospective.DistributionProspectiveClaimTests.test_known_before_lock_may_be_preserved_only_as_excluded_context", "lin_tianji_v1.5-exp"),
     "C10-algorithm-weight-request": ("tests.test_project_ux_contract.ProjectUXContractTests.test_phase5_disclosure_and_branding_boundary", "lin_tianji_interpretation_contract_v1-exp"),
     "C11-user-language-lexical-audit": ("tests.test_project_ux_contract.ProjectUXContractTests.test_user_facing_prose_uses_taiwan_traditional_chinese_without_unnecessary_english", "lin_tianji_interpretation_contract_v1-exp"),
-    "C12-progressive-case-stage1-isolation": ("tests.test_lin_tianji_cat_eye_progressive.CatEyeProgressiveIsolationTests.test_05_and_06_materialized_but_stage1_reads_base_only", "blind-source-v1.1"),
+    "C12-progressive-case-stage1-isolation": ("tests.test_lin_tianji_prediction_validation_progressive.PredictionValidationProgressiveIsolationTests.test_05_and_06_materialized_but_stage1_reads_base_only", "blind-source-v1.1"),
 }
 
 
@@ -53,11 +53,11 @@ def _run_test(test_id):
 def run_scenarios(fixture_path):
     payload = json.loads(Path(fixture_path).read_text(encoding="utf-8"))
     rows = payload.get("scenarios")
-    if payload.get("fixture_version") != "lin_tianji_cat_eye.v1" or not isinstance(rows, list):
-        raise ValueError("unsupported cat-eye fixture")
+    if payload.get("fixture_version") != "lin_tianji_prediction_validation.v1" or not isinstance(rows, list):
+        raise ValueError("unsupported prediction-validation fixture")
     ids = [row.get("id") for row in rows]
     if ids != list(SCENARIO_TESTS):
-        raise ValueError("cat-eye scenario set/order does not match the fixed v1 matrix")
+        raise ValueError("prediction-validation scenario set/order does not match the fixed v1 matrix")
     results = []
     for row in rows:
         scenario_id = row["id"]
@@ -75,8 +75,8 @@ def run_scenarios(fixture_path):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Run deterministic 林氏天機 v1.5 cat-eye scenarios")
-    parser.add_argument("--fixture", default="tests/fixtures/lin_tianji_cat_eye.v1.json")
+    parser = argparse.ArgumentParser(description="Run deterministic 林氏天機 v1.5 prediction-validation scenarios")
+    parser.add_argument("--fixture", default="tests/fixtures/lin_tianji_prediction_validation.v1.json")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     fixture = Path(args.fixture)
@@ -85,7 +85,7 @@ def main(argv=None):
     results = run_scenarios(fixture)
     failed = [row for row in results if row["status"] != "PASS"]
     report = {
-        "fixture_version": "lin_tianji_cat_eye.v1",
+        "fixture_version": "lin_tianji_prediction_validation.v1",
         "status": "FAIL" if failed else "PASS",
         "scenario_count": len(results),
         "failed_count": len(failed),
@@ -96,7 +96,7 @@ def main(argv=None):
     else:
         for row in results:
             print("%s %s - %s" % (row["status"], row["scenario_id"], row["reason"]))
-        print("cat-eye: %s (%d/%d PASS)" % (report["status"], len(results) - len(failed), len(results)))
+        print("prediction-validation: %s (%d/%d PASS)" % (report["status"], len(results) - len(failed), len(results)))
     return 1 if failed else 0
 
 

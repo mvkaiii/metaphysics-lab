@@ -3,10 +3,10 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-RUNNER = ROOT / "tools" / "run_v15_sandbox_black_box.py"
+RUNNER = ROOT / "tools" / "run_v15_release_surface_validation.py"
 
 
-class V15SandboxBlackBoxTests(unittest.TestCase):
+class V15ReleaseSurfaceValidationTests(unittest.TestCase):
     def test_all_critical_black_box_rubric_items_pass(self):
         spec = importlib.util.spec_from_file_location("v15_black_box", RUNNER)
         module = importlib.util.module_from_spec(spec)

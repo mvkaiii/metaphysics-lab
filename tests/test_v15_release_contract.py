@@ -132,7 +132,7 @@ class V15ReleaseContractTests(unittest.TestCase):
         text = workflow.read_text(encoding="utf-8")
         self.assertIn("contents: write", text)
         self.assertIn("v1.5.0", text)
-        self.assertIn("run_lin_tianji_cat_eye.py", text)
+        self.assertIn("run_lin_tianji_prediction_validation.py", text)
         self.assertIn("build_release_package.py", text)
         self.assertIn("project_instructions.txt", text)
         self.assertIn("Metaphysics-Lab-v1.5.0-User-Package.zip", text)

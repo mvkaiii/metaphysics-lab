@@ -6,9 +6,15 @@
 
 ## 最新正式發布
 
-- Metaphysics Lab Core：**v1.5.0**
-- 發布日期：**2026-08-29**
-- Release baseline：林氏天機 v1.5 Phase 1–6 + deterministic cat-eye + black-box distribution gate + final release qualification
+- Metaphysics Lab Core：**v1.4.0**
+- 發布日期：**2026-08-26**
+- v1.4.0 為目前已建立 Git tag / GitHub Release 的正式版本。
+
+## 目前發行候選
+
+- **v1.5.0 Release Candidate**
+- 狀態：`PENDING_FINAL_QUALIFICATION`
+- Release baseline：林氏天機 v1.5 Phase 1–6 + 林氏天機預測驗證 + v1.5 發行面驗證 + v1.5 隔離沙盒對話驗證 + v1.5 最終發行資格驗證
 
 主要元件：
 
@@ -33,9 +39,9 @@
 
 ---
 
-## v1.5.0 Capability 狀態
+## v1.5.0 Release Candidate Capability 狀態
 
-目前執行能力的權威來源是 `runtime_info`。以下是本次正式 release snapshot；**release 本身不改變 capability maturity**。
+目前執行能力的權威來源是 `runtime_info`。以下是本次 Release Candidate snapshot；**release 本身不改變 capability maturity**。
 
 | Capability / Layer | Implementation | Maturity | Routing / Role |
 |---|---|---|---|
@@ -64,9 +70,9 @@
 
 ---
 
-## v1.5.0 Distribution / Contract Snapshot
+## v1.5.0 Release Candidate Distribution / Contract Snapshot
 
-v1.5.0 正式收斂下列 distribution / data contract：
+v1.5.0 Release Candidate 收斂下列 distribution / data contract：
 
 ```text
 Project Contract          1.1
@@ -97,7 +103,7 @@ Portable Offline Natal：
 
 ---
 
-## v1.5.0 Qualification Snapshot
+## v1.5.0 Release Candidate Qualification Snapshot
 
 ### Natal Foundation
 
@@ -176,10 +182,13 @@ Bazi flow-time qualification --check       PASS
 Ziwei flow-time qualification --check      PASS
 Ziwei month-boundary qualification --check PASS
 Deterministic distribution build/check     PASS
-Focused historical/progressive suite       PASS
+林氏天機 v1.5 focused regression       PASS
 Full repository regression                 PASS
 Python 3.9 compileall                       PASS
 Clean validation tree                      PASS
+林氏天機預測驗證                           PASS
+v1.5 發行面驗證                            PASS
+v1.5 隔離沙盒對話驗證                     PASS
 ```
 
 實際最終 test count、workflow run 與 artifact digest 以 release-preparation PR 的最終驗證紀錄為準；不得在驗證前預填成功數字。
@@ -188,7 +197,7 @@ Clean validation tree                      PASS
 
 ## AI Distribution Pack
 
-v1.5.0 正式提供 mobile-first AI release surface：
+v1.5.0 Release Candidate 提供 mobile-first AI release surface：
 
 ```text
 dist/ai/metaphysics_lab.py
