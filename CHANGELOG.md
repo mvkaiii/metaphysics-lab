@@ -2,6 +2,18 @@
 
 這份文件保存正式版本與尚未發布變更的技術紀錄。第一次使用 Metaphysics Lab 請先看 `README.md`；一般使用者版 v1.4.0 發布說明見 `docs/發布說明-v1.4.0.md`。
 
+## v1.5.0｜2026-08-29
+
+### 林氏天機 v1.5 正式收斂
+
+- 完成 Phase 1–6：prospective lock、evidence model、eligibility/ranking、historical personalization、interpretation contract、prospective evaluation。
+- 新增可證偽 Claim 契約：Primary 最多 3、Secondary 最多 2，明確 `matched_if / partial_if / not_matched_if`，並分開記錄 domain / event-family / timing 結果。
+- 保持 Legacy Phase 1 lock 可讀；新 Claim 欄位採向後相容擴充，不要求 Case Schema 1.1 migration。
+- `project_instructions.txt` 取代一般使用者發行面的 `.md`，方便手機／電腦直接開啟與複製；repo 內權威來源仍為 Markdown。
+- 新增 deterministic three-file User Package：`Metaphysics-Lab-v1.5.0-User-Package.zip`，ZIP 內只能有 `metaphysics_lab.py`、`metaphysics_core.md`、`project_instructions.txt`。
+- 新增 12-case deterministic 貓眼測試、三檔 distribution black-box contract gate 與 final release workflow。
+- 不修改八字／紫微公式、Phase 3 ranking authority、Phase 4/5 邊界或 capability maturity。
+
 ## Unreleased｜林氏天機 Phase 5 Interpretation Contract
 
 - 新增 `distribution.interpretation_contract` / `build_interpretation_contract`，固定 profile `lin_tianji_interpretation_contract_v1-exp`，`ranking_authority=false`。

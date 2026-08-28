@@ -34,7 +34,7 @@ _RESOLVED_ANCHOR_FIELDS = {
     "question_reference",
     "status",
 }
-_CLAIM_FIELDS = {
+_REQUIRED_CLAIM_FIELDS = {
     "claim_id",
     "forecast_window",
     "primary_domain",
@@ -51,8 +51,11 @@ _CLAIM_FIELDS = {
     "contamination_state",
     "method_version",
 }
+_OPTIONAL_CLAIM_FIELDS = {"priority", "partial_if"}
+_CLAIM_FIELDS = _REQUIRED_CLAIM_FIELDS | _OPTIONAL_CLAIM_FIELDS
 _OUTCOME_FIELDS = {"observed_actual", "evaluation", "failure_mode"}
 _CONFIDENCE = {"high", "medium", "low"}
+_PRIORITIES = {"primary", "secondary"}
 _CAPABILITY_MATURITY = {"stable", "experimental"}
 _CONTAMINATION_STATES = {"clean_prospective", "known_before_lock", "partially_known"}
 _EVALUATION_ELIGIBILITY = {"clean_scorable", "excluded_from_clean_accuracy"}
@@ -273,7 +276,7 @@ def validate_forecast_claim(claim: Mapping[str, object], anchor: Mapping[str, ob
 
     keys = set(claim)
     forbidden = sorted(keys & _OUTCOME_FIELDS)
-    missing = sorted(_CLAIM_FIELDS - keys)
+    missing = sorted(_REQUIRED_CLAIM_FIELDS - keys)
     unknown = sorted(keys - _CLAIM_FIELDS)
     if forbidden or missing or unknown:
         raise _invalid_claim(
@@ -298,6 +301,14 @@ def validate_forecast_claim(claim: Mapping[str, object], anchor: Mapping[str, ob
     prediction = _claim_text(claim.get("prediction"), "prediction")
     matched_if = _claim_text(claim.get("matched_if"), "matched_if")
     not_matched_if = _claim_text(claim.get("not_matched_if"), "not_matched_if")
+    priority = None
+    partial_if = None
+    if "priority" in claim:
+        priority = _claim_text(claim.get("priority"), "priority")
+        if priority not in _PRIORITIES:
+            raise _invalid_claim("unsupported priority", value=priority)
+    if "partial_if" in claim:
+        partial_if = _claim_text(claim.get("partial_if"), "partial_if")
 
     forecast_window = claim.get("forecast_window")
     if not isinstance(forecast_window, Mapping) or set(forecast_window) != {"start", "end"}:
@@ -353,6 +364,10 @@ def validate_forecast_claim(claim: Mapping[str, object], anchor: Mapping[str, ob
         "contamination_state": contamination_state,
         "method_version": METHOD_VERSION,
     }
+    if priority is not None:
+        normalized["priority"] = priority
+    if partial_if is not None:
+        normalized["partial_if"] = partial_if
     return _json_normalize(normalized, "invalid_forecast_claim")
 
 
@@ -388,6 +403,21 @@ def lock_prospective_forecast(payload: Mapping[str, object]) -> dict:
             raise _invalid_forecast("duplicate claim_id", claim_id=claim_id)
         claim_ids.add(claim_id)
         normalized_claims.append(normalized)
+
+    enhanced = ["priority" in claim or "partial_if" in claim for claim in normalized_claims]
+    if any(enhanced):
+        if not all("priority" in claim and "partial_if" in claim for claim in normalized_claims):
+            raise _invalid_forecast(
+                "enhanced v1.5 claims must provide priority and partial_if for every claim"
+            )
+        primary_count = sum(claim["priority"] == "primary" for claim in normalized_claims)
+        secondary_count = sum(claim["priority"] == "secondary" for claim in normalized_claims)
+        if primary_count > 3 or secondary_count > 2:
+            raise _invalid_forecast(
+                "enhanced v1.5 claim volume exceeds the fixed 3 primary / 2 secondary boundary",
+                primary_count=primary_count,
+                secondary_count=secondary_count,
+            )
 
     locked_body = {
         "method_version": METHOD_VERSION,

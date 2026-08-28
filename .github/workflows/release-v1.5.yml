@@ -1,0 +1,81 @@
+name: Release v1.5.0
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: github.repository == 'mvkaiii/metaphysics-lab'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact release ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Bazi flow-time qualification
+        run: python tools/build_bazi_flow_time_qualification.py --check
+
+      - name: Ziwei flow-time qualification
+        run: python tools/build_ziwei_flow_time_qualification.py --check
+
+      - name: Ziwei month-boundary qualification
+        run: python tools/build_ziwei_month_boundary_qualification.py --check
+
+      - name: Rebuild and verify AI distribution
+        run: |
+          python tools/build_ai_distribution.py
+          python tools/build_ai_distribution.py --check
+
+      - name: Run 林氏天機 deterministic cat-eye
+        run: python tools/run_lin_tianji_cat_eye.py --json
+
+      - name: Run three-asset black-box contract gate
+        run: python tools/run_v15_sandbox_black_box.py --json
+
+      - name: Full repository regression
+        run: python -m unittest discover -s tests -p 'test_*.py'
+
+      - name: Python 3.9 compile check
+        run: python -m compileall -q engine tools tests dist/ai/metaphysics_lab.py
+
+      - name: Verify clean release tree before package output
+        run: git diff --exit-code && test -z "$(git status --porcelain)"
+
+      - name: Build deterministic three-file user package
+        run: |
+          python tools/build_release_package.py --output "$RUNNER_TEMP/Metaphysics-Lab-v1.5.0-User-Package.zip"
+          python tools/build_release_package.py --verify
+          sha256sum "$RUNNER_TEMP/Metaphysics-Lab-v1.5.0-User-Package.zip"
+
+      - name: Publish v1.5.0 release if absent
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view v1.5.0 >/dev/null 2>&1; then
+            echo "v1.5.0 already exists; refusing to overwrite immutable release identity"
+            gh release view v1.5.0 --json tagName,targetCommitish,isDraft,isPrerelease
+            exit 0
+          fi
+          gh release create v1.5.0 \
+            --target "$GITHUB_SHA" \
+            --title "Metaphysics Lab v1.5.0" \
+            --notes-file docs/發布說明-v1.5.0.md \
+            "$RUNNER_TEMP/Metaphysics-Lab-v1.5.0-User-Package.zip" \
+            dist/ai/metaphysics_lab.py \
+            dist/ai/metaphysics_core.md \
+            dist/ai/project_instructions.txt

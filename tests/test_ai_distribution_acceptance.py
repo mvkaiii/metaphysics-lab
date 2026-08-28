@@ -11,7 +11,7 @@ DIST = ROOT / "dist" / "ai"
 EXPECTED_ARTIFACTS = {
     "metaphysics_lab.py",
     "metaphysics_core.md",
-    "project_instructions.md",
+    "project_instructions.txt",
 }
 
 
@@ -43,7 +43,7 @@ class AIDistributionAcceptanceTests(unittest.TestCase):
     def test_fixed_markdown_has_no_dynamic_capability_snapshot(self):
         fixed = (
             (DIST / "metaphysics_core.md").read_text(encoding="utf-8")
-            + (DIST / "project_instructions.md").read_text(encoding="utf-8")
+            + (DIST / "project_instructions.txt").read_text(encoding="utf-8")
         )
         for forbidden in (
             "600/600",
@@ -70,10 +70,10 @@ class AIDistributionAcceptanceTests(unittest.TestCase):
         self.assertEqual(caps["historical.activation_selector"]["maturity"], "experimental")
         self.assertEqual(caps["historical.activation_selector"]["routing"], "on_demand")
 
-    def test_formal_release_identity_is_v1_4_0(self):
+    def test_formal_release_identity_is_v1_5_0(self):
         text = (ROOT / "VERSION.md").read_text(encoding="utf-8")
-        self.assertIn("Metaphysics Lab Core：**v1.4.0**", text)
-        self.assertIn("發布日期：**2026-08-26**", text)
+        self.assertIn("Metaphysics Lab Core：**v1.5.0**", text)
+        self.assertIn("發布日期：**2026-08-29**", text)
         self.assertIn("AI Distribution Pack", text)
         self.assertIn("AI Distribution Runtime：v1.1-exp", text)
         self.assertIn("release 本身不改變 capability maturity", text)

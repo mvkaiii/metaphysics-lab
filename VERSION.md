@@ -1,14 +1,14 @@
 # Metaphysics Lab 版本
 
-> `VERSION.md` 是給開發、驗證與版本治理看的**技術版本表**。第一次使用請先看 `README.md` 或 `docs/快速開始.md`；一般使用者版 v1.4.0 發布說明見 `docs/發布說明-v1.4.0.md`。
+> `VERSION.md` 是給開發、驗證與版本治理看的**技術版本表**。第一次使用請先看 `README.md` 或 `docs/快速開始.md`；一般使用者版 v1.5.0 發布說明見 `docs/發布說明-v1.5.0.md`。
 >
 > v1.3.0 與更早版本屬歷史 Release snapshot，不因後續 qualification 或文件更新回寫改造。v1.4.0 收斂 v1.3.0 之後已合併到 `main` 的 Project Contract / Case Schema 1.1、Portable Offline Natal、Historical Blind Calibration 與細時間 qualification；release 本身不改變 capability maturity。
 
 ## 最新正式發布
 
-- Metaphysics Lab Core：**v1.4.0**
-- 發布日期：**2026-08-26**
-- Release baseline：v1.4.0 release-preparation gate；正式 Git tag 應在 release 文件 merge、`main` regression 驗證完成後建立
+- Metaphysics Lab Core：**v1.5.0**
+- 發布日期：**2026-08-29**
+- Release baseline：林氏天機 v1.5 Phase 1–6 + deterministic cat-eye + black-box distribution gate + final release qualification
 
 主要元件：
 
@@ -33,7 +33,7 @@
 
 ---
 
-## v1.4.0 Capability 狀態
+## v1.5.0 Capability 狀態
 
 目前執行能力的權威來源是 `runtime_info`。以下是本次正式 release snapshot；**release 本身不改變 capability maturity**。
 
@@ -64,9 +64,9 @@
 
 ---
 
-## v1.4.0 Distribution / Contract Snapshot
+## v1.5.0 Distribution / Contract Snapshot
 
-v1.4.0 正式收斂下列 distribution / data contract：
+v1.5.0 正式收斂下列 distribution / data contract：
 
 ```text
 Project Contract          1.1
@@ -97,7 +97,7 @@ Portable Offline Natal：
 
 ---
 
-## v1.4.0 Qualification Snapshot
+## v1.5.0 Qualification Snapshot
 
 ### Natal Foundation
 
@@ -167,7 +167,7 @@ Private Astralium raw chart、raw birth input、完整住址與 normalized priva
 
 ---
 
-## v1.4.0 Release Acceptance Gate
+## v1.5.0 Release Acceptance Gate
 
 正式 tag 前必須在 release candidate exact head / merged `main` 上重新確認：
 
@@ -188,17 +188,17 @@ Clean validation tree                      PASS
 
 ## AI Distribution Pack
 
-v1.4.0 正式提供 mobile-first AI release surface：
+v1.5.0 正式提供 mobile-first AI release surface：
 
 ```text
 dist/ai/metaphysics_lab.py
 dist/ai/metaphysics_core.md
-dist/ai/project_instructions.md
+dist/ai/project_instructions.txt
 ```
 
-一般使用者不需要理解 repo modules。前兩個檔案上傳到 ChatGPT / Claude Project，`project_instructions.md` 內容貼入 Project Instructions；完整分析若平台提供，可優先使用較高推理強度模式。
+一般使用者不需要理解 repo modules。前兩個檔案上傳到 ChatGPT / Claude Project，`project_instructions.txt` 內容貼入 Project Instructions；完整分析若平台提供，可優先使用較高推理強度模式。
 
-從 v1.3.0 升級到 v1.4.0 時，由於 Project Contract / Case Schema 已正式進到 1.1，Release 說明要求同步三個發行檔；既有私人 Case 不應因此清空或破壞性重建。
+從 v1.4.0 升級到 v1.5.0 時，Project Contract / Case Schema 仍維持 1.1；同步三個發行檔即可，既有私人 Case 與舊 prospective lock 不要求清空、破壞性重建或 schema migration。
 
 AI Distribution Runtime 目前版本為 `1.1-exp`；正式 GitHub Release 不把它或任何 experimental metaphysics capability 自動升 Stable。
 

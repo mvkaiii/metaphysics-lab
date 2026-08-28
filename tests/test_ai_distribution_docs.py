@@ -14,12 +14,12 @@ ARCHITECTURE = ROOT / "docs" / "架構說明.md"
 CHANGELOG = ROOT / "CHANGELOG.md"
 RELEASE_NOTES = ROOT / "docs" / "發布說明-v1.4.0.md"
 HISTORICAL_V130_RELEASE_NOTES = ROOT / "docs" / "發布說明-v1.3.0.md"
-PROJECT_INSTRUCTIONS = ROOT / "dist" / "ai" / "project_instructions.md"
+PROJECT_INSTRUCTIONS = ROOT / "dist" / "ai" / "project_instructions.txt"
 
 USER_ARTIFACTS = (
     "metaphysics_lab.py",
     "metaphysics_core.md",
-    "project_instructions.md",
+    "project_instructions.txt",
 )
 USER_LABELS = (
     "命理計算程式",
@@ -78,7 +78,7 @@ class AIDistributionDocsTests(unittest.TestCase):
     def test_project_install_is_two_uploads_plus_one_copy(self):
         self.assertIn("上傳 `metaphysics_lab.py`", self.install)
         self.assertIn("上傳 `metaphysics_core.md`", self.install)
-        self.assertIn("`project_instructions.md`", self.install)
+        self.assertIn("`project_instructions.txt`", self.install)
         self.assertIn("Project Instructions", self.install)
         for label in USER_LABELS:
             self.assertIn(label, self.install)
@@ -133,7 +133,7 @@ class AIDistributionDocsTests(unittest.TestCase):
         self.assertIn("Runtime", self.update)
         self.assertIn("Case Schema", self.update)
         self.assertIn("只替換 `metaphysics_lab.py`", self.update)
-        self.assertIn("project_instructions.md", self.update)
+        self.assertIn("project_instructions.txt", self.update)
         self.assertIn("metaphysics_core.md", self.update)
         self.assertIn("schema migration", self.update)
         self.assertIn("runtime_info", self.update)

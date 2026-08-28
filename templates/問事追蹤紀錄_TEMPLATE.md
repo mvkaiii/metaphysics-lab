@@ -198,3 +198,32 @@
 - [ ] 若屬重大決策，更新「重大決策紀錄.md」
 - [ ] 若顯示穩定長期模式，評估是否更新「命盤核心摘要.md」
 - [ ] 若顯示算法問題，更新「命理推導計算規則.md」
+
+## Locked Claims｜v1.5
+
+> 重要且可驗證的未來問事使用。第一階段 lock 後不得覆寫。
+
+### Claim 01
+- claim_id：
+- priority：primary / secondary
+- domain：
+- event_family：
+- forecast_window：
+- matched_if：
+- partial_if：
+- not_matched_if：
+- confidence：
+- contamination_state：clean_prospective / partially_known / known_before_lock
+- evidence_basis：
+- knowledge_cutoff_at：
+- method_version：
+
+### Evaluation｜時間窗結束後追加
+- verification_state：matched / partial / not_matched / cannot_recall
+- domain_result：
+- event_family_result：
+- timing_result：
+- observed_actual：
+- failure_mode：none / ai_compliance_failure / specification_ambiguity / deterministic_or_algorithm_failure / metaphysical_signal_failure
+
+規則：Primary Claims 最多 3 個、Secondary Claims 最多 2 個；不得為提高命中率大量增列低資訊量 Claim。`matched_if` / `partial_if` / `not_matched_if` 在 lock 後不得擴張或重寫。

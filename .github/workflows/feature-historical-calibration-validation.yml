@@ -110,6 +110,15 @@ jobs:
             tests.test_fifth_round_legacy_record_id_compat \
             tests.test_distribution_runtime_info -v
 
+      - name: Run v1.5 deterministic cat-eye
+        run: python tools/run_lin_tianji_cat_eye.py --json
+
+      - name: Verify v1.5 black-box release contract
+        run: python tools/run_v15_sandbox_black_box.py --json
+
+      - name: Verify deterministic three-file user package
+        run: python tools/build_release_package.py --verify --output "$RUNNER_TEMP/Metaphysics-Lab-v1.5.0-User-Package.zip"
+
       - name: Full repository regression
         run: |
           python -m unittest discover -s tests -p 'test_*.py' -v
