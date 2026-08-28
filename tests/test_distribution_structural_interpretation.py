@@ -122,7 +122,11 @@ class StructuralInterpretationTests(unittest.TestCase):
 
     def test_bazi_and_ziwei_same_domain_remain_independent_features(self):
         result = interpret_structural_evidence(self.context(cross_system_career=True), "yearly")
-        career = [item for item in result["features"] if item["primary_domain"] == "career"]
+        career = [
+            item
+            for item in result["features"]
+            if item["scope"] == "yearly" and item["primary_domain"] == "career"
+        ]
         self.assertEqual({item["system"] for item in career}, {"bazi", "ziwei"})
         self.assertEqual(len({item["dependency_family"] for item in career}), 2)
 
