@@ -43,6 +43,12 @@ class HistoricalPersonalizationTests(unittest.TestCase):
     def career_only_base(self):
         return rank_evidence([self.feature("career")], target_scope="yearly")
 
+    def base_with_career_families(self, families):
+        return rank_evidence(
+            [self.feature("career", event_family_support=list(families))],
+            target_scope="yearly",
+        )
+
     @staticmethod
     def domain(result, domain_id):
         return next(row for row in result["domains"] if row["primary_domain"] == domain_id)
@@ -285,6 +291,76 @@ class HistoricalPersonalizationTests(unittest.TestCase):
             [row["primary_domain"] for row in base["domains"]],
         )
         self.assertTrue(all(row["historical_modifier_scaled"] == 0 for row in result["domains"]))
+
+    def test_two_exact_canonical_family_matches_prefer_existing_candidate_only(self):
+        base = self.base_with_career_families(["responsibility", "role_change"])
+        rows = [
+            self.record(2020, families=["role_change"]),
+            self.record(2021, families=["role_change"]),
+        ]
+        career = self.domain(personalize_ranking(base, "basic", rows), "career")
+        self.assertEqual(career["personalized_event_family_order"][0], "role_change")
+        self.assertEqual(
+            set(career["personalized_event_family_order"]),
+            set(career["base_event_families"]),
+        )
+        self.assertEqual(career["preferred_event_families"], ["role_change"])
+        self.assertEqual(career["deprioritized_event_families"], [])
+
+    def test_history_family_not_in_current_base_candidates_cannot_be_added(self):
+        base = self.base_with_career_families(["responsibility"])
+        rows = [
+            self.record(2020, families=["role_change"]),
+            self.record(2021, families=["role_change"]),
+        ]
+        result = personalize_ranking(base, "basic", rows)
+        career = self.domain(result, "career")
+        self.assertEqual(career["personalized_event_family_order"], ["responsibility"])
+        self.assertEqual(career["preferred_event_families"], [])
+        self.assertEqual(career["deprioritized_event_families"], [])
+        self.assertEqual(result["excluded_record_counts"]["event_family_not_in_base"], 2)
+
+    def test_multi_family_record_does_not_split_event_form_vote(self):
+        rows = [
+            self.record(2020, families=["role_change", "responsibility"]),
+            self.record(2021, families=["role_change", "responsibility"]),
+        ]
+        result = personalize_ranking(self.base_ranking(), "basic", rows)
+        self.assertEqual(result["excluded_record_counts"]["ambiguous_multi_family"], 2)
+        career = self.domain(result, "career")
+        self.assertEqual(
+            career["personalized_event_family_order"],
+            career["base_event_families"],
+        )
+        self.assertEqual(career["preferred_event_families"], [])
+
+    def test_two_family_misses_deprioritize_without_removing_candidate(self):
+        base = self.base_with_career_families(["role_change", "responsibility"])
+        rows = [
+            self.missed_record(2020, families=["role_change"]),
+            self.missed_record(2021, families=["role_change"]),
+        ]
+        career = self.domain(personalize_ranking(base, "basic", rows), "career")
+        self.assertEqual(set(career["personalized_event_family_order"]), set(career["base_event_families"]))
+        self.assertEqual(career["deprioritized_event_families"], ["role_change"])
+
+    def test_score_qualified_free_text_and_actual_date_mutation_cannot_change_result(self):
+        rows = [self.record(2020), self.record(2021)]
+        mutated = copy.deepcopy(rows)
+        mutated[0]["blind_prediction"]["hypothesis"] = "完全不同盲判文字"
+        mutated[1]["blind_prediction"]["hypothesis"] = "另一段描述"
+        mutated[0]["user_confirmed_actual"]["actual_event"] = "完全不同事件文字"
+        mutated[1]["user_confirmed_actual"]["actual_event"] = "第二段不同事件文字"
+        mutated[0]["user_confirmed_actual"]["actual_date"] = "1999-01-01"
+        mutated[1]["user_confirmed_actual"]["actual_date"] = "2099-12-31"
+
+        first = personalize_ranking(self.base_ranking(), "basic", rows)
+        second = personalize_ranking(self.base_ranking(), "basic", mutated)
+        self.assertEqual(first["historical_source_digest"], second["historical_source_digest"])
+        self.assertEqual(first["personalization_digest"], second["personalization_digest"])
+        self.assertEqual(first["domains"], second["domains"])
+        self.assertEqual(first["eligible_record_count"], second["eligible_record_count"])
+        self.assertEqual(first["excluded_record_counts"], second["excluded_record_counts"])
 
 
 if __name__ == "__main__":
