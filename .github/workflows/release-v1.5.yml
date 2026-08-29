@@ -58,7 +58,9 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_*.py'
 
       - name: Python 3.9 compile check
-        run: python -m compileall -q engine tools tests dist/ai/metaphysics_lab.py
+        run: |
+          python -m compileall -q engine tools tests
+          python -c "compile(open('dist/ai/metaphysics_lab.py', encoding='utf-8').read(), 'dist/ai/metaphysics_lab.py', 'exec')"
 
       - name: Verify clean release tree before package output
         run: git diff --exit-code && test -z "$(git status --porcelain)"
