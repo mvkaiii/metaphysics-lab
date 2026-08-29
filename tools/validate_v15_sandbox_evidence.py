@@ -45,16 +45,23 @@ def _parse_evidence(text: str):
     fields = {}
     rubrics = {}
     errors = []
+    in_critical_rubric = False
     for raw_line in text.splitlines():
         line = raw_line.strip()
-        rubric_match = _RUBRIC.match(line)
-        if rubric_match and rubric_match.group(1) in RUBRICS:
-            key, value = rubric_match.groups()
-            if key in rubrics:
-                errors.append("duplicate_rubric:%s" % key)
-            else:
-                rubrics[key] = value
+        if line.startswith("## "):
+            in_critical_rubric = line == "## Critical rubric"
             continue
+
+        if in_critical_rubric:
+            rubric_match = _RUBRIC.match(line)
+            if rubric_match and rubric_match.group(1) in RUBRICS:
+                key, value = rubric_match.groups()
+                if key in rubrics:
+                    errors.append("duplicate_rubric:%s" % key)
+                else:
+                    rubrics[key] = value
+            continue
+
         field_match = _FIELD.match(line)
         if field_match:
             key, value = field_match.groups()
