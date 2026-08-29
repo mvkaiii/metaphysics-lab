@@ -2,19 +2,15 @@
 
 > `VERSION.md` 是給開發、驗證與版本治理看的**技術版本表**。第一次使用請先看 `README.md` 或 `docs/快速開始.md`；一般使用者版 v1.5.0 發布說明見 `docs/發布說明-v1.5.0.md`。
 >
-> v1.3.0 與更早版本屬歷史 Release snapshot，不因後續 qualification 或文件更新回寫改造。v1.4.0 收斂 v1.3.0 之後已合併到 `main` 的 Project Contract / Case Schema 1.1、Portable Offline Natal、Historical Blind Calibration 與細時間 qualification；release 本身不改變 capability maturity。
+> 歷史 Release snapshot 不因後續 qualification 或文件更新回寫改造。正式發版只固定 release identity；**release 本身不改變 capability maturity**，目前執行能力仍以 `runtime_info` 為技術權威來源。
 
 ## 最新正式發布
 
-- Metaphysics Lab Core：**v1.4.0**
-- 發布日期：**2026-08-26**
-- v1.4.0 為目前已建立 Git tag / GitHub Release 的正式版本。
-
-## 目前發行候選
-
-- **v1.5.0 Release Candidate**
-- 狀態：`PENDING_FINAL_QUALIFICATION`
-- Release baseline：林氏天機 v1.5 Phase 1–6 + 林氏天機預測驗證 + v1.5 發行面驗證 + v1.5 隔離沙盒對話驗證 + v1.5 最終發行資格驗證
+- Metaphysics Lab Core：**v1.5.0**
+- 發布日期：**2026-08-29**
+- 正式 release commit：`66f604222caadac0209125a78674c3f4491c4b99`
+- Git tag / GitHub Release：`v1.5.0` 已正式發布。
+- Release baseline：林氏天機 v1.5 Phase 1–6 + 林氏天機預測驗證 + v1.5 發行面驗證 + v1.5 隔離沙盒對話驗證 + v1.5 最終發行資格驗證。
 
 主要元件：
 
@@ -39,9 +35,7 @@
 
 ---
 
-## v1.5.0 Release Candidate Capability 狀態
-
-目前執行能力的權威來源是 `runtime_info`。以下是本次 Release Candidate snapshot；**release 本身不改變 capability maturity**。
+## v1.5.0 Capability Snapshot
 
 | Capability / Layer | Implementation | Maturity | Routing / Role |
 |---|---|---|---|
@@ -70,9 +64,7 @@
 
 ---
 
-## v1.5.0 Release Candidate Distribution / Contract Snapshot
-
-v1.5.0 Release Candidate 收斂下列 distribution / data contract：
+## v1.5.0 Distribution / Contract Snapshot
 
 ```text
 Project Contract          1.1
@@ -103,7 +95,7 @@ Portable Offline Natal：
 
 ---
 
-## v1.5.0 Release Candidate Qualification Snapshot
+## v1.5.0 Qualification Snapshot
 
 ### Natal Foundation
 
@@ -121,19 +113,17 @@ promotion_allowed       false
 
 ### Ziwei Fine Cycle Day / Hour
 
-現有 `ziwei-fine-cycle-lunar-late-zi-v1` / `late_zi_forward-v1` 維持：
-
 ```text
 pinned lunar-lite 1d104fff...   18/18 PASS
 pinned iztro 814b77e6...        integration PASS
 Astralium fine-cycle             PENDING
 ```
 
-另有 pinned `lunar-python==1.4.8` 的流日／流時 qualification，覆蓋 late-Zi、五鼠遁、Gregorian transition、DST responsibility 與 modular ↔ generated runtime parity。Fine Cycle stem / transformations / flying 仍是 Experimental / On-demand。
+Fine Cycle stem / transformations / flying 仍是 Experimental / On-demand。
 
 ### Ziwei Month Boundary
 
-v1.4.0 納入 PR #175 已合併的月層 qualification：
+v1.4.0 納入的月層 qualification 保持有效歷史來源：
 
 ```text
 month-oracle checks              86
@@ -143,9 +133,7 @@ real leap day15/day16            14 cases / 7 leap-month years
 ordinal 13 -> next year month 1  10/10 property PASS
 ```
 
-`leap_twelfth_month_second_half` 已不再只有 synthetic internal coverage：pinned `lunar-python==1.4.8` 對真實 1574 閏十二月顯示 day 15 為 `丁丑`，下一個實際農曆月為 1575 正月 `戊寅`，Project day 16 effective month source 亦為 `戊寅`。
-
-Pinned lunar-lite 對閏十二月下半月本身仍有 direct-runtime oracle 限制；這個來源限制保留，不冒充已由 lunar-lite 直接驗證。Astralium fine-cycle 仍為 `PENDING`，也不因此 promotion。
+`leap_twelfth_month_second_half` 已有 pinned `lunar-python==1.4.8` 的實際月序 continuity 支持；Astralium fine-cycle 仍為 `PENDING`，不因此 promotion。
 
 ### Ziwei Flowing Stars
 
@@ -173,31 +161,35 @@ Private Astralium raw chart、raw birth input、完整住址與 normalized priva
 
 ---
 
-## v1.5.0 Release Acceptance Gate
+## v1.5.0 Release Acceptance Gate｜已完成
 
-正式 tag 前必須在 release candidate exact head / merged `main` 上重新確認：
+正式 v1.5.0 已在 exact release candidate / merged `main` 完成：
 
 ```text
 Bazi flow-time qualification --check       PASS
 Ziwei flow-time qualification --check      PASS
 Ziwei month-boundary qualification --check PASS
 Deterministic distribution build/check     PASS
-林氏天機 v1.5 focused regression       PASS
-Full repository regression                 PASS
-Python 3.9 compileall                       PASS
+林氏天機 v1.5 focused regression           PASS
+Full repository regression                 926/926 PASS
+Python 3.9 compile check                    PASS
 Clean validation tree                      PASS
-林氏天機預測驗證                           PASS
-v1.5 發行面驗證                            PASS
-v1.5 隔離沙盒對話驗證                     PASS
+林氏天機預測驗證                           12/12 PASS
+v1.5 發行面驗證                            8/8 PASS
+v1.5 隔離沙盒對話驗證                      8/8 critical rubrics PASS
 ```
 
-實際最終 test count、workflow run 與 artifact digest 以 release-preparation PR 的最終驗證紀錄為準；不得在驗證前預填成功數字。
+正式 release target：`66f604222caadac0209125a78674c3f4491c4b99`。
+
+AI distribution digest：`868d4e565715b8a35acbffe87ec41bf346b761decb4b29d4b6824311597946df`。
+
+User Package SHA256：`a7fe693a8bd91f6b720409e5e23e655cc3bf13396e21c8b7f99f79bc2b23cbfc`。
 
 ---
 
 ## AI Distribution Pack
 
-v1.5.0 Release Candidate 提供 mobile-first AI release surface：
+v1.5.0 正式提供 mobile-first AI release surface：
 
 ```text
 dist/ai/metaphysics_lab.py
@@ -205,7 +197,7 @@ dist/ai/metaphysics_core.md
 dist/ai/project_instructions.txt
 ```
 
-一般使用者不需要理解 repo modules。前兩個檔案上傳到 ChatGPT / Claude Project，`project_instructions.txt` 內容貼入 Project Instructions；完整分析若平台提供，可優先使用較高推理強度模式。
+一般使用者不需要理解 repo modules。前兩個檔案上傳到 ChatGPT / Claude Project，`project_instructions.txt` 內容貼入 Project Instructions。
 
 從 v1.4.0 升級到 v1.5.0 時，Project Contract / Case Schema 仍維持 1.1；同步三個發行檔即可，既有私人 Case 與舊 prospective lock 不要求清空、破壞性重建或 schema migration。
 
@@ -253,6 +245,12 @@ AI Distribution Runtime 目前版本為 `1.1-exp`；正式 GitHub Release 不把
 ---
 
 ## 歷史版本
+
+### v1.4.0｜2026-08-26
+
+- 收斂 Project Contract / Case Schema 1.1、Portable Offline Natal、Historical Blind Calibration、Bazi / Ziwei 細時間 qualification 與一般使用者語言邊界。
+- 規則與 capability maturity 的歷史狀態不因後續 v1.5.0 發布而回寫。
+- 一般使用者版歷史發布說明：`docs/發布說明-v1.4.0.md`。
 
 ### v1.3.0｜2026-08-23
 
