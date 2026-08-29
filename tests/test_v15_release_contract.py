@@ -2,6 +2,7 @@ import hashlib
 import importlib.util
 import io
 import json
+import tempfile
 import unittest
 import zipfile
 from pathlib import Path
@@ -19,6 +20,7 @@ EXPECTED_ZIP_MEMBERS = sorted(EXPECTED_ASSETS)
 SANDBOX_SCRIPT = ROOT / "docs" / "release" / "v1.5.0-isolated-sandbox-script.md"
 SANDBOX_FIXTURE = ROOT / "tests" / "fixtures" / "v1.5.0-isolated-sandbox-fixture.v1.json"
 SANDBOX_EVIDENCE = ROOT / "docs" / "release" / "v1.5.0-isolated-sandbox-conversation-validation.md"
+SANDBOX_PENDING_EVIDENCE = ROOT / "tests" / "fixtures" / "v1.5.0-isolated-sandbox-evidence.pending.md"
 SANDBOX_VALIDATOR = ROOT / "tools" / "validate_v15_sandbox_evidence.py"
 SANDBOX_RUBRICS = (
     "temporal_ownership_pass",
@@ -128,7 +130,6 @@ class V15ReleaseContractTests(unittest.TestCase):
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
 
-        import tempfile
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             for name in EXPECTED_ASSETS:
@@ -173,9 +174,9 @@ class V15ReleaseContractTests(unittest.TestCase):
         self.assertNotIn("1984-03-13", combined)
         self.assertIn("fictional", combined.lower())
 
-    def test_isolated_sandbox_evidence_template_is_fail_closed_until_real_run(self):
-        self.assertTrue(SANDBOX_EVIDENCE.is_file())
-        text = SANDBOX_EVIDENCE.read_text(encoding="utf-8")
+    def test_pending_sandbox_evidence_fixture_is_fail_closed_until_real_run(self):
+        self.assertTrue(SANDBOX_PENDING_EVIDENCE.is_file())
+        text = SANDBOX_PENDING_EVIDENCE.read_text(encoding="utf-8")
         self.assertIn("schema_version: v1.5.0-isolated-sandbox-evidence.v1", text)
         self.assertIn("status: PENDING", text)
         self.assertNotIn("status: PASS", text)
@@ -193,7 +194,7 @@ class V15ReleaseContractTests(unittest.TestCase):
         for rubric in SANDBOX_RUBRICS:
             self.assertIn(f"- {rubric}: PENDING", text)
 
-    def test_sandbox_evidence_validator_rejects_pending_template(self):
+    def test_sandbox_evidence_validator_rejects_pending_fixture(self):
         self.assertTrue(SANDBOX_VALIDATOR.is_file(), "sandbox evidence validator is missing")
         spec = importlib.util.spec_from_file_location("validate_v15_sandbox_evidence_test", SANDBOX_VALIDATOR)
         self.assertIsNotNone(spec)
@@ -203,12 +204,36 @@ class V15ReleaseContractTests(unittest.TestCase):
 
         report = module.validate_evidence(
             root=ROOT,
-            evidence_path=SANDBOX_EVIDENCE,
+            evidence_path=SANDBOX_PENDING_EVIDENCE,
             current_sha="f" * 40,
         )
         self.assertEqual(report["status"], "PENDING", report)
         self.assertFalse(report["release_allowed"], report)
         self.assertIn("evidence_status_not_pass", report["errors"])
+
+    def test_sandbox_evidence_parser_ignores_historical_rubric_bullets(self):
+        self.assertTrue(SANDBOX_VALIDATOR.is_file(), "sandbox evidence validator is missing")
+        spec = importlib.util.spec_from_file_location("validate_v15_sandbox_evidence_history_test", SANDBOX_VALIDATOR)
+        self.assertIsNotNone(spec)
+        self.assertIsNotNone(spec.loader)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        current = "\n".join(f"- {rubric}: PASS" for rubric in SANDBOX_RUBRICS)
+        evidence = (
+            "schema_version: v1.5.0-isolated-sandbox-evidence.v1\n"
+            "status: PASS\n"
+            "script_version: v1.5.0-isolated-sandbox-script.v1\n"
+            "fixture_version: v1.5.0-isolated-sandbox-fixture.v1\n"
+            "\n## Critical rubric\n\n"
+            f"{current}\n"
+            "\n## 先前失敗紀錄（保留，不覆寫）\n\n"
+            "- natural_language_pass: FAIL\n"
+            "- 整體 C.2: FAIL\n"
+        )
+        _, rubrics, errors = module._parse_evidence(evidence)
+        self.assertEqual(rubrics, {rubric: "PASS" for rubric in SANDBOX_RUBRICS})
+        self.assertNotIn("duplicate_rubric:natural_language_pass", errors)
 
     def test_validation_workflow_artifact_names_follow_checked_out_validation_sha(self):
         workflow = ROOT / ".github" / "workflows" / "lin-tianji-v1.5-validation.yml"
