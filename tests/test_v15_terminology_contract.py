@@ -86,24 +86,51 @@ class V15TerminologyContractTests(unittest.TestCase):
             text = (ROOT / relative).read_text(encoding="utf-8")
             self.assertNotIn("Historical Blind Calibration", text, relative)
 
-    def test_version_and_changelog_distinguish_release_candidate_from_history(self):
+    def test_active_current_state_docs_reflect_published_v15(self):
+        active_files = (
+            "README.md",
+            "VERSION.md",
+            "CHANGELOG.md",
+            "docs/快速開始.md",
+            "docs/安裝到ChatGPT-Project.md",
+            "docs/更新與版本同步.md",
+            "docs/架構說明.md",
+            "docs/release/v1.5.0-qualification.md",
+            "docs/release/v1.5.0-terminology-audit.md",
+        )
+        forbidden = (
+            "v1.5.0 Release Candidate",
+            "PENDING_FINAL_QUALIFICATION",
+            "PENDING_FINAL_EVIDENCE",
+            "ACTIVE_TERMINOLOGY_CLEAN_PENDING_FULL_CI",
+            "v1.5.0 正式發布後",
+        )
+        for relative in active_files:
+            text = (ROOT / relative).read_text(encoding="utf-8")
+            for token in forbidden:
+                self.assertNotIn(token, text, "%s still contains %r" % (relative, token))
+
+    def test_version_and_changelog_reflect_published_v15_without_rewriting_history(self):
         version = (ROOT / "VERSION.md").read_text(encoding="utf-8")
-        self.assertIn("v1.5.0 Release Candidate", version)
-        self.assertIn("林氏天機預測驗證", version)
-        self.assertIn("發行面驗證", version)
-        self.assertIn("隔離沙盒對話驗證", version)
-        self.assertNotIn("deterministic cat-eye", version)
-        self.assertNotIn("black-box distribution gate", version)
+        formal = version.split("## 歷史版本", 1)[0]
+        self.assertIn("Metaphysics Lab Core：**v1.5.0**", formal)
+        self.assertIn("發布日期：**2026-08-29**", formal)
+        self.assertIn("正式 release commit：`66f604222caadac0209125a78674c3f4491c4b99`", formal)
+        self.assertIn("林氏天機預測驗證", formal)
+        self.assertIn("發行面驗證", formal)
+        self.assertIn("隔離沙盒對話驗證", formal)
+        self.assertNotIn("PENDING_FINAL_QUALIFICATION", formal)
 
         changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
         current = changelog.split("## v1.4.0｜", 1)[0]
-        self.assertIn("v1.5.0｜Release Candidate", current)
-        self.assertNotIn("## Unreleased｜林氏天機", current)
+        self.assertIn("## v1.5.0｜2026-08-29", current)
+        self.assertNotIn("v1.5.0｜Release Candidate", current)
         self.assertIn("林氏天機預測驗證", current)
         self.assertIn("發行面驗證", current)
 
-    def test_update_and_architecture_docs_have_current_status_without_rewriting_v14_history(self):
+    def test_update_and_architecture_docs_have_published_status_without_rewriting_v14_history(self):
         update = (ROOT / "docs/更新與版本同步.md").read_text(encoding="utf-8")
+        self.assertIn("目前正式版本為 **v1.5.0｜2026-08-29**", update)
         self.assertIn("v1.4.0 → v1.5.0", update)
         self.assertIn("Metaphysics-Lab-v1.5.0-User-Package.zip", update)
         self.assertIn("project_instructions.txt", update)
@@ -111,9 +138,9 @@ class V15TerminologyContractTests(unittest.TestCase):
         self.assertIn("project_instructions.md", historical)
 
         architecture = (ROOT / "docs/架構說明.md").read_text(encoding="utf-8")
-        self.assertIn("v1.4.0", architecture[:600])
-        self.assertIn("v1.5.0 Release Candidate", architecture[:1000])
-        self.assertNotIn("目前正式版本為 **v1.3.0", architecture[:600])
+        self.assertIn("目前正式版本為 **v1.5.0｜2026-08-29**", architecture[:800])
+        self.assertNotIn("v1.5.0 Release Candidate", architecture[:1000])
+        self.assertNotIn("目前正式版本為 **v1.4.0", architecture[:800])
 
 
 if __name__ == "__main__":

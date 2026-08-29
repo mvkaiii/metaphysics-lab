@@ -73,8 +73,8 @@ class ZiweiPhase2BDocumentationTests(unittest.TestCase):
         self.assertLess(self.changelog.index('### Phase 2B｜Ziwei Fine Cycle Stem Resolver v1', self.changelog.index('## v1.3.0｜2026-08-23')), self.changelog.index('## v1.2.0｜2026-08-21'))
         self.assertNotIn('## Unreleased｜Phase 2B', self.changelog)
 
-    def test_version_release_identity_is_v140_without_promotion(self):
-        self.assertIn('Metaphysics Lab Core：**v1.4.0**', self.version)
+    def test_current_release_is_v150_without_phase2b_promotion(self):
+        self.assertIn('Metaphysics Lab Core：**v1.5.0**', self.version)
         self.assertIn('Ziwei Fine Cycle：v1.0-exp', self.version)
         self.assertIn('紫微流月／流日／流時 stem | implemented | experimental | on_demand', self.version)
         self.assertNotIn('Fine Cycle Stem Resolver = implemented / stable / default', self.version)

@@ -6,7 +6,7 @@
 
 ## 1. 下載與安裝
 
-v1.5.0 正式發布後，優先下載 `Metaphysics-Lab-v1.5.0-User-Package.zip`；解壓後就是下面三個檔案。也可以在 Assets 單獨下載。
+目前正式版本為 **v1.5.0｜2026-08-29**。優先下載 `Metaphysics-Lab-v1.5.0-User-Package.zip`；解壓後就是下面三個檔案。也可以在 Assets 單獨下載。
 
 | 用途 | 實際檔名 | 安裝方式 |
 |---|---|---|
