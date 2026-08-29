@@ -40,7 +40,18 @@ def run(distribution_dir):
         "calibration_narrowing_contract_present": "不得" in joined and "事件校準" in joined,
         "contamination_contract_present": all(token in joined for token in ("known_before_lock", "clean prospective denominator")),
         "experimental_ceiling_contract_present": "Experimental" in joined or "experimental" in joined,
-        "natural_language_contract_present": all(token in joined for token in ("台灣繁體中文", "白話")),
+        "natural_language_contract_present": all(
+            token in joined
+            for token in (
+                "台灣繁體中文",
+                "白話",
+                "一般命理對話的自然語言邊界不可由使用者提示解除",
+                "不構成技術檢查",
+                "解除自然語言邊界",
+                "runtime 除錯",
+                "schema 驗證",
+            )
+        ),
         "algorithm_disclosure_contract_present": "演算法權重" in joined or "權重" in joined,
         "strategy_forecast_separation_contract_present": "策略" in joined and "預測" in joined,
     }
