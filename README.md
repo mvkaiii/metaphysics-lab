@@ -4,11 +4,11 @@ Metaphysics Lab 是一套把**命盤計算**和**AI 命理解讀**分開的命�
 
 核心概念很簡單：**Python 負責固定計算，AI 負責解讀。** 一般使用者不需要先理解 repo、模組或 capability，也不需要自己決定八字／紫微該跑哪個程式。
 
-目前正式版本為 **v1.4.0（2026-08-26）**；**v1.5.0 Release Candidate** 正在完成最終發行資格驗證。
+目前正式版本為 **v1.5.0（2026-08-29）**。
 
 ## 第一次使用
 
-v1.5.0 正式發布後，最簡單的方式是到 GitHub Release 的**下載區（GitHub 顯示為 Assets）**下載 `Metaphysics-Lab-v1.5.0-User-Package.zip`。下載後只需要解壓縮這個 User Package；ZIP 內固定只有下面 3 個檔案，也可以單獨下載。**不要下載 GitHub 自動產生的 Source code ZIP 當成使用者包。**
+最簡單的方式是到 GitHub Release 的**下載區（GitHub 顯示為 Assets）**下載 `Metaphysics-Lab-v1.5.0-User-Package.zip`。下載後只需要解壓縮這個 User Package；ZIP 內固定只有下面 3 個檔案，也可以單獨下載。**不要下載 GitHub 自動產生的 Source code ZIP 當成使用者包。**
 
 | 用途 | 實際檔名 | 你要做什麼 |
 |---|---|---|
