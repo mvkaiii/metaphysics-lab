@@ -70,18 +70,17 @@ class AIDistributionAcceptanceTests(unittest.TestCase):
         self.assertEqual(caps["historical.activation_selector"]["maturity"], "experimental")
         self.assertEqual(caps["historical.activation_selector"]["routing"], "on_demand")
 
-    def test_formal_release_remains_v1_4_0_while_v1_5_is_release_candidate(self):
+    def test_formal_release_is_v1_5_0_without_capability_promotion(self):
         text = (ROOT / "VERSION.md").read_text(encoding="utf-8")
-        formal = text.split("## 目前發行候選", 1)[0]
-        candidate = text.split("## 目前發行候選", 1)[1].split("主要元件：", 1)[0]
-        self.assertIn("Metaphysics Lab Core：**v1.4.0**", formal)
-        self.assertIn("發布日期：**2026-08-26**", formal)
-        self.assertIn("**v1.5.0 Release Candidate**", candidate)
-        self.assertIn("PENDING_FINAL_QUALIFICATION", candidate)
+        formal = text.split("## 歷史版本", 1)[0]
+        self.assertIn("Metaphysics Lab Core：**v1.5.0**", formal)
+        self.assertIn("發布日期：**2026-08-29**", formal)
+        self.assertIn("正式 release commit：`66f604222caadac0209125a78674c3f4491c4b99`", formal)
+        self.assertNotIn("PENDING_FINAL_QUALIFICATION", formal)
         self.assertIn("AI Distribution Pack", text)
         self.assertIn("AI Distribution Runtime：v1.1-exp", text)
         self.assertIn("release 本身不改變 capability maturity", text)
-        self.assertNotRegex(formal, r"最新正式發布[\s\S]{0,100}v1\.3\.0")
+        self.assertNotRegex(formal, r"最新正式發布[\s\S]{0,100}v1\.4\.0")
 
     def test_distribution_contains_no_private_case_payload_files(self):
         self.assertEqual({path.name for path in DIST.iterdir()}, EXPECTED_ARTIFACTS)
