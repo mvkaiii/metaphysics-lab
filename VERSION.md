@@ -2,19 +2,15 @@
 
 > `VERSION.md` 是給開發、驗證與版本治理看的**技術版本表**。第一次使用請先看 `README.md` 或 `docs/快速開始.md`；一般使用者版 v1.5.0 發布說明見 `docs/發布說明-v1.5.0.md`。
 >
-> v1.3.0 與更早版本屬歷史 Release snapshot，不因後續 qualification 或文件更新回寫改造。v1.4.0 收斂 v1.3.0 之後已合併到 `main` 的 Project Contract / Case Schema 1.1、Portable Offline Natal、Historical Blind Calibration 與細時間 qualification；release 本身不改變 capability maturity。
+> v1.4.0 與更早版本屬歷史 Release snapshot，不因後續 qualification 或文件更新回寫改造。release 本身不改變 capability maturity；目前執行能力仍以 `runtime_info` 為技術權威來源。
 
 ## 最新正式發布
 
-- Metaphysics Lab Core：**v1.4.0**
-- 發布日期：**2026-08-26**
-- v1.4.0 為目前已建立 Git tag / GitHub Release 的正式版本。
-
-## 目前發行候選
-
-- **v1.5.0 Release Candidate**
-- 狀態：`PENDING_FINAL_QUALIFICATION`
-- Release baseline：林氏天機 v1.5 Phase 1–6 + 林氏天機預測驗證 + v1.5 發行面驗證 + v1.5 隔離沙盒對話驗證 + v1.5 最終發行資格驗證
+- Metaphysics Lab Core：**v1.5.0**
+- 發布日期：**2026-08-29**
+- 正式 release commit：`66f604222caadac0209125a78674c3f4491c4b99`
+- v1.5.0 已建立 Git tag / GitHub Release，正式 release assets 包含三檔單檔與 `Metaphysics-Lab-v1.5.0-User-Package.zip`。
+- Release baseline：林氏天機 v1.5 Phase 1–6 + 林氏天機預測驗證 + v1.5 發行面驗證 + v1.5 隔離沙盒對話驗證 + v1.5 最終發行資格驗證。
 
 主要元件：
 
@@ -39,9 +35,9 @@
 
 ---
 
-## v1.5.0 Release Candidate Capability 狀態
+## v1.5.0 Capability Snapshot
 
-目前執行能力的權威來源是 `runtime_info`。以下是本次 Release Candidate snapshot；**release 本身不改變 capability maturity**。
+目前執行能力的權威來源是 `runtime_info`。以下是 v1.5.0 發布 snapshot；**release 本身不改變 capability maturity**。
 
 | Capability / Layer | Implementation | Maturity | Routing / Role |
 |---|---|---|---|
@@ -70,9 +66,9 @@
 
 ---
 
-## v1.5.0 Release Candidate Distribution / Contract Snapshot
+## v1.5.0 Distribution / Contract Snapshot
 
-v1.5.0 Release Candidate 收斂下列 distribution / data contract：
+v1.5.0 收斂下列 distribution / data contract：
 
 ```text
 Project Contract          1.1
@@ -103,7 +99,7 @@ Portable Offline Natal：
 
 ---
 
-## v1.5.0 Release Candidate Qualification Snapshot
+## v1.5.0 Qualification Snapshot
 
 ### Natal Foundation
 
@@ -173,31 +169,32 @@ Private Astralium raw chart、raw birth input、完整住址與 normalized priva
 
 ---
 
-## v1.5.0 Release Acceptance Gate
+## v1.5.0 Release Acceptance Gate｜PASS
 
-正式 tag 前必須在 release candidate exact head / merged `main` 上重新確認：
+正式 tag 前已在 exact release candidate / merged `main` 重新確認：
 
 ```text
 Bazi flow-time qualification --check       PASS
 Ziwei flow-time qualification --check      PASS
 Ziwei month-boundary qualification --check PASS
 Deterministic distribution build/check     PASS
-林氏天機 v1.5 focused regression       PASS
+林氏天機 v1.5 focused regression            PASS
 Full repository regression                 PASS
-Python 3.9 compileall                       PASS
+Python 3.9 compile check                    PASS
 Clean validation tree                      PASS
-林氏天機預測驗證                           PASS
-v1.5 發行面驗證                            PASS
-v1.5 隔離沙盒對話驗證                     PASS
+林氏天機預測驗證                            PASS
+v1.5 發行面驗證                             PASS
+v1.5 隔離沙盒對話驗證                      PASS
+Deterministic three-file User Package       PASS
 ```
 
-實際最終 test count、workflow run 與 artifact digest 以 release-preparation PR 的最終驗證紀錄為準；不得在驗證前預填成功數字。
+正式 release workflow run 為 `33246674305`；full repository regression 為 `926/926 PASS`；正式 User Package SHA256 為 `a7fe693a8bd91f6b720409e5e23e655cc3bf13396e21c8b7f99f79bc2b23cbfc`。完整 C.2 與 release qualification 證據見 `docs/release/v1.5.0-isolated-sandbox-conversation-validation.md` 與 `docs/release/v1.5.0-qualification.md`。
 
 ---
 
 ## AI Distribution Pack
 
-v1.5.0 Release Candidate 提供 mobile-first AI release surface：
+v1.5.0 提供 mobile-first AI release surface：
 
 ```text
 dist/ai/metaphysics_lab.py
@@ -253,6 +250,13 @@ AI Distribution Runtime 目前版本為 `1.1-exp`；正式 GitHub Release 不把
 ---
 
 ## 歷史版本
+
+### v1.4.0｜2026-08-26
+
+- 收斂 Project Contract / Case Schema 1.1、Portable Offline Natal、Historical Blind Calibration 與 Bazi / Ziwei 細時間 qualification。
+- 一般使用者語言邊界正式納入 release surface；Astralium 回到可選 External Natal Source / qualification source。
+- v1.4.0 發布時的 `project_instructions.md`、Release Notes 與 qualification snapshot 保持歷史原貌，不因 v1.5.0 改成 `.txt` 而回寫。
+- 一般使用者版歷史發布說明：`docs/發布說明-v1.4.0.md`。
 
 ### v1.3.0｜2026-08-23
 
