@@ -14,9 +14,14 @@ ARCHITECTURE = ROOT / "docs" / "架構說明.md"
 CHANGELOG = ROOT / "CHANGELOG.md"
 RELEASE_NOTES = ROOT / "docs" / "發布說明-v1.4.0.md"
 HISTORICAL_V130_RELEASE_NOTES = ROOT / "docs" / "發布說明-v1.3.0.md"
-PROJECT_INSTRUCTIONS = ROOT / "dist" / "ai" / "project_instructions.md"
+PROJECT_INSTRUCTIONS = ROOT / "dist" / "ai" / "project_instructions.txt"
 
 USER_ARTIFACTS = (
+    "metaphysics_lab.py",
+    "metaphysics_core.md",
+    "project_instructions.txt",
+)
+V140_USER_ARTIFACTS = (
     "metaphysics_lab.py",
     "metaphysics_core.md",
     "project_instructions.md",
@@ -58,8 +63,9 @@ class AIDistributionDocsTests(unittest.TestCase):
             self.assertIn(label, head)
         self.assertIn("下載區", head)
         self.assertIn("GitHub 顯示為 Assets", head)
-        self.assertIn("不需要下載 Source code", head)
-        self.assertIn("不需要解壓縮", head)
+        self.assertIn("Metaphysics-Lab-v1.5.0-User-Package.zip", head)
+        self.assertIn("解壓縮", head)
+        self.assertIn("不要下載 GitHub 自動產生的 Source code", head)
         self.assertIn(STARTUP, head)
         self.assertIn("較高推理", head)
         self.assertNotIn("Draft PR #160", head)
@@ -78,7 +84,7 @@ class AIDistributionDocsTests(unittest.TestCase):
     def test_project_install_is_two_uploads_plus_one_copy(self):
         self.assertIn("上傳 `metaphysics_lab.py`", self.install)
         self.assertIn("上傳 `metaphysics_core.md`", self.install)
-        self.assertIn("`project_instructions.md`", self.install)
+        self.assertIn("`project_instructions.txt`", self.install)
         self.assertIn("Project Instructions", self.install)
         for label in USER_LABELS:
             self.assertIn(label, self.install)
@@ -133,7 +139,7 @@ class AIDistributionDocsTests(unittest.TestCase):
         self.assertIn("Runtime", self.update)
         self.assertIn("Case Schema", self.update)
         self.assertIn("只替換 `metaphysics_lab.py`", self.update)
-        self.assertIn("project_instructions.md", self.update)
+        self.assertIn("project_instructions.txt", self.update)
         self.assertIn("metaphysics_core.md", self.update)
         self.assertIn("schema migration", self.update)
         self.assertIn("runtime_info", self.update)
@@ -154,8 +160,9 @@ class AIDistributionDocsTests(unittest.TestCase):
         text = RELEASE_NOTES.read_text(encoding="utf-8")
         self.assertIn("Metaphysics Lab v1.4.0", text)
         self.assertIn("下載區", text)
-        for name in USER_ARTIFACTS:
+        for name in V140_USER_ARTIFACTS:
             self.assertIn(name, text)
+        self.assertNotIn("project_instructions.txt", text)
         for label in USER_LABELS:
             self.assertIn(label, text)
         self.assertIn("Birth Data first", text)

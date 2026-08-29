@@ -6,19 +6,19 @@
 
 ## 1. 下載與安裝
 
-到 GitHub Release 頁面下方的**下載區（GitHub 顯示為 Assets）**，下載三個檔案：
+v1.5.0 正式發布後，優先下載 `Metaphysics-Lab-v1.5.0-User-Package.zip`；解壓後就是下面三個檔案。也可以在 Assets 單獨下載。
 
 | 用途 | 實際檔名 | 安裝方式 |
 |---|---|---|
 | **命理計算程式** | `metaphysics_lab.py` | 上傳到 Project |
 | **命理分析核心規則** | `metaphysics_core.md` | 上傳到 Project |
-| **Project 設定指令** | `project_instructions.md` | 全文貼到 Project Instructions |
+| **Project 設定指令** | `project_instructions.txt` | 全文貼到 Project Instructions |
 
 實際操作：
 
 1. 上傳 `metaphysics_lab.py` 到 Project。
 2. 上傳 `metaphysics_core.md` 到 Project。
-3. 開啟 Project Instructions，把 `project_instructions.md` 的全文複製進去。
+3. 開啟 Project Instructions，把 `project_instructions.txt` 的全文複製進去。
 
 也就是**兩個上傳檔＋一份貼進 Project Instructions 的文字**。不需要下載 Source code，也不需要解壓縮原始碼。
 
@@ -106,7 +106,7 @@ Alex_7F3A2C_04_紫微基礎資料包.md
 
 ## 8. 問未來的順序
 
-如果需要 Historical Blind Calibration，AI 會先完成未受歷史事件影響的第一版盤面判斷，再請你驗證過去事件，最後才做第二階段校準。這樣可以避免先知道答案後再修改第一版預測。
+如果需要 歷史事件校準，AI 會先完成未受歷史事件影響的第一版盤面判斷，再請你驗證過去事件，最後才做第二階段校準。這樣可以避免先知道答案後再修改第一版預測。
 
 ## 9. Astralium／第三方盤的資料邊界
 

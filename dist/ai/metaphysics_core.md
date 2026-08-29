@@ -853,3 +853,94 @@ AI 不得只在聊天說「已更新」。永久變更必須 resolve subject_id�
 > **現實背景決定策略。**
 >
 > **先鎖盲判，再看答案；失準必須保留，不能事後改寫。**
+
+## 十五、v1.5 可證偽 Claim 契約
+
+對重要且可驗證的未來問事，第一階段完成後必須依 `林氏天機預測驗證契約.md` 收斂成有限數量 Locked Claims，再進入第二階段事件校準。
+
+- Primary Claims 原則上最多 3 個；Secondary Claims 原則上最多 2 個。
+- 每個新 Claim 應有事件族群、時間窗、`matched_if`、`partial_if`、`not_matched_if`、信心與 contamination 狀態。
+- 事後不得擴張命中條件，不得用年度領域命中冒充細時間命中。
+- 舊 lock 保持可讀，不要求破壞性重建。
+
+---
+
+<!-- Source: core/林氏天機預測驗證契約.md -->
+# 林氏天機 v1.5｜預測與驗證契約
+
+本文件定義「未來問事如何把高顆粒度盤面收斂成可驗證預測」。它不修改八字、紫微、時間推導、Phase 3 ranking 或 capability maturity。
+
+## 1. 核心原則
+
+重要且可驗證的未來問事，在第一階段盲判完成後，必須把主要預測收斂成有限數量的 Locked Claims，再進入事件校準。
+
+- **Primary Claims：最多 3 個。**
+- **Secondary Claims：最多 2 個。**
+- 若確有理由超過，必須在 lock 前說明研究理由；不得為提高表面命中率而大量列出低資訊量預測。
+- 盤面可保持高顆粒度，但輸出必須收斂成：事件領域 → 事件族群 → 明確時間窗 → 可反證條件。
+- 第一版一旦 lock，事件發生後不得改寫、擴張 `matched_if`，也不得把已知結果倒填成原本預測。
+
+## 2. Locked Claim 最低欄位
+
+每個新 v1.5 Claim 至少應保留：
+
+- `claim_id`：穩定識別碼。
+- `priority`：`primary` 或 `secondary`。
+- `domain`：人類可讀的事件領域；runtime 對應欄位為 `primary_domain`。
+- `event_family`：比「工作／健康／財運」更窄、可辨認的事件族群。
+- `forecast_window`：明確開始與結束時間。
+- `matched_if`：什麼情況算完整命中。
+- `partial_if`：什麼情況只能算部分命中。
+- `not_matched_if`：什麼情況構成可反證的未命中。
+- `confidence`：依既有信心規則標示。
+- `contamination_state`：是否在 lock 前已知道部分未來安排。
+
+`prediction`、`evidence_layers`、`evidence_time_scales`、`knowledge_cutoff_at`、`evaluation_eligibility`、`method_version` 等機器欄位仍依 Phase 1 prospective contract 保存。
+
+舊 Phase 1 lock 不要求破壞性遷移；runtime 仍可驗證舊格式。v1.5 發布後新建立的重要預測，則應使用完整的新 Claim 欄位。
+
+## 3. Contamination
+
+固定使用：
+
+- `clean_prospective`：lock 前未知，可進 clean prospective denominator。
+- `partially_known`：lock 前已知部分事實或安排，不得當成乾淨預測命中。
+- `known_before_lock`：lock 前已明確知道該未來事件或安排，不得進 clean prospective denominator。
+
+已知的醫療排程、已簽約工作、已訂好的旅行、已確認會議等，可以影響策略，但不得重新包裝成預測命中。
+
+## 4. 評估必須拆三層
+
+事件發生後，除 `verification_state` 外，研究紀錄應分別保留：
+
+- `domain_result`：領域是否抓對。
+- `event_family_result`：事件族群是否抓對。
+- `timing_result`：事前時間窗是否抓對。
+
+不得用「年度領域有中」冒充「月份或日期也中」。未事前 claim 的時間精度，事後只能標示 `not_claimed` 或等價狀態，不得補寫成命中。
+
+Phase 6 的 `matched / partial / not_matched / cannot_recall` 與 failure attribution 仍是正式 evaluation authority；上述三層結果是額外的可讀研究分解，不取代 Phase 6。
+
+## 5. Failure attribution
+
+仍沿用 Phase 6：
+
+- `ai_compliance_failure`
+- `specification_ambiguity`
+- `deterministic_or_algorithm_failure`
+- `metaphysical_signal_failure`
+- 無失敗時為 `none`
+
+不得因結果不好，就把 metaphysical signal failure 改寫成 interpretation problem；也不得因結果好，就事後放寬 Claim 定義。
+
+## 6. 輸出要求
+
+自然語言回答仍以台灣繁體中文、白話策略為主。Claim 是研究與追蹤層，不要求把所有 runtime 欄位直接丟給一般使用者。
+
+對重要未來問事，至少要讓使用者看得出：
+
+1. 最重要的 1～3 個 Primary Claims 是什麼。
+2. 次要的 Secondary Claims 是什麼。
+3. 各自的時間窗。
+4. 什麼算全中、部分中、沒中。
+5. 哪些現實安排已知，因此不能算乾淨預測。

@@ -1,4 +1,4 @@
-name: Feature Historical Calibration Validation
+name: 林氏天機 v1.5 Validation
 
 on:
   push:
@@ -62,11 +62,11 @@ jobs:
       - name: Upload rebuilt distribution snapshot
         uses: actions/upload-artifact@v4
         with:
-          name: phase6-rebuilt-ai-distribution-${{ github.sha }}
+          name: lin-tianji-v1.5-rebuilt-ai-distribution-${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           path: dist/ai/
           if-no-files-found: error
 
-      - name: Historical selector, personalization, interpretation, prospective evaluation, and progressive Case focused tests
+      - name: 林氏天機 v1.5 focused regression
         run: |
           python -m unittest \
             tests.test_bazi_structural_relations \
@@ -110,6 +110,15 @@ jobs:
             tests.test_fifth_round_legacy_record_id_compat \
             tests.test_distribution_runtime_info -v
 
+      - name: Run 林氏天機預測驗證
+        run: python tools/run_lin_tianji_prediction_validation.py --json
+
+      - name: Run v1.5 發行面驗證
+        run: python tools/run_v15_release_surface_validation.py --json
+
+      - name: Verify deterministic three-file user package
+        run: python tools/build_release_package.py --verify --output "$RUNNER_TEMP/Metaphysics-Lab-v1.5.0-User-Package.zip"
+
       - name: Full repository regression
         run: |
           python -m unittest discover -s tests -p 'test_*.py' -v
@@ -126,6 +135,6 @@ jobs:
       - name: Upload generated distribution
         uses: actions/upload-artifact@v4
         with:
-          name: progressive-case-ai-distribution
+          name: lin-tianji-v1.5-ai-distribution-${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           path: dist/ai/
           if-no-files-found: error

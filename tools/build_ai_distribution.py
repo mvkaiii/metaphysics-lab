@@ -7,7 +7,7 @@ artifacts for end users:
 
 - metaphysics_lab.py
 - metaphysics_core.md
-- project_instructions.md
+- project_instructions.txt
 """
 
 from __future__ import annotations
@@ -43,7 +43,7 @@ MAX_BUNDLE_BYTES = 5 * 1024 * 1024
 ARTIFACT_NAMES = (
     "metaphysics_core.md",
     "metaphysics_lab.py",
-    "project_instructions.md",
+    "project_instructions.txt",
 )
 _FIRST_PARTY_TEXT_PREFIXES = ("engine/", "templates/")
 _SINGLE_BUNDLE_INPUTS = (
@@ -367,7 +367,7 @@ def _render_project_instructions(repo_root: Path) -> str:
 def _render_metaphysics_core(repo_root: Path) -> str:
     root = Path(repo_root)
     sections = []
-    for relative in ("core/AI工作流程.md", "core/命理分析作業規範.md"):
+    for relative in ("core/AI工作流程.md", "core/命理分析作業規範.md", "core/林氏天機預測驗證契約.md"):
         text = _normalize_text((root / relative).read_text(encoding="utf-8")).rstrip()
         sections.append("<!-- Source: %s -->\n%s" % (relative, text))
     return "\n\n---\n\n".join(sections).rstrip() + "\n"
@@ -459,7 +459,7 @@ def render_distribution(repo_root: Path) -> Dict[str, bytes]:
     bundle = _render_bundle(root)
     enforce_size_limit(bundle)
     artifacts = {
-        "project_instructions.md": _render_project_instructions(root).encode("utf-8"),
+        "project_instructions.txt": _render_project_instructions(root).encode("utf-8"),
         "metaphysics_core.md": _render_metaphysics_core(root).encode("utf-8"),
         "metaphysics_lab.py": bundle.encode("utf-8"),
     }
