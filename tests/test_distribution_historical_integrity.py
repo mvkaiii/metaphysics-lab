@@ -7,6 +7,7 @@ from engine.distribution.calibration import (
     finalize_historical_calibration,
     lock_historical_calibration,
 )
+from engine.historical.selection_integrity import verify_selection_result
 
 from tests.historical_authority_helpers import authoritative_finalize, authoritative_lock
 
@@ -92,6 +93,13 @@ def lock(selector=None, supplemental=None):
 
 
 class HistoricalCalibrationIntegrityTests(unittest.TestCase):
+    def test_v1_integrity_digest_is_stable(self):
+        result = selector_result()
+        first = verify_selection_result(result)
+        second = verify_selection_result(copy.deepcopy(result))
+        self.assertEqual(first, second)
+        self.assertEqual(first, result["selection_digest"])
+
     def test_lock_rejects_high_year_override_even_when_test_points_follow_override(self):
         tampered = selector_result()
         tampered["high_years"] = [
