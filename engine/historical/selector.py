@@ -9,7 +9,12 @@ from zoneinfo import ZoneInfo
 from engine.bazi.calendar import flow_month_pillar, flow_year_pillar, solar_term_time
 from engine.bazi.structural_relations import detect_structural_relations
 
-from .control_eligibility import historical_strength_class
+from .control_eligibility import (
+    V2_PROFILE_ID,
+    V2_RULE_VERSION,
+    evaluate_control_candidate,
+    historical_strength_class,
+)
 from .models import ActivationEvidence, ActivationRankVector
 
 FLOW_MONTH_START_TERMS = (
@@ -398,6 +403,147 @@ def select_historical_activation(payload: Mapping[str, object]) -> dict:
             "derived_by": "engine.historical.selector",
             "annual_boundary": "li_chun",
             "selection_policy": "lexicographic_top4_bottom1_no_override",
+            "ziwei_ranking_authority": False,
+        },
+    }
+
+
+def select_historical_activation_v2(payload: Mapping[str, object]) -> dict:
+    if not isinstance(payload, Mapping):
+        raise ValueError("selector payload must be a mapping")
+    forbidden = sorted(_FORBIDDEN_HINTS & set(payload))
+    if forbidden:
+        raise ValueError("history-based ranking hints are forbidden: %s" % ", ".join(forbidden))
+    normalized = payload.get("normalized_natal")
+    if not isinstance(normalized, Mapping):
+        raise ValueError("normalized_natal must be a mapping")
+    timezone = payload.get("timezone")
+    as_of = payload.get("as_of_datetime")
+    if not isinstance(timezone, str) or not isinstance(as_of, str):
+        raise ValueError("as_of_datetime and timezone are required")
+    bazi = _project_bazi(normalized)
+    natal_pillars = bazi.get("pillars")
+    if not isinstance(natal_pillars, Mapping):
+        raise ValueError("Project Bazi pillars are missing")
+
+    periods = completed_flow_year_periods(as_of, timezone, 10)
+    rows = []
+    decadal_indices = set()
+    boundary_in_window = False
+    for period in periods:
+        context = _decadal_context(bazi, period)
+        decadal_indices.add(context["index"])
+        boundary_in_window = boundary_in_window or context["boundary_in_period"]
+        evidence = build_year_evidence(
+            label_year=period["label_year"],
+            flow_year_pillar=period["flow_year_pillar"],
+            natal_pillars=natal_pillars,
+            decadal_pillar=context["pillar"],
+            decadal_boundary=context["boundary_in_period"],
+        )
+        rank = rank_evidence(evidence)
+        rows.append({
+            **dict(period),
+            "decadal_index": context["index"],
+            "decadal_pillar": context["pillar"],
+            "decadal_boundary_in_period": context["boundary_in_period"],
+            "decadal_boundary_datetimes": context["boundary_datetimes"],
+            "rank_vector": rank.to_dict(),
+            "evidence": [item.to_dict() for item in evidence],
+            "_sort_key": rank.as_sort_key(period["label_year"]),
+        })
+    ranked = sorted(rows, key=lambda row: row["_sort_key"], reverse=True)
+    for row in ranked:
+        row.pop("_sort_key", None)
+
+    for index, row in enumerate(ranked):
+        rank = ActivationRankVector(**row["rank_vector"])
+        if index < 4:
+            row.update({
+                "annual_role": "sustained_high",
+                "annual_control_eligibility": False,
+                "control_rejection_reasons": ["top4_high_activation"],
+                "annual_strength_class": historical_strength_class(rank),
+                "local_window_status": "not_required",
+                "local_windows": [],
+            })
+            continue
+        diagnostics = build_month_activation_diagnostics(
+            annual_row=row,
+            natal_pillars=natal_pillars,
+            bazi=bazi,
+            timezone=timezone,
+        )
+        evaluation = evaluate_control_candidate(
+            annual_row=row,
+            next_higher_row=ranked[index - 1],
+            local_windows=diagnostics["local_windows"],
+            coverage_complete=diagnostics["coverage_complete"],
+        )
+        row.update({
+            "annual_role": evaluation["annual_role"],
+            "annual_control_eligibility": evaluation["control_eligible"],
+            "control_rejection_reasons": evaluation["control_rejection_reasons"],
+            "annual_strength_class": evaluation["annual_strength_class"],
+            "local_window_status": "complete" if diagnostics["coverage_complete"] else "incomplete",
+            "local_windows": diagnostics["local_windows"],
+        })
+
+    eligible_indexes = [
+        index for index in range(4, len(ranked))
+        if ranked[index]["annual_control_eligibility"]
+    ]
+    selected_index = eligible_indexes[-1] if eligible_indexes else None
+    for index in eligible_indexes:
+        ranked[index]["annual_role"] = "true_control" if index == selected_index else "relative_low"
+
+    high = ranked[:4]
+    control = None if selected_index is None else ranked[selected_index]
+    control_selection = "abstain" if control is None else "selected"
+    control_quality = "no_clean_control" if control is None else "true_control"
+    if boundary_in_window:
+        coverage = "boundary_in_window"
+    elif len(decadal_indices) > 1:
+        coverage = "cross_cycle"
+    else:
+        coverage = "single_cycle"
+
+    canonical = {
+        "profile_id": V2_PROFILE_ID,
+        "rule_version": V2_RULE_VERSION,
+        "as_of_datetime": as_of,
+        "timezone": timezone,
+        "ranked_periods": ranked,
+        "high_year_labels": [item["label_year"] for item in high],
+        "control_year_label": None if control is None else control["label_year"],
+        "control_selection": control_selection,
+        "control_quality": control_quality,
+        "control_quality_semantics": "structural_comparison_only_not_quiet_year",
+        "major_cycle_coverage": coverage,
+    }
+    digest = _canonical_digest(canonical)
+    return {
+        "classification": "Project 推導盤面",
+        "capability_id": "historical.activation_selector",
+        "profile_id": V2_PROFILE_ID,
+        "rule_version": V2_RULE_VERSION,
+        "maturity": "experimental",
+        "ranking_basis": "bazi_only",
+        "as_of_datetime": as_of,
+        "timezone": timezone,
+        "ranked_periods": ranked,
+        "high_years": high,
+        "control_year": control,
+        "control_selection": control_selection,
+        "control_quality": control_quality,
+        "control_quality_semantics": "structural_comparison_only_not_quiet_year",
+        "major_cycle_coverage": coverage,
+        "selection_digest": digest,
+        "provenance": {
+            "derived_by": "engine.historical.selector",
+            "annual_boundary": "li_chun",
+            "monthly_boundary": "exact_solar_terms",
+            "selection_policy": "lexicographic_top4_optional_true_control_v2",
             "ziwei_ranking_authority": False,
         },
     }
