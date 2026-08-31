@@ -258,6 +258,8 @@ def _build_interpretation_contract_summary(payload: Mapping[str, object]) -> dic
         "personalization",
         "local_windows",
         "locked_forecast",
+        "interpretation_profile_version",
+        "structural_interpretation",
     }
     unknown = sorted(set(payload) - allowed)
     missing = sorted({"base_ranking", "anchor"} - set(payload))
@@ -267,13 +269,45 @@ def _build_interpretation_contract_summary(payload: Mapping[str, object]) -> dic
             "interpretation contract payload fields do not match the fixed contract",
             {"unknown_fields": unknown, "missing_fields": missing},
         )
-    from .interpretation_contract import build_interpretation_contract
-    return build_interpretation_contract(
-        payload.get("base_ranking"),
-        payload.get("anchor"),
-        personalization=payload.get("personalization"),
-        local_windows=payload.get("local_windows"),
-        locked_forecast=payload.get("locked_forecast"),
+
+    v1_profile = "lin_tianji_interpretation_contract_v1-exp"
+    v2_profile = "lin_tianji_interpretation_contract_v2-exp"
+    profile = payload.get("interpretation_profile_version", v1_profile)
+    common = {
+        "personalization": payload.get("personalization"),
+        "local_windows": payload.get("local_windows"),
+        "locked_forecast": payload.get("locked_forecast"),
+    }
+    if profile == v1_profile:
+        if "structural_interpretation" in payload:
+            raise DistributionError(
+                "invalid_interpretation_contract",
+                "v1 interpretation contract does not accept structural_interpretation",
+            )
+        from .interpretation_contract import build_interpretation_contract
+        return build_interpretation_contract(
+            payload.get("base_ranking"),
+            payload.get("anchor"),
+            **common,
+        )
+    if profile == v2_profile:
+        structural = payload.get("structural_interpretation")
+        if not isinstance(structural, Mapping):
+            raise DistributionError(
+                "invalid_interpretation_contract",
+                "v2 interpretation contract requires structural_interpretation",
+            )
+        from .interpretation_contract_v2 import build_interpretation_contract_v2
+        return build_interpretation_contract_v2(
+            payload.get("base_ranking"),
+            payload.get("anchor"),
+            structural_interpretation=structural,
+            **common,
+        )
+    raise DistributionError(
+        "invalid_interpretation_contract",
+        "unsupported interpretation profile",
+        {"interpretation_profile_version": profile},
     )
 
 
