@@ -21,7 +21,7 @@ class HistoricalActivationCapabilityTests(unittest.TestCase):
             capability["supported_profiles"],
             (
                 {"profile_id": "historical-activation-bazi-v1", "rule_version": "1.0-exp"},
-                {"profile_id": "historical-activation-bazi-v2", "rule_version": "2.0-exp"},
+                {"profile_id": "historical-activation-bazi-v2", "rule_version": "2.1-exp"},
             ),
         )
 
