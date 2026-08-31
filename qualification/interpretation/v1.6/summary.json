@@ -1,0 +1,24 @@
+{
+  "schema_version": "v1.6-private-qualification-summary.v1",
+  "status": "PENDING",
+  "case_count": 0,
+  "selector": {
+    "v1_control_false_negative_count": 0,
+    "v2_not_true_control_count": 0,
+    "v2_true_control_count": 0,
+    "v2_abstention_count": 0
+  },
+  "interpretation": {
+    "v1_domain": {"matched": 0, "partial": 0, "missed": 0},
+    "v2_domain": {"matched": 0, "partial": 0, "missed": 0},
+    "v1_event_family": {"matched": 0, "partial": 0, "missed": 0},
+    "v2_event_family": {"matched": 0, "partial": 0, "missed": 0},
+    "v1_false_positive_count": 0,
+    "v2_false_positive_count": 0,
+    "v2_abstention_count": 0
+  },
+  "cutoff_contamination_count": 0,
+  "input_set_digest": null,
+  "summary_digest": "PENDING",
+  "promotion_allowed": false
+}
