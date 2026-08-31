@@ -6,10 +6,16 @@ from datetime import datetime, timedelta
 from typing import Mapping, Sequence
 from zoneinfo import ZoneInfo
 
-from engine.bazi.calendar import flow_year_pillar, solar_term_time
+from engine.bazi.calendar import flow_month_pillar, flow_year_pillar, solar_term_time
 from engine.bazi.structural_relations import detect_structural_relations
 
+from .control_eligibility import historical_strength_class
 from .models import ActivationEvidence, ActivationRankVector
+
+FLOW_MONTH_START_TERMS = (
+    "立春", "驚蟄", "清明", "立夏", "芒種", "小暑",
+    "立秋", "白露", "寒露", "立冬", "大雪", "小寒",
+)
 
 PROFILE_ID = "historical-activation-bazi-v1"
 RULE_VERSION = "1.0-exp"
@@ -180,6 +186,120 @@ def _decadal_context(bazi: Mapping[str, object], period: Mapping[str, object]) -
         "pillar": str(active["pillar"]),
         "boundary_in_period": bool(boundaries),
         "boundary_datetimes": boundaries,
+    }
+
+
+def flow_month_periods_for_year(annual_period: Mapping[str, object], timezone: str) -> tuple[dict, ...]:
+    if not isinstance(annual_period, Mapping):
+        raise ValueError("annual_period must be a mapping")
+    if not isinstance(timezone, str) or not timezone.strip():
+        raise ValueError("timezone must be a non-empty IANA timezone")
+    label_year = annual_period.get("label_year")
+    if not isinstance(label_year, int) or isinstance(label_year, bool):
+        raise ValueError("annual_period.label_year must be an integer")
+    start = _aware_datetime(annual_period.get("period_start"), "period_start")
+    end = _aware_datetime(annual_period.get("period_end"), "period_end")
+    boundaries = [start]
+    for term in FLOW_MONTH_START_TERMS[1:]:
+        boundary_year = label_year + 1 if term == "小寒" else label_year
+        boundaries.append(solar_term_time(boundary_year, term, timezone))
+    boundaries.append(end)
+    if len(boundaries) != 13 or any(left >= right for left, right in zip(boundaries, boundaries[1:])):
+        raise ValueError("flow-month boundaries are incomplete or non-monotonic")
+    rows = []
+    for month_start, month_end in zip(boundaries, boundaries[1:]):
+        rows.append({
+            "period_start": month_start.isoformat(),
+            "period_end": month_end.isoformat(),
+            "flow_month_pillar": flow_month_pillar(month_start + timedelta(seconds=1)),
+        })
+    return tuple(rows)
+
+
+def build_month_activation_diagnostics(
+    *,
+    annual_row: Mapping[str, object],
+    natal_pillars: Mapping[str, str],
+    bazi: Mapping[str, object],
+    timezone: str,
+) -> dict:
+    if not isinstance(annual_row, Mapping):
+        raise ValueError("annual_row must be a mapping")
+    if not isinstance(natal_pillars, Mapping):
+        raise ValueError("natal_pillars must be a mapping")
+    if not isinstance(bazi, Mapping):
+        raise ValueError("bazi must be a mapping")
+    raw_parent_rank = annual_row.get("rank_vector")
+    if not isinstance(raw_parent_rank, Mapping):
+        raise ValueError("annual_row.rank_vector must be a mapping")
+    parent_rank = ActivationRankVector(**dict(raw_parent_rank))
+    parent_strength = historical_strength_class(parent_rank)
+    try:
+        periods = flow_month_periods_for_year(annual_row, timezone)
+    except ValueError:
+        return {
+            "coverage_complete": False,
+            "coverage_count": 0,
+            "local_windows": [],
+            "months": [],
+        }
+
+    months = []
+    local_windows = []
+    try:
+        for period in periods:
+            context = _decadal_context(bazi, period)
+            relations = detect_structural_relations(
+                scope="monthly",
+                target_pillar=period["flow_month_pillar"],
+                natal_pillars=natal_pillars,
+                decadal_pillar=context["pillar"],
+                decadal_boundary=False,
+            )
+            evidence = tuple(
+                _evidence(
+                    int(annual_row["label_year"]),
+                    relation.tier,
+                    relation.relation_family,
+                    relation.target_layer,
+                    relation.target_component,
+                    relation.participants,
+                )
+                for relation in relations
+            )
+            rank = rank_evidence(evidence)
+            child_strength = historical_strength_class(rank)
+            if child_strength == "strong" and parent_strength in {"weak", "unspecified"}:
+                window_type = "local_spike"
+            elif child_strength == "strong":
+                window_type = "active_window"
+            else:
+                window_type = None
+            row = {
+                "period_start": period["period_start"],
+                "period_end": period["period_end"],
+                "flow_month_pillar": period["flow_month_pillar"],
+                "decadal_pillar": context["pillar"],
+                "rank_vector": rank.to_dict(),
+                "strength_class": child_strength,
+                "window_type": window_type,
+            }
+            months.append(row)
+            if window_type is not None:
+                local_windows.append(dict(row))
+    except (KeyError, TypeError, ValueError):
+        return {
+            "coverage_complete": False,
+            "coverage_count": len(months),
+            "local_windows": local_windows,
+            "months": months,
+        }
+
+    return {
+        "coverage_complete": len(months) == 12,
+        "coverage_count": len(months),
+        "local_windows": local_windows,
+        "months": months,
     }
 
 
