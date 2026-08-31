@@ -170,7 +170,7 @@ def _selector_point_map(selector: Mapping[str, object]) -> Tuple[list, dict]:
         if not isinstance(control, Mapping):
             raise DistributionError("invalid_selector_result", "v1 selector_result must contain one control year")
         selected_rows = list(high) + [control]
-    elif profile_id == "historical-activation-bazi-v2" and rule_version == "2.0-exp":
+    elif profile_id == "historical-activation-bazi-v2" and rule_version in ("2.0-exp", "2.1-exp"):
         selection = selector.get("control_selection")
         if selection == "selected":
             if not isinstance(control, Mapping):
