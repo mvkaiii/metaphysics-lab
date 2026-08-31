@@ -1,0 +1,96 @@
+"""Versioned Interpretation vNext wrapper preserving Phase 3/4/5 authority."""
+
+from __future__ import annotations
+
+import copy
+import hashlib
+import json
+from typing import Mapping, Sequence
+
+from .claim_evidence import build_claim_evidence_packets
+from .interpretation_contract import build_interpretation_contract
+
+
+INTERPRETATION_PROFILE_VERSION_V2 = "lin_tianji_interpretation_contract_v2-exp"
+
+READING_POLICY = {
+    "bazi_order": [
+        "day_master_and_pillar_roles",
+        "month_command",
+        "strength_evidence_if_materialized",
+        "pattern_and_useful_god_if_materialized",
+        "natal_interactions_and_distance_if_materialized",
+        "shensha_auxiliary_if_materialized",
+        "decadal",
+        "yearly",
+        "qualified_fine_time",
+    ],
+    "ziwei_order": [
+        "ming_shen_fude",
+        "ming_cai_guan_qian",
+        "opposition_axes",
+        "stars_in_palace_context",
+        "natal_transformations",
+        "natal_flying_if_materialized",
+        "decadal",
+        "yearly",
+        "small_limit_if_materialized",
+        "qualified_fine_cycle",
+        "repeated_domain_activation",
+    ],
+    "guards": {
+        "missing_layer_must_abstain": True,
+        "five_element_count_is_not_strength_conclusion": True,
+        "ten_god_is_not_event_formula": True,
+        "shensha_auxiliary_only": True,
+        "bazi_cannot_rewrite_ziwei": True,
+        "ziwei_cannot_rewrite_bazi": True,
+        "cross_system_conflict_must_be_preserved": True,
+    },
+}
+
+
+def _digest(value: object) -> str:
+    raw = json.dumps(
+        value,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    ).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()
+
+
+def build_interpretation_contract_v2(
+    base_ranking: Mapping[str, object],
+    anchor: Mapping[str, object],
+    *,
+    structural_interpretation: Mapping[str, object],
+    personalization: Mapping[str, object] | None = None,
+    local_windows: Sequence[Mapping[str, object]] | None = None,
+    locked_forecast: Mapping[str, object] | None = None,
+) -> dict:
+    v1 = build_interpretation_contract(
+        base_ranking,
+        anchor,
+        personalization=personalization,
+        local_windows=local_windows,
+        locked_forecast=locked_forecast,
+    )
+    claim_bundle = build_claim_evidence_packets(
+        base_ranking=base_ranking,
+        structural_interpretation=structural_interpretation,
+        domain_interpretation=v1["domain_interpretation"],
+    )
+
+    result = copy.deepcopy(v1)
+    result["profile_version"] = INTERPRETATION_PROFILE_VERSION_V2
+    result["claim_evidence_profile_version"] = claim_bundle["profile_version"]
+    result["claim_evidence_digest"] = claim_bundle["claim_evidence_digest"]
+    result["claim_evidence_packets"] = copy.deepcopy(claim_bundle["packets"])
+    result["global_conflicts"] = copy.deepcopy(claim_bundle["global_conflicts"])
+    result["reading_policy"] = copy.deepcopy(READING_POLICY)
+    result["global_abstentions"] = [] if result["domain_interpretation"] else ["abstain_domain"]
+    result.pop("interpretation_contract_digest", None)
+    result["interpretation_contract_digest"] = _digest(result)
+    return result
