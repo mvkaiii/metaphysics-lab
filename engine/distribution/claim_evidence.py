@@ -173,10 +173,14 @@ def _validate_domain_interpretation(value: object, base_domains: Sequence[Mappin
             _raise("domain_interpretation specificity is invalid", {"primary_domain": domain})
         if SPECIFICITY_LEVELS.index(effective) > SPECIFICITY_LEVELS.index(base_specificity):
             _raise("domain_interpretation cannot raise specificity", {"primary_domain": domain})
+        explanation_classes = raw.get("evidence_explanation_classes", [])
+        if not isinstance(explanation_classes, list) or any(not isinstance(item, str) for item in explanation_classes):
+            _raise("evidence_explanation_classes must be a text list", {"primary_domain": domain})
         rows[domain] = {
             "event_family_candidates": candidates,
             "effective_specificity": effective,
             "base_allowed_specificity": base_specificity,
+            "evidence_explanation_classes": list(explanation_classes),
         }
     base_ids = {str(item["primary_domain"]) for item in base_domains}
     if set(rows) != base_ids:
@@ -210,6 +214,106 @@ def _evidence_row(feature: EvidenceFeature) -> dict:
     }
 
 
+def classify_cross_system_relation(
+    *,
+    packet_domain: str,
+    selected_features: Sequence[EvidenceFeature],
+    all_selected_features: Sequence[EvidenceFeature],
+    target_scope: str,
+) -> tuple[str | None, list[dict]]:
+    bazi_target_domains = sorted({
+        feature.primary_domain
+        for feature in all_selected_features
+        if feature.system == "bazi" and feature.role == "target_evidence" and feature.scope == target_scope
+    })
+    ziwei_target_domains = sorted({
+        feature.primary_domain
+        for feature in all_selected_features
+        if feature.system == "ziwei" and feature.role == "target_evidence" and feature.scope == target_scope
+    })
+    if bazi_target_domains and ziwei_target_domains and not (set(bazi_target_domains) & set(ziwei_target_domains)):
+        conflict = {
+            "reason": "disjoint_target_domain_sets",
+            "bazi_target_domains": bazi_target_domains,
+            "ziwei_target_domains": ziwei_target_domains,
+        }
+        return "conflict_or_divergence", [conflict]
+
+    packet = [feature for feature in selected_features if feature.primary_domain == packet_domain]
+    systems = {feature.system for feature in packet}
+    if not {"bazi", "ziwei"} <= systems:
+        return None, []
+
+    bazi_target = any(
+        feature.system == "bazi" and feature.role == "target_evidence" and feature.scope == target_scope
+        for feature in packet
+    )
+    ziwei_target = any(
+        feature.system == "ziwei" and feature.role == "target_evidence" and feature.scope == target_scope
+        for feature in packet
+    )
+    if bazi_target and ziwei_target:
+        return "independent_convergence", []
+    if bazi_target != ziwei_target:
+        supporting_system = "ziwei" if bazi_target else "bazi"
+        if any(
+            feature.system == supporting_system and feature.role in {"modifier", "timing_trigger"}
+            for feature in packet
+        ):
+            return "layered_complement", []
+    return None, []
+
+
+def abstentions_for_packet(
+    *,
+    effective_specificity: str,
+    event_family_candidates: Sequence[str],
+    has_local_window: bool,
+    cross_system_relation: str | None,
+) -> list[str]:
+    if effective_specificity not in SPECIFICITY_LEVELS:
+        _raise("effective specificity is invalid", {"effective_specificity": effective_specificity})
+    abstentions = []
+    if effective_specificity == "domain" or not event_family_candidates:
+        abstentions.append("abstain_event_family")
+    if not has_local_window:
+        abstentions.append("abstain_timing")
+    if effective_specificity != "concrete_event":
+        abstentions.append("abstain_concrete_event")
+    return [label for label in ABSTENTION_LABELS if label in abstentions]
+
+
+def confidence_class_for_packet(packet_inputs: Mapping[str, object]) -> str:
+    relation = packet_inputs.get("cross_system_relation")
+    specificity = packet_inputs.get("effective_specificity")
+    selected = packet_inputs.get("selected_features")
+    target_scope = packet_inputs.get("target_scope")
+    if not isinstance(selected, Sequence) or isinstance(selected, (str, bytes)):
+        _raise("selected_features must be a sequence for confidence classification")
+    target_features = [
+        feature for feature in selected
+        if isinstance(feature, EvidenceFeature)
+        and feature.role == "target_evidence"
+        and feature.scope == target_scope
+    ]
+    if relation == "conflict_or_divergence" or specificity == "domain":
+        return "low_confidence"
+    if target_features and all(
+        feature.maturity == "experimental" or feature.qualification_status == "needs_verification"
+        for feature in target_features
+    ):
+        return "low_confidence"
+    if (
+        relation == "independent_convergence"
+        and target_features
+        and all(feature.qualification_status == "qualified" for feature in target_features)
+        and any(feature.maturity == "stable" for feature in target_features)
+        and specificity in {"event_family", "concrete_event"}
+    ):
+        return "high_confidence"
+    return "moderate_confidence"
+
+
 def build_claim_evidence_packets(
     *,
     base_ranking: Mapping[str, object],
@@ -224,15 +328,10 @@ def build_claim_evidence_packets(
     domains = _validate_domain_interpretation(domain_interpretation, base["domains"])
     by_id = {feature.feature_id: feature for feature in features}
 
-    packets = []
+    selected_by_domain = {}
+    all_selected = []
     for base_domain in base["domains"]:
         domain = str(base_domain["primary_domain"])
-        domain_row = domains[domain]
-        if domain_row["event_family_candidates"] != base_domain["event_families"]:
-            _raise("event-family candidate set must equal Phase 3 candidate set", {"primary_domain": domain})
-        if domain_row["base_allowed_specificity"] != base_domain["allowed_specificity"]:
-            _raise("domain base specificity must equal Phase 3 specificity", {"primary_domain": domain})
-
         selected = []
         for feature_id in base_domain["feature_ids"]:
             feature = by_id.get(feature_id)
@@ -249,6 +348,45 @@ def build_claim_evidence_packets(
                     {"feature_id": feature.feature_id, "system": feature.system},
                 )
             selected.append(feature)
+        selected_by_domain[domain] = selected
+        all_selected.extend(selected)
+
+    packets = []
+    global_conflicts = []
+    for base_domain in base["domains"]:
+        domain = str(base_domain["primary_domain"])
+        domain_row = domains[domain]
+        if domain_row["event_family_candidates"] != base_domain["event_families"]:
+            _raise("event-family candidate set must equal Phase 3 candidate set", {"primary_domain": domain})
+        if domain_row["base_allowed_specificity"] != base_domain["allowed_specificity"]:
+            _raise("domain base specificity must equal Phase 3 specificity", {"primary_domain": domain})
+
+        selected = selected_by_domain[domain]
+        relation, conflicts = classify_cross_system_relation(
+            packet_domain=domain,
+            selected_features=selected,
+            all_selected_features=all_selected,
+            target_scope=base["target_scope"],
+        )
+        has_local_window = any(
+            item in {"local_spike", "active_window"}
+            for item in domain_row["evidence_explanation_classes"]
+        )
+        abstentions = abstentions_for_packet(
+            effective_specificity=domain_row["effective_specificity"],
+            event_family_candidates=base_domain["event_families"],
+            has_local_window=has_local_window,
+            cross_system_relation=relation,
+        )
+        confidence = confidence_class_for_packet({
+            "cross_system_relation": relation,
+            "effective_specificity": domain_row["effective_specificity"],
+            "selected_features": selected,
+            "target_scope": base["target_scope"],
+        })
+        for conflict in conflicts:
+            if conflict not in global_conflicts:
+                global_conflicts.append(conflict)
 
         dependency_count = len({feature.dependency_family for feature in selected})
         if dependency_count != base_domain["independent_dependency_count"]:
@@ -271,13 +409,13 @@ def build_claim_evidence_packets(
             "ziwei_evidence": ziwei,
             "source_layers": source_layers,
             "independent_support_count": dependency_count,
-            "cross_system_relation": None,
-            "conflicts": [],
+            "cross_system_relation": relation,
+            "conflicts": conflicts,
             "assumptions": [],
             "base_allowed_specificity": base_domain["allowed_specificity"],
             "effective_specificity": domain_row["effective_specificity"],
-            "abstention_status": [],
-            "confidence_class": "moderate_confidence",
+            "abstention_status": abstentions,
+            "confidence_class": confidence,
             "reasoning_chain": {
                 "phase3_ranking_digest": base["ranking_digest"],
                 "structural_interpretation_digest": structural_digest,
@@ -293,7 +431,7 @@ def build_claim_evidence_packets(
         "base_ranking_digest": base["ranking_digest"],
         "structural_interpretation_digest": structural_digest,
         "packets": packets,
-        "global_conflicts": [],
+        "global_conflicts": global_conflicts,
     }
     result["claim_evidence_digest"] = _digest(result)
     return result
