@@ -6,6 +6,7 @@ from engine.historical.selector import (
     build_month_activation_diagnostics,
     completed_flow_year_periods,
     flow_month_periods_for_year,
+    select_historical_activation_v2,
 )
 from engine.historical.control_eligibility import (
     evaluate_control_candidate,
@@ -146,3 +147,92 @@ def test_month_boundary_failure_marks_coverage_incomplete_and_rejects_true_contr
     )
     assert result["control_eligible"] is False
     assert result["annual_role"] == "uncertain"
+
+
+def _v2_payload():
+    return {
+        "normalized_natal": {
+            "validation": {"blocking_conflict_count": 0},
+            "project": {"bazi": _synthetic_bazi()},
+        },
+        "as_of_datetime": "2026-08-23T10:27:00+08:00",
+        "timezone": "Asia/Taipei",
+    }
+
+
+def _clean_month_diagnostics(**_kwargs):
+    return {
+        "coverage_complete": True,
+        "coverage_count": 12,
+        "local_windows": [],
+        "months": [],
+    }
+
+
+def _spike_month_diagnostics(**_kwargs):
+    return {
+        "coverage_complete": True,
+        "coverage_count": 12,
+        "local_windows": [{"window_type": "local_spike"}],
+        "months": [],
+    }
+
+
+def test_ac03_v2_selects_exactly_one_true_control_when_low_candidate_is_clean():
+    with patch(
+        "engine.historical.selector.build_month_activation_diagnostics",
+        side_effect=_clean_month_diagnostics,
+    ):
+        result = select_historical_activation_v2(_v2_payload())
+    assert result["profile_id"] == "historical-activation-bazi-v2"
+    assert result["rule_version"] == "2.0-exp"
+    assert result["control_selection"] == "selected"
+    assert result["control_quality"] == "true_control"
+    assert result["control_year"] is not None
+    assert result["control_year"]["label_year"] == 2017
+    true_controls = [
+        item for item in result["ranked_periods"] if item["annual_role"] == "true_control"
+    ]
+    assert len(true_controls) == 1
+    assert true_controls[0]["label_year"] == result["control_year"]["label_year"]
+
+
+def test_ac04_v2_abstains_when_all_low_candidates_have_local_spikes():
+    with patch(
+        "engine.historical.selector.build_month_activation_diagnostics",
+        side_effect=_spike_month_diagnostics,
+    ):
+        result = select_historical_activation_v2(_v2_payload())
+    assert result["control_year"] is None
+    assert result["control_selection"] == "abstain"
+    assert result["control_quality"] == "no_clean_control"
+    assert not any(item["annual_role"] == "true_control" for item in result["ranked_periods"])
+
+
+def test_v2_selection_digest_is_deterministic_and_changes_with_natal_basis():
+    payload = _v2_payload()
+    with patch(
+        "engine.historical.selector.build_month_activation_diagnostics",
+        side_effect=_clean_month_diagnostics,
+    ):
+        first = select_historical_activation_v2(payload)
+        second = select_historical_activation_v2(copy.deepcopy(payload))
+        changed = copy.deepcopy(payload)
+        changed["normalized_natal"]["project"]["bazi"]["pillars"]["day"] = "丙寅"
+        third = select_historical_activation_v2(changed)
+    assert first == second
+    assert first["selection_digest"] != third["selection_digest"]
+
+
+def test_v2_rejects_history_based_ranking_hints():
+    for forbidden in (
+        "preferred_years", "known_event_years", "event_keywords", "manual_rank_override"
+    ):
+        payload = _v2_payload()
+        payload[forbidden] = [2020]
+        try:
+            select_historical_activation_v2(payload)
+        except ValueError as exc:
+            assert "history-based ranking hints are forbidden" in str(exc)
+        else:
+            raise AssertionError("forbidden history hint was accepted: %s" % forbidden)
