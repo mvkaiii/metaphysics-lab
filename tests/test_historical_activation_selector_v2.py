@@ -59,6 +59,34 @@ def test_tier2_difference_establishes_control_separation():
     assert has_structural_separation(low, near) is True
 
 
+def test_ac03b_active_child_window_rejects_true_control_without_relabeling_local_spike():
+    annual = row(ActivationRankVector(0,0,False,1,1,0,0))
+    next_higher = row(ActivationRankVector(0,0,False,2,2,0,0))
+    result = evaluate(
+        annual,
+        next_higher=next_higher,
+        local_windows=[{"window_type": "active_window"}],
+        coverage_complete=True,
+    )
+    assert result["control_eligible"] is False
+    assert result["annual_role"] == "relative_low"
+    assert result["control_rejection_reasons"] == ["active_child_window"]
+
+
+def test_clean_moderate_candidate_without_strong_child_window_remains_true_control():
+    annual = row(ActivationRankVector(0,0,False,1,1,0,0))
+    next_higher = row(ActivationRankVector(0,0,False,2,2,0,0))
+    result = evaluate(
+        annual,
+        next_higher=next_higher,
+        local_windows=[],
+        coverage_complete=True,
+    )
+    assert result["control_eligible"] is True
+    assert result["annual_role"] == "true_control"
+    assert result["control_rejection_reasons"] == []
+
+
 def _synthetic_bazi():
     return {
         "pillars": {
@@ -185,7 +213,7 @@ def test_ac03_v2_selects_exactly_one_true_control_when_low_candidate_is_clean():
     ):
         result = select_historical_activation_v2(_v2_payload())
     assert result["profile_id"] == "historical-activation-bazi-v2"
-    assert result["rule_version"] == "2.0-exp"
+    assert result["rule_version"] == "2.1-exp"
     assert result["control_selection"] == "selected"
     assert result["control_quality"] == "true_control"
     assert result["control_year"] is not None
