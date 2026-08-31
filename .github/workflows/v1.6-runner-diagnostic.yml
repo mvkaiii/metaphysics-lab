@@ -1,0 +1,26 @@
+name: v1.6 Runner Diagnostic
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostic:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Runner alive
+        run: |
+          echo "runner=${{ runner.name }}"
+          uname -a
+      - name: Checkout validation ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - name: Confirm head
+        run: git log -1 --format=%H
