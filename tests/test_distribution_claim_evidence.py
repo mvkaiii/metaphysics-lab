@@ -116,3 +116,104 @@ def test_provenance_is_separated_by_system_and_other_systems_rejected():
             structural_interpretation=structural(bad_features),
             domain_interpretation=bad_contract['domain_interpretation'],
         )
+
+
+def packet_result(features):
+    ranking = rank_evidence(features, target_scope='yearly')
+    contract = build_interpretation_contract(ranking, anchor())
+    return build_claim_evidence_packets(
+        base_ranking=ranking,
+        structural_interpretation=structural(features),
+        domain_interpretation=contract['domain_interpretation'],
+    )
+
+
+def test_cross_system_independent_convergence():
+    result = packet_result([
+        feature('b1', system='bazi', domain='career', role='target_evidence', scope='yearly', dependency='b'),
+        feature('z1', system='ziwei', domain='career', role='target_evidence', scope='yearly', dependency='z'),
+    ])
+    assert result['packets'][0]['cross_system_relation'] == 'independent_convergence'
+
+
+def test_cross_system_layered_complement():
+    result = packet_result([
+        feature('b1', system='bazi', domain='career', role='target_evidence', scope='yearly', dependency='b'),
+        feature('z1', system='ziwei', domain='career', role='modifier', scope='decadal', families=(), dependency='z'),
+    ])
+    assert result['packets'][0]['cross_system_relation'] == 'layered_complement'
+
+
+def test_cross_system_divergence_preserves_both_domain_packets():
+    result = packet_result([
+        feature('b-fin', system='bazi', domain='finance', role='target_evidence', scope='yearly', dependency='b-fin'),
+        feature('z-car', system='ziwei', domain='career', role='target_evidence', scope='yearly', dependency='z-car'),
+    ])
+    assert {p['primary_domain'] for p in result['packets']} == {'finance', 'career'}
+    assert {p['cross_system_relation'] for p in result['packets']} == {'conflict_or_divergence'}
+    for packet in result['packets']:
+        assert packet['conflicts'][0]['bazi_target_domains'] == ['finance']
+        assert packet['conflicts'][0]['ziwei_target_domains'] == ['career']
+
+
+def test_single_system_packet_has_no_fake_cross_system_relation():
+    result = packet_result([
+        feature('b1', system='bazi', domain='career', role='target_evidence', scope='yearly', dependency='b'),
+    ])
+    assert result['packets'][0]['cross_system_relation'] is None
+    assert result['packets'][0]['conflicts'] == []
+
+
+def test_domain_specificity_abstains_event_family_and_is_low_confidence():
+    result = packet_result([
+        feature('b1', system='bazi', domain='career', role='target_evidence', scope='yearly', families=(), dependency='b'),
+    ])
+    packet = result['packets'][0]
+    assert packet['effective_specificity'] == 'domain'
+    assert 'abstain_event_family' in packet['abstention_status']
+    assert 'abstain_concrete_event' in packet['abstention_status']
+    assert packet['confidence_class'] == 'low_confidence'
+
+
+def test_event_family_specificity_requires_concrete_event_abstention():
+    result = packet_result([
+        feature('b1', system='bazi', domain='career', role='target_evidence', scope='yearly', families=('role_change',), dependency='b'),
+    ])
+    packet = result['packets'][0]
+    assert packet['effective_specificity'] == 'event_family'
+    assert 'abstain_concrete_event' in packet['abstention_status']
+
+
+def test_conflict_is_always_low_confidence_even_with_stable_evidence():
+    result = packet_result([
+        feature('b-fin', system='bazi', domain='finance', role='target_evidence', scope='yearly', dependency='b-fin'),
+        feature('z-car', system='ziwei', domain='career', role='target_evidence', scope='yearly', dependency='z-car'),
+    ])
+    assert {p['confidence_class'] for p in result['packets']} == {'low_confidence'}
+
+
+def test_independent_qualified_stable_convergence_can_be_high_confidence():
+    result = packet_result([
+        feature('b1', system='bazi', domain='career', role='target_evidence', scope='yearly', dependency='b'),
+        feature('z1', system='ziwei', domain='career', role='target_evidence', scope='yearly', dependency='z'),
+    ])
+    packet = result['packets'][0]
+    assert packet['effective_specificity'] == 'concrete_event'
+    assert packet['confidence_class'] == 'high_confidence'
+    assert 'abstain_concrete_event' not in packet['abstention_status']
+
+
+def test_no_local_window_requires_timing_abstention():
+    result = packet_result([
+        feature('b1', system='bazi', domain='career', role='target_evidence', scope='yearly', dependency='b'),
+    ])
+    assert 'abstain_timing' in result['packets'][0]['abstention_status']
+
+
+def test_packet_has_no_probability_semantics():
+    result = packet_result([
+        feature('b1', system='bazi', domain='career', role='target_evidence', scope='yearly', dependency='b'),
+    ])
+    serialized = json.dumps(result['packets'][0], ensure_ascii=False).lower()
+    for token in ('probability', 'likelihood', 'percent', '%'):
+        assert token not in serialized
