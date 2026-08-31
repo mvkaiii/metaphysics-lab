@@ -21,7 +21,12 @@ def test_selected_rows_keep_five_for_v1_and_v2_selected():
     assert len(_selected_historical_rows(v2_selected())) == 5
 
 def test_ziwei_support_uses_actual_expected_selected_count():
-    selector=v2_abstain(); result=_ziwei_historical_support(selector, _v2_payload())
+    selector = v2_abstain()
+    with patch(
+        "engine.distribution.forecast.resolve_forecast_context",
+        return_value={"ziwei": {"yearly": {"scope": "yearly", "reference": "synthetic"}}},
+    ):
+        result = _ziwei_historical_support(selector, _v2_payload())
     assert result["status"] == "available"
     assert len(result["years"]) == 4
 
