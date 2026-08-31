@@ -184,6 +184,21 @@ class HistoricalActivationSelectorTests(unittest.TestCase):
         else:
             self.assertEqual(result["control_quality"], "strong_control")
 
+    def test_v1_selector_shape_stays_legacy_top4_bottom1(self):
+        result = select_historical_activation(
+            {
+                "normalized_natal": NATAL,
+                "as_of_datetime": "2026-08-23T10:27:00+08:00",
+                "timezone": "Asia/Taipei",
+            }
+        )
+        self.assertEqual(result["profile_id"], "historical-activation-bazi-v1")
+        self.assertEqual(result["rule_version"], "1.0-exp")
+        self.assertEqual(len(result["high_years"]), 4)
+        self.assertIsInstance(result["control_year"], dict)
+        self.assertNotIn("annual_role", result["ranked_periods"][0])
+        self.assertNotIn("control_selection", result)
+
 
 if __name__ == "__main__":
     unittest.main()
