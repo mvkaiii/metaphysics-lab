@@ -5,7 +5,7 @@ from typing import Mapping, Sequence
 from .models import ActivationRankVector
 
 V2_PROFILE_ID = "historical-activation-bazi-v2"
-V2_RULE_VERSION = "2.0-exp"
+V2_RULE_VERSION = "2.1-exp"
 ANNUAL_ROLES = (
     "sustained_high",
     "localized_spike",
@@ -95,6 +95,12 @@ def evaluate_control_candidate(
     )
     if has_local_spike:
         reasons.append("local_spike")
+    has_active_child_window = any(
+        isinstance(window, Mapping) and window.get("window_type") == "active_window"
+        for window in local_windows
+    )
+    if has_active_child_window:
+        reasons.append("active_child_window")
     if not separated:
         reasons.append("insufficient_separation")
 
