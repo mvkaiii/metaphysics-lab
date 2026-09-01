@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validation:
@@ -59,6 +59,26 @@ jobs:
         run: |
           python tools/build_ai_distribution.py
           python tools/build_ai_distribution.py --check
+
+      - name: Sync deterministic AI distribution bootstrap
+        if: github.event_name == 'pull_request' && github.head_ref == 'impl/v1.6-selector-v2-clean-control-21' && github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          changed="$(git diff --name-only)"
+          untracked="$(git ls-files --others --exclude-standard)"
+          if [ -z "$changed" ] && [ -z "$untracked" ]; then
+            echo "Distribution already synchronized."
+            exit 0
+          fi
+          if [ "$changed" != "dist/ai/metaphysics_lab.py" ] || [ -n "$untracked" ]; then
+            echo "Unexpected rebuild drift; refusing bootstrap commit."
+            git status --short
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist/ai/metaphysics_lab.py
+          git commit -m "build: sync deterministic AI distribution"
+          git push origin "HEAD:${{ github.head_ref }}"
 
       - name: Upload rebuilt distribution snapshot
         uses: actions/upload-artifact@v4
