@@ -7,6 +7,7 @@ import hashlib
 import json
 from typing import Mapping, Sequence
 
+from .claim_consumption_contract import build_claim_consumption_bundle
 from .claim_evidence import build_claim_evidence_packets
 from .coordination_policy_v2 import build_coordination_bundle
 from .interpretation_contract import build_interpretation_contract
@@ -96,6 +97,10 @@ def build_interpretation_contract_v2(
         source_interpretation_digest=str(structural_interpretation["interpretation_digest"]),
         phase3_specificity_by_domain=phase3_caps,
     )
+    claim_consumption_bundle = build_claim_consumption_bundle(
+        claim_evidence_bundle=claim_bundle,
+        coordination_bundle=coordination_bundle,
+    )
 
     result = copy.deepcopy(v1)
     result["profile_version"] = INTERPRETATION_PROFILE_VERSION_V2
@@ -106,6 +111,9 @@ def build_interpretation_contract_v2(
     result["coordination_policy_version"] = coordination_bundle["policy_version"]
     result["coordination_digest"] = coordination_bundle["coordination_digest"]
     result["coordination_relations"] = copy.deepcopy(coordination_bundle["relations"])
+    result["claim_consumption_profile_version"] = claim_consumption_bundle["profile_version"]
+    result["claim_consumption_digest"] = claim_consumption_bundle["claim_consumption_digest"]
+    result["claim_consumption_decisions"] = copy.deepcopy(claim_consumption_bundle["decisions"])
     result["reading_policy"] = copy.deepcopy(READING_POLICY)
     result["global_abstentions"] = [] if result["domain_interpretation"] else ["abstain_domain"]
     result.pop("interpretation_contract_digest", None)
