@@ -1,0 +1,109 @@
+{
+  "cases": [
+    {
+      "case_id": "Q-SYN-001",
+      "claim_consumption_bundle": {
+        "claim_consumption_digest": "8455440ff271ceb35b76466420ff35a9466ae859ed455d7835f920f507f5dee5",
+        "claim_evidence_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "coordination_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "decisions": [
+          {
+            "authorized_specificity": "event_family",
+            "claim_id": "claim:yearly:career",
+            "confidence_class": "moderate_confidence",
+            "coordination_relation": "direct_domain_convergence",
+            "decision": "render",
+            "original_effective_specificity": "event_family",
+            "primary_domain": "career",
+            "reason_codes": []
+          }
+        ],
+        "profile_version": "lin_tianji_claim_consumption_v1-exp",
+        "target_scope": "yearly"
+      },
+      "cutoff_contamination": false,
+      "expectations": [
+        {
+          "caveat_required": false,
+          "claim_id": "claim:yearly:career",
+          "expected_authorization": "render",
+          "maximum_specificity": "concrete_event",
+          "minimum_acceptable_specificity": "event_family"
+        }
+      ],
+      "input_digest": "5750692cbb35eccdee164a555b6e1a90ff8e453dabb59683015a55274942cb81"
+    },
+    {
+      "case_id": "Q-SYN-002",
+      "claim_consumption_bundle": {
+        "claim_consumption_digest": "e5b3a899190691e4736e798c5b2139f0444299573ceb9faba87533451be39ecb",
+        "claim_evidence_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "coordination_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "decisions": [
+          {
+            "authorized_specificity": "event_family",
+            "claim_id": "claim:yearly:finance",
+            "confidence_class": "moderate_confidence",
+            "coordination_relation": "single_system_support",
+            "decision": "render_with_caveat",
+            "original_effective_specificity": "concrete_event",
+            "primary_domain": "finance",
+            "reason_codes": [
+              "single_system_support"
+            ]
+          }
+        ],
+        "profile_version": "lin_tianji_claim_consumption_v1-exp",
+        "target_scope": "yearly"
+      },
+      "cutoff_contamination": false,
+      "expectations": [
+        {
+          "caveat_required": true,
+          "claim_id": "claim:yearly:finance",
+          "expected_authorization": "render_with_caveat",
+          "maximum_specificity": "event_family",
+          "minimum_acceptable_specificity": "domain"
+        }
+      ],
+      "input_digest": "afd35d22e664fa0672519e4b679620556ad460c17a2f02b8649f3a158047e622"
+    },
+    {
+      "case_id": "Q-SYN-003",
+      "claim_consumption_bundle": {
+        "claim_consumption_digest": "0261638fc19df77caf017c564c872459a846407fb701d46ae1ce9fe198ed166f",
+        "claim_evidence_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "coordination_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "decisions": [
+          {
+            "authorized_specificity": "event_family",
+            "claim_id": "claim:yearly:partnership",
+            "confidence_class": "moderate_confidence",
+            "coordination_relation": "single_system_support",
+            "decision": "abstain_claim",
+            "original_effective_specificity": "event_family",
+            "primary_domain": "partnership",
+            "reason_codes": [
+              "no_same_scope_target_support"
+            ]
+          }
+        ],
+        "profile_version": "lin_tianji_claim_consumption_v1-exp",
+        "target_scope": "yearly"
+      },
+      "cutoff_contamination": false,
+      "expectations": [
+        {
+          "caveat_required": false,
+          "claim_id": "claim:yearly:partnership",
+          "expected_authorization": "abstain_claim",
+          "maximum_specificity": null,
+          "minimum_acceptable_specificity": null
+        }
+      ],
+      "input_digest": "9b44321ef5808e1c8c7a431c0ba8b53526d23d82f42402fa6c952412e3c60da3"
+    }
+  ],
+  "classification": "synthetic_validation",
+  "schema_version": "v1.6-claim-consumption-qualification-input.v1"
+}
