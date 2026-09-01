@@ -8,6 +8,7 @@ import json
 from typing import Mapping, Sequence
 
 from .claim_evidence import build_claim_evidence_packets
+from .coordination_policy_v2 import build_coordination_bundle
 from .interpretation_contract import build_interpretation_contract
 
 
@@ -46,6 +47,10 @@ READING_POLICY = {
         "bazi_cannot_rewrite_ziwei": True,
         "ziwei_cannot_rewrite_bazi": True,
         "cross_system_conflict_must_be_preserved": True,
+        "coordination_relation_is_v2_interpretation_authority": True,
+        "parallel_signals_must_not_be_rewritten_as_conflict": True,
+        "legacy_cross_system_relation_is_audit_provenance": True,
+        "coordination_must_not_raise_specificity": True,
     },
 }
 
@@ -82,6 +87,17 @@ def build_interpretation_contract_v2(
         structural_interpretation=structural_interpretation,
         domain_interpretation=v1["domain_interpretation"],
     )
+    phase3_specificity = {
+        row["primary_domain"]: row["allowed_specificity"]
+        for row in base_ranking.get("domains", [])
+    }
+    coordination_bundle = build_coordination_bundle(
+        claim_evidence_packets=claim_bundle["packets"],
+        target_scope=base_ranking["target_scope"],
+        source_ranking_digest=base_ranking["ranking_digest"],
+        source_interpretation_digest=claim_bundle["structural_interpretation_digest"],
+        phase3_specificity_by_domain=phase3_specificity,
+    )
 
     result = copy.deepcopy(v1)
     result["profile_version"] = INTERPRETATION_PROFILE_VERSION_V2
@@ -89,6 +105,9 @@ def build_interpretation_contract_v2(
     result["claim_evidence_digest"] = claim_bundle["claim_evidence_digest"]
     result["claim_evidence_packets"] = copy.deepcopy(claim_bundle["packets"])
     result["global_conflicts"] = copy.deepcopy(claim_bundle["global_conflicts"])
+    result["coordination_policy_version"] = coordination_bundle["policy_version"]
+    result["coordination_digest"] = coordination_bundle["coordination_digest"]
+    result["coordination_relations"] = copy.deepcopy(coordination_bundle["relations"])
     result["reading_policy"] = copy.deepcopy(READING_POLICY)
     result["global_abstentions"] = [] if result["domain_interpretation"] else ["abstain_domain"]
     result.pop("interpretation_contract_digest", None)
