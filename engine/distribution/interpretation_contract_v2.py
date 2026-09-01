@@ -47,6 +47,7 @@ READING_POLICY = {
         "bazi_cannot_rewrite_ziwei": True,
         "ziwei_cannot_rewrite_bazi": True,
         "cross_system_conflict_must_be_preserved": True,
+        "coordination_relation_is_python_authority": True,
     },
 }
 
@@ -106,7 +107,6 @@ def build_interpretation_contract_v2(
     result["coordination_digest"] = coordination_bundle["coordination_digest"]
     result["coordination_relations"] = copy.deepcopy(coordination_bundle["relations"])
     result["reading_policy"] = copy.deepcopy(READING_POLICY)
-    result["reading_policy"]["guards"]["coordination_relation_is_python_authority"] = True
     result["global_abstentions"] = [] if result["domain_interpretation"] else ["abstain_domain"]
     result.pop("interpretation_contract_digest", None)
     result["interpretation_contract_digest"] = _digest(result)
