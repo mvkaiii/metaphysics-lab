@@ -328,6 +328,13 @@ control：`strong_control / acceptable_control` 可描述為相對低活化；`r
 8. AI 依 contract 轉成自然語言解讀。
 9. 當次 known reality／現實背景可以讓策略更具體，但只作用在策略層，不回寫 canonical contract，不得改變 ranking、不得提高 specificity、不得把 known reality 視為 prospective hit。
 
+若當次 contract 是 Interpretation v2 且包含 `coordination_relations`：
+
+- `coordination_relation` 是 **Python authority**。AI 僅負責把 Python 已計算的 coordination 語義轉成人可讀文字，不得從八字／紫微 raw evidence 重新判定 `coordination_relation`，也不得用 legacy `cross_system_relation` 覆蓋。
+- `parallel_signals` 代表不同 domain 並行，不是因為 domain 不同就互相矛盾；不得把 `parallel_signals` 改寫成 conflict。
+- `direct_domain_convergence`、`layered_complement`、`parallel_signals` 等只描述 coordination 結構，不是額外 ranking authority。不得因 coordination 自動提高 confidence；specificity 只能維持或保守下修，且不得高於 `coordination_specificity_cap`。
+- 若 Python 沒有輸出合法 coordination relation，AI 必須 abstain／降級，不得自行補算。
+
 未完成歷史事件校準時仍可 cold-start；Phase 4 personalization 是可選層，不是進入未來分析的必要條件。Historical Personalization 不等於機率。
 
 # 六、05 驗證事件與 Calibration Ledger
@@ -432,3 +439,5 @@ Candidate Envelope 是 Project 原生盤面候選集合；候選依賴欄位不�
 - 使用者當次現實背景決定 **策略是否可執行**。
 
 若任一必要來源不可讀、runtime 不可執行或輸入精度不足，明確降級或停止；不得用猜測填滿缺口。
+
+---
