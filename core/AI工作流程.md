@@ -335,6 +335,13 @@ control：`strong_control / acceptable_control` 可描述為相對低活化；`r
 - `direct_domain_convergence`、`layered_complement`、`parallel_signals` 等只描述 coordination 結構，不是額外 ranking authority。不得因 coordination 自動提高 confidence；specificity 只能維持或保守下修，且不得高於 `coordination_specificity_cap`。
 - 若 Python 沒有輸出合法 coordination relation，AI 必須 abstain／降級，不得自行補算。
 
+若當次 Interpretation v2 同時包含 `claim_consumption_decisions` 與 `claim_consumption_digest`：
+
+- claim consumption Python authority 決定每個既有 claim 是 `render`、`render_with_caveat` 或 `abstain_claim`；AI 不得重新判定 claim consumption decision，也不得從 raw Bazi／Ziwei、legacy relation 或 coordination 另算一套 decision。
+- `render_with_caveat` 必須保留 Python 已給定的 caveat／reason semantics，不得在自然語言轉譯時消失；不得把 `abstain_claim` 改成可呈現 claim，亦不得用現實背景把已 abstain 的 prospective claim 重新開啟。
+- `authorized_specificity` 是 AI 輸出的 specificity ceiling；不得高於 `authorized_specificity`，也不得因 claim consumption 提高 confidence。claim consumption 只能維持或保守降級既有 authority。
+- 若 claim consumption 欄位缺失、digest 無法驗證或 decision 不合法，AI 必須 fail closed／abstain，不得自行補算。
+
 未完成歷史事件校準時仍可 cold-start；Phase 4 personalization 是可選層，不是進入未來分析的必要條件。Historical Personalization 不等於機率。
 
 # 六、05 驗證事件與 Calibration Ledger
