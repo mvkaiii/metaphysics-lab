@@ -1,0 +1,29 @@
+{
+  "allowed_case_statuses": [
+    "EXCLUDE_AFTER_CUTOFF",
+    "EXCLUDE_INPUT_INVALID",
+    "EXCLUDE_NON_CONFIRMATION",
+    "EXCLUDE_OUT_OF_SCOPE",
+    "EXCLUDE_PREVIOUSLY_EXPOSED",
+    "INCLUDE"
+  ],
+  "allowed_exclusion_reason_codes": [
+    "after_cutoff",
+    "input_invalid",
+    "non_confirmation",
+    "out_of_scope",
+    "previously_exposed"
+  ],
+  "candidate_exposure_must_be_unexposed": true,
+  "claim_universe_must_be_outcome_free": true,
+  "complete_census_required": true,
+  "minimum_case_count_rule": "at_least_one_if_eligible",
+  "minimum_claim_count_rule": "at_least_one_if_eligible",
+  "promotion_allowed": false,
+  "protocol_digest": "6dc9cab5844455bedf2e5a3b02434acf8018e2622b5bdfdeaeb959d004bc9692",
+  "protocol_frozen_at": "2026-09-01T16:27:25Z",
+  "required_t1_policy_digest": "65a072b2de63d6f509cc79139442263695589feca28ee99da0ab976ba0c3118a",
+  "required_t1_policy_profile": "lin_tianji_claim_consumption_private_strict_zero_v1",
+  "sampling_profile": "lin_tianji_claim_consumption_complete_census_v1",
+  "schema_version": "v1.6-claim-consumption-sampling-protocol.v1"
+}
