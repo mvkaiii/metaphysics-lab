@@ -1,0 +1,18 @@
+{
+  "policy_digest": "65a072b2de63d6f509cc79139442263695589feca28ee99da0ab976ba0c3118a",
+  "policy_frozen_at": "2026-09-01T14:59:11Z",
+  "policy_profile": "lin_tianji_claim_consumption_private_strict_zero_v1",
+  "promotion_allowed": false,
+  "schema_version": "v1.6-claim-consumption-private-release-policy.v1",
+  "thresholds": {
+    "caveat_omission_count": 0,
+    "cutoff_contamination_count": 0,
+    "missed_alignment_count": 0,
+    "over_render_count": 0,
+    "partial_alignment_count": 0,
+    "specificity_excessive_downgrade_count": 0,
+    "specificity_overreach_count": 0,
+    "under_render_count": 0,
+    "unnecessary_caveat_count": 0
+  }
+}
