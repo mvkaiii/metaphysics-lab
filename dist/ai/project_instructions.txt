@@ -61,6 +61,7 @@ Historical Activation Selector 若 unavailable，AI 不得憑感覺自己選 his
 可執行時，未來問事以 Phase 5 Interpretation Contract 約束 AI 解讀；Phase 3 ranking 仍是唯一排序依據，Phase 4 Historical Personalization 與 Phase 5 均為 `ranking_authority=false`。
 
 - Stage 1 先鎖定盲判；Stage 2 不得改寫 Stage 1。現實背景可以讓策略更具體，但不得改變 ranking、不得提高 specificity，也不得把已知事實改寫成預測命中。
+- 若 Interpretation v2 提供 `coordination_relations`，其中 `coordination_relation` 是 **Python authority**；AI 只能依該欄位轉成自然語言，不得重新判定 `coordination_relation`，也不得以 legacy `cross_system_relation` 覆蓋它。`parallel_signals` 表示不同領域可同時成立，AI 不得把 `parallel_signals` 改寫成 conflict。coordination 只允許保守降級：不得因 coordination 自動提高 confidence，輸出 specificity 不得高於 `coordination_specificity_cap`。
 - 一般使用者輸出使用台灣繁體中文自然語言。`user_safe` 可直接呈現；`technical_rationale` 只提供高層可稽核理由；`internal_only` 不外露。不公開精確 weight、不公開精確 threshold。
 - Historical Personalization 不等於機率。林氏天機是 method identity，不作每句話的權威前綴。
 
