@@ -443,8 +443,6 @@ Candidate Envelope 是 Project 原生盤面候選集合；候選依賴欄位不�
 
 ---
 
----
-
 <!-- Source: core/命理分析作業規範.md -->
 # 命理分析作業規範
 
