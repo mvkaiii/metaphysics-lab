@@ -162,11 +162,31 @@ def lock_blind_forecast(payload: Mapping[str, object]) -> dict:
 def _selector_point_map(selector: Mapping[str, object]) -> Tuple[list, dict]:
     high = selector.get("high_years")
     control = selector.get("control_year")
-    if not isinstance(high, (list, tuple)) or len(high) != 4 or not isinstance(control, Mapping):
-        raise DistributionError("invalid_selector_result", "selector_result must contain four high years and one control year")
+    if not isinstance(high, (list, tuple)) or len(high) != 4:
+        raise DistributionError("invalid_selector_result", "selector_result must contain exactly four high years")
+    profile_id = selector.get("profile_id")
+    rule_version = selector.get("rule_version")
+    if profile_id == "historical-activation-bazi-v1" and rule_version == "1.0-exp":
+        if not isinstance(control, Mapping):
+            raise DistributionError("invalid_selector_result", "v1 selector_result must contain one control year")
+        selected_rows = list(high) + [control]
+    elif profile_id == "historical-activation-bazi-v2" and rule_version in ("2.0-exp", "2.1-exp"):
+        selection = selector.get("control_selection")
+        if selection == "selected":
+            if not isinstance(control, Mapping):
+                raise DistributionError("invalid_selector_result", "v2 selected selector_result must contain one control year")
+            selected_rows = list(high) + [control]
+        elif selection == "abstain":
+            if control is not None:
+                raise DistributionError("invalid_selector_result", "v2 abstain selector_result cannot contain a control year")
+            selected_rows = list(high)
+        else:
+            raise DistributionError("invalid_selector_result", "v2 selector_result control_selection is invalid")
+    else:
+        raise DistributionError("invalid_selector_result", "selector_result profile or rule version is unsupported")
     rows = []
     order = []
-    for row in list(high) + [control]:
+    for row in selected_rows:
         if not isinstance(row, Mapping) or not isinstance(row.get("label_year"), int):
             raise DistributionError("invalid_selector_result", "selector year rows are malformed")
         year = int(row["label_year"])
@@ -208,21 +228,29 @@ def lock_historical_calibration(payload: Mapping[str, object]) -> dict:
     except ValueError as exc:
         raise DistributionError("selector_integrity_mismatch", str(exc)) from exc
     canonical = payload.get("canonical_test_points")
-    if not isinstance(canonical, (list, tuple)) or len(canonical) != 5:
-        raise DistributionError("invalid_calibration_point", "canonical_test_points must contain exactly five points")
+    if not isinstance(canonical, (list, tuple)):
+        raise DistributionError("invalid_calibration_point", "canonical_test_points must be a list")
     expected_order, selector_rows = _selector_point_map(selector)
+    if len(canonical) != len(expected_order):
+        raise DistributionError(
+            "selector_binding_mismatch",
+            "canonical test point count must match selector control selection",
+            {"expected_count": len(expected_order), "actual_count": len(canonical)},
+        )
     actual_order = [item.get("reference_year") if isinstance(item, Mapping) else None for item in canonical]
     if actual_order != expected_order:
         raise DistributionError(
             "selector_binding_mismatch",
-            "canonical test points must preserve selector Top 4 + Bottom 1 selection and order",
+            "canonical test points must preserve selector selected-year order",
             {"expected_years": expected_order, "actual_years": actual_order},
         )
+    control = selector.get("control_year")
+    control_label = int(control["label_year"]) if isinstance(control, Mapping) else None
     normalized = []
     for index, raw in enumerate(canonical):
         if not isinstance(raw, Mapping):
             raise DistributionError("invalid_calibration_point", "canonical point must be a mapping")
-        expected_role = "control" if index == 4 else "high_activation"
+        expected_role = "control" if expected_order[index] == control_label else "high_activation"
         if raw.get("role") != expected_role:
             raise DistributionError("selector_binding_mismatch", "canonical test point role does not match selector role")
         normalized.append(_normalize_test_point(raw, selector_rows[expected_order[index]], "canonical"))
@@ -251,7 +279,7 @@ def lock_historical_calibration(payload: Mapping[str, object]) -> dict:
         if year in canonical_years:
             raise DistributionError(
                 "supplemental_duplicates_canonical",
-                "supplemental point must not duplicate a canonical Top 4 + Bottom 1 year",
+                "supplemental point must not duplicate a canonical selected year",
                 {"reference_year": year},
             )
         if year in seen_supplemental:

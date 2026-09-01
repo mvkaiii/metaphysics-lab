@@ -1,0 +1,40 @@
+{
+  "case_count": 4,
+  "cutoff_contamination_count": 0,
+  "input_set_digest": "117b3d67fab7ef3bc69d2d0b8f5aa1cc188a71df89e559f1ad77a4ded5abf4c3",
+  "interpretation": {
+    "v1_domain": {
+      "matched": 2,
+      "missed": 1,
+      "partial": 1
+    },
+    "v1_event_family": {
+      "matched": 2,
+      "missed": 1,
+      "partial": 1
+    },
+    "v1_false_positive_count": 0,
+    "v2_abstention_count": 4,
+    "v2_domain": {
+      "matched": 2,
+      "missed": 2,
+      "partial": 0
+    },
+    "v2_event_family": {
+      "matched": 1,
+      "missed": 2,
+      "partial": 1
+    },
+    "v2_false_positive_count": 2
+  },
+  "promotion_allowed": false,
+  "schema_version": "v1.6-private-qualification-summary.v1",
+  "selector": {
+    "v1_control_false_negative_count": 1,
+    "v2_abstention_count": 4,
+    "v2_not_true_control_count": 4,
+    "v2_true_control_count": 0
+  },
+  "status": "PASS",
+  "summary_digest": "76e25535f58cbfa5fc37902475d33fa3a639124deb9a7ba20278207f0ea0408c"
+}

@@ -75,9 +75,28 @@ def runtime_info() -> dict:
 def _selected_historical_rows(selector_result: Mapping[str, object]):
     high = selector_result.get("high_years")
     control = selector_result.get("control_year")
-    if not isinstance(high, (list, tuple)) or len(high) != 4 or not isinstance(control, Mapping):
-        raise DistributionError("historical_selector_invalid", "selector result must contain four high years and one control year")
-    rows = list(high) + [control]
+    if not isinstance(high, (list, tuple)) or len(high) != 4:
+        raise DistributionError("historical_selector_invalid", "selector result must contain exactly four high years")
+    profile_id = selector_result.get("profile_id")
+    rule_version = selector_result.get("rule_version")
+    if profile_id == "historical-activation-bazi-v1" and rule_version == "1.0-exp":
+        if not isinstance(control, Mapping):
+            raise DistributionError("historical_selector_invalid", "v1 selector result must contain one control year")
+        rows = list(high) + [control]
+    elif profile_id == "historical-activation-bazi-v2" and rule_version == "2.0-exp":
+        selection = selector_result.get("control_selection")
+        if selection == "selected":
+            if not isinstance(control, Mapping):
+                raise DistributionError("historical_selector_invalid", "v2 selected selector result must contain one control year")
+            rows = list(high) + [control]
+        elif selection == "abstain":
+            if control is not None:
+                raise DistributionError("historical_selector_invalid", "v2 abstain selector result cannot contain a control year")
+            rows = list(high)
+        else:
+            raise DistributionError("historical_selector_invalid", "v2 selector control_selection is invalid")
+    else:
+        raise DistributionError("historical_selector_invalid", "unsupported selector profile")
     if any(not isinstance(row, Mapping) for row in rows):
         raise DistributionError("historical_selector_invalid", "selector result contains malformed selected years")
     return rows
@@ -97,7 +116,9 @@ def _ziwei_historical_support(selector_result: Mapping[str, object], payload: Ma
         return {"status": "unavailable", "role": "support_only", "ranking_authority": False, "years": [], "reason": "selector timezone cannot be resolved: %s" % exc}
     support_rows = []
     failures = []
-    for row in _selected_historical_rows(selector_result):
+    selected_rows = _selected_historical_rows(selector_result)
+    expected_count = len(selected_rows)
+    for row in selected_rows:
         label_year = row.get("label_year")
         try:
             start = datetime.fromisoformat(str(row["period_start"]))
@@ -117,10 +138,10 @@ def _ziwei_historical_support(selector_result: Mapping[str, object], payload: Ma
             support_rows.append(support_row)
         except (DistributionError, KeyError, TypeError, ValueError) as exc:
             failures.append({"label_year": label_year, "reason": str(exc), "error_code": getattr(exc, "code", None)})
-    if len(support_rows) == 5:
+    if len(support_rows) == expected_count:
         status, reason = "available", None
     elif support_rows:
-        status, reason = "partial", "Ziwei yearly support was unavailable for %d of 5 canonical years" % len(failures)
+        status, reason = "partial", "Ziwei yearly support was unavailable for %d of %d canonical years" % (len(failures), expected_count)
     else:
         status, reason = "unavailable", failures[0]["reason"] if failures else "Ziwei yearly support is unavailable"
     result = {"status": status, "role": "support_only", "ranking_authority": False, "years": support_rows}
@@ -132,13 +153,22 @@ def _ziwei_historical_support(selector_result: Mapping[str, object], payload: Ma
 
 
 def _prepare_historical_calibration(payload: Mapping[str, object]) -> dict:
-    from engine.historical.selector import select_historical_activation
+    from engine.historical.selector import select_historical_activation, select_historical_activation_v2
+
+    selector_profile_id = payload.get("selector_profile_id", "historical-activation-bazi-v1")
+    selector_payload = dict(payload)
+    selector_payload.pop("selector_profile_id", None)
     try:
-        selector_result = select_historical_activation(payload)
+        if selector_profile_id == "historical-activation-bazi-v1":
+            selector_result = select_historical_activation(selector_payload)
+        elif selector_profile_id == "historical-activation-bazi-v2":
+            selector_result = select_historical_activation_v2(selector_payload)
+        else:
+            raise DistributionError("historical_selector_invalid", "unsupported selector profile")
     except ValueError as exc:
         raise DistributionError("historical_selector_invalid", str(exc)) from exc
     result = dict(selector_result)
-    result["ziwei_support"] = _ziwei_historical_support(selector_result, payload)
+    result["ziwei_support"] = _ziwei_historical_support(selector_result, selector_payload)
     return result
 
 
@@ -228,6 +258,8 @@ def _build_interpretation_contract_summary(payload: Mapping[str, object]) -> dic
         "personalization",
         "local_windows",
         "locked_forecast",
+        "interpretation_profile_version",
+        "structural_interpretation",
     }
     unknown = sorted(set(payload) - allowed)
     missing = sorted({"base_ranking", "anchor"} - set(payload))
@@ -237,13 +269,45 @@ def _build_interpretation_contract_summary(payload: Mapping[str, object]) -> dic
             "interpretation contract payload fields do not match the fixed contract",
             {"unknown_fields": unknown, "missing_fields": missing},
         )
-    from .interpretation_contract import build_interpretation_contract
-    return build_interpretation_contract(
-        payload.get("base_ranking"),
-        payload.get("anchor"),
-        personalization=payload.get("personalization"),
-        local_windows=payload.get("local_windows"),
-        locked_forecast=payload.get("locked_forecast"),
+
+    v1_profile = "lin_tianji_interpretation_contract_v1-exp"
+    v2_profile = "lin_tianji_interpretation_contract_v2-exp"
+    profile = payload.get("interpretation_profile_version", v1_profile)
+    common = {
+        "personalization": payload.get("personalization"),
+        "local_windows": payload.get("local_windows"),
+        "locked_forecast": payload.get("locked_forecast"),
+    }
+    if profile == v1_profile:
+        if "structural_interpretation" in payload:
+            raise DistributionError(
+                "invalid_interpretation_contract",
+                "v1 interpretation contract does not accept structural_interpretation",
+            )
+        from .interpretation_contract import build_interpretation_contract
+        return build_interpretation_contract(
+            payload.get("base_ranking"),
+            payload.get("anchor"),
+            **common,
+        )
+    if profile == v2_profile:
+        structural = payload.get("structural_interpretation")
+        if not isinstance(structural, Mapping):
+            raise DistributionError(
+                "invalid_interpretation_contract",
+                "v2 interpretation contract requires structural_interpretation",
+            )
+        from .interpretation_contract_v2 import build_interpretation_contract_v2
+        return build_interpretation_contract_v2(
+            payload.get("base_ranking"),
+            payload.get("anchor"),
+            structural_interpretation=structural,
+            **common,
+        )
+    raise DistributionError(
+        "invalid_interpretation_contract",
+        "unsupported interpretation profile",
+        {"interpretation_profile_version": profile},
     )
 
 

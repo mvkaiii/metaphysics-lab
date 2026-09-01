@@ -52,6 +52,10 @@ _CAPABILITIES = {
         "maturity": "experimental",
         "routing": "on_demand",
         "rule_version": "lin_tianji_interpretation_contract_v1-exp",
+        "supported_profiles": (
+            "lin_tianji_interpretation_contract_v1-exp",
+            "lin_tianji_interpretation_contract_v2-exp",
+        ),
         "module": "engine.distribution.interpretation_contract",
         "dependencies": ("distribution.evidence_engine",),
         "output_classification": "Interpretation contract metadata",

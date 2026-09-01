@@ -1,0 +1,580 @@
+{
+  "schema_version": "v1.6-interpretation-bakeoff.v1",
+  "classification": "synthetic_test_case",
+  "cases": [
+    {
+      "case_id": "SYN-01",
+      "target_scope": "yearly",
+      "knowledge_cutoff_at": "2029-12-31T23:59:59+08:00",
+      "allowed_evidence_ids": [
+        "E-BZ-1",
+        "E-ZW-1",
+        "E-TIME-1"
+      ],
+      "specificity_ceiling": "event_family",
+      "ground_truth": {
+        "primary_domains": [
+          "career"
+        ],
+        "event_families": [
+          "role_change"
+        ],
+        "actual_at": "2030-06-15T12:00:00+08:00"
+      },
+      "variants": [
+        {
+          "variant_id": "V0",
+          "claims": [
+            {
+              "primary_domain": "career",
+              "event_family": "role_change",
+              "forecast_start": "2030-01-01T00:00:00+08:00",
+              "forecast_end": "2030-12-31T23:59:59+08:00",
+              "specificity": "event_family",
+              "evidence_ids": [
+                "E-BZ-1"
+              ],
+              "abstentions": [],
+              "claim_id": "SYN-01-V0-C1"
+            }
+          ],
+          "personalization_records": []
+        },
+        {
+          "variant_id": "V1",
+          "claims": [
+            {
+              "primary_domain": "career",
+              "event_family": "role_change",
+              "forecast_start": "2030-01-01T00:00:00+08:00",
+              "forecast_end": "2030-12-31T23:59:59+08:00",
+              "specificity": "event_family",
+              "evidence_ids": [
+                "E-BZ-1"
+              ],
+              "abstentions": [],
+              "claim_id": "SYN-01-V1-C1"
+            }
+          ],
+          "personalization_records": []
+        },
+        {
+          "variant_id": "V2",
+          "claims": [
+            {
+              "primary_domain": "career",
+              "event_family": "role_change",
+              "forecast_start": "2030-01-01T00:00:00+08:00",
+              "forecast_end": "2030-12-31T23:59:59+08:00",
+              "specificity": "event_family",
+              "evidence_ids": [
+                "E-BZ-1"
+              ],
+              "abstentions": [],
+              "claim_id": "SYN-01-V2-C1"
+            }
+          ],
+          "personalization_records": []
+        },
+        {
+          "variant_id": "V3",
+          "claims": [
+            {
+              "primary_domain": "career",
+              "event_family": "role_change",
+              "forecast_start": "2030-01-01T00:00:00+08:00",
+              "forecast_end": "2030-12-31T23:59:59+08:00",
+              "specificity": "event_family",
+              "evidence_ids": [
+                "E-BZ-1"
+              ],
+              "abstentions": [],
+              "claim_id": "SYN-01-V3-C1"
+            }
+          ],
+          "personalization_records": []
+        },
+        {
+          "variant_id": "V4",
+          "claims": [
+            {
+              "primary_domain": "career",
+              "event_family": "role_change",
+              "forecast_start": "2030-01-01T00:00:00+08:00",
+              "forecast_end": "2030-12-31T23:59:59+08:00",
+              "specificity": "event_family",
+              "evidence_ids": [
+                "E-BZ-1"
+              ],
+              "abstentions": [],
+              "claim_id": "SYN-01-V4-C1"
+            }
+          ],
+          "personalization_records": []
+        }
+      ]
+    },
+    {
+      "case_id": "SYN-02",
+      "target_scope": "yearly",
+      "knowledge_cutoff_at": "2030-12-31T23:59:59+08:00",
+      "allowed_evidence_ids": [
+        "E-BZ-2",
+        "E-ZW-2"
+      ],
+      "specificity_ceiling": "event_family",
+      "ground_truth": {
+        "primary_domains": [
+          "family"
+        ],
+        "event_families": [
+          "relocation"
+        ],
+        "actual_at": "2031-08-10T12:00:00+08:00"
+      },
+      "variants": [
+        {
+          "variant_id": "V0",
+          "claims": [
+            {
+              "primary_domain": "finance",
+              "event_family": "investment_gain",
+              "forecast_start": "2031-01-01T00:00:00+08:00",
+              "forecast_end": "2031-12-31T23:59:59+08:00",
+              "specificity": "concrete_event",
+              "evidence_ids": [
+                "E-FORBIDDEN"
+              ],
+              "abstentions": [],
+              "claim_id": "SYN-02-V0-C1"
+            }
+          ],
+          "personalization_records": []
+        },
+        {
+          "variant_id": "V1",
+          "claims": [
+            {
+              "primary_domain": "family",
+              "event_family": "relocation",
+              "forecast_start": "2031-01-01T00:00:00+08:00",
+              "forecast_end": "2031-12-31T23:59:59+08:00",
+              "specificity": "event_family",
+              "evidence_ids": [
+                "E-BZ-2"
+              ],
+              "abstentions": [],
+              "claim_id": "SYN-02-V1-C1"
+            }
+          ],
+          "personalization_records": []
+        },
+        {
+          "variant_id": "V2",
+          "claims": [
+            {
+              "primary_domain": "family",
+              "event_family": "relocation",
+              "forecast_start": "2031-01-01T00:00:00+08:00",
+              "forecast_end": "2031-12-31T23:59:59+08:00",
+              "specificity": "event_family",
+              "evidence_ids": [
+                "E-BZ-2"
+              ],
+              "abstentions": [],
+              "claim_id": "SYN-02-V2-C1"
+            }
+          ],
+          "personalization_records": []
+        },
+        {
+          "variant_id": "V3",
+          "claims": [
+            {
+              "primary_domain": "family",
+              "event_family": "relocation",
+              "forecast_start": "2031-01-01T00:00:00+08:00",
+              "forecast_end": "2031-12-31T23:59:59+08:00",
+              "specificity": "event_family",
+              "evidence_ids": [
+                "E-BZ-2"
+              ],
+              "abstentions": [],
+              "claim_id": "SYN-02-V3-C1"
+            }
+          ],
+          "personalization_records": []
+        },
+        {
+          "variant_id": "V4",
+          "claims": [
+            {
+              "primary_domain": "family",
+              "event_family": "relocation",
+              "forecast_start": "2031-01-01T00:00:00+08:00",
+              "forecast_end": "2031-12-31T23:59:59+08:00",
+              "specificity": "event_family",
+              "evidence_ids": [
+                "E-BZ-2"
+              ],
+              "abstentions": [],
+              "claim_id": "SYN-02-V4-C1"
+            }
+          ],
+          "personalization_records": []
+        }
+      ]
+    },
+    {
+      "case_id": "SYN-03",
+      "target_scope": "yearly",
+      "knowledge_cutoff_at": "2031-12-31T23:59:59+08:00",
+      "allowed_evidence_ids": [
+        "E-BZ-3"
+      ],
+      "specificity_ceiling": "domain",
+      "ground_truth": {
+        "primary_domains": [
+          "career"
+        ],
+        "event_families": [
+          "role_change"
+        ],
+        "actual_at": "2032-04-01T12:00:00+08:00"
+      },
+      "variants": [
+        {
+          "variant_id": "V0",
+          "claims": [
+            {
+              "primary_domain": "career",
+              "event_family": null,
+              "forecast_start": "2032-01-01T00:00:00+08:00",
+              "forecast_end": "2032-12-31T23:59:59+08:00",
+              "specificity": "domain",
+              "evidence_ids": [
+                "E-BZ-3"
+              ],
+              "abstentions": [
+                "abstain_event_family",
+                "abstain_concrete_event"
+              ],
+              "claim_id": "SYN-03-V0-C1"
+            }
+          ],
+          "personalization_records": []
+        },
+        {
+          "variant_id": "V1",
+          "claims": [
+            {
+              "primary_domain": "career",
+              "event_family": null,
+              "forecast_start": "2032-01-01T00:00:00+08:00",
+              "forecast_end": "2032-12-31T23:59:59+08:00",
+              "specificity": "domain",
+              "evidence_ids": [
+                "E-BZ-3"
+              ],
+              "abstentions": [
+                "abstain_event_family",
+                "abstain_concrete_event"
+              ],
+              "claim_id": "SYN-03-V1-C1"
+            }
+          ],
+          "personalization_records": []
+        },
+        {
+          "variant_id": "V2",
+          "claims": [
+            {
+              "primary_domain": "career",
+              "event_family": null,
+              "forecast_start": "2032-01-01T00:00:00+08:00",
+              "forecast_end": "2032-12-31T23:59:59+08:00",
+              "specificity": "domain",
+              "evidence_ids": [
+                "E-BZ-3"
+              ],
+              "abstentions": [
+                "abstain_event_family",
+                "abstain_concrete_event"
+              ],
+              "claim_id": "SYN-03-V2-C1"
+            }
+          ],
+          "personalization_records": []
+        },
+        {
+          "variant_id": "V3",
+          "claims": [
+            {
+              "primary_domain": "career",
+              "event_family": null,
+              "forecast_start": "2032-01-01T00:00:00+08:00",
+              "forecast_end": "2032-12-31T23:59:59+08:00",
+              "specificity": "domain",
+              "evidence_ids": [
+                "E-BZ-3"
+              ],
+              "abstentions": [
+                "abstain_event_family",
+                "abstain_concrete_event"
+              ],
+              "claim_id": "SYN-03-V3-C1"
+            }
+          ],
+          "personalization_records": []
+        },
+        {
+          "variant_id": "V4",
+          "claims": [
+            {
+              "primary_domain": "career",
+              "event_family": null,
+              "forecast_start": "2032-01-01T00:00:00+08:00",
+              "forecast_end": "2032-12-31T23:59:59+08:00",
+              "specificity": "domain",
+              "evidence_ids": [
+                "E-BZ-3"
+              ],
+              "abstentions": [
+                "abstain_event_family",
+                "abstain_concrete_event"
+              ],
+              "claim_id": "SYN-03-V4-C1"
+            }
+          ],
+          "personalization_records": []
+        }
+      ]
+    },
+    {
+      "case_id": "SYN-04",
+      "target_scope": "yearly",
+      "knowledge_cutoff_at": "2032-12-31T23:59:59+08:00",
+      "allowed_evidence_ids": [
+        "E-BZ-CONFLICT",
+        "E-ZW-CONFLICT"
+      ],
+      "specificity_ceiling": "event_family",
+      "ground_truth": {
+        "primary_domains": [
+          "relationship"
+        ],
+        "event_families": [
+          "partnership_change"
+        ],
+        "actual_at": "2033-09-09T12:00:00+08:00"
+      },
+      "variants": [
+        {
+          "variant_id": "V0",
+          "claims": [
+            {
+              "primary_domain": "relationship",
+              "event_family": "partnership_change",
+              "forecast_start": "2033-01-01T00:00:00+08:00",
+              "forecast_end": "2033-12-31T23:59:59+08:00",
+              "specificity": "event_family",
+              "evidence_ids": [
+                "E-BZ-CONFLICT",
+                "E-ZW-CONFLICT"
+              ],
+              "abstentions": [],
+              "claim_id": "SYN-04-V0-C1"
+            }
+          ],
+          "personalization_records": []
+        },
+        {
+          "variant_id": "V1",
+          "claims": [
+            {
+              "primary_domain": "relationship",
+              "event_family": "partnership_change",
+              "forecast_start": "2033-01-01T00:00:00+08:00",
+              "forecast_end": "2033-12-31T23:59:59+08:00",
+              "specificity": "event_family",
+              "evidence_ids": [
+                "E-BZ-CONFLICT",
+                "E-ZW-CONFLICT"
+              ],
+              "abstentions": [],
+              "claim_id": "SYN-04-V1-C1"
+            }
+          ],
+          "personalization_records": []
+        },
+        {
+          "variant_id": "V2",
+          "claims": [
+            {
+              "primary_domain": "relationship",
+              "event_family": "partnership_change",
+              "forecast_start": "2033-01-01T00:00:00+08:00",
+              "forecast_end": "2033-12-31T23:59:59+08:00",
+              "specificity": "event_family",
+              "evidence_ids": [
+                "E-BZ-CONFLICT",
+                "E-ZW-CONFLICT"
+              ],
+              "abstentions": [],
+              "claim_id": "SYN-04-V2-C1"
+            }
+          ],
+          "personalization_records": []
+        },
+        {
+          "variant_id": "V3",
+          "claims": [
+            {
+              "primary_domain": "relationship",
+              "event_family": "partnership_change",
+              "forecast_start": "2033-01-01T00:00:00+08:00",
+              "forecast_end": "2033-12-31T23:59:59+08:00",
+              "specificity": "event_family",
+              "evidence_ids": [
+                "E-BZ-CONFLICT",
+                "E-ZW-CONFLICT"
+              ],
+              "abstentions": [],
+              "claim_id": "SYN-04-V3-C1"
+            }
+          ],
+          "personalization_records": []
+        },
+        {
+          "variant_id": "V4",
+          "claims": [
+            {
+              "primary_domain": "relationship",
+              "event_family": "partnership_change",
+              "forecast_start": "2033-01-01T00:00:00+08:00",
+              "forecast_end": "2033-12-31T23:59:59+08:00",
+              "specificity": "event_family",
+              "evidence_ids": [
+                "E-BZ-CONFLICT",
+                "E-ZW-CONFLICT"
+              ],
+              "abstentions": [],
+              "claim_id": "SYN-04-V4-C1"
+            }
+          ],
+          "personalization_records": []
+        }
+      ]
+    },
+    {
+      "case_id": "SYN-05",
+      "target_scope": "yearly",
+      "knowledge_cutoff_at": "2033-12-31T23:59:59+08:00",
+      "allowed_evidence_ids": [
+        "E-BZ-5"
+      ],
+      "specificity_ceiling": "event_family",
+      "ground_truth": {
+        "primary_domains": [
+          "overall_stability"
+        ],
+        "event_families": [
+          "no_major_outcome"
+        ],
+        "actual_at": "2034-12-31T12:00:00+08:00"
+      },
+      "variants": [
+        {
+          "variant_id": "V0",
+          "claims": [
+            {
+              "primary_domain": "overall_stability",
+              "event_family": "no_major_outcome",
+              "forecast_start": "2034-01-01T00:00:00+08:00",
+              "forecast_end": "2034-12-31T23:59:59+08:00",
+              "specificity": "event_family",
+              "evidence_ids": [
+                "E-BZ-5"
+              ],
+              "abstentions": [],
+              "claim_id": "SYN-05-V0-C1"
+            }
+          ],
+          "personalization_records": []
+        },
+        {
+          "variant_id": "V1",
+          "claims": [
+            {
+              "primary_domain": "overall_stability",
+              "event_family": "no_major_outcome",
+              "forecast_start": "2034-01-01T00:00:00+08:00",
+              "forecast_end": "2034-12-31T23:59:59+08:00",
+              "specificity": "event_family",
+              "evidence_ids": [
+                "E-BZ-5"
+              ],
+              "abstentions": [],
+              "claim_id": "SYN-05-V1-C1"
+            }
+          ],
+          "personalization_records": []
+        },
+        {
+          "variant_id": "V2",
+          "claims": [
+            {
+              "primary_domain": "overall_stability",
+              "event_family": "no_major_outcome",
+              "forecast_start": "2034-01-01T00:00:00+08:00",
+              "forecast_end": "2034-12-31T23:59:59+08:00",
+              "specificity": "event_family",
+              "evidence_ids": [
+                "E-BZ-5"
+              ],
+              "abstentions": [],
+              "claim_id": "SYN-05-V2-C1"
+            }
+          ],
+          "personalization_records": []
+        },
+        {
+          "variant_id": "V3",
+          "claims": [
+            {
+              "primary_domain": "overall_stability",
+              "event_family": "no_major_outcome",
+              "forecast_start": "2034-01-01T00:00:00+08:00",
+              "forecast_end": "2034-12-31T23:59:59+08:00",
+              "specificity": "event_family",
+              "evidence_ids": [
+                "E-BZ-5"
+              ],
+              "abstentions": [],
+              "claim_id": "SYN-05-V3-C1"
+            }
+          ],
+          "personalization_records": []
+        },
+        {
+          "variant_id": "V4",
+          "claims": [
+            {
+              "primary_domain": "overall_stability",
+              "event_family": "no_major_outcome",
+              "forecast_start": "2034-01-01T00:00:00+08:00",
+              "forecast_end": "2034-12-31T23:59:59+08:00",
+              "specificity": "event_family",
+              "evidence_ids": [
+                "E-BZ-5"
+              ],
+              "abstentions": [],
+              "claim_id": "SYN-05-V4-C1"
+            }
+          ],
+          "personalization_records": []
+        }
+      ]
+    }
+  ]
+}
