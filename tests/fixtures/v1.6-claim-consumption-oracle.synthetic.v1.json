@@ -1,0 +1,42 @@
+{
+  "cases": [
+    {
+      "case_id": "oracle-case-b",
+      "cutoff_contamination": false,
+      "expectations": [
+        {
+          "caveat_required": false,
+          "claim_id": "finance",
+          "expected_authorization": "abstain_claim",
+          "maximum_specificity": null,
+          "minimum_acceptable_specificity": null
+        },
+        {
+          "caveat_required": true,
+          "claim_id": "partnership",
+          "expected_authorization": "render_with_caveat",
+          "maximum_specificity": "concrete_event",
+          "minimum_acceptable_specificity": "domain"
+        }
+      ],
+      "oracle_case_digest": "68804af37bb3140e8c2483920c4a6ebacf202ba537843ddec859abbaa38e3a9b"
+    },
+    {
+      "case_id": "oracle-case-a",
+      "cutoff_contamination": false,
+      "expectations": [
+        {
+          "caveat_required": false,
+          "claim_id": "career",
+          "expected_authorization": "render",
+          "maximum_specificity": "event_family",
+          "minimum_acceptable_specificity": "domain"
+        }
+      ],
+      "oracle_case_digest": "e575d672ffeb8e81fbaabeeb5591e79962589afae6817da282e2d2d26b92428e"
+    }
+  ],
+  "oracle_profile": "lin_tianji_claim_consumption_oracle_v1",
+  "rubric_digest": "fb67d577ab2f1f71fa9dfc4fba02e69f8639dfb9f3f8b2db3b4359f5f8dcf73e",
+  "schema_version": "v1.6-claim-consumption-oracle.v1"
+}
