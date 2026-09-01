@@ -28,6 +28,11 @@ def test_v2_exposes_python_owned_coordination_bundle_for_same_domain_convergence
     assert row['legacy_cross_system_relation'] == 'independent_convergence'
     assert row['coordination_relation'] == 'direct_domain_convergence'
     assert row['same_scope_target_systems'] == ['bazi', 'ziwei']
+    assert result['claim_consumption_profile_version'] == 'lin_tianji_claim_consumption_v1-exp'
+    assert result['claim_consumption_digest']
+    decision = result['claim_consumption_decisions'][0]
+    assert decision['primary_domain'] == 'career'
+    assert decision['decision'] == 'render_with_caveat'
 
 
 def test_v2_reclassifies_disjoint_domains_as_parallel_without_rewriting_legacy_packets():
@@ -40,6 +45,10 @@ def test_v2_reclassifies_disjoint_domains_as_parallel_without_rewriting_legacy_p
     assert {row['coordination_relation'] for row in result['coordination_relations']} == {'parallel_signals'}
     assert {row['legacy_cross_system_relation'] for row in result['coordination_relations']} == {'conflict_or_divergence'}
     assert result['global_conflicts']
+    decisions = result['claim_consumption_decisions']
+    assert [row['primary_domain'] for row in decisions] == ['career', 'finance']
+    assert {row['coordination_relation'] for row in decisions} == {'parallel_signals'}
+    assert {row['decision'] for row in decisions} == {'render_with_caveat'}
 
 
 def test_v2_coordination_never_raises_phase3_or_packet_specificity():
