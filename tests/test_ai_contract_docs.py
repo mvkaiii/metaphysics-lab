@@ -94,6 +94,20 @@ class AIContractDocsTests(unittest.TestCase):
         ):
             self.assertIn(phrase, combined)
 
+    def test_v16_hybrid_ai_consumes_python_coordination_without_recomputing(self):
+        combined = "\n".join((self._read(CORE_PROMPT), self._read(AI_WORKFLOW)))
+        for phrase in (
+            "coordination_relation",
+            "coordination_specificity_cap",
+            "parallel_signals",
+            "Python authority",
+            "不得重新判定 `coordination_relation`",
+            "不得把 `parallel_signals` 改寫成 conflict",
+            "不得因 coordination 自動提高 confidence",
+            "不得高於 `coordination_specificity_cap`",
+        ):
+            self.assertIn(phrase, combined)
+
     def test_phase5_technical_governance_preserves_ranking_authority(self):
         rules = (ROOT / "core" / "命理推導計算規則.md").read_text(encoding="utf-8")
         for phrase in (
