@@ -108,6 +108,21 @@ class AIContractDocsTests(unittest.TestCase):
         ):
             self.assertIn(phrase, combined)
 
+    def test_v16_hybrid_ai_consumes_python_claim_consumption_authority(self):
+        combined = "\n".join((self._read(CORE_PROMPT), self._read(AI_WORKFLOW)))
+        for phrase in (
+            "claim_consumption_decisions",
+            "claim_consumption_digest",
+            "render_with_caveat",
+            "abstain_claim",
+            "claim consumption Python authority",
+            "不得重新判定 claim consumption decision",
+            "不得把 `abstain_claim` 改成可呈現 claim",
+            "不得高於 `authorized_specificity`",
+            "不得因 claim consumption 提高 confidence",
+        ):
+            self.assertIn(phrase, combined)
+
     def test_phase5_technical_governance_preserves_ranking_authority(self):
         rules = (ROOT / "core" / "命理推導計算規則.md").read_text(encoding="utf-8")
         for phrase in (
