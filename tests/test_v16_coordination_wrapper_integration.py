@@ -1,6 +1,7 @@
 import copy
 import hashlib
 import json
+import unittest
 
 from engine.distribution.claim_evidence import build_claim_evidence_packets
 from engine.distribution.interpretation_contract import build_interpretation_contract
@@ -68,43 +69,46 @@ def fixtures(disjoint=False):
     return base, structural, anchor
 
 
-def test_wrapper_adds_coordination_without_rewriting_legacy_claim_packets():
-    base, structural, anchor = fixtures(False)
-    v1 = build_interpretation_contract(base, anchor)
-    legacy = build_claim_evidence_packets(
-        base_ranking=base,
-        structural_interpretation=structural,
-        domain_interpretation=v1["domain_interpretation"],
-    )
-    result = build_interpretation_contract_v2(base, anchor, structural_interpretation=structural)
-    assert result["claim_evidence_packets"] == legacy["packets"]
-    assert result["claim_evidence_digest"] == legacy["claim_evidence_digest"]
-    assert result["coordination_relations"][0]["coordination_relation"] == "direct_domain_convergence"
-    assert result["coordination_relations"][0]["legacy_cross_system_relation"] == "independent_convergence"
+class CoordinationWrapperIntegrationTests(unittest.TestCase):
+    def test_wrapper_adds_coordination_without_rewriting_legacy_claim_packets(self):
+        base, structural, anchor = fixtures(False)
+        v1 = build_interpretation_contract(base, anchor)
+        legacy = build_claim_evidence_packets(
+            base_ranking=base,
+            structural_interpretation=structural,
+            domain_interpretation=v1["domain_interpretation"],
+        )
+        result = build_interpretation_contract_v2(base, anchor, structural_interpretation=structural)
+        self.assertEqual(result["claim_evidence_packets"], legacy["packets"])
+        self.assertEqual(result["claim_evidence_digest"], legacy["claim_evidence_digest"])
+        self.assertEqual(result["coordination_relations"][0]["coordination_relation"], "direct_domain_convergence")
+        self.assertEqual(result["coordination_relations"][0]["legacy_cross_system_relation"], "independent_convergence")
+
+    def test_disjoint_domain_coordination_is_parallel_but_v1_order_and_legacy_conflict_remain(self):
+        base, structural, anchor = fixtures(True)
+        v1 = build_interpretation_contract(base, anchor)
+        result = build_interpretation_contract_v2(base, anchor, structural_interpretation=structural)
+        self.assertEqual(result["primary_domains"], v1["primary_domains"])
+        self.assertEqual(result["secondary_domains"], v1["secondary_domains"])
+        self.assertEqual({p["cross_system_relation"] for p in result["claim_evidence_packets"]}, {"conflict_or_divergence"})
+        self.assertEqual({r["coordination_relation"] for r in result["coordination_relations"]}, {"parallel_signals"})
+
+    def test_v2_call_keeps_repeated_v1_digest_immutable(self):
+        base, structural, anchor = fixtures(True)
+        before = build_interpretation_contract(base, anchor)
+        frozen = copy.deepcopy(before)
+        build_interpretation_contract_v2(base, anchor, structural_interpretation=structural)
+        after = build_interpretation_contract(base, anchor)
+        self.assertEqual(before, frozen)
+        self.assertEqual(before, after)
+
+    def test_reading_policy_exposes_coordination_guards(self):
+        guards = READING_POLICY["guards"]
+        self.assertTrue(guards["coordination_relation_is_v2_interpretation_authority"])
+        self.assertTrue(guards["parallel_signals_must_not_be_rewritten_as_conflict"])
+        self.assertTrue(guards["legacy_cross_system_relation_is_audit_provenance"])
+        self.assertTrue(guards["coordination_must_not_raise_specificity"])
 
 
-def test_disjoint_domain_coordination_is_parallel_but_v1_order_and_legacy_conflict_remain():
-    base, structural, anchor = fixtures(True)
-    v1 = build_interpretation_contract(base, anchor)
-    result = build_interpretation_contract_v2(base, anchor, structural_interpretation=structural)
-    assert result["primary_domains"] == v1["primary_domains"]
-    assert result["secondary_domains"] == v1["secondary_domains"]
-    assert {p["cross_system_relation"] for p in result["claim_evidence_packets"]} == {"conflict_or_divergence"}
-    assert {r["coordination_relation"] for r in result["coordination_relations"]} == {"parallel_signals"}
-
-
-def test_v2_call_keeps_repeated_v1_digest_immutable():
-    base, structural, anchor = fixtures(True)
-    before = build_interpretation_contract(base, anchor)
-    frozen = copy.deepcopy(before)
-    build_interpretation_contract_v2(base, anchor, structural_interpretation=structural)
-    after = build_interpretation_contract(base, anchor)
-    assert before == frozen == after
-
-
-def test_reading_policy_exposes_coordination_guards():
-    guards = READING_POLICY["guards"]
-    assert guards["coordination_relation_is_v2_interpretation_authority"] is True
-    assert guards["parallel_signals_must_not_be_rewritten_as_conflict"] is True
-    assert guards["legacy_cross_system_relation_is_audit_provenance"] is True
-    assert guards["coordination_must_not_raise_specificity"] is True
+if __name__ == "__main__":
+    unittest.main()
