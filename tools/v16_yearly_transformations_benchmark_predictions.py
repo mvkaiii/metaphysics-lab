@@ -4,7 +4,12 @@ import copy
 import hashlib
 import json
 import subprocess
+import sys
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from engine.distribution.event_family_attribution import build_event_family_attribution_bundle
 from engine.distribution.runtime import dispatch
