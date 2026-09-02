@@ -10,6 +10,10 @@ from typing import Mapping, Sequence
 from .claim_consumption_contract import build_claim_consumption_bundle
 from .claim_evidence import build_claim_evidence_packets
 from .coordination_policy_v2 import build_coordination_bundle
+from .event_family_attribution import build_event_family_attribution_bundle
+from .hierarchical_claim_authority import build_hierarchical_claim_authority_bundle
+from .hybrid_claim_composer import build_hybrid_claim_composer_bundle
+from .hybrid_output_contract import build_hybrid_output_contract
 from .interpretation_contract import build_interpretation_contract
 
 
@@ -101,6 +105,24 @@ def build_interpretation_contract_v2(
         claim_evidence_bundle=claim_bundle,
         coordination_bundle=coordination_bundle,
     )
+    event_family_attribution_bundle = build_event_family_attribution_bundle(
+        base_ranking=base_ranking,
+        structural_interpretation=structural_interpretation,
+    )
+    hierarchical_claim_authority_bundle = build_hierarchical_claim_authority_bundle(
+        claim_consumption_bundle=claim_consumption_bundle,
+        event_family_attribution_bundle=event_family_attribution_bundle,
+        claim_evidence_bundle=claim_bundle,
+    )
+    hybrid_claim_composer_bundle = build_hybrid_claim_composer_bundle(
+        hierarchical_authority_bundle=hierarchical_claim_authority_bundle,
+        event_family_attribution_bundle=event_family_attribution_bundle,
+        interpretation_contract=v1,
+        claim_evidence_bundle=claim_bundle,
+    )
+    hybrid_output_contract_bundle = build_hybrid_output_contract(
+        hybrid_claim_composer_bundle=hybrid_claim_composer_bundle,
+    )
 
     result = copy.deepcopy(v1)
     result["profile_version"] = INTERPRETATION_PROFILE_VERSION_V2
@@ -114,6 +136,21 @@ def build_interpretation_contract_v2(
     result["claim_consumption_profile_version"] = claim_consumption_bundle["profile_version"]
     result["claim_consumption_digest"] = claim_consumption_bundle["claim_consumption_digest"]
     result["claim_consumption_decisions"] = copy.deepcopy(claim_consumption_bundle["decisions"])
+
+    result["event_family_attribution_profile_version"] = event_family_attribution_bundle["profile_version"]
+    result["event_family_attribution_digest"] = event_family_attribution_bundle["event_family_attribution_digest"]
+    result["event_family_attribution_children"] = copy.deepcopy(event_family_attribution_bundle["children"])
+    result["hierarchical_claim_authority_profile_version"] = hierarchical_claim_authority_bundle["profile_version"]
+    result["hierarchical_claim_authority_digest"] = hierarchical_claim_authority_bundle["hierarchical_claim_authority_digest"]
+    result["hierarchical_claim_authority_decisions"] = copy.deepcopy(hierarchical_claim_authority_bundle["decisions"])
+    result["hybrid_claim_composer_profile_version"] = hybrid_claim_composer_bundle["profile_version"]
+    result["hybrid_claim_composer_digest"] = hybrid_claim_composer_bundle["hybrid_claim_composer_digest"]
+    result["hybrid_claim_composer_children"] = copy.deepcopy(hybrid_claim_composer_bundle["children"])
+    result["hybrid_composition_groups"] = copy.deepcopy(hybrid_claim_composer_bundle["composition_groups"])
+    result["hybrid_output_contract_profile_version"] = hybrid_output_contract_bundle["profile_version"]
+    result["hybrid_output_contract_digest"] = hybrid_output_contract_bundle["hybrid_output_contract_digest"]
+    result["hybrid_render_units"] = copy.deepcopy(hybrid_output_contract_bundle["render_units"])
+
     result["reading_policy"] = copy.deepcopy(READING_POLICY)
     result["global_abstentions"] = [] if result["domain_interpretation"] else ["abstain_domain"]
     result.pop("interpretation_contract_digest", None)
