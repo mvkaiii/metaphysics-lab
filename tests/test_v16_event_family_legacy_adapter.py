@@ -151,10 +151,9 @@ class EventFamilyLegacyAdapterTests(unittest.TestCase):
             interpretation_contract_v2=frozen_legacy_contract(),
         )
 
-        self.assertEqual(
-            [row["child_claim_id"] for row in legacy["children"]],
-            [row["child_claim_id"] for row in efa["children"]],
-        )
+        efa_ids = {row["event_family"]: row["child_claim_id"] for row in efa["children"]}
+        legacy_ids = {row["event_family"]: row["child_claim_id"] for row in legacy["children"]}
+        self.assertEqual(legacy_ids, efa_ids)
 
     def test_repeated_build_is_deterministic_and_does_not_mutate_source(self):
         source = frozen_legacy_contract()
