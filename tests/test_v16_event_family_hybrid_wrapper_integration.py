@@ -1,4 +1,5 @@
 import copy
+import unittest
 
 from engine.distribution.claim_consumption_contract import build_claim_consumption_bundle
 from engine.distribution.claim_evidence import build_claim_evidence_packets
@@ -70,77 +71,92 @@ def _frozen_legacy_outputs(ranking, structural_interpretation):
     }
 
 
-def test_v2_exposes_event_family_hybrid_authority_additively():
-    _, ranking, structural_interpretation = _fixture()
-    result = build_interpretation_contract_v2(
-        ranking,
-        anchor(),
-        structural_interpretation=structural_interpretation,
-    )
+class EventFamilyHybridWrapperIntegrationTests(unittest.TestCase):
+    def test_v2_exposes_event_family_hybrid_authority_additively(self):
+        _, ranking, structural_interpretation = _fixture()
+        result = build_interpretation_contract_v2(
+            ranking,
+            anchor(),
+            structural_interpretation=structural_interpretation,
+        )
 
-    assert result['event_family_attribution_profile_version'] == EVENT_FAMILY_ATTRIBUTION_PROFILE_VERSION
-    assert result['event_family_attribution_digest']
-    assert result['event_family_attribution_children']
+        self.assertEqual(
+            result['event_family_attribution_profile_version'],
+            EVENT_FAMILY_ATTRIBUTION_PROFILE_VERSION,
+        )
+        self.assertTrue(result['event_family_attribution_digest'])
+        self.assertTrue(result['event_family_attribution_children'])
 
-    assert result['hierarchical_claim_authority_profile_version'] == HIERARCHICAL_CLAIM_AUTHORITY_PROFILE_VERSION
-    assert result['hierarchical_claim_authority_digest']
-    assert result['hierarchical_claim_authority_decisions']
+        self.assertEqual(
+            result['hierarchical_claim_authority_profile_version'],
+            HIERARCHICAL_CLAIM_AUTHORITY_PROFILE_VERSION,
+        )
+        self.assertTrue(result['hierarchical_claim_authority_digest'])
+        self.assertTrue(result['hierarchical_claim_authority_decisions'])
 
-    assert result['hybrid_claim_composer_profile_version'] == HYBRID_CLAIM_COMPOSER_PROFILE_VERSION
-    assert result['hybrid_claim_composer_digest']
-    assert result['hybrid_claim_composer_children']
-    assert isinstance(result['hybrid_composition_groups'], list)
+        self.assertEqual(
+            result['hybrid_claim_composer_profile_version'],
+            HYBRID_CLAIM_COMPOSER_PROFILE_VERSION,
+        )
+        self.assertTrue(result['hybrid_claim_composer_digest'])
+        self.assertTrue(result['hybrid_claim_composer_children'])
+        self.assertIsInstance(result['hybrid_composition_groups'], list)
 
-    assert result['hybrid_output_contract_profile_version'] == HYBRID_OUTPUT_CONTRACT_PROFILE_VERSION
-    assert result['hybrid_output_contract_digest']
-    assert result['hybrid_render_units']
-    assert all(unit['causality_allowed'] is False for unit in result['hybrid_render_units'])
+        self.assertEqual(
+            result['hybrid_output_contract_profile_version'],
+            HYBRID_OUTPUT_CONTRACT_PROFILE_VERSION,
+        )
+        self.assertTrue(result['hybrid_output_contract_digest'])
+        self.assertTrue(result['hybrid_render_units'])
+        self.assertTrue(
+            all(unit['causality_allowed'] is False for unit in result['hybrid_render_units'])
+        )
 
+    def test_v2_hybrid_integration_preserves_frozen_legacy_outputs_and_is_deterministic(self):
+        _, ranking, structural_interpretation = _fixture()
+        expected = _frozen_legacy_outputs(ranking, structural_interpretation)
 
-def test_v2_hybrid_integration_preserves_frozen_legacy_outputs_and_is_deterministic():
-    _, ranking, structural_interpretation = _fixture()
-    expected = _frozen_legacy_outputs(ranking, structural_interpretation)
+        first = build_interpretation_contract_v2(
+            ranking,
+            anchor(),
+            structural_interpretation=structural_interpretation,
+        )
+        second = build_interpretation_contract_v2(
+            ranking,
+            anchor(),
+            structural_interpretation=structural_interpretation,
+        )
 
-    first = build_interpretation_contract_v2(
-        ranking,
-        anchor(),
-        structural_interpretation=structural_interpretation,
-    )
-    second = build_interpretation_contract_v2(
-        ranking,
-        anchor(),
-        structural_interpretation=structural_interpretation,
-    )
+        self.assertEqual(first, second)
+        self.assertEqual(first['claim_evidence_digest'], expected['claim_evidence_digest'])
+        self.assertEqual(first['coordination_digest'], expected['coordination_digest'])
+        self.assertEqual(first['claim_consumption_digest'], expected['claim_consumption_digest'])
+        self.assertEqual(first['primary_domains'], expected['primary_domains'])
+        self.assertEqual(first['secondary_domains'], expected['secondary_domains'])
 
-    assert first == second
-    assert first['claim_evidence_digest'] == expected['claim_evidence_digest']
-    assert first['coordination_digest'] == expected['coordination_digest']
-    assert first['claim_consumption_digest'] == expected['claim_consumption_digest']
-    assert first['primary_domains'] == expected['primary_domains']
-    assert first['secondary_domains'] == expected['secondary_domains']
+    def test_v2_hybrid_render_manifest_binds_to_exposed_hcc_and_child_authority(self):
+        _, ranking, structural_interpretation = _fixture()
+        result = build_interpretation_contract_v2(
+            ranking,
+            anchor(),
+            structural_interpretation=structural_interpretation,
+        )
 
+        renderable_ids = {
+            row['child_claim_id']
+            for row in result['hierarchical_claim_authority_decisions']
+            if row['decision'] in {'render', 'render_with_caveat'}
+        }
+        rendered_ids = {
+            child_id
+            for unit in result['hybrid_render_units']
+            for child_id in unit['member_child_claim_ids']
+        }
 
-def test_v2_hybrid_render_manifest_binds_to_exposed_hcc_and_child_authority():
-    _, ranking, structural_interpretation = _fixture()
-    result = build_interpretation_contract_v2(
-        ranking,
-        anchor(),
-        structural_interpretation=structural_interpretation,
-    )
-
-    renderable_ids = {
-        row['child_claim_id']
-        for row in result['hierarchical_claim_authority_decisions']
-        if row['decision'] in {'render', 'render_with_caveat'}
-    }
-    rendered_ids = {
-        child_id
-        for unit in result['hybrid_render_units']
-        for child_id in unit['member_child_claim_ids']
-    }
-
-    assert rendered_ids == renderable_ids
-    assert all(
-        unit['source_hcc_digest'] == result['hybrid_claim_composer_digest']
-        for unit in result['hybrid_render_units']
-    )
+        self.assertEqual(rendered_ids, renderable_ids)
+        self.assertTrue(
+            all(
+                unit['source_hcc_digest'] == result['hybrid_claim_composer_digest']
+                for unit in result['hybrid_render_units']
+            )
+        )
