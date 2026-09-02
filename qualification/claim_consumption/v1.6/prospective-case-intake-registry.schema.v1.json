@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mvkaiii/metaphysics-lab/qualification/claim_consumption/v1.6/prospective-case-intake-registry.schema.v1.json",
+  "title": "Metaphysics Lab v1.6 Prospective Case Intake Registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "intake_profile",
+    "registry_locked_at",
+    "previous_registry_digest",
+    "records",
+    "registry_digest",
+    "promotion_allowed"
+  ],
+  "properties": {
+    "schema_version": {"const": "v1.6-claim-consumption-prospective-case-intake-registry.v1"},
+    "intake_profile": {"const": "lin_tianji_claim_consumption_prospective_case_intake_v1"},
+    "registry_locked_at": {"type": "string", "pattern": "Z$"},
+    "previous_registry_digest": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      ]
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "opaque_case_id",
+          "case_origin",
+          "source_timestamp",
+          "intake_timestamp",
+          "outcome_availability_at_intake",
+          "source_record_digest",
+          "source_provenance_status",
+          "source_provenance_digest",
+          "first_intake_status",
+          "first_intake_provenance_digest",
+          "candidate_exposure_status",
+          "candidate_exposure_provenance_digest",
+          "eligibility_status",
+          "eligibility_reason_code",
+          "intake_record_digest"
+        ],
+        "properties": {
+          "opaque_case_id": {"type": "string", "minLength": 1},
+          "case_origin": {"enum": ["FUTURE_EVENT", "HISTORICAL_UNEXPOSED"]},
+          "source_timestamp": {"type": "string", "pattern": "Z$"},
+          "intake_timestamp": {"type": "string", "pattern": "Z$"},
+          "outcome_availability_at_intake": {"enum": ["PENDING", "KNOWN"]},
+          "source_record_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "source_provenance_status": {"enum": ["VERIFIABLE", "UNVERIFIABLE"]},
+          "source_provenance_digest": {
+            "oneOf": [
+              {"type": "null"},
+              {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+            ]
+          },
+          "first_intake_status": {"enum": ["VERIFIABLE", "UNVERIFIABLE"]},
+          "first_intake_provenance_digest": {
+            "oneOf": [
+              {"type": "null"},
+              {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+            ]
+          },
+          "candidate_exposure_status": {"enum": ["UNEXPOSED", "PREVIOUSLY_EXPOSED", "UNKNOWN"]},
+          "candidate_exposure_provenance_digest": {
+            "oneOf": [
+              {"type": "null"},
+              {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+            ]
+          },
+          "eligibility_status": {
+            "enum": [
+              "ELIGIBLE_FOR_S1_SOURCE",
+              "INELIGIBLE_SOURCE_PROVENANCE",
+              "INELIGIBLE_PREVIOUSLY_EXPOSED"
+            ]
+          },
+          "eligibility_reason_code": {
+            "enum": [
+              "eligible",
+              "source_provenance_unverifiable",
+              "first_intake_unverifiable",
+              "exposure_provenance_unverifiable",
+              "previously_exposed"
+            ]
+          },
+          "intake_record_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "registry_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "promotion_allowed": {"const": false}
+  }
+}
