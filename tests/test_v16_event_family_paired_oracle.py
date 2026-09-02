@@ -1,6 +1,9 @@
 import copy
 import json
 from pathlib import Path
+import subprocess
+import sys
+import tempfile
 import unittest
 
 from engine.distribution.event_family_paired_oracle import (
@@ -12,6 +15,7 @@ from engine.distribution.event_family_paired_oracle import (
 
 
 FIXTURE = Path("tests/fixtures/v1.6-event-family-paired-oracle.synthetic.v1.json")
+CLI = Path("tools/seal_v16_event_family_paired_oracle.py")
 
 
 def load_oracle():
@@ -31,6 +35,19 @@ def shared_child_universe():
             "event_family": "role_change",
         },
     ]
+
+
+def rendered_bytes(value):
+    return (
+        json.dumps(
+            value,
+            ensure_ascii=False,
+            sort_keys=True,
+            indent=2,
+            allow_nan=False,
+        )
+        + "\n"
+    ).encode("utf-8")
 
 
 class EventFamilyPairedOracleTests(unittest.TestCase):
@@ -195,6 +212,60 @@ class EventFamilyPairedOracleTests(unittest.TestCase):
                 seal_receipt=tampered,
                 shared_child_universe=shared_child_universe(),
             )
+
+    def test_seal_and_verify_cli_match_direct_api_bytes(self):
+        oracle = load_oracle()
+        expected = seal_event_family_paired_oracle(
+            oracle=oracle,
+            shared_child_universe=shared_child_universe(),
+        )
+        expected_bytes = rendered_bytes(expected)
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            universe_path = root / "universe.json"
+            receipt_path = root / "receipt.json"
+            universe_path.write_text(
+                json.dumps(shared_child_universe(), ensure_ascii=False),
+                encoding="utf-8",
+            )
+
+            seal = subprocess.run(
+                [
+                    sys.executable,
+                    str(CLI),
+                    "seal",
+                    "--oracle",
+                    str(FIXTURE),
+                    "--child-universe",
+                    str(universe_path),
+                    "--receipt",
+                    str(receipt_path),
+                ],
+                check=False,
+                capture_output=True,
+            )
+            self.assertEqual(seal.returncode, 0, seal.stderr.decode("utf-8"))
+            self.assertEqual(seal.stdout, b"")
+            self.assertEqual(receipt_path.read_bytes(), expected_bytes)
+
+            verify = subprocess.run(
+                [
+                    sys.executable,
+                    str(CLI),
+                    "verify",
+                    "--oracle",
+                    str(FIXTURE),
+                    "--child-universe",
+                    str(universe_path),
+                    "--receipt",
+                    str(receipt_path),
+                ],
+                check=False,
+                capture_output=True,
+            )
+            self.assertEqual(verify.returncode, 0, verify.stderr.decode("utf-8"))
+            self.assertEqual(verify.stdout, expected_bytes)
 
 
 if __name__ == "__main__":
