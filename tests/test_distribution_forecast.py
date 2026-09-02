@@ -80,6 +80,30 @@ class DistributionForecastTests(unittest.TestCase):
         self.assertNotIn("interpretation", data)
         self.assertNotIn("advice", data)
 
+    def test_yearly_transformations_share_the_yearly_flowing_source(self):
+        result = self.forecast("2025-06-15T12:00:00", ["yearly"])
+        self.assertTrue(result["ok"], result)
+        yearly = result["data"]["ziwei"]["yearly"]
+        transform = yearly["transformation_layer"]
+        flowing = yearly["flowing_star_layer"]
+
+        self.assertEqual(transform["identity"]["scope"], "yearly")
+        self.assertEqual(transform["identity"]["reference"], flowing["source"]["reference"])
+        self.assertEqual(transform["source"]["heavenly_stem"], flowing["source"]["heavenly_stem"])
+        self.assertEqual(transform["source"]["scope"], "yearly")
+        self.assertEqual(len(transform["transformations"]["transformations"]), 4)
+        self.assertEqual(len(transform["flying_edges"]), 4)
+
+    def test_yearly_2025_uses_existing_yi_transformation_profile(self):
+        result = self.forecast("2025-06-15T12:00:00", ["yearly"])
+        self.assertTrue(result["ok"], result)
+        rows = result["data"]["ziwei"]["yearly"]["transformation_layer"]["transformations"]["transformations"]
+        actual = [(row["type"], row["star"]) for row in rows]
+        self.assertEqual(
+            actual,
+            [("祿", "天機"), ("權", "天梁"), ("科", "紫微"), ("忌", "太陰")],
+        )
+
     def test_evidence_extraction_preserves_forecast_truth_and_is_deterministic(self):
         result = self.forecast(
             "2026-09-15T14:30:00",
