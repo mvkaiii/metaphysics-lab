@@ -35,3 +35,11 @@ jobs:
 
       - name: Legacy Adapter focused gate
         run: python -m unittest -v tests.test_v16_event_family_legacy_adapter
+
+      - name: Frozen Legacy authority regressions
+        run: |
+          python -m pytest \
+            tests/test_distribution_interpretation_contract_v2.py \
+            tests/test_v16_claim_consumption_contract.py \
+            tests/test_v16_coordination_wrapper_integration.py \
+            -q
