@@ -109,11 +109,11 @@ def _validated_hcc(bundle: Mapping[str, object]) -> dict:
         bundle.get("event_family_attribution_digest"),
         "HCC event_family_attribution_digest",
     )
-    _sha256(
+    _text(
         bundle.get("source_interpretation_contract_digest"),
         "HCC source_interpretation_contract_digest",
     )
-    _sha256(
+    _text(
         bundle.get("source_claim_evidence_digest"),
         "HCC source_claim_evidence_digest",
     )
