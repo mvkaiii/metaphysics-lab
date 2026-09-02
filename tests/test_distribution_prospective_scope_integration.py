@@ -45,7 +45,7 @@ def _context():
                     "year": "甲子",
                     "month": "丁卯",
                     "day": "丙午",
-                    "time": "戊戌",
+                    "hour": "戊戌",
                 },
                 "current_decadal": {
                     "pillar": "辛未",
