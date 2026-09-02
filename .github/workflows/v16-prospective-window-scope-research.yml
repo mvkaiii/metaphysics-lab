@@ -43,4 +43,5 @@ jobs:
             tests.test_distribution_prospective_window_scope \
             tests.test_distribution_claim_authority_manifest \
             tests.test_distribution_prospective_claim_universe \
+            tests.test_distribution_prospective_scope_integration \
             -v
