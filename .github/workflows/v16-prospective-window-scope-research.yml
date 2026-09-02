@@ -1,6 +1,18 @@
 name: v1.6 prospective window scope research
 
 on:
+  push:
+    branches:
+      - research/v1.6-prospective-window-scope-v1
+    paths:
+      - 'engine/distribution/prospective_window_scope.py'
+      - 'engine/distribution/claim_authority_manifest.py'
+      - 'engine/distribution/prospective_claim_universe.py'
+      - 'tests/test_distribution_prospective_window_scope.py'
+      - 'tests/test_distribution_claim_authority_manifest.py'
+      - 'tests/test_distribution_prospective_claim_universe.py'
+      - 'tests/test_distribution_prospective_scope_integration.py'
+      - '.github/workflows/v16-prospective-window-scope-research.yml'
   pull_request:
     branches:
       - impl/v1.6-legacy-adapter-paired-evaluation
