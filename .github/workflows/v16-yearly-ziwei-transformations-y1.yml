@@ -40,6 +40,9 @@ jobs:
             tests.test_distribution_forecast.DistributionForecastTests.test_yearly_2025_uses_existing_yi_transformation_profile \
             tests.test_distribution_structural_interpretation.StructuralInterpretationTests.test_project_2025_yearly_transformation_opens_finance_structural_family
 
+      - name: Source-oracle cross-check
+        run: python -m unittest -v tests.test_yearly_ziwei_transformations_y1
+
       - name: Forecast and structural regression
         run: |
           python -m unittest -v \
@@ -52,3 +55,28 @@ jobs:
             tests.test_ziwei_transformations \
             tests.test_ziwei_flying \
             tests.test_ziwei_composition
+
+      - name: Outcome-blind benchmark predictions are deterministic
+        run: |
+          mkdir -p research-output
+          python tools/v16_yearly_transformations_benchmark_predictions.py > research-output/predictions-1.json
+          python tools/v16_yearly_transformations_benchmark_predictions.py > research-output/predictions-2.json
+          cmp research-output/predictions-1.json research-output/predictions-2.json
+          sha256sum research-output/predictions-1.json
+
+      - name: Retrospective adjudication is deterministic
+        run: |
+          python tools/v16_yearly_transformations_benchmark_adjudicate.py research-output/predictions-1.json > research-output/adjudication-1.json
+          python tools/v16_yearly_transformations_benchmark_adjudicate.py research-output/predictions-1.json > research-output/adjudication-2.json
+          cmp research-output/adjudication-1.json research-output/adjudication-2.json
+          sha256sum research-output/adjudication-1.json
+          python -m json.tool research-output/adjudication-1.json >/dev/null
+
+      - name: Upload retrospective research artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: yearly-transformations-y1-retrospective
+          path: |
+            research-output/predictions-1.json
+            research-output/adjudication-1.json
+          if-no-files-found: error
