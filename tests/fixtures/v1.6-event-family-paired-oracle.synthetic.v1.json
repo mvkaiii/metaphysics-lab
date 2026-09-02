@@ -1,0 +1,32 @@
+{
+  "schema_version": "v1.6-event-family-paired-oracle.v1",
+  "classification": "synthetic_validation",
+  "oracle_frozen_at": "2026-09-02T08:20:00Z",
+  "cases": [
+    {
+      "case_id": "synthetic-paired-oracle-1",
+      "target_scope": "yearly",
+      "child_outcomes": [
+        {
+          "child_claim_id": "child:yearly:career:leadership_change",
+          "primary_domain": "career",
+          "event_family": "leadership_change",
+          "outcome_status": "unsupported",
+          "maximum_supported_specificity": null,
+          "caveat_required": false,
+          "expected_cross_system_relation": "single_system_qualified"
+        },
+        {
+          "child_claim_id": "child:yearly:career:role_change",
+          "primary_domain": "career",
+          "event_family": "role_change",
+          "outcome_status": "supported",
+          "maximum_supported_specificity": "event_family",
+          "caveat_required": false,
+          "expected_cross_system_relation": "single_system_qualified"
+        }
+      ],
+      "case_digest": "0ffacce65ca49ec94c6508a6117eafddb5bce631627d62357d9de1cd2106dfc9"
+    }
+  ]
+}
