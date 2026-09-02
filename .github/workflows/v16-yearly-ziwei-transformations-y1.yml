@@ -1,0 +1,40 @@
+name: v1.6 Yearly Ziwei Transformations Y1
+
+on:
+  push:
+    branches:
+      - research/v1.6-yearly-ziwei-transformations-y1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  yearly-transformations-tdd:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch head
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Confirm branch SHA
+        run: git log -1 --format=%H
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install pytest==8.4.2
+
+      - name: Yearly transformation focused TDD
+        run: |
+          python -m unittest -v \
+            tests.test_distribution_forecast.DistributionForecastTests.test_yearly_transformations_share_the_yearly_flowing_source \
+            tests.test_distribution_forecast.DistributionForecastTests.test_yearly_2025_uses_existing_yi_transformation_profile
