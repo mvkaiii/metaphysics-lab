@@ -2,6 +2,9 @@ import copy
 import hashlib
 import json
 from pathlib import Path
+import subprocess
+import sys
+import tempfile
 import unittest
 
 from engine.distribution.event_family_paired_evaluation import (
@@ -13,6 +16,7 @@ from engine.distribution.event_family_paired_oracle import seal_event_family_pai
 
 
 FIXTURE = Path("tests/fixtures/v1.6-event-family-paired-evaluation.synthetic.v1.json")
+CLI = Path("tools/evaluate_v16_event_family_paired.py")
 
 
 def digest(value):
@@ -25,6 +29,19 @@ def digest(value):
             allow_nan=False,
         ).encode("utf-8")
     ).hexdigest()
+
+
+def rendered_bytes(value):
+    return (
+        json.dumps(
+            value,
+            ensure_ascii=False,
+            sort_keys=True,
+            indent=2,
+            allow_nan=False,
+        )
+        + "\n"
+    ).encode("utf-8")
 
 
 def load_payload():
@@ -195,13 +212,11 @@ class EventFamilyPairedEvaluationTests(unittest.TestCase):
         self.assertEqual(report["legacy_metrics"]["unsupported_child_render_count"], 0)
 
     def test_all_four_research_labels_are_reachable_without_private_semantics(self):
-        # Pareto is the frozen synthetic fixture.
         self.assertEqual(
             evaluate_event_family_paired_comparison(load_payload())["research_label"],
             "PARETO_IMPROVEMENT_EVIDENCE",
         )
 
-        # Tradeoff: candidate avoids unsupported breadth but misses one supported child.
         tradeoff = load_payload()
         set_candidate_rendered(
             tradeoff["cases"][0]["candidate_hoc_bundle"],
@@ -214,7 +229,6 @@ class EventFamilyPairedEvaluationTests(unittest.TestCase):
             "TRADEOFF",
         )
 
-        # Non-inferior: make both arms structurally equivalent on the same sealed oracle.
         equal = load_payload()
         for outcome in equal["oracle"]["cases"][0]["child_outcomes"]:
             outcome["expected_cross_system_relation"] = "direct_convergence"
@@ -234,7 +248,6 @@ class EventFamilyPairedEvaluationTests(unittest.TestCase):
             "NON_INFERIOR_NO_STRICT_GAIN",
         )
 
-        # Regression: from the equivalent state, candidate alone misses a supported child.
         regression = copy.deepcopy(equal)
         set_candidate_rendered(
             regression["cases"][0]["candidate_hoc_bundle"],
@@ -259,6 +272,43 @@ class EventFamilyPairedEvaluationTests(unittest.TestCase):
         payload["cases"][0]["input_digest"] = "0" * 64
         with self.assertRaises(ValueError):
             evaluate_event_family_paired_comparison(payload)
+
+    def test_evaluation_cli_matches_api_and_is_byte_deterministic(self):
+        expected = rendered_bytes(
+            evaluate_event_family_paired_comparison(load_payload())
+        )
+        first = subprocess.run(
+            [sys.executable, str(CLI), "--input", str(FIXTURE)],
+            check=False,
+            capture_output=True,
+        )
+        second = subprocess.run(
+            [sys.executable, str(CLI), "--input", str(FIXTURE)],
+            check=False,
+            capture_output=True,
+        )
+        self.assertEqual(first.returncode, 0, first.stderr.decode("utf-8"))
+        self.assertEqual(second.returncode, 0, second.stderr.decode("utf-8"))
+        self.assertEqual(first.stdout, expected)
+        self.assertEqual(second.stdout, expected)
+
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "report.json"
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(CLI),
+                    "--input",
+                    str(FIXTURE),
+                    "--output",
+                    str(output),
+                ],
+                check=False,
+                capture_output=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr.decode("utf-8"))
+            self.assertEqual(result.stdout, b"")
+            self.assertEqual(output.read_bytes(), expected)
 
 
 if __name__ == "__main__":
