@@ -200,11 +200,14 @@ jobs:
       - name: Verify deterministic generated tree remains clean
         run: |
           python tools/build_ai_distribution.py --check
-          echo '--- git status --short ---'
-          git status --short
-          echo '--- git diff --name-only ---'
-          git diff --name-only
-          echo '--- git diff --stat ---'
-          git diff --stat
-          git diff --exit-code
-          test -z "$(git status --porcelain)"
+          python - <<'PY'
+          import subprocess
+          status = subprocess.check_output(
+              ["git", "status", "--porcelain", "--untracked-files=all"],
+              text=True,
+          )
+          print("CLEAN_TREE_STATUS=" + repr(status))
+          if status:
+              compact = " | ".join(line for line in status.splitlines() if line)
+              raise SystemExit("DIRTY_TREE_FILES=" + compact)
+          PY
