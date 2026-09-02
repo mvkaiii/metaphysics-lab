@@ -37,5 +37,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Run prospective window scope tests
-        run: python -m unittest tests.test_distribution_prospective_window_scope -v
+      - name: Run prospective governance focused tests
+        run: |
+          python -m unittest \
+            tests.test_distribution_prospective_window_scope \
+            tests.test_distribution_claim_authority_manifest \
+            -v
