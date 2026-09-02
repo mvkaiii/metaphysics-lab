@@ -4,13 +4,13 @@ on:
   push:
     branches:
       - research/v1.6-yearly-ziwei-transformations-y1
-  workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   rebuild-distribution:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout exact validation SHA
@@ -35,16 +35,28 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
-      - name: Rebuild distribution into isolated output
+      - name: Rebuild committed distribution only
         run: |
-          mkdir -p "$RUNNER_TEMP/dist-ai"
-          python tools/build_ai_distribution.py --output-dir "$RUNNER_TEMP/dist-ai"
-          python tools/build_ai_distribution.py --output-dir "$RUNNER_TEMP/dist-ai" --check
-          sha256sum "$RUNNER_TEMP/dist-ai"/*
+          python tools/build_ai_distribution.py
+          python tools/build_ai_distribution.py --check
+          changed="$(git diff --name-only)"
+          echo "$changed"
+          unexpected="$(printf '%s\n' "$changed" | grep -v '^dist/ai/' || true)"
+          if [ -n "$unexpected" ]; then
+            echo "Unexpected generated changes:"
+            echo "$unexpected"
+            exit 1
+          fi
+          sha256sum dist/ai/*
 
-      - name: Upload deterministic rebuilt distribution
-        uses: actions/upload-artifact@v4
-        with:
-          name: v1.6-yearly-transformations-y1-dist-rebuild-${{ github.sha }}
-          path: ${{ runner.temp }}/dist-ai/
-          if-no-files-found: error
+      - name: Commit deterministic generated artifacts
+        run: |
+          if git diff --quiet -- dist/ai; then
+            echo "Distribution already current"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist/ai
+          git commit -m "build: refresh AI distribution for yearly transformations"
+          git push origin HEAD:research/v1.6-yearly-ziwei-transformations-y1
