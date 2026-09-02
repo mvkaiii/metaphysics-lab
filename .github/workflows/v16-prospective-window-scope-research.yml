@@ -38,4 +38,4 @@ jobs:
         with:
           python-version: '3.11'
       - name: Run prospective window scope tests
-        run: python -m pytest tests/test_distribution_prospective_window_scope.py -q
+        run: python -m unittest tests.test_distribution_prospective_window_scope -v
