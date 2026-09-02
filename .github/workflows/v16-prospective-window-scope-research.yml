@@ -4,30 +4,15 @@ on:
   push:
     branches:
       - research/v1.6-prospective-window-scope-v1
-    paths:
-      - 'engine/distribution/prospective_window_scope.py'
-      - 'engine/distribution/claim_authority_manifest.py'
-      - 'engine/distribution/prospective_claim_universe.py'
-      - 'tests/test_distribution_prospective_window_scope.py'
-      - 'tests/test_distribution_claim_authority_manifest.py'
-      - 'tests/test_distribution_prospective_claim_universe.py'
-      - 'tests/test_distribution_prospective_scope_integration.py'
-      - '.github/workflows/v16-prospective-window-scope-research.yml'
   pull_request:
     branches:
       - impl/v1.6-legacy-adapter-paired-evaluation
-    paths:
-      - 'engine/distribution/prospective_window_scope.py'
-      - 'engine/distribution/claim_authority_manifest.py'
-      - 'engine/distribution/prospective_claim_universe.py'
-      - 'tests/test_distribution_prospective_window_scope.py'
-      - 'tests/test_distribution_claim_authority_manifest.py'
-      - 'tests/test_distribution_prospective_claim_universe.py'
-      - 'tests/test_distribution_prospective_scope_integration.py'
-      - '.github/workflows/v16-prospective-window-scope-research.yml'
 
 permissions:
   contents: read
+
+env:
+  BASE_SHA: eaf03116bf5e02b08b4b51caed2cb2c31f796686
 
 jobs:
   focused:
@@ -45,3 +30,175 @@ jobs:
             tests.test_distribution_prospective_claim_universe \
             tests.test_distribution_prospective_scope_integration \
             -v
+
+  full-qualification:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout research head
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install pytest==8.4.2
+
+      - name: Prospective governance focused gates
+        run: |
+          python -m pytest \
+            tests/test_distribution_prospective_window_scope.py \
+            tests/test_distribution_claim_authority_manifest.py \
+            tests/test_distribution_prospective_claim_universe.py \
+            tests/test_distribution_prospective_scope_integration.py \
+            -q
+
+      - name: Paired research focused gates
+        run: |
+          python -m pytest \
+            tests/test_v16_event_family_legacy_adapter.py \
+            tests/test_v16_event_family_paired_oracle.py \
+            tests/test_v16_event_family_paired_evaluation.py \
+            tests/test_v16_event_family_hybrid_qualification.py \
+            tests/test_v16_event_family_attribution.py \
+            tests/test_v16_hierarchical_claim_authority.py \
+            tests/test_v16_hybrid_claim_composer.py \
+            tests/test_v16_hybrid_output_contract.py \
+            tests/test_v16_event_family_hybrid_wrapper_integration.py \
+            -q
+
+      - name: Frozen Q1 C1 O1 T1 S1 I1 regressions
+        run: |
+          python -m unittest -v tests.test_v16_claim_consumption_qualification
+          python -m unittest -v tests.test_v16_claim_consumption_contract
+          python -m unittest -v tests.test_v16_claim_consumption_oracle_seal
+          python -m unittest -v tests.test_v16_claim_consumption_private_threshold
+          python -m unittest -v tests.test_v16_claim_consumption_sampling_eligibility
+          python -m unittest -v tests.test_v16_prospective_case_intake
+
+      - name: Frozen Coordination regressions
+        run: |
+          python -m pytest -q \
+            tests/test_v16_coordination_policy_v2.py \
+            tests/test_v16_coordination_wrapper_integration.py
+
+      - name: Governance runbook boundary check
+        run: |
+          grep -F 'Legacy + Candidate 必須在 outcome window 前生成並 seal' docs/research/2026-09-02-v1.6-event-family-paired-prospective-evaluation.md
+          grep -F 'Oracle reveal 後不可改 Legacy Adapter、Candidate、Q2、paired rule' docs/research/2026-09-02-v1.6-event-family-paired-prospective-evaluation.md
+          grep -F '任何 evaluated case scoring 後永久 exposed' docs/research/2026-09-02-v1.6-event-family-paired-prospective-evaluation.md
+          grep -F 'FAIL/REGRESSION 不得用同 case retune 再跑' docs/research/2026-09-02-v1.6-event-family-paired-prospective-evaluation.md
+          grep -F 'promotion_allowed=false' docs/research/2026-09-02-v1.6-event-family-paired-prospective-evaluation.md
+          grep -F '本 infrastructure freeze cycle 不建立真實 private oracle' docs/research/2026-09-02-v1.6-event-family-paired-prospective-evaluation.md
+
+      - name: Diff semantic boundary guard
+        run: |
+          python - <<'PY'
+          import subprocess
+          allowed = {
+              'engine/distribution/prospective_window_scope.py',
+              'engine/distribution/claim_authority_manifest.py',
+              'engine/distribution/prospective_claim_universe.py',
+          }
+          changed = subprocess.check_output(
+              ['git', 'diff', '--name-only', f"{__import__('os').environ['BASE_SHA']}...HEAD"],
+              text=True,
+          ).splitlines()
+          forbidden = [p for p in changed if p.startswith('engine/') and p not in allowed]
+          print('changed_count=', len(changed))
+          print('semantic_engine_changes=', sorted(p for p in changed if p.startswith('engine/')))
+          if forbidden:
+              raise SystemExit('forbidden semantic engine edits: ' + ', '.join(forbidden))
+          PY
+
+      - name: Builder and compile gate
+        run: |
+          python tools/build_ai_distribution.py
+          python tools/build_ai_distribution.py --check
+          python -m compileall -q engine tools tests
+
+      - name: Bazi flow-day/hour qualification evidence
+        run: python tools/build_bazi_flow_time_qualification.py --check
+
+      - name: Ziwei flow-day/hour qualification evidence
+        run: python tools/build_ziwei_flow_time_qualification.py --check
+
+      - name: Ziwei month-boundary qualification evidence
+        run: python tools/build_ziwei_month_boundary_qualification.py --check
+
+      - name: Validation-equivalent rebuild AI distribution
+        run: |
+          python tools/build_ai_distribution.py
+          python tools/build_ai_distribution.py --check
+
+      - name: Validation-equivalent v1.5 focused regression
+        run: |
+          python -m unittest \
+            tests.test_bazi_structural_relations \
+            tests.test_distribution_bazi_structural_interpretation \
+            tests.test_distribution_ziwei_structural_interpretation \
+            tests.test_distribution_structural_interpretation \
+            tests.test_distribution_evidence_models \
+            tests.test_distribution_evidence \
+            tests.test_distribution_evidence_audit \
+            tests.test_distribution_evidence_ranker \
+            tests.test_distribution_evidence_runtime \
+            tests.test_distribution_forecast \
+            tests.test_historical_activation_relations \
+            tests.test_historical_activation_selector \
+            tests.test_historical_activation_capabilities \
+            tests.test_distribution_historical_calibration \
+            tests.test_distribution_historical_integrity \
+            tests.test_distribution_historical_support \
+            tests.test_distribution_historical_personalization_policy \
+            tests.test_distribution_historical_personalization \
+            tests.test_distribution_historical_personalization_runtime \
+            tests.test_distribution_historical_personalization_bundle \
+            tests.test_distribution_interpretation_contract \
+            tests.test_distribution_interpretation_contract_local_window_validation \
+            tests.test_distribution_interpretation_contract_runtime \
+            tests.test_distribution_interpretation_contract_bundle \
+            tests.test_project_ux_contract \
+            tests.test_ai_contract_docs \
+            tests.test_distribution_case_pack \
+            tests.test_distribution_blind_sources \
+            tests.test_distribution_blind_source_bundle_parity \
+            tests.test_distribution_prospective \
+            tests.test_distribution_prospective_evaluation \
+            tests.test_distribution_prospective_evaluation_comparison \
+            tests.test_distribution_partial_case \
+            tests.test_postmerge_audit_regressions \
+            tests.test_second_round_adversarial_regressions \
+            tests.test_third_round_adversarial_regressions \
+            tests.test_third_round_bundle_parity \
+            tests.test_fourth_round_nonfinite_case_records \
+            tests.test_fifth_round_legacy_record_id_compat \
+            tests.test_distribution_runtime_info -v
+
+      - name: Validation-equivalent prediction validation
+        run: python tools/run_lin_tianji_prediction_validation.py --json
+
+      - name: Validation-equivalent release-surface validation
+        run: python tools/run_v15_release_surface_validation.py --json
+
+      - name: Validation-equivalent deterministic user package
+        run: python tools/build_release_package.py --verify --output "$RUNNER_TEMP/Metaphysics-Lab-v1.5.0-User-Package.zip"
+
+      - name: Validation-equivalent full repository regression
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+
+      - name: Validation-equivalent Python 3.9 compile check
+        run: python -m compileall engine tests tools
+
+      - name: Verify deterministic generated tree remains clean
+        run: |
+          python tools/build_ai_distribution.py --check
+          git diff --exit-code
+          test -z "$(git status --porcelain)"
