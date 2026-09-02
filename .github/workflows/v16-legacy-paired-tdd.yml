@@ -36,6 +36,9 @@ jobs:
       - name: Legacy Adapter focused gate
         run: python -m unittest -v tests.test_v16_event_family_legacy_adapter
 
+      - name: Paired Oracle focused gate
+        run: python -m unittest -v tests.test_v16_event_family_paired_oracle
+
       - name: Frozen Legacy authority regressions
         run: |
           python -m pytest \
