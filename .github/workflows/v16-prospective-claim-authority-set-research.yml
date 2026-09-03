@@ -18,4 +18,6 @@ jobs:
           python-version: '3.9'
       - name: Run prospective claim-authority set focused tests
         run: |
-          python -m unittest -v tests.test_distribution_prospective_claim_authority_set
+          python -m unittest -v \
+            tests.test_distribution_prospective_claim_authority_set \
+            tests.test_tool_build_v16_prospective_claim_authority_set
