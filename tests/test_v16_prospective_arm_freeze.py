@@ -1,4 +1,3 @@
-import copy
 import unittest
 
 from engine.distribution.claim_authority_manifest import build_claim_authority_manifest
@@ -7,7 +6,19 @@ from engine.distribution.event_family_attribution import build_event_family_attr
 from engine.distribution.evidence_ranker import rank_evidence
 from engine.distribution.prospective_arm_freeze import build_prospective_arm_freeze
 from engine.distribution.prospective_window_scope import resolve_prospective_window_scope
-from tests.test_distribution_claim_evidence import anchor, feature, structural
+from tests.test_distribution_claim_evidence import feature, structural
+
+
+def _q4_anchor():
+    return {
+        "query_anchor_at": "2026-09-03T15:30:00+08:00",
+        "query_timezone": "Asia/Taipei",
+        "knowledge_cutoff_at": "2026-09-03T15:30:00+08:00",
+        "prospective_window_start": "2026-10-01T00:00:00+08:00",
+        "prospective_window_end": "2026-12-31T23:59:59+08:00",
+        "question_reference": "synthetic-prospective-arm-freeze",
+        "status": "ok",
+    }
 
 
 class ProspectiveArmFreezeTests(unittest.TestCase):
@@ -66,7 +77,7 @@ class ProspectiveArmFreezeTests(unittest.TestCase):
             structural_interpretation=interpretation,
         )
         locked_ids = [row["child_claim_id"] for row in efa["children"]]
-        payload = {
+        return {
             "opaque_case_id": "case-synthetic-arm-freeze",
             "sealed_at": "2026-09-03T15:30:00+08:00",
             "scope_policy": scope_policy,
@@ -74,7 +85,7 @@ class ProspectiveArmFreezeTests(unittest.TestCase):
             "forecast_context_digest": interpretation["source_context_digest"],
             "base_ranking": ranking,
             "structural_interpretation": interpretation,
-            "anchor": anchor(),
+            "anchor": _q4_anchor(),
             "locked_claim_ids": locked_ids,
             "s1_provenance": {
                 "composite_claim_authority_digest": "4" * 64,
@@ -83,10 +94,10 @@ class ProspectiveArmFreezeTests(unittest.TestCase):
                 "sampling_receipt_digest": "7" * 64,
             },
         }
-        return payload
 
     def test_builds_both_arms_from_one_source_and_preserves_exact_s1_universe(self):
-        result = build_prospective_arm_freeze(self._fixture())
+        payload = self._fixture()
+        result = build_prospective_arm_freeze(payload)
 
         self.assertEqual(result["status"], "WAITING_FOR_OUTCOME")
         self.assertTrue(result["outcome_blind"])
@@ -97,7 +108,7 @@ class ProspectiveArmFreezeTests(unittest.TestCase):
         self.assertEqual(result["target_scope"], "yearly")
         self.assertEqual(result["timing_scopes"], ["monthly"])
 
-        locked = set(self._fixture()["locked_claim_ids"])
+        locked = set(payload["locked_claim_ids"])
         legacy_ids = {row["child_claim_id"] for row in result["legacy_arm"]["children"]}
         candidate_ids = {
             row["child_claim_id"]
@@ -150,6 +161,42 @@ class ProspectiveArmFreezeTests(unittest.TestCase):
         with self.assertRaises(DistributionError) as caught:
             build_prospective_arm_freeze(payload)
         self.assertEqual(caught.exception.code, "invalid_prospective_arm_freeze")
+
+    def test_seal_must_be_offset_aware_and_strictly_before_outcome_window(self):
+        for sealed_at in (
+            "2026-09-03T15:30:00",
+            "2026-10-01T00:00:00+08:00",
+            "2026-10-01T00:00:01+08:00",
+        ):
+            with self.subTest(sealed_at=sealed_at):
+                payload = self._fixture()
+                payload["sealed_at"] = sealed_at
+                with self.assertRaises(DistributionError) as caught:
+                    build_prospective_arm_freeze(payload)
+                self.assertEqual(caught.exception.code, "invalid_prospective_arm_freeze")
+
+    def test_anchor_cutoff_and_query_must_not_extend_past_seal(self):
+        for field in ("knowledge_cutoff_at", "query_anchor_at"):
+            with self.subTest(field=field):
+                payload = self._fixture()
+                payload["anchor"][field] = "2026-09-03T15:30:01+08:00"
+                with self.assertRaises(DistributionError) as caught:
+                    build_prospective_arm_freeze(payload)
+                self.assertEqual(caught.exception.code, "invalid_prospective_arm_freeze")
+
+    def test_anchor_must_bind_exact_scoring_window_and_timezone(self):
+        mutations = (
+            ("prospective_window_start", "2026-10-02T00:00:00+08:00"),
+            ("prospective_window_end", "2026-12-30T23:59:59+08:00"),
+            ("query_timezone", "Asia/Tokyo"),
+        )
+        for field, value in mutations:
+            with self.subTest(field=field):
+                payload = self._fixture()
+                payload["anchor"][field] = value
+                with self.assertRaises(DistributionError) as caught:
+                    build_prospective_arm_freeze(payload)
+                self.assertEqual(caught.exception.code, "invalid_prospective_arm_freeze")
 
 
 if __name__ == "__main__":
