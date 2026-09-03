@@ -3,6 +3,11 @@ name: Release v1.6.0
 on:
   push:
     branches: [main]
+    paths:
+      - '.github/workflows/release-v1.6.yml'
+      - 'docs/發布說明-v1.6.0.md'
+      - 'docs/release/v1.6.0-qualification.md'
+      - 'docs/release/v1.6.0-isolated-sandbox-conversation-validation.md'
   workflow_dispatch:
 
 permissions:
