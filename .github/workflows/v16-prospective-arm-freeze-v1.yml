@@ -1,0 +1,62 @@
+name: v1.6 Prospective Arm Freeze V1
+
+on:
+  push:
+    branches:
+      - research/v1.6-prospective-arm-freeze-v1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  focused:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact validation SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Confirm exact validation SHA
+        run: |
+          echo "github_sha=${{ github.sha }}"
+          test "$(git rev-parse HEAD)" = "${{ github.sha }}"
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install pytest==8.4.2
+
+      - name: Y1 combined-lineage focused test
+        run: python -m unittest -v tests.test_yearly_ziwei_transformations_y1
+
+      - name: Arm-freeze focused tests when present
+        shell: bash
+        run: |
+          if [ -f tests/test_v16_prospective_arm_freeze.py ]; then
+            python -m unittest -v tests.test_v16_prospective_arm_freeze
+          fi
+
+      - name: Frozen arm authorities regressions
+        run: |
+          python -m pytest \
+            tests/test_v16_event_family_legacy_adapter.py \
+            tests/test_v16_hierarchical_claim_authority.py \
+            tests/test_v16_hybrid_claim_composer.py \
+            tests/test_v16_hybrid_output_contract.py \
+            tests/test_distribution_prospective_claim_universe.py \
+            tests/test_distribution_prospective_scope_integration.py \
+            tests/test_distribution_prospective_claim_authority_set.py \
+            -q
+
+      - name: Python compile check
+        run: python -m compileall -q engine tests tools
