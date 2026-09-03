@@ -1,0 +1,31 @@
+{
+  "fixture_version": "v1.6.0-isolated-sandbox-fixture.v1",
+  "classification": "synthetic_test_case",
+  "privacy": "fictional_no_real_user_data",
+  "subject": {
+    "display_name": "Mina",
+    "sex": "female",
+    "birth_date": "1992-08-17",
+    "birth_time": "14:30",
+    "birth_place": "高雄市"
+  },
+  "target_year": 2027,
+  "known_reality_context": {
+    "known_before_lock": true,
+    "event_date": "2027-04-15",
+    "event_time": "20:00",
+    "summary": "公司已排定一場內部提案簡報，這件事在本次問事前已確定。"
+  },
+  "historical_event_ledger": [
+    {"year": 2016, "status": "verified", "summary": "全年沒有可確認的重大職務變動。"},
+    {"year": 2017, "status": "verified", "summary": "轉到新團隊，工作責任明顯增加。"},
+    {"year": 2018, "status": "verified", "summary": "完成一項工作相關的專業課程或證照。"},
+    {"year": 2019, "status": "verified", "summary": "搬家，居住安排有明確變動。"},
+    {"year": 2020, "status": "verified", "summary": "工作改為長期遠距，但沒有升職。"},
+    {"year": 2021, "status": "verified", "summary": "接受一次需要恢復期的牙科治療。"},
+    {"year": 2022, "status": "verified", "summary": "開始一項跨部門合作專案。"},
+    {"year": 2023, "status": "verified", "summary": "獲得一次明確可核對的績效獎金。"},
+    {"year": 2024, "status": "verified", "summary": "開始固定帶新人並負責教學。"},
+    {"year": 2025, "status": "verified", "summary": "接受一項外部短期顧問合作。"}
+  ]
+}
