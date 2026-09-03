@@ -1,0 +1,21 @@
+name: v1.6 prospective claim-authority set research
+
+on:
+  push:
+    branches:
+      - research/v1.6-prospective-claim-authority-set
+
+permissions:
+  contents: read
+
+jobs:
+  focused:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - name: Run prospective claim-authority set focused tests
+        run: |
+          python -m unittest -v tests.test_distribution_prospective_claim_authority_set
