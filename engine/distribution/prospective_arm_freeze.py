@@ -10,6 +10,8 @@ import copy
 import hashlib
 import json
 from collections.abc import Mapping, Sequence
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from .claim_authority_manifest import validate_claim_authority_manifest
 from .claim_consumption_contract import build_claim_consumption_bundle
@@ -135,6 +137,110 @@ def _scan_forbidden_keys(value: object, path: str = "payload") -> None:
             _scan_forbidden_keys(child, "%s[%d]" % (path, index))
 
 
+def _aware_iso_in_zone(value: object, field: str, timezone_name: str) -> datetime:
+    text = _text(value, field)
+    try:
+        zone = ZoneInfo(timezone_name)
+    except Exception as exc:
+        _raise("scope timezone must be a valid IANA timezone", {"field": "scope_policy.timezone"})
+        raise AssertionError("unreachable") from exc
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError as exc:
+        _raise("%s must be an ISO-8601 datetime" % field, {"field": field})
+        raise AssertionError("unreachable") from exc
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        _raise("%s must include an explicit UTC offset" % field, {"field": field})
+
+    localized = parsed.astimezone(zone)
+    if (
+        localized.replace(tzinfo=None) != parsed.replace(tzinfo=None)
+        or localized.utcoffset() != parsed.utcoffset()
+    ):
+        _raise(
+            "%s offset does not match the frozen prospective timezone" % field,
+            {"field": field, "timezone": timezone_name},
+        )
+    return localized
+
+
+def _validated_pre_outcome_binding(
+    *,
+    sealed_at: object,
+    scope_policy: Mapping[str, object],
+    anchor: object,
+) -> dict:
+    """Fail closed before any forecast/interpretation builder can observe the input."""
+
+    source = _mapping(anchor, "anchor")
+    timezone_name = _text(scope_policy.get("timezone"), "scope_policy.timezone")
+    query_timezone = _text(source.get("query_timezone"), "anchor.query_timezone")
+    if query_timezone != timezone_name:
+        _raise(
+            "anchor query_timezone must exactly match frozen scope timezone",
+            {"field": "anchor.query_timezone"},
+        )
+
+    expected_start = _text(scope_policy.get("window_start"), "scope_policy.window_start")
+    expected_end = _text(scope_policy.get("window_end"), "scope_policy.window_end")
+    anchor_start = _text(
+        source.get("prospective_window_start"),
+        "anchor.prospective_window_start",
+    )
+    anchor_end = _text(
+        source.get("prospective_window_end"),
+        "anchor.prospective_window_end",
+    )
+    if anchor_start != expected_start:
+        _raise(
+            "anchor prospective_window_start must exactly match frozen scope policy",
+            {"field": "anchor.prospective_window_start"},
+        )
+    if anchor_end != expected_end:
+        _raise(
+            "anchor prospective_window_end must exactly match frozen scope policy",
+            {"field": "anchor.prospective_window_end"},
+        )
+
+    seal = _aware_iso_in_zone(sealed_at, "sealed_at", timezone_name)
+    outcome_start = _aware_iso_in_zone(expected_start, "scope_policy.window_start", timezone_name)
+    if seal >= outcome_start:
+        _raise(
+            "sealed_at must be strictly earlier than the prospective outcome window",
+            {"field": "sealed_at"},
+        )
+
+    query_anchor = _aware_iso_in_zone(
+        source.get("query_anchor_at"),
+        "anchor.query_anchor_at",
+        timezone_name,
+    )
+    knowledge_cutoff = _aware_iso_in_zone(
+        source.get("knowledge_cutoff_at"),
+        "anchor.knowledge_cutoff_at",
+        timezone_name,
+    )
+    if query_anchor > seal:
+        _raise(
+            "anchor.query_anchor_at must not extend past sealed_at",
+            {"field": "anchor.query_anchor_at"},
+        )
+    if knowledge_cutoff > seal:
+        _raise(
+            "anchor.knowledge_cutoff_at must not extend past sealed_at",
+            {"field": "anchor.knowledge_cutoff_at"},
+        )
+
+    return {
+        "sealed_at": seal.isoformat(),
+        "query_anchor_at": query_anchor.isoformat(),
+        "knowledge_cutoff_at": knowledge_cutoff.isoformat(),
+        "query_timezone": query_timezone,
+        "prospective_window_start": expected_start,
+        "prospective_window_end": expected_end,
+    }
+
+
 def _validated_scope_policy(value: object) -> dict:
     supplied = _mapping(value, "scope_policy")
     expected = resolve_prospective_window_scope(
@@ -257,8 +363,15 @@ def build_prospective_arm_freeze(payload: Mapping[str, object]) -> dict:
     _exact_fields(source, _INPUT_FIELDS, "prospective arm-freeze input")
 
     case_id = _text(source.get("opaque_case_id"), "opaque_case_id")
-    sealed_at = _text(source.get("sealed_at"), "sealed_at")
     scope_policy = _validated_scope_policy(source.get("scope_policy"))
+    anchor = _mapping(source.get("anchor"), "anchor")
+    pre_outcome_binding = _validated_pre_outcome_binding(
+        sealed_at=source.get("sealed_at"),
+        scope_policy=scope_policy,
+        anchor=anchor,
+    )
+    sealed_at = pre_outcome_binding["sealed_at"]
+
     authority = validate_claim_authority_manifest(
         _mapping(source.get("claim_authority_manifest"), "claim_authority_manifest")
     )
@@ -276,7 +389,6 @@ def build_prospective_arm_freeze(payload: Mapping[str, object]) -> dict:
         source.get("structural_interpretation"),
         "structural_interpretation",
     )
-    anchor = _mapping(source.get("anchor"), "anchor")
 
     if ranking.get("target_scope") != scope_policy["claim_target_scope"]:
         _raise("base_ranking target_scope does not match frozen scope policy")
@@ -332,6 +444,7 @@ def build_prospective_arm_freeze(payload: Mapping[str, object]) -> dict:
         "profile_version": PROSPECTIVE_ARM_FREEZE_PROFILE,
         "opaque_case_id": case_id,
         "sealed_at": sealed_at,
+        "pre_outcome_binding": pre_outcome_binding,
         "status": "WAITING_FOR_OUTCOME",
         "outcome_blind": True,
         "oracle_status": "NOT_CREATED",
