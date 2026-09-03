@@ -13,6 +13,13 @@ SYNTHETIC_BIRTH = {
     "birth_place": "台北市",
 }
 
+KAI_BIRTH = {
+    "sex": "male",
+    "birth_date": "1984-03-13",
+    "birth_time": "19:20",
+    "birth_place": "台北市",
+}
+
 RESOLVED_TAIPEI = {
     "canonical_name": "Taipei City, Taiwan",
     "latitude": 25.033,
@@ -147,6 +154,55 @@ class StructuralInterpretationTests(unittest.TestCase):
         ]
         self.assertEqual({item["system"] for item in career}, {"bazi", "ziwei"})
         self.assertEqual(len({item["dependency_family"] for item in career}), 2)
+
+    def test_project_2025_yearly_transformation_opens_finance_structural_family(self):
+        natal = dispatch(
+            "build_natal",
+            {
+                "birth": KAI_BIRTH,
+                "resolved_location": RESOLVED_TAIPEI,
+            },
+        )
+        self.assertTrue(natal["ok"], natal)
+
+        forecast = dispatch(
+            "resolve_forecast_context",
+            {
+                "normalized_natal": natal["data"]["normalized_natal"],
+                "target": {
+                    "civil_datetime": "2025-06-15T12:00:00",
+                    "timezone": "Asia/Taipei",
+                },
+                "requested_scopes": ["yearly"],
+            },
+        )
+        self.assertTrue(forecast["ok"], forecast)
+
+        interpreted = dispatch(
+            "interpret_structural_evidence",
+            {
+                "forecast_context": forecast["data"],
+                "target_scope": "yearly",
+            },
+        )
+        self.assertTrue(interpreted["ok"], interpreted)
+
+        finance = [
+            feature
+            for feature in interpreted["data"]["features"]
+            if feature["system"] == "ziwei"
+            and feature["scope"] == "yearly"
+            and feature["primary_domain"] == "finance"
+        ]
+        self.assertTrue(finance, interpreted)
+        self.assertTrue(any(feature["role"] == "target_evidence" for feature in finance))
+        families = {
+            family
+            for feature in finance
+            for family in feature["event_family_support"]
+        }
+        self.assertIn("income_assets", families)
+        self.assertIn("constraint_or_friction", families)
 
     def test_zero_history_pipeline_produces_nonempty_ranked_baseline(self):
         natal = dispatch(
