@@ -1,0 +1,110 @@
+name: Release v1.6.0
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: github.repository == 'mvkaiii/metaphysics-lab'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact release ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Y1 yearly Ziwei qualification
+        run: python -m unittest tests.test_yearly_ziwei_transformations_y1 -v
+
+      - name: Preserve v1 default routing
+        run: python -m unittest tests.test_v16_default_profiles -v
+
+      - name: Bazi flow-time qualification
+        run: python tools/build_bazi_flow_time_qualification.py --check
+
+      - name: Ziwei flow-time qualification
+        run: python tools/build_ziwei_flow_time_qualification.py --check
+
+      - name: Ziwei month-boundary qualification
+        run: python tools/build_ziwei_month_boundary_qualification.py --check
+
+      - name: Rebuild and verify AI distribution
+        run: |
+          python tools/build_ai_distribution.py
+          python tools/build_ai_distribution.py --check
+
+      - name: Run 林氏天機 prediction validation
+        run: python tools/run_lin_tianji_prediction_validation.py --json
+
+      - name: Run v1.6 release-surface validation
+        run: python tools/run_v16_release_surface_validation.py --json
+
+      - name: Validate isolated sandbox conversation evidence
+        run: |
+          python tools/validate_v16_sandbox_evidence.py \
+            --evidence docs/release/v1.6.0-isolated-sandbox-conversation-validation.md \
+            --current-sha "$GITHUB_SHA" \
+            --json
+
+      - name: Full repository regression
+        run: python -m unittest discover -s tests -p 'test_*.py'
+
+      - name: Python 3.9 compile check
+        run: |
+          python -m compileall -q engine tools tests
+          python -c "compile(open('dist/ai/metaphysics_lab.py', encoding='utf-8').read(), 'dist/ai/metaphysics_lab.py', 'exec')"
+
+      - name: Private outcome contamination scan
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          forbidden_names = {'驗證事件紀錄.md', 'Kai_CDBF04_05_驗證事件紀錄.md', 'adjudication-1.json'}
+          bad = []
+          for root in (Path('dist/ai'), Path('docs/release')):
+              if root.exists():
+                  bad.extend(str(path) for path in root.rglob('*') if path.is_file() and path.name in forbidden_names)
+          if bad:
+              raise SystemExit('forbidden private/outcome release artifacts: ' + ', '.join(sorted(bad)))
+          print('private/outcome release-artifact scan: PASS')
+          PY
+
+      - name: Verify clean release tree before package output
+        run: git diff --exit-code && test -z "$(git status --porcelain)"
+
+      - name: Build deterministic three-file user package
+        run: |
+          python tools/build_release_package.py --output "$RUNNER_TEMP/Metaphysics-Lab-v1.6.0-User-Package.zip"
+          python tools/build_release_package.py --verify
+          sha256sum "$RUNNER_TEMP/Metaphysics-Lab-v1.6.0-User-Package.zip"
+
+      - name: Publish v1.6.0 release if absent
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view v1.6.0 >/dev/null 2>&1; then
+            echo "v1.6.0 already exists; refusing to replace immutable release identity"
+            gh release view v1.6.0 --json tagName,targetCommitish,isDraft,isPrerelease
+            exit 0
+          fi
+          gh release create v1.6.0 \
+            --target "$GITHUB_SHA" \
+            --title "Metaphysics Lab v1.6.0" \
+            --notes-file docs/發布說明-v1.6.0.md \
+            "$RUNNER_TEMP/Metaphysics-Lab-v1.6.0-User-Package.zip" \
+            dist/ai/metaphysics_lab.py \
+            dist/ai/metaphysics_core.md \
+            dist/ai/project_instructions.txt
