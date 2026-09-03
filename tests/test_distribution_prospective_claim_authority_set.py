@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 from engine.distribution.claim_authority_manifest import build_claim_authority_manifest
+from engine.distribution.claim_consumption_sampling_eligibility import validate_claim_universe_lock
 from engine.distribution.event_family_attribution import EVENT_FAMILY_ATTRIBUTION_PROFILE_VERSION
 from engine.distribution.prospective_window_scope import resolve_prospective_window_scope
 from engine.distribution.structural_policy import MAPPING_PROFILE
@@ -23,6 +24,17 @@ FIXTURE = ROOT / "tests" / "fixtures" / "v1.6-claim-consumption-sampling-eligibi
 
 def _sha(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _canonical_digest(value: object) -> str:
+    rendered = json.dumps(
+        value,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    ).encode("utf-8")
+    return hashlib.sha256(rendered).hexdigest()
 
 
 def _fixture() -> dict:
@@ -84,6 +96,31 @@ def _members() -> tuple[dict, dict, list[dict]]:
         },
     ]
     return protocol, source, members
+
+
+def _refresh_claim_lock_digest(lock: dict) -> dict:
+    body = {
+        "schema_version": lock["schema_version"],
+        "sampling_profile": lock["sampling_profile"],
+        "sampling_protocol_digest": lock["sampling_protocol_digest"],
+        "source_manifest_digest": lock["source_manifest_digest"],
+        "claim_authority_profile": lock["claim_authority_profile"],
+        "claim_authority_digest": lock["claim_authority_digest"],
+        "locked_at": lock["locked_at"],
+        "cases": sorted(lock["cases"], key=lambda row: row["opaque_case_id"]),
+    }
+    lock["claim_universe_digest"] = _canonical_digest(body)
+    return lock
+
+
+def _claim_lock(protocol: dict, source: dict, composite: dict) -> dict:
+    fixture = _fixture()
+    lock = copy.deepcopy(fixture["claim_universe_lock"])
+    lock["sampling_protocol_digest"] = protocol["protocol_digest"]
+    lock["source_manifest_digest"] = source["source_manifest_digest"]
+    lock["claim_authority_profile"] = composite["claim_authority_profile"]
+    lock["claim_authority_digest"] = composite["claim_authority_digest"]
+    return _refresh_claim_lock_digest(lock)
 
 
 class ProspectiveClaimAuthoritySetTests(unittest.TestCase):
@@ -196,6 +233,53 @@ class ProspectiveClaimAuthoritySetTests(unittest.TestCase):
         bad[0]["source_record_digest"] = _sha("wrong-source")
         with self.assertRaises(ValueError):
             build_claim_authority_set(protocol, source, bad, promotion_allowed=False)
+
+    def test_frozen_s1_accepts_composite_provenance_unchanged(self) -> None:
+        protocol, source, members = _members()
+        composite = build_claim_authority_set(protocol, source, members, promotion_allowed=False)
+        lock = _claim_lock(protocol, source, composite)
+        self.assertEqual(validate_claim_universe_lock(lock, source, protocol), lock)
+
+    def test_s1_missing_include_case_still_fails_with_composite_provenance(self) -> None:
+        protocol, source, members = _members()
+        composite = build_claim_authority_set(protocol, source, members, promotion_allowed=False)
+        lock = _claim_lock(protocol, source, composite)
+        lock["cases"] = [row for row in lock["cases"] if row["opaque_case_id"] != "case-b"]
+        _refresh_claim_lock_digest(lock)
+        with self.assertRaises(ValueError):
+            validate_claim_universe_lock(lock, source, protocol)
+
+    def test_s1_empty_claim_set_still_fails_with_composite_provenance(self) -> None:
+        protocol, source, members = _members()
+        composite = build_claim_authority_set(protocol, source, members, promotion_allowed=False)
+        lock = _claim_lock(protocol, source, composite)
+        target = next(row for row in lock["cases"] if row["opaque_case_id"] == "case-a")
+        target["locked_claim_ids"] = []
+        target["claim_case_digest"] = _canonical_digest(
+            {"opaque_case_id": target["opaque_case_id"], "locked_claim_ids": []}
+        )
+        _refresh_claim_lock_digest(lock)
+        with self.assertRaises(ValueError):
+            validate_claim_universe_lock(lock, source, protocol)
+
+    def test_s1_claim_universe_digest_tamper_still_fails(self) -> None:
+        protocol, source, members = _members()
+        composite = build_claim_authority_set(protocol, source, members, promotion_allowed=False)
+        lock = _claim_lock(protocol, source, composite)
+        lock["claim_universe_digest"] = "0" * 64
+        with self.assertRaises(ValueError):
+            validate_claim_universe_lock(lock, source, protocol)
+
+    def test_arbitrary_provenance_cannot_bypass_s1_case_completeness(self) -> None:
+        protocol, source, members = _members()
+        composite = build_claim_authority_set(protocol, source, members, promotion_allowed=False)
+        lock = _claim_lock(protocol, source, composite)
+        lock["claim_authority_profile"] = "synthetic-other-provenance"
+        lock["claim_authority_digest"] = _sha("other-provenance")
+        lock["cases"] = [row for row in lock["cases"] if row["opaque_case_id"] != "case-b"]
+        _refresh_claim_lock_digest(lock)
+        with self.assertRaises(ValueError):
+            validate_claim_universe_lock(lock, source, protocol)
 
 
 if __name__ == "__main__":
