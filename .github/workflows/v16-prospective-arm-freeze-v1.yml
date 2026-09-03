@@ -148,7 +148,7 @@ jobs:
           import subprocess
           allowed = {
               'engine/distribution/forecast.py',
-              'engine/distribution/yearly_cycle.py',
+              'engine/ziwei/yearly_cycle.py',
               'engine/distribution/prospective_arm_freeze.py',
           }
           changed = subprocess.check_output(
@@ -169,7 +169,7 @@ jobs:
         run: |
           git diff --exit-code f20ec931bf868f152226bab831dfa011f905a4f2 -- \
             engine/distribution/forecast.py \
-            engine/distribution/yearly_cycle.py
+            engine/ziwei/yearly_cycle.py
 
       - name: Builder and compile gate
         run: |
