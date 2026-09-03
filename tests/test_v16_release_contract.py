@@ -66,6 +66,31 @@ class V16ReleaseContractTests(unittest.TestCase):
         ):
             self.assertIn(required, text)
 
+    def test_v16_sandbox_kit_is_synthetic_and_pending_evidence_fails_closed(self):
+        script = ROOT / "docs" / "release" / "v1.6.0-isolated-sandbox-script.md"
+        fixture = ROOT / "tests" / "fixtures" / "v1.6.0-isolated-sandbox-fixture.v1.json"
+        pending = ROOT / "tests" / "fixtures" / "v1.6.0-isolated-sandbox-evidence.pending.md"
+        validator = ROOT / "tools" / "validate_v16_sandbox_evidence.py"
+        self.assertTrue(script.is_file())
+        self.assertTrue(fixture.is_file())
+        self.assertTrue(pending.is_file())
+        self.assertTrue(validator.is_file())
+        combined = script.read_text(encoding="utf-8") + "\n" + fixture.read_text(encoding="utf-8")
+        self.assertIn("fictional", combined.lower())
+        self.assertNotIn("1984-03-13", combined)
+        self.assertIn("Y1", script.read_text(encoding="utf-8"))
+        self.assertIn("Experimental", script.read_text(encoding="utf-8"))
+
+        spec = importlib.util.spec_from_file_location("validate_v16_sandbox_evidence_test", validator)
+        self.assertIsNotNone(spec)
+        self.assertIsNotNone(spec.loader)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        report = module.validate_evidence(ROOT, pending, "f" * 40)
+        self.assertEqual(report["status"], "PENDING", report)
+        self.assertFalse(report["release_allowed"], report)
+        self.assertIn("evidence_status_not_pass", report["errors"])
+
 
 if __name__ == "__main__":
     unittest.main()
