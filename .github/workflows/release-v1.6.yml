@@ -8,6 +8,7 @@ on:
       - 'docs/發布說明-v1.6.0.md'
       - 'docs/release/v1.6.0-qualification.md'
       - 'docs/release/v1.6.0-isolated-sandbox-conversation-validation.md'
+      - 'docs/release/v1.6.0-isolated-sandbox-transcript.md'
   workflow_dispatch:
 
 permissions:

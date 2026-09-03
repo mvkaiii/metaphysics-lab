@@ -73,7 +73,7 @@ jobs:
         run: python tools/build_release_package.py --verify --output "$RUNNER_TEMP/Metaphysics-Lab-v1.6.0-User-Package.zip"
 
       - name: Release contract
-        run: python -m unittest tests.test_v16_release_contract tests.test_v15_release_contract -v
+        run: python -m unittest tests.test_v16_sandbox_contract_v2 tests.test_v16_release_contract tests.test_v15_release_contract -v
 
       - name: Full repository regression
         run: python -m unittest discover -s tests -p 'test_*.py' -v

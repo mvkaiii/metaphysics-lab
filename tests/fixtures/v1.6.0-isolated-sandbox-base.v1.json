@@ -1,0 +1,13 @@
+{
+  "fixture_version": "v1.6.0-isolated-sandbox-base.v1",
+  "classification": "synthetic_test_case",
+  "privacy": "fictional_no_real_user_data",
+  "subject": {
+    "display_name": "Mina",
+    "sex": "female",
+    "birth_date": "1992-08-17",
+    "birth_time": "14:30",
+    "birth_place": "高雄市"
+  },
+  "target_year": 2027
+}

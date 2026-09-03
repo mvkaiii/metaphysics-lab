@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import unittest
 from pathlib import Path
 
@@ -48,8 +49,21 @@ class V16ReleaseContractTests(unittest.TestCase):
         self.assertIn("v1.6.0", release_text)
         self.assertIn("Metaphysics-Lab-v1.6.0-User-Package.zip", release_text)
         self.assertIn("validate_v16_sandbox_evidence.py", release_text)
+        self.assertIn("v1.6.0-isolated-sandbox-transcript.md", release_text)
         self.assertIn("gh release create v1.6.0", release_text)
         self.assertTrue((ROOT / ".github" / "workflows" / "release-v1.5.yml").is_file())
+
+    def test_v16_qualification_keeps_v2_sandbox_gate_pending(self):
+        qualification = ROOT / "docs" / "release" / "v1.6.0-qualification.md"
+        text = qualification.read_text(encoding="utf-8")
+        self.assertIn("sandbox_contract_version: v1.6.0-isolated-sandbox-script.v2", text)
+        self.assertIn("sandbox_evidence_status: PENDING", text)
+        self.assertIn("operator-only", text)
+        self.assertIn("staged visibility", text)
+        self.assertIn(
+            "- [ ] isolated sandbox conversation validation PASS on exact release candidate SHA",
+            text,
+        )
 
     def test_v16_release_docs_exist_and_state_no_accuracy_promotion(self):
         notes = ROOT / "docs" / "發布說明-v1.6.0.md"
@@ -67,19 +81,56 @@ class V16ReleaseContractTests(unittest.TestCase):
             self.assertIn(required, text)
 
     def test_v16_sandbox_kit_is_synthetic_and_pending_evidence_fails_closed(self):
-        script = ROOT / "docs" / "release" / "v1.6.0-isolated-sandbox-script.md"
-        fixture = ROOT / "tests" / "fixtures" / "v1.6.0-isolated-sandbox-fixture.v1.json"
+        legacy_script = ROOT / "docs" / "release" / "v1.6.0-isolated-sandbox-script.md"
+        legacy_fixture = ROOT / "tests" / "fixtures" / "v1.6.0-isolated-sandbox-fixture.v1.json"
+        script = ROOT / "docs" / "release" / "v1.6.0-isolated-sandbox-script.v2.md"
+        fixture = ROOT / "tests" / "fixtures" / "v1.6.0-isolated-sandbox-base.v1.json"
+        known_reality = ROOT / "tests" / "fixtures" / "operator-only" / "v1.6.0-isolated-sandbox-known-reality.v1.json"
+        historical_ledger = ROOT / "tests" / "fixtures" / "operator-only" / "v1.6.0-isolated-sandbox-historical-ledger.v1.json"
         pending = ROOT / "tests" / "fixtures" / "v1.6.0-isolated-sandbox-evidence.pending.md"
+        transcript = ROOT / "docs" / "release" / "v1.6.0-isolated-sandbox-transcript.md"
         validator = ROOT / "tools" / "validate_v16_sandbox_evidence.py"
+        self.assertFalse(legacy_script.exists())
+        self.assertFalse(legacy_fixture.exists())
         self.assertTrue(script.is_file())
         self.assertTrue(fixture.is_file())
+        self.assertTrue(known_reality.is_file())
+        self.assertTrue(historical_ledger.is_file())
         self.assertTrue(pending.is_file())
+        self.assertTrue(transcript.is_file())
         self.assertTrue(validator.is_file())
+        base = json.loads(fixture.read_text(encoding="utf-8"))
+        known = json.loads(known_reality.read_text(encoding="utf-8"))
+        ledger = json.loads(historical_ledger.read_text(encoding="utf-8"))
+        self.assertEqual(base["fixture_version"], "v1.6.0-isolated-sandbox-base.v1")
+        self.assertEqual(known["fixture_version"], "v1.6.0-isolated-sandbox-known-reality.v1")
+        self.assertEqual(ledger["fixture_version"], "v1.6.0-isolated-sandbox-historical-ledger.v1")
+        self.assertNotIn("known_reality_context", base)
+        self.assertNotIn("historical_event_ledger", base)
+        self.assertEqual(len(ledger["historical_event_ledger"]), 10)
+        self.assertEqual(
+            [row["year"] for row in ledger["historical_event_ledger"]],
+            list(range(2016, 2026)),
+        )
         combined = script.read_text(encoding="utf-8") + "\n" + fixture.read_text(encoding="utf-8")
         self.assertIn("fictional", combined.lower())
         self.assertNotIn("1984-03-13", combined)
+        self.assertNotIn("event_date", combined)
         self.assertIn("Y1", script.read_text(encoding="utf-8"))
         self.assertIn("Experimental", script.read_text(encoding="utf-8"))
+        self.assertIn("P05", script.read_text(encoding="utf-8"))
+        self.assertIn("P06", script.read_text(encoding="utf-8"))
+        self.assertIn("staged_visibility_v2", script.read_text(encoding="utf-8"))
+        self.assertIn("initial context", script.read_text(encoding="utf-8"))
+        self.assertIn("blind", script.read_text(encoding="utf-8").lower())
+        pending_text = pending.read_text(encoding="utf-8")
+        self.assertIn("schema_version: v1.6.0-isolated-sandbox-evidence.v2", pending_text)
+        self.assertIn("transcript_sha256: PENDING", pending_text)
+        self.assertNotIn("status: PASS", pending_text)
+        self.assertIn(
+            "formal_synthetic_sandbox_transcript",
+            transcript.read_text(encoding="utf-8"),
+        )
 
         spec = importlib.util.spec_from_file_location("validate_v16_sandbox_evidence_test", validator)
         self.assertIsNotNone(spec)
