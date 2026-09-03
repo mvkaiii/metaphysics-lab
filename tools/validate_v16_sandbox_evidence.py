@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -21,6 +22,12 @@ FIXTURE_VERSION = "v1.6.0-isolated-sandbox-fixture.v1"
 SCRIPT_PATH = Path("docs/release/v1.6.0-isolated-sandbox-script.md")
 FIXTURE_PATH = Path("tests/fixtures/v1.6.0-isolated-sandbox-fixture.v1.json")
 DEFAULT_EVIDENCE_PATH = Path("docs/release/v1.6.0-isolated-sandbox-conversation-validation.md")
+EVIDENCE_SEAL_ALLOWED_PATHS = frozenset(
+    {
+        "docs/release/v1.6.0-isolated-sandbox-conversation-validation.md",
+        "docs/release/v1.6.0-qualification.md",
+    }
+)
 RUBRICS = (
     "temporal_ownership_pass",
     "specificity_pass",
@@ -74,6 +81,37 @@ def _is_ready(value: str) -> bool:
     return bool(value and value.strip() and value.strip().upper() != "PENDING")
 
 
+def _validate_evidence_seal_delta(root: Path, tested_sha: str, current_sha: str):
+    if tested_sha == current_sha:
+        return []
+    try:
+        ancestor = subprocess.run(
+            ["git", "merge-base", "--is-ancestor", tested_sha, current_sha],
+            cwd=str(root),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=False,
+        )
+    except OSError:
+        return ["git_evidence_seal_check_unavailable"]
+    if ancestor.returncode != 0:
+        return ["tested_release_candidate_not_ancestor"]
+    changed = subprocess.run(
+        ["git", "diff", "--name-only", tested_sha, current_sha, "--"],
+        cwd=str(root),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        check=False,
+    )
+    if changed.returncode != 0:
+        return ["git_evidence_seal_diff_failed"]
+    changed_paths = {line.strip() for line in changed.stdout.splitlines() if line.strip()}
+    forbidden = sorted(changed_paths - EVIDENCE_SEAL_ALLOWED_PATHS)
+    return ["post_sandbox_non_evidence_change:%s" % path for path in forbidden]
+
+
 def validate_evidence(root: Path, evidence_path: Path, current_sha: str) -> dict:
     root = Path(root)
     evidence_path = Path(evidence_path)
@@ -102,8 +140,8 @@ def validate_evidence(root: Path, evidence_path: Path, current_sha: str) -> dict
     tested_sha = fields.get("tested_release_candidate_sha", "")
     if not _HEX40.fullmatch(tested_sha):
         errors.append("tested_release_candidate_sha_invalid")
-    if tested_sha != current_sha:
-        errors.append("tested_release_candidate_sha_mismatch")
+    elif _HEX40.fullmatch(current_sha or ""):
+        errors.extend(_validate_evidence_seal_delta(root, tested_sha, current_sha))
     for key in ("tested_distribution_digest", "tested_user_package_sha256", "script_sha256", "fixture_sha256"):
         if not _HEX64.fullmatch(fields.get(key, "")):
             errors.append("%s_invalid" % key)
