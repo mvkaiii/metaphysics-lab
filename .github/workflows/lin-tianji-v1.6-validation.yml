@@ -1,0 +1,118 @@
+name: 林氏天機 v1.6 Validation
+
+on:
+  push:
+    branches:
+      - 'release/v1.6.0-*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout validation ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Confirm validation SHA
+        run: |
+          echo "event=${{ github.event_name }}"
+          echo "github_sha=${{ github.sha }}"
+          echo "head_ref=${{ github.head_ref }}"
+          git log -1 --format=%H
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install pytest==8.4.2
+
+      - name: Y1 yearly Ziwei qualification
+        run: |
+          python -m unittest tests.test_yearly_ziwei_transformations_y1 -v
+          python -m unittest tests.test_distribution_forecast tests.test_distribution_structural_interpretation -v
+
+      - name: Preserve v1 default routing
+        run: python -m unittest tests.test_v16_default_profiles -v
+
+      - name: Bazi flow-day/hour qualification evidence
+        run: python tools/build_bazi_flow_time_qualification.py --check
+
+      - name: Ziwei flow-day/hour qualification evidence
+        run: python tools/build_ziwei_flow_time_qualification.py --check
+
+      - name: Ziwei month-boundary qualification evidence
+        run: python tools/build_ziwei_month_boundary_qualification.py --check
+
+      - name: Rebuild AI distribution
+        run: |
+          python tools/build_ai_distribution.py
+          python tools/build_ai_distribution.py --check
+
+      - name: Run 林氏天機 prediction validation
+        run: python tools/run_lin_tianji_prediction_validation.py --json
+
+      - name: Run v1.6 release-surface validation
+        run: python tools/run_v16_release_surface_validation.py --json
+
+      - name: Verify deterministic v1.6.0 three-file user package
+        run: python tools/build_release_package.py --verify --output "$RUNNER_TEMP/Metaphysics-Lab-v1.6.0-User-Package.zip"
+
+      - name: Release contract
+        run: python -m unittest tests.test_v16_release_contract tests.test_v15_release_contract -v
+
+      - name: Full repository regression
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+
+      - name: Python 3.9 compile check
+        run: |
+          python -m compileall -q engine tools tests
+          python -c "compile(open('dist/ai/metaphysics_lab.py', encoding='utf-8').read(), 'dist/ai/metaphysics_lab.py', 'exec')"
+
+      - name: Private outcome contamination scan
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          forbidden_names = {
+              '驗證事件紀錄.md',
+              'Kai_CDBF04_05_驗證事件紀錄.md',
+              'adjudication-1.json',
+          }
+          roots = [Path('dist/ai'), Path('docs/release')]
+          bad = []
+          for root in roots:
+              if not root.exists():
+                  continue
+              for path in root.rglob('*'):
+                  if path.is_file() and path.name in forbidden_names:
+                      bad.append(str(path))
+          if bad:
+              raise SystemExit('forbidden private/outcome release artifacts: ' + ', '.join(sorted(bad)))
+          print('private/outcome release-artifact scan: PASS')
+          PY
+
+      - name: Verify clean tree
+        run: |
+          git diff --exit-code
+          test -z "$(git status --porcelain)"
+
+      - name: Upload generated distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: lin-tianji-v1.6-ai-distribution-${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          path: dist/ai/
+          if-no-files-found: error
