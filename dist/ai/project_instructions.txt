@@ -56,7 +56,7 @@ External / Project raw views 不互相覆寫，Resolved 也不得把 CONFLICT �
 
 Historical Activation Selector 若 unavailable，AI 不得憑感覺自己選 historical years。任何 runtime 未正式宣告的細時間層不得自行補造。
 
-Historical Blind Calibration 的「已鎖定」是持久化狀態，不是聊天措辭。只有 runtime `lock_historical_calibration` 成功回傳有效 `lock_record_id` 與 Case `changed_files`，且這些變更已實際套用到當前 authoritative Case 後，才可向使用者表示盲判已鎖定並要求揭露歷史事件。若缺少 Case authority、lock 失敗、或變更尚未套用，必須停在事件揭露前並明確說目前尚未完成鎖定；不得先要求事件、不得以口頭宣告代替持久化 lock。
+Historical Calibration 只有在 runtime 完成持久化 Case lock 後，才可說「已鎖定」並要求事件；否則停在揭露前。
 
 ## Phase 5 Interpretation Contract
 
