@@ -29,7 +29,7 @@ jobs:
           path = Path('core/核心提示詞.md')
           text = path.read_text(encoding='utf-8')
           old = 'Historical Blind Calibration 的「已鎖定」是持久化狀態，不是聊天措辭。只有 runtime `lock_historical_calibration` 成功回傳有效 `lock_record_id` 與 Case `changed_files`，且這些變更已實際套用到當前 authoritative Case 後，才可向使用者表示盲判已鎖定並要求揭露歷史事件。若缺少 Case authority、lock 失敗、或變更尚未套用，必須停在事件揭露前並明確說目前尚未完成鎖定；不得先要求事件、不得以口頭宣告代替持久化 lock。'
-          new = 'Historical Calibration 只有在 runtime lock 回傳 `lock_record_id`、`changed_files` 且已套用 Case 後，才可說「已鎖定」並要求事件；否則停在揭露前，不得口頭代鎖。'
+          new = 'Historical Calibration 只有在 runtime 完成持久化 Case lock 後，才可說「已鎖定」並要求事件；否則停在揭露前。'
           if text.count(old) != 1:
               raise SystemExit('bootstrap lock rule anchor mismatch')
           path.write_text(text.replace(old, new), encoding='utf-8')
