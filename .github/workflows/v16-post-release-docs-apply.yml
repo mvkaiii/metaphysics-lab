@@ -1,0 +1,179 @@
+name: v1.6 Post-release Docs Apply
+
+on:
+  push:
+    branches: [docs/v1.6.0-post-release-normalization]
+    paths:
+      - '.github/workflows/v16-post-release-docs-apply.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/v1.6.0-post-release-normalization
+          fetch-depth: 0
+      - name: Normalize published v1.6.0 docs and contracts
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          RELEASE = 'v1.6.0'
+          DATE = '2026-09-05'
+          RELEASE_COMMIT = 'c325d754112df71c6747e17262d2e781d2864441'
+          PACKAGE = 'Metaphysics-Lab-v1.6.0-User-Package.zip'
+
+          def read(path):
+              return Path(path).read_text(encoding='utf-8')
+
+          def write(path, text):
+              Path(path).write_text(text, encoding='utf-8')
+
+          def once(text, old, new, path):
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected exactly one occurrence of {old!r}, got {count}')
+              return text.replace(old, new, 1)
+
+          # README
+          path = 'README.md'
+          text = read(path)
+          text = once(text, '目前正式版本為 **v1.5.0（2026-08-29）**。', '目前正式版本為 **v1.6.0（2026-09-05）**。', path)
+          text = once(text, 'Metaphysics-Lab-v1.5.0-User-Package.zip', PACKAGE, path)
+          write(path, text)
+
+          # Quick start
+          path = 'docs/快速開始.md'
+          text = read(path)
+          text = once(
+              text,
+              '目前正式版本為 **v1.5.0｜2026-08-29**。優先下載 `Metaphysics-Lab-v1.5.0-User-Package.zip`；ZIP 內固定只有三個正式檔案。若只想更新單一檔案，也可以在 Assets 個別下載。',
+              '目前正式版本為 **v1.6.0｜2026-09-05**。優先下載 `Metaphysics-Lab-v1.6.0-User-Package.zip`；ZIP 內固定只有三個正式檔案。若只想更新單一檔案，也可以在 Assets 個別下載。',
+              path,
+          )
+          write(path, text)
+
+          # Install guide
+          path = 'docs/安裝到ChatGPT-Project.md'
+          text = read(path)
+          text = once(
+              text,
+              '目前正式版本為 **v1.5.0｜2026-08-29**。優先下載 `Metaphysics-Lab-v1.5.0-User-Package.zip`；解壓後就是下面三個檔案。也可以在 Assets 單獨下載。',
+              '目前正式版本為 **v1.6.0｜2026-09-05**。優先下載 `Metaphysics-Lab-v1.6.0-User-Package.zip`；解壓後就是下面三個檔案。也可以在 Assets 單獨下載。',
+              path,
+          )
+          write(path, text)
+
+          # Architecture guide
+          path = 'docs/架構說明.md'
+          text = read(path)
+          old = 'Metaphysics Lab 目前正式版本為 **v1.5.0｜2026-08-29**。本文件保留架構與技術歷史；動態 capability implementation / maturity / routing 仍以 `runtime_info` 為權威來源。正式 release 不會自動提升任何 experimental capability maturity。'
+          new = 'Metaphysics Lab 目前正式版本為 **v1.6.0｜2026-09-05**。本文件保留架構與技術歷史；動態 capability implementation / maturity / routing 仍以 `runtime_info` 為權威來源。正式 release 不會自動提升任何 experimental capability maturity。v1.6.0 正式納入 Y1 年度紫微四化的 Project-derived / Experimental 能力，並強化 Historical Calibration 的持久化盲判鎖定；既有 selector / interpretation default 不因發版自動 promotion。'
+          text = once(text, old, new, path)
+          write(path, text)
+
+          # Update guide
+          path = 'docs/更新與版本同步.md'
+          text = read(path)
+          text = once(
+              text,
+              '目前正式版本為 **v1.5.0｜2026-08-29**。Project Contract 1.1、Case Schema 1.1、Runtime Schema 1.1 與 AI Distribution Runtime 1.1-exp 均已納入正式 Release；v1.4.0 與更早 tag / Release snapshot 不回頭改寫。',
+              '目前正式版本為 **v1.6.0｜2026-09-05**。Project Contract 1.1、Case Schema 1.1、Runtime Schema 1.1 與 AI Distribution Runtime 1.1-exp 仍維持正式契約；v1.5.0 與更早 tag / Release snapshot 不回頭改寫。',
+              path,
+          )
+          marker = '## 五、Project Contract 更新\n'
+          section = '''## 五、v1.5.0 → v1.6.0\n\nv1.6.0 的 User Package 仍是同一個三檔安裝面，但 runtime、核心規則與 Project Instructions 都有正式更新，因此建議三個檔案一起同步；Case Schema 仍維持 1.1，不要求重建私人 Case。\n\n更新方式：\n\n1. 下載 `Metaphysics-Lab-v1.6.0-User-Package.zip`。\n2. 替換 Project 中的 `metaphysics_lab.py`。\n3. 替換 `metaphysics_core.md`。\n4. 打開新版 `project_instructions.txt`，把全文重新貼到 Project Instructions。\n5. **保留**既有 `命主索引.md`、出生盤、驗證事件、流年／問事／重大決策紀錄與已鎖定的第一版預測。\n6. 更新後執行 `runtime_info`，確認 runtime / capability 狀態。\n\nv1.6.0 新增或強化的重點包含 Historical Calibration 持久化 Case lock，以及 Y1 年度紫微四化 Project 推導能力。Y1 在本版仍是 **Experimental / Project-derived**；正式納入軟體不等於已證明比舊方法更準，也不代表 selector v2 / interpretation v2 已取得 default promotion。\n\n本次沒有 Case Schema migration。不要因升級而重建 `subject_id`、清空 05～08、覆寫既有 blind forecast，或把舊歷史事件重新寫成新的預測命中。\n\n'''
+          if marker not in text:
+              raise SystemExit(f'{path}: insertion marker not found')
+          text = text.replace(marker, section + '## 六、Project Contract 更新\n', 1)
+          for old, new in (
+              ('## 六、Case Schema 更新', '## 七、Case Schema 更新'),
+              ('## 七、Subject Identity 更新規則', '## 八、Subject Identity 更新規則'),
+              ('## 八、Candidate Envelope 與 partial Case', '## 九、Candidate Envelope 與 partial Case'),
+              ('## 九、能力狀態不要從固定文件猜', '## 十、能力狀態不要從固定文件猜'),
+              ('## 十、什麼情況需要重新計算？', '## 十一、什麼情況需要重新計算？'),
+              ('## 十一、更新後快速檢查', '## 十二、更新後快速檢查'),
+              ('## 十二、版本歷史與尚未發布內容', '## 十三、版本歷史與尚未發布內容'),
+          ):
+              text = once(text, old, new, path)
+          write(path, text)
+
+          # VERSION.md: update current release identity, keep v1.5 snapshots as history.
+          path = 'VERSION.md'
+          text = read(path)
+          for old, new in (
+              ('一般使用者版 v1.5.0 發布說明見 `docs/發布說明-v1.5.0.md`。', '一般使用者版 v1.6.0 發布說明見 `docs/發布說明-v1.6.0.md`。'),
+              ('- Metaphysics Lab Core：**v1.5.0**', '- Metaphysics Lab Core：**v1.6.0**'),
+              ('- 發布日期：**2026-08-29**', '- 發布日期：**2026-09-05**'),
+              ('- 正式 release commit：`66f604222caadac0209125a78674c3f4491c4b99`', f'- 正式 release commit：`{RELEASE_COMMIT}`'),
+              ('- Git tag / GitHub Release：`v1.5.0` 已正式發布。', '- Git tag / GitHub Release：`v1.6.0` 已正式發布。'),
+              ('- Release baseline：林氏天機 v1.5 Phase 1–6 + 林氏天機預測驗證 + v1.5 發行面驗證 + v1.5 隔離沙盒對話驗證 + v1.5 最終發行資格驗證。', '- Release baseline：v1.5 default contract 保持不變 + v1.6 結構化能力 + Y1 年度紫微四化（Experimental / Project-derived）+ Historical Calibration persistent lock + 林氏天機預測驗證 + v1.6 發行面驗證 + v1.6 隔離沙盒對話驗證。'),
+          ):
+              text = once(text, old, new, path)
+
+          marker = '## v1.5.0 Capability Snapshot\n'
+          v16_snapshot = '''## v1.6.0 Release Snapshot\n\n- 軟體 release 與 research-model promotion 分開管理；`promotion_allowed=false` 不因 v1.6.0 發布而改變。\n- Historical Activation Selector 正式 default 仍是 v1；Interpretation Contract 正式 default 仍是 v1。\n- Y1 年度紫微四化已納入正式軟體，但定位仍為 **Experimental / Project-derived**；這只證明 calculation path 可執行、可重現、受版本管理，不代表預測效度已被證明。\n- Historical Calibration public runtime 現在要求 authoritative Case persistence；只有 blind set 真正持久化後，AI 才能說「已鎖定」並要求歷史事件。\n- 正式受測 candidate：`b38cdf2bf9d2259d54b093adec03d960fa214733`；正式 release target：`c325d754112df71c6747e17262d2e781d2864441`。\n- v1.6 isolated sandbox：Setup + P01～P11 PASS，八項 critical rubrics 全 PASS。\n- deterministic v1.6.0 User Package SHA256：`30c6a4ff1dade6da2cdbf1b9d53463df4936c8a5b887d8a73cb1fbd2359c83eb`。\n\n---\n\n'''
+          if marker not in text:
+              raise SystemExit(f'{path}: v1.5 snapshot marker not found')
+          text = text.replace(marker, v16_snapshot + marker, 1)
+          text = once(text, 'v1.5.0 正式提供 mobile-first AI release surface：', 'v1.6.0 正式沿用 mobile-first AI release surface：', path)
+          text = once(
+              text,
+              '從 v1.4.0 升級到 v1.5.0 時，Project Contract / Case Schema 仍維持 1.1；同步三個發行檔即可，既有私人 Case 與舊 prospective lock 不要求清空、破壞性重建或 schema migration。',
+              '從 v1.5.0 升級到 v1.6.0 時，Project Contract / Case Schema 仍維持 1.1；建議同步三個發行檔，既有私人 Case、Historical Calibration 紀錄與 prospective lock 不要求清空、破壞性重建或 schema migration。',
+              path,
+          )
+          hist_marker = '## 歷史版本\n\n'
+          hist = '''### v1.5.0｜2026-08-29\n\n- 完成林氏天機 Phase 1–6、deterministic 三檔 User Package、12-case 預測驗證、發行面驗證與隔離沙盒 release gate。\n- 正式 release target：`66f604222caadac0209125a78674c3f4491c4b99`。\n- 一般使用者版歷史發布說明：`docs/發布說明-v1.5.0.md`。\n- v1.5.0 的歷史 qualification / maturity snapshot 不因 v1.6.0 發布而回寫。\n\n'''
+          if hist_marker not in text:
+              raise SystemExit(f'{path}: history marker not found')
+          text = text.replace(hist_marker, hist_marker + hist, 1)
+          write(path, text)
+
+          # CHANGELOG: new top release entry, preserve v1.5 history verbatim below.
+          path = 'CHANGELOG.md'
+          text = read(path)
+          text = once(
+              text,
+              '這份文件保存正式版本與尚未發布變更的技術紀錄。第一次使用 Metaphysics Lab 請先看 `README.md`；目前正式版本為 **v1.5.0｜2026-08-29**，一般使用者發布說明見 `docs/發布說明-v1.5.0.md`。',
+              '這份文件保存正式版本與尚未發布變更的技術紀錄。第一次使用 Metaphysics Lab 請先看 `README.md`；目前正式版本為 **v1.6.0｜2026-09-05**，一般使用者發布說明見 `docs/發布說明-v1.6.0.md`。',
+              path,
+          )
+          marker = '## v1.5.0｜2026-08-29\n'
+          entry = f'''## v1.6.0｜2026-09-05\n\n### 正式軟體 Release\n\n- 正式 release target：`{RELEASE_COMMIT}`；受測 software candidate：`b38cdf2bf9d2259d54b093adec03d960fa214733`。\n- 將軟體 release 與 research-model promotion 分開管理；selector v1 / interpretation v1 繼續作為 default，`promotion_allowed=false`。\n- 正式納入 Y1 年度紫微四化 Project 推導能力，成熟度維持 **Experimental / Project-derived**；不宣稱已證明比舊方法更準或已取得 Stable prediction authority。\n- 修正 Historical Calibration 持久化 authority：public runtime 在沒有 authoritative Case persistence 時 fail closed；只有成功寫入 persistent blind lock 後才能對使用者宣稱「已鎖定」並要求事件揭露。\n- Fresh isolated sandbox 的 Setup、P01～P11 與八項 critical rubrics 全部 PASS；P06 驗證 persistent lock → selective disclosure → 0/5 misses 不事後救題的完整流程。\n- Exact candidate / evidence-head v1.6 與 v1.5 backward-compat CI 均 PASS；sealed evidence validator 回傳 `release_allowed=true`。\n- deterministic User Package：`{PACKAGE}`，SHA256 `30c6a4ff1dade6da2cdbf1b9d53463df4936c8a5b887d8a73cb1fbd2359c83eb`。\n- GitHub Release Assets 維持四項：User Package ZIP、`metaphysics_lab.py`、`metaphysics_core.md`、`project_instructions.txt`。\n\n'''
+          if marker not in text:
+              raise SystemExit(f'{path}: v1.5 marker not found')
+          text = text.replace(marker, entry + marker, 1)
+          write(path, text)
+
+          # Existing docs tests: current-release assertions move to the new v1.6 contract;
+          # v1.5 tests continue protecting v1.5 historical snapshots.
+          path = 'tests/test_ai_distribution_docs.py'
+          text = read(path)
+          text = once(text, 'self.assertIn("Metaphysics-Lab-v1.5.0-User-Package.zip", head)', 'self.assertIn("Metaphysics-Lab-v1.6.0-User-Package.zip", head)', path)
+          write(path, text)
+
+          path = 'tests/test_v15_terminology_contract.py'
+          text = read(path)
+          old = '''    def test_current_user_docs_prefer_user_package_and_current_terms(self):\n        for relative in ("README.md", "docs/快速開始.md", "docs/安裝到ChatGPT-Project.md"):\n            text = (ROOT / relative).read_text(encoding="utf-8")\n            self.assertIn("Metaphysics-Lab-v1.5.0-User-Package.zip", text, relative)\n            self.assertIn("project_instructions.txt", text, relative)\n        for relative in ("README.md", "docs/快速開始.md", "docs/安裝到ChatGPT-Project.md"):\n            text = (ROOT / relative).read_text(encoding="utf-8")\n            self.assertNotIn("Historical Blind Calibration", text, relative)\n'''
+          new = '''    def test_current_user_docs_keep_three_file_surface_and_current_terms(self):\n        for relative in ("README.md", "docs/快速開始.md", "docs/安裝到ChatGPT-Project.md"):\n            text = (ROOT / relative).read_text(encoding="utf-8")\n            self.assertIn("project_instructions.txt", text, relative)\n            self.assertNotIn("Historical Blind Calibration", text, relative)\n'''
+          text = once(text, old, new, path)
+          old = '''    def test_version_and_changelog_reflect_published_v15_without_rewriting_history(self):\n        version = (ROOT / "VERSION.md").read_text(encoding="utf-8")\n        formal = version.split("## 歷史版本", 1)[0]\n        self.assertIn("Metaphysics Lab Core：**v1.5.0**", formal)\n        self.assertIn("發布日期：**2026-08-29**", formal)\n        self.assertIn("正式 release commit：`66f604222caadac0209125a78674c3f4491c4b99`", formal)\n        self.assertIn("林氏天機預測驗證", formal)\n        self.assertIn("發行面驗證", formal)\n        self.assertIn("隔離沙盒對話驗證", formal)\n        self.assertNotIn("PENDING_FINAL_QUALIFICATION", formal)\n\n        changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")\n        current = changelog.split("## v1.4.0｜", 1)[0]\n        self.assertIn("## v1.5.0｜2026-08-29", current)\n        self.assertNotIn("v1.5.0｜Release Candidate", current)\n        self.assertIn("林氏天機預測驗證", current)\n        self.assertIn("發行面驗證", current)\n'''
+          new = '''    def test_v15_release_history_remains_preserved_after_newer_releases(self):\n        version = (ROOT / "VERSION.md").read_text(encoding="utf-8")\n        self.assertIn("## v1.5.0 Capability Snapshot", version)\n        self.assertIn("### v1.5.0｜2026-08-29", version)\n        self.assertIn("66f604222caadac0209125a78674c3f4491c4b99", version)\n\n        changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")\n        v15 = changelog.split("## v1.5.0｜2026-08-29", 1)[1].split("## v1.4.0｜", 1)[0]\n        self.assertNotIn("v1.5.0｜Release Candidate", v15)\n        self.assertIn("林氏天機預測驗證", v15)\n        self.assertIn("發行面驗證", v15)\n        self.assertIn("66f604222caadac0209125a78674c3f4491c4b99", v15)\n'''
+          text = once(text, old, new, path)
+          old = '''    def test_update_and_architecture_docs_have_published_status_without_rewriting_v14_history(self):\n        update = (ROOT / "docs/更新與版本同步.md").read_text(encoding="utf-8")\n        self.assertIn("目前正式版本為 **v1.5.0｜2026-08-29**", update)\n        self.assertIn("v1.4.0 → v1.5.0", update)\n        self.assertIn("Metaphysics-Lab-v1.5.0-User-Package.zip", update)\n        self.assertIn("project_instructions.txt", update)\n        historical = update.split("## 三、v1.3.0 → v1.4.0", 1)[1].split("## 四、", 1)[0]\n        self.assertIn("project_instructions.md", historical)\n\n        architecture = (ROOT / "docs/架構說明.md").read_text(encoding="utf-8")\n        self.assertIn("目前正式版本為 **v1.5.0｜2026-08-29**", architecture[:800])\n        self.assertNotIn("v1.5.0 Release Candidate", architecture[:1000])\n        self.assertNotIn("目前正式版本為 **v1.4.0", architecture[:800])\n'''
+          new = '''    def test_v15_upgrade_history_remains_without_rewriting_v14_history(self):\n        update = (ROOT / "docs/更新與版本同步.md").read_text(encoding="utf-8")\n        self.assertIn("v1.4.0 → v1.5.0", update)\n        v15_upgrade = update.split("## 四、v1.4.0 → v1.5.0", 1)[1].split("## 五、", 1)[0]\n        self.assertIn("Metaphysics-Lab-v1.5.0-User-Package.zip", v15_upgrade)\n        self.assertIn("project_instructions.txt", v15_upgrade)\n        historical = update.split("## 三、v1.3.0 → v1.4.0", 1)[1].split("## 四、", 1)[0]\n        self.assertIn("project_instructions.md", historical)\n\n        architecture = (ROOT / "docs/架構說明.md").read_text(encoding="utf-8")\n        self.assertNotIn("v1.5.0 Release Candidate", architecture[:1200])\n        self.assertNotIn("目前正式版本為 **v1.4.0", architecture[:800])\n'''
+          text = once(text, old, new, path)
+          write(path, text)
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md VERSION.md CHANGELOG.md docs/快速開始.md docs/安裝到ChatGPT-Project.md docs/更新與版本同步.md docs/架構說明.md tests/test_ai_distribution_docs.py tests/test_v15_terminology_contract.py
+          git diff --cached --check
+          git commit -m "docs: normalize repository for v1.6.0 release"
+          git push origin HEAD:docs/v1.6.0-post-release-normalization
