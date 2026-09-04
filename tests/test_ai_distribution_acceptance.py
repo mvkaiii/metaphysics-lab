@@ -70,12 +70,12 @@ class AIDistributionAcceptanceTests(unittest.TestCase):
         self.assertEqual(caps["historical.activation_selector"]["maturity"], "experimental")
         self.assertEqual(caps["historical.activation_selector"]["routing"], "on_demand")
 
-    def test_formal_release_is_v1_5_0_without_capability_promotion(self):
+    def test_formal_release_is_v1_6_0_without_capability_promotion(self):
         text = (ROOT / "VERSION.md").read_text(encoding="utf-8")
         formal = text.split("## 歷史版本", 1)[0]
-        self.assertIn("Metaphysics Lab Core：**v1.5.0**", formal)
-        self.assertIn("發布日期：**2026-08-29**", formal)
-        self.assertIn("正式 release commit：`66f604222caadac0209125a78674c3f4491c4b99`", formal)
+        self.assertIn("Metaphysics Lab Core：**v1.6.0**", formal)
+        self.assertIn("發布日期：**2026-09-05**", formal)
+        self.assertIn("正式 release commit：`c325d754112df71c6747e17262d2e781d2864441`", formal)
         self.assertNotIn("PENDING_FINAL_QUALIFICATION", formal)
         self.assertIn("AI Distribution Pack", text)
         self.assertIn("AI Distribution Runtime：v1.1-exp", text)
