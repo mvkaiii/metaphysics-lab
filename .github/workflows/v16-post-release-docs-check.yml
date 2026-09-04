@@ -1,0 +1,21 @@
+name: v1.6 Post-release Docs Check
+
+on:
+  push:
+    branches: [docs/v1.6.0-post-release-normalization]
+
+permissions:
+  contents: read
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - name: Run post-release docs contract
+        run: python -m unittest tests.test_v16_post_release_docs -v
