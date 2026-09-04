@@ -1,0 +1,68 @@
+name: Apply v1.6 Historical Lock Fix
+
+on:
+  push:
+    branches:
+      - release/v1.6.0-historical-lock-fix
+    paths:
+      - .github/workflows/apply-v16-historical-lock-fix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/v1.6.0-historical-lock-fix
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - name: Patch runtime and AI contracts
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          runtime_path = Path('engine/distribution/runtime.py')
+          runtime = runtime_path.read_text(encoding='utf-8')
+          old = '''        if action in ("lock_blind_forecast", "lock_historical_calibration", "finalize_historical_calibration"):\n            from .calibration import finalize_historical_calibration, lock_blind_forecast, lock_historical_calibration\n            handler = {"lock_blind_forecast": lock_blind_forecast, "lock_historical_calibration": lock_historical_calibration, "finalize_historical_calibration": finalize_historical_calibration}[action]\n            return _ok(action, handler(request))\n'''
+          new = '''        if action in ("lock_blind_forecast", "lock_historical_calibration", "finalize_historical_calibration"):\n            from .calibration import finalize_historical_calibration, lock_blind_forecast, lock_historical_calibration\n            handler = {"lock_blind_forecast": lock_blind_forecast, "lock_historical_calibration": lock_historical_calibration, "finalize_historical_calibration": finalize_historical_calibration}[action]\n            if action == "lock_historical_calibration":\n                case_files = request.get("case_files")\n                if not isinstance(case_files, Mapping) or not case_files:\n                    raise DistributionError(\n                        "lock_authority_required",\n                        "historical calibration lock requires authoritative Case files",\n                    )\n            result = handler(request)\n            if action == "lock_historical_calibration":\n                lock_record_id = result.get("lock_record_id")\n                changed_files = result.get("changed_files")\n                if not isinstance(lock_record_id, str) or not lock_record_id.strip() or not isinstance(changed_files, Mapping):\n                    raise DistributionError(\n                        "lock_authority_required",\n                        "historical calibration lock did not produce persistent Case authority",\n                    )\n            return _ok(action, result)\n'''
+          if runtime.count(old) != 1:
+              raise SystemExit('runtime dispatch anchor mismatch')
+          runtime_path.write_text(runtime.replace(old, new), encoding='utf-8')
+
+          prompt_path = Path('core/核心提示詞.md')
+          prompt = prompt_path.read_text(encoding='utf-8')
+          prompt_anchor = 'Historical Activation Selector 若 unavailable，AI 不得憑感覺自己選 historical years。任何 runtime 未正式宣告的細時間層不得自行補造。\n'
+          prompt_rule = '''\nHistorical Blind Calibration 的「已鎖定」是持久化狀態，不是聊天措辭。只有 runtime `lock_historical_calibration` 成功回傳有效 `lock_record_id` 與 Case `changed_files`，且這些變更已實際套用到當前 authoritative Case 後，才可向使用者表示盲判已鎖定並要求揭露歷史事件。若缺少 Case authority、lock 失敗、或變更尚未套用，必須停在事件揭露前並明確說目前尚未完成鎖定；不得先要求事件、不得以口頭宣告代替持久化 lock。\n'''
+          if prompt.count(prompt_anchor) != 1:
+              raise SystemExit('project instructions anchor mismatch')
+          prompt_path.write_text(prompt.replace(prompt_anchor, prompt_anchor + prompt_rule), encoding='utf-8')
+
+          workflow_path = Path('core/AI工作流程.md')
+          workflow = workflow_path.read_text(encoding='utf-8')
+          workflow_anchor = '完成 Stage 2\n```\n\n使用者選擇略過或稍後再做時，'
+          workflow_rule = '''完成 Stage 2\n```\n\n**Historical Blind Set 的揭露閘門必須以持久化 Case authority 為準。** `lock_historical_calibration` 必須帶入當前 authoritative `case_files`；只有 action 成功回傳有效 `lock_record_id` 與 `changed_files`，而且 `changed_files` 已實際套用到當前 Case 後，才算完成 Historical Blind Set lock。AI 在此之前不得對使用者說「已鎖定」、不得要求或接受歷史事件答案。若 lock action 失敗、缺少 Case authority、或無法確認變更已套用，必須停在揭露前 fail closed；口頭宣告、digest-only result 或事後補鎖都不能取代 pre-disclosure persistent lock。\n\n使用者選擇略過或稍後再做時，'''
+          if workflow.count(workflow_anchor) != 1:
+              raise SystemExit('AI workflow anchor mismatch')
+          workflow_path.write_text(workflow.replace(workflow_anchor, workflow_rule), encoding='utf-8')
+          PY
+      - name: Run focused regression
+        run: python -m unittest tests.test_v16_historical_lock_runtime_gate -v
+      - name: Rebuild deterministic AI distribution
+        run: |
+          python tools/build_ai_distribution.py
+          python tools/build_ai_distribution.py --check
+      - name: Commit generated fix
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add engine/distribution/runtime.py core/核心提示詞.md core/AI工作流程.md dist/ai/metaphysics_lab.py dist/ai/metaphysics_core.md dist/ai/project_instructions.txt
+          git diff --cached --check
+          git commit -m 'fix: require persisted historical lock authority'
+          git push origin HEAD:release/v1.6.0-historical-lock-fix
