@@ -1,0 +1,53 @@
+name: Apply v1.6 Historical Lock Prompt Size Fix
+
+on:
+  push:
+    branches:
+      - release/v1.6.0-historical-lock-fix
+    paths:
+      - .github/workflows/apply-v16-historical-lock-prompt-size-fix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/v1.6.0-historical-lock-fix
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - name: Compact bootstrap lock rule
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('core/核心提示詞.md')
+          text = path.read_text(encoding='utf-8')
+          old = 'Historical Blind Calibration 的「已鎖定」是持久化狀態，不是聊天措辭。只有 runtime `lock_historical_calibration` 成功回傳有效 `lock_record_id` 與 Case `changed_files`，且這些變更已實際套用到當前 authoritative Case 後，才可向使用者表示盲判已鎖定並要求揭露歷史事件。若缺少 Case authority、lock 失敗、或變更尚未套用，必須停在事件揭露前並明確說目前尚未完成鎖定；不得先要求事件、不得以口頭宣告代替持久化 lock。'
+          new = 'Historical Calibration 只有在 runtime lock 回傳 `lock_record_id`、`changed_files` 且已套用 Case 後，才可說「已鎖定」並要求事件；否則停在揭露前，不得口頭代鎖。'
+          if text.count(old) != 1:
+              raise SystemExit('bootstrap lock rule anchor mismatch')
+          path.write_text(text.replace(old, new), encoding='utf-8')
+          PY
+      - name: Rebuild deterministic AI distribution
+        run: |
+          python tools/build_ai_distribution.py
+          python tools/build_ai_distribution.py --check
+      - name: Run focused regressions
+        run: |
+          python -m unittest tests.test_project_ux_contract.ProjectUXContractTests.test_project_instructions_fit_chatgpt_project_limit_and_keep_bootstrap_contract -v
+          python -m unittest tests.test_v16_historical_lock_runtime_gate -v
+      - name: Commit generated fix
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add core/核心提示詞.md dist/ai/project_instructions.txt
+          git diff --cached --check
+          git commit -m 'fix: keep historical lock bootstrap within project limit'
+          git push origin HEAD:release/v1.6.0-historical-lock-fix
