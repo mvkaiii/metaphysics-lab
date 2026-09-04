@@ -1,6 +1,19 @@
 # 變更紀錄
 
-這份文件保存正式版本與尚未發布變更的技術紀錄。第一次使用 Metaphysics Lab 請先看 `README.md`；目前正式版本為 **v1.5.0｜2026-08-29**，一般使用者發布說明見 `docs/發布說明-v1.5.0.md`。
+這份文件保存正式版本與尚未發布變更的技術紀錄。第一次使用 Metaphysics Lab 請先看 `README.md`；目前正式版本為 **v1.6.0｜2026-09-05**，一般使用者發布說明見 `docs/發布說明-v1.6.0.md`。
+
+## v1.6.0｜2026-09-05
+
+### 正式軟體 Release
+
+- 正式 release target：`c325d754112df71c6747e17262d2e781d2864441`；受測 software candidate：`b38cdf2bf9d2259d54b093adec03d960fa214733`。
+- 將軟體 release 與 research-model promotion 分開管理；selector v1 / interpretation v1 繼續作為 default，`promotion_allowed=false`。
+- 正式納入 Y1 年度紫微四化 Project 推導能力，成熟度維持 **Experimental / Project-derived**；不宣稱已證明比舊方法更準或已取得 Stable prediction authority。
+- 修正 Historical Calibration 持久化 authority：public runtime 在沒有 authoritative Case persistence 時 fail closed；只有成功寫入 persistent blind lock 後才能對使用者宣稱「已鎖定」並要求事件揭露。
+- Fresh isolated sandbox 的 Setup、P01～P11 與八項 critical rubrics 全部 PASS；P06 驗證 persistent lock → selective disclosure → 0/5 misses 不事後救題的完整流程。
+- Exact candidate / evidence-head v1.6 與 v1.5 backward-compat CI 均 PASS；sealed evidence validator 回傳 `release_allowed=true`。
+- deterministic User Package：`Metaphysics-Lab-v1.6.0-User-Package.zip`，SHA256 `30c6a4ff1dade6da2cdbf1b9d53463df4936c8a5b887d8a73cb1fbd2359c83eb`。
+- GitHub Release Assets 維持四項：User Package ZIP、`metaphysics_lab.py`、`metaphysics_core.md`、`project_instructions.txt`。
 
 ## v1.5.0｜2026-08-29
 

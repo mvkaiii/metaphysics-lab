@@ -1,16 +1,16 @@
 # Metaphysics Lab 版本
 
-> `VERSION.md` 是給開發、驗證與版本治理看的**技術版本表**。第一次使用請先看 `README.md` 或 `docs/快速開始.md`；一般使用者版 v1.5.0 發布說明見 `docs/發布說明-v1.5.0.md`。
+> `VERSION.md` 是給開發、驗證與版本治理看的**技術版本表**。第一次使用請先看 `README.md` 或 `docs/快速開始.md`；一般使用者版 v1.6.0 發布說明見 `docs/發布說明-v1.6.0.md`。
 >
 > 歷史 Release snapshot 不因後續 qualification 或文件更新回寫改造。正式發版只固定 release identity；**release 本身不改變 capability maturity**，目前執行能力仍以 `runtime_info` 為技術權威來源。
 
 ## 最新正式發布
 
-- Metaphysics Lab Core：**v1.5.0**
-- 發布日期：**2026-08-29**
-- 正式 release commit：`66f604222caadac0209125a78674c3f4491c4b99`
-- Git tag / GitHub Release：`v1.5.0` 已正式發布。
-- Release baseline：林氏天機 v1.5 Phase 1–6 + 林氏天機預測驗證 + v1.5 發行面驗證 + v1.5 隔離沙盒對話驗證 + v1.5 最終發行資格驗證。
+- Metaphysics Lab Core：**v1.6.0**
+- 發布日期：**2026-09-05**
+- 正式 release commit：`c325d754112df71c6747e17262d2e781d2864441`
+- Git tag / GitHub Release：`v1.6.0` 已正式發布。
+- Release baseline：v1.5 default contract 保持不變 + v1.6 結構化能力 + Y1 年度紫微四化（Experimental / Project-derived）+ Historical Calibration persistent lock + 林氏天機預測驗證 + v1.6 發行面驗證 + v1.6 隔離沙盒對話驗證。
 
 主要元件：
 
@@ -32,6 +32,18 @@
 - Project Contract：v1.1
 - Case Schema：v1.1
 - 問事追蹤制度：v1.0
+
+---
+
+## v1.6.0 Release Snapshot
+
+- 軟體 release 與 research-model promotion 分開管理；`promotion_allowed=false` 不因 v1.6.0 發布而改變。
+- Historical Activation Selector 正式 default 仍是 v1；Interpretation Contract 正式 default 仍是 v1。
+- Y1 年度紫微四化已納入正式軟體，但定位仍為 **Experimental / Project-derived**；這只證明 calculation path 可執行、可重現、受版本管理，不代表預測效度已被證明。
+- Historical Calibration public runtime 現在要求 authoritative Case persistence；只有 blind set 真正持久化後，AI 才能說「已鎖定」並要求歷史事件。
+- 正式受測 candidate：`b38cdf2bf9d2259d54b093adec03d960fa214733`；正式 release target：`c325d754112df71c6747e17262d2e781d2864441`。
+- v1.6 isolated sandbox：Setup + P01～P11 PASS，八項 critical rubrics 全 PASS。
+- deterministic v1.6.0 User Package SHA256：`30c6a4ff1dade6da2cdbf1b9d53463df4936c8a5b887d8a73cb1fbd2359c83eb`。
 
 ---
 
@@ -189,7 +201,7 @@ User Package SHA256：`a7fe693a8bd91f6b720409e5e23e655cc3bf13396e21c8b7f99f79bc2
 
 ## AI Distribution Pack
 
-v1.5.0 正式提供 mobile-first AI release surface：
+v1.6.0 正式沿用 mobile-first AI release surface：
 
 ```text
 dist/ai/metaphysics_lab.py
@@ -199,7 +211,7 @@ dist/ai/project_instructions.txt
 
 一般使用者不需要理解 repo modules。前兩個檔案上傳到 ChatGPT / Claude Project，`project_instructions.txt` 內容貼入 Project Instructions。
 
-從 v1.4.0 升級到 v1.5.0 時，Project Contract / Case Schema 仍維持 1.1；同步三個發行檔即可，既有私人 Case 與舊 prospective lock 不要求清空、破壞性重建或 schema migration。
+從 v1.5.0 升級到 v1.6.0 時，Project Contract / Case Schema 仍維持 1.1；建議同步三個發行檔，既有私人 Case、Historical Calibration 紀錄與 prospective lock 不要求清空、破壞性重建或 schema migration。
 
 AI Distribution Runtime 目前版本為 `1.1-exp`；正式 GitHub Release 不把它或任何 experimental metaphysics capability 自動升 Stable。
 
@@ -245,6 +257,13 @@ AI Distribution Runtime 目前版本為 `1.1-exp`；正式 GitHub Release 不把
 ---
 
 ## 歷史版本
+
+### v1.5.0｜2026-08-29
+
+- 完成林氏天機 Phase 1–6、deterministic 三檔 User Package、12-case 預測驗證、發行面驗證與隔離沙盒 release gate。
+- 正式 release target：`66f604222caadac0209125a78674c3f4491c4b99`。
+- 一般使用者版歷史發布說明：`docs/發布說明-v1.5.0.md`。
+- v1.5.0 的歷史 qualification / maturity snapshot 不因 v1.6.0 發布而回寫。
 
 ### v1.4.0｜2026-08-26
 
