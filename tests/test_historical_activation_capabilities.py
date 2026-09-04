@@ -13,6 +13,18 @@ class HistoricalActivationCapabilityTests(unittest.TestCase):
         self.assertEqual(capability["profile_id"], "historical-activation-bazi-v1")
         self.assertEqual(capability["module"], "engine.historical.selector")
 
+    def test_capability_advertises_v1_and_v2_without_switching_default(self):
+        capability = get_capability("historical.activation_selector")
+        self.assertEqual(capability["profile_id"], "historical-activation-bazi-v1")
+        self.assertEqual(capability["rule_version"], "1.0-exp")
+        self.assertEqual(
+            capability["supported_profiles"],
+            (
+                {"profile_id": "historical-activation-bazi-v1", "rule_version": "1.0-exp"},
+                {"profile_id": "historical-activation-bazi-v2", "rule_version": "2.1-exp"},
+            ),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

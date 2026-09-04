@@ -269,6 +269,8 @@ finalize calibration
 完成 Stage 2
 ```
 
+**Historical Blind Set 的揭露閘門必須以持久化 Case authority 為準。** `lock_historical_calibration` 必須帶入當前 authoritative `case_files`；只有 action 成功回傳有效 `lock_record_id` 與 `changed_files`，而且 `changed_files` 已實際套用到當前 Case 後，才算完成 Historical Blind Set lock。AI 在此之前不得對使用者說「已鎖定」、不得要求或接受歷史事件答案。若 lock action 失敗、缺少 Case authority、或無法確認變更已套用，必須停在揭露前 fail closed；口頭宣告、digest-only result 或事後補鎖都不能取代 pre-disclosure persistent lock。
+
 使用者選擇略過或稍後再做時，**未校準仍可直接進入**流年、未來、問事與重大決策分析，維持 `uncalibrated`。對外要清楚說明：「目前尚未完成歷史事件校準，因此以下可以正常分析，但主要依命盤本身前向判斷；這**不影響排盤本身的正確性**，只是**個人化落地形式與信心校準會少一層證據**。」此時不得把回答包裝成已完成事件校準的 Stage 2。
 
 不論使用者是否校準，anti-leak gate 都不變：Stage 1 鎖定前不得先讀歷史答案。
@@ -327,6 +329,20 @@ control：`strong_control / acceptable_control` 可描述為相對低活化；`r
 7. Stage 2 以同一份 immutable base ranking 加入 personalization 再建 contract；Stage 2 不得改寫 Stage 1。
 8. AI 依 contract 轉成自然語言解讀。
 9. 當次 known reality／現實背景可以讓策略更具體，但只作用在策略層，不回寫 canonical contract，不得改變 ranking、不得提高 specificity、不得把 known reality 視為 prospective hit。
+
+若當次 contract 是 Interpretation v2 且包含 `coordination_relations`：
+
+- `coordination_relation` 是 **Python authority**。AI 僅負責把 Python 已計算的 coordination 語義轉成人可讀文字，不得從八字／紫微 raw evidence 重新判定 `coordination_relation`，也不得用 legacy `cross_system_relation` 覆蓋。
+- `parallel_signals` 代表不同 domain 並行，不是因為 domain 不同就互相矛盾；不得把 `parallel_signals` 改寫成 conflict。
+- `direct_domain_convergence`、`layered_complement`、`parallel_signals` 等只描述 coordination 結構，不是額外 ranking authority。不得因 coordination 自動提高 confidence；specificity 只能維持或保守下修，且不得高於 `coordination_specificity_cap`。
+- 若 Python 沒有輸出合法 coordination relation，AI 必須 abstain／降級，不得自行補算。
+
+若當次 Interpretation v2 同時包含 `claim_consumption_decisions` 與 `claim_consumption_digest`：
+
+- claim consumption Python authority 決定每個既有 claim 是 `render`、`render_with_caveat` 或 `abstain_claim`；AI 不得重新判定 claim consumption decision，也不得從 raw Bazi／Ziwei、legacy relation 或 coordination 另算一套 decision。
+- `render_with_caveat` 必須保留 Python 已給定的 caveat／reason semantics，不得在自然語言轉譯時消失；不得把 `abstain_claim` 改成可呈現 claim，亦不得用現實背景把已 abstain 的 prospective claim 重新開啟。
+- `authorized_specificity` 是 AI 輸出的 specificity ceiling；不得高於 `authorized_specificity`，也不得因 claim consumption 提高 confidence。claim consumption 只能維持或保守降級既有 authority。
+- 若 claim consumption 欄位缺失、digest 無法驗證或 decision 不合法，AI 必須 fail closed／abstain，不得自行補算。
 
 未完成歷史事件校準時仍可 cold-start；Phase 4 personalization 是可選層，不是進入未來分析的必要條件。Historical Personalization 不等於機率。
 

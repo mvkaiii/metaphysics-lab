@@ -8,8 +8,8 @@ import json
 import zipfile
 from pathlib import Path
 
-RELEASE_VERSION = "1.5.0"
-USER_PACKAGE_NAME = "Metaphysics-Lab-v1.5.0-User-Package.zip"
+RELEASE_VERSION = "1.6.0"
+USER_PACKAGE_NAME = "Metaphysics-Lab-v1.6.0-User-Package.zip"
 USER_ASSETS = (
     "metaphysics_core.md",
     "metaphysics_lab.py",

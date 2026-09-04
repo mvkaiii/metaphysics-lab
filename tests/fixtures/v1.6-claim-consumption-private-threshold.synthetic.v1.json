@@ -1,0 +1,78 @@
+{
+  "evaluation_identity_receipt": {
+    "bound_at": "2026-09-01T14:33:00Z",
+    "candidate_sha": "3f1a61c7b2dbdca356af2669fb340caf06b203f9",
+    "case_count": 4,
+    "claim_count": 12,
+    "oracle_seal_digest": "698bd756e173b243954774b8cce110070602ea51eaded8caa1fc4660ef4692da",
+    "promotion_allowed": false,
+    "qualification_input_set_digest": "db006847f53ea03a949936645971cf63489c5fff6161c6eb7a028e314179d0f9",
+    "receipt_digest": "285977e57f1327a7a73158b1ca588307e9feb418ab326f83172712f947748ee3",
+    "schema_version": "v1.6-claim-consumption-private-evaluation-identity-receipt.v1"
+  },
+  "oracle_receipt": {
+    "case_count": 4,
+    "case_set_digest": "7b4dd5be21921992c9e369a9e441cc5d6f50a2ef7c89b9cad1cc14488883a416",
+    "claim_count": 12,
+    "cutoff_contamination_count": 0,
+    "oracle_expectation_digest": "80822c900bdbb19f8582498b059f34b52a47b8d745ed68527ddc1741be8c4f4b",
+    "oracle_profile": "synthetic_oracle_v1",
+    "promotion_allowed": false,
+    "rubric_digest": "49672f0ef3b3a542b3b86b475936cc9adf1ddf60369e9b120ba33900294c99d8",
+    "schema_version": "v1.6-claim-consumption-oracle-seal-receipt.v1",
+    "seal_digest": "698bd756e173b243954774b8cce110070602ea51eaded8caa1fc4660ef4692da",
+    "sealed_at": "2026-09-01T14:32:00Z",
+    "status": "SEALED"
+  },
+  "policy": {
+    "policy_digest": "c68a8b1ae116008020776676d7c36fc3bc2c95e06266550684e16e238fdd5eac",
+    "policy_frozen_at": "2026-09-01T14:30:00Z",
+    "policy_profile": "lin_tianji_claim_consumption_private_strict_zero_v1",
+    "promotion_allowed": false,
+    "schema_version": "v1.6-claim-consumption-private-release-policy.v1",
+    "thresholds": {
+      "caveat_omission_count": 0,
+      "cutoff_contamination_count": 0,
+      "missed_alignment_count": 0,
+      "over_render_count": 0,
+      "partial_alignment_count": 0,
+      "specificity_excessive_downgrade_count": 0,
+      "specificity_overreach_count": 0,
+      "under_render_count": 0,
+      "unnecessary_caveat_count": 0
+    }
+  },
+  "q1_report": {
+    "case_count": 4,
+    "caveat_omission_count": 0,
+    "claim_count": 12,
+    "classification": "private_external_evaluation",
+    "cutoff_contamination_count": 0,
+    "decision_alignment": {
+      "matched": 12,
+      "missed": 0,
+      "partial": 0
+    },
+    "general_conformance_status": "METRICS_ONLY",
+    "input_set_digest": "db006847f53ea03a949936645971cf63489c5fff6161c6eb7a028e314179d0f9",
+    "over_render_count": 0,
+    "promotion_allowed": false,
+    "report_digest": "8eb7ca1a741c68e7c7a13212577270186d6b50ec91c590416d3aebf6cbf5f654",
+    "schema_version": "v1.6-claim-consumption-qualification-report.v1",
+    "specificity_excessive_downgrade_count": 0,
+    "specificity_overreach_count": 0,
+    "under_render_count": 0,
+    "unnecessary_caveat_count": 0
+  },
+  "sampling_receipt": {
+    "case_count": 4,
+    "claim_count": 12,
+    "promotion_allowed": false,
+    "receipt_digest": "2f219a27f1d909b75455d5af0037cf9d3b5a16ea5920e4d00b0e5718cc54efca",
+    "sampling_profile": "synthetic_sampling_v1",
+    "sampling_protocol_digest": "f32cf17576632d48d3f9756144ad8287885c61f457ff3f7837a29d425b38f2e6",
+    "schema_version": "v1.6-claim-consumption-sampling-eligibility-receipt.v1",
+    "sealed_at": "2026-09-01T14:31:00Z",
+    "status": "ELIGIBLE"
+  }
+}

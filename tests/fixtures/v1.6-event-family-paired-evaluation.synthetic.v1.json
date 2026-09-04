@@ -1,0 +1,184 @@
+{
+  "schema_version": "v1.6-event-family-paired-evaluation-input.v1",
+  "classification": "synthetic_validation",
+  "oracle": {
+    "schema_version": "v1.6-event-family-paired-oracle.v1",
+    "classification": "synthetic_validation",
+    "oracle_frozen_at": "2026-09-02T08:00:00Z",
+    "cases": [
+      {
+        "case_id": "synthetic-paired-001",
+        "target_scope": "yearly",
+        "child_outcomes": [
+          {
+            "child_claim_id": "child:yearly:career:income_change",
+            "primary_domain": "career",
+            "event_family": "income_change",
+            "outcome_status": "unsupported",
+            "maximum_supported_specificity": null,
+            "caveat_required": false,
+            "expected_cross_system_relation": "single_system_qualified"
+          },
+          {
+            "child_claim_id": "child:yearly:career:leadership_change",
+            "primary_domain": "career",
+            "event_family": "leadership_change",
+            "outcome_status": "supported",
+            "maximum_supported_specificity": "concrete_event",
+            "caveat_required": false,
+            "expected_cross_system_relation": "direct_convergence"
+          },
+          {
+            "child_claim_id": "child:yearly:career:role_change",
+            "primary_domain": "career",
+            "event_family": "role_change",
+            "outcome_status": "supported",
+            "maximum_supported_specificity": "event_family",
+            "caveat_required": true,
+            "expected_cross_system_relation": "single_system_qualified"
+          }
+        ],
+        "case_digest": "bcc6feaa2e48ea1b7e22093c88b2bc81a152572ed8ba602950ab9130ac6402b5"
+      }
+    ]
+  },
+  "oracle_seal_receipt": {
+    "profile_version": "lin_tianji_event_family_paired_oracle_seal_v1",
+    "schema_version": "v1.6-event-family-paired-oracle-seal-receipt.v1",
+    "classification": "synthetic_validation",
+    "oracle_frozen_at": "2026-09-02T08:00:00Z",
+    "case_count": 1,
+    "child_count": 3,
+    "oracle_digest": "0dcf11bbff42a618ff3b2dc475f49e5f4282d854edff83dc35b0c8cbd5f56519",
+    "promotion_allowed": false,
+    "seal_digest": "06df7d85d7a16961eee0ef45f35fc2d828a7a6d8f53a4b64138f19a70a27101b"
+  },
+  "cases": [
+    {
+      "case_id": "synthetic-paired-001",
+      "legacy_adapter_bundle": {
+        "profile_version": "lin_tianji_event_family_legacy_adapter_v1-exp",
+        "target_scope": "yearly",
+        "source_interpretation_contract_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "children": [
+          {
+            "child_claim_id": "child:yearly:career:role_change",
+            "parent_claim_id": "claim:yearly:career",
+            "primary_domain": "career",
+            "event_family": "role_change",
+            "decision": "render",
+            "authorized_specificity": "concrete_event",
+            "caveat_required": false,
+            "projected_cross_system_relation": "direct_convergence_projection",
+            "source_parent_decision": "render",
+            "source_coordination_relation": "direct_domain_convergence"
+          },
+          {
+            "child_claim_id": "child:yearly:career:leadership_change",
+            "parent_claim_id": "claim:yearly:career",
+            "primary_domain": "career",
+            "event_family": "leadership_change",
+            "decision": "render",
+            "authorized_specificity": "concrete_event",
+            "caveat_required": false,
+            "projected_cross_system_relation": "direct_convergence_projection",
+            "source_parent_decision": "render",
+            "source_coordination_relation": "direct_domain_convergence"
+          },
+          {
+            "child_claim_id": "child:yearly:career:income_change",
+            "parent_claim_id": "claim:yearly:career",
+            "primary_domain": "career",
+            "event_family": "income_change",
+            "decision": "render",
+            "authorized_specificity": "concrete_event",
+            "caveat_required": false,
+            "projected_cross_system_relation": "direct_convergence_projection",
+            "source_parent_decision": "render",
+            "source_coordination_relation": "direct_domain_convergence"
+          }
+        ],
+        "legacy_adapter_digest": "b61e2476fef56a01cf663b7f9ab1ce2b959a045bf2788877e7960084c6b00bc8"
+      },
+      "candidate_hoc_bundle": {
+        "profile_version": "lin_tianji_hybrid_output_contract_v1-exp",
+        "target_scope": "yearly",
+        "source_hybrid_claim_composer_digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "render_units": [
+          {
+            "render_unit_id": "render-unit:role",
+            "member_child_claim_ids": ["child:yearly:career:role_change"],
+            "primary_domain": "career",
+            "target_scope": "yearly",
+            "composition_type": "single_child",
+            "cross_system_relations": ["single_system_qualified"],
+            "visibility": "primary",
+            "authorized_specificity": "event_family",
+            "required_caveats": ["single_system_support"],
+            "causality_allowed": false,
+            "source_efa_digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "source_c2_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "source_hcc_digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+          },
+          {
+            "render_unit_id": "render-unit:leadership",
+            "member_child_claim_ids": ["child:yearly:career:leadership_change"],
+            "primary_domain": "career",
+            "target_scope": "yearly",
+            "composition_type": "direct_convergence_child",
+            "cross_system_relations": ["direct_convergence"],
+            "visibility": "primary",
+            "authorized_specificity": "concrete_event",
+            "required_caveats": [],
+            "causality_allowed": false,
+            "source_efa_digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "source_c2_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "source_hcc_digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+          }
+        ],
+        "children": [
+          {
+            "child_claim_id": "child:yearly:career:role_change",
+            "parent_claim_id": "claim:yearly:career",
+            "primary_domain": "career",
+            "event_family": "role_change",
+            "authority_decision": "render_with_caveat",
+            "authorized_specificity": "event_family",
+            "source_systems": ["bazi"],
+            "cross_system_relation": "single_system_qualified",
+            "visibility": "primary",
+            "required_caveats": ["single_system_support"]
+          },
+          {
+            "child_claim_id": "child:yearly:career:leadership_change",
+            "parent_claim_id": "claim:yearly:career",
+            "primary_domain": "career",
+            "event_family": "leadership_change",
+            "authority_decision": "render",
+            "authorized_specificity": "concrete_event",
+            "source_systems": ["bazi", "ziwei"],
+            "cross_system_relation": "direct_convergence",
+            "visibility": "primary",
+            "required_caveats": []
+          }
+        ],
+        "audit_only_children": [
+          {
+            "child_claim_id": "child:yearly:career:income_change",
+            "parent_claim_id": "claim:yearly:career",
+            "primary_domain": "career",
+            "event_family": "income_change",
+            "authority_decision": "abstain_child",
+            "authorized_specificity": null,
+            "source_systems": [],
+            "cross_system_relation": null,
+            "visibility": "audit_only",
+            "required_caveats": []
+          }
+        ],
+        "hybrid_output_contract_digest": "ec81ef970893f2302e7221531fc877a65dca8f38f96847f47582c5b97c905bac"
+      },
+      "input_digest": "20cee40e49c42a41be66cea567edde11c0db8e733213a3ab39b2798400d538a2"
+    }
+  ]
+}

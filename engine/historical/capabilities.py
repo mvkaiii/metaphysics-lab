@@ -9,6 +9,10 @@ _CAPABILITIES = {
         "routing": "on_demand",
         "rule_version": "1.0-exp",
         "profile_id": "historical-activation-bazi-v1",
+        "supported_profiles": (
+            {"profile_id": "historical-activation-bazi-v1", "rule_version": "1.0-exp"},
+            {"profile_id": "historical-activation-bazi-v2", "rule_version": "2.1-exp"},
+        ),
         "module": "engine.historical.selector",
         "dependencies": ("bazi.natal_chart",),
         "output_classification": "Project 推導盤面",

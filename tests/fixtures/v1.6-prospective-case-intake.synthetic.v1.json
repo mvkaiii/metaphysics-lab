@@ -1,0 +1,44 @@
+{
+  "future_unexposed": {
+    "opaque_case_id": "case-future-a",
+    "case_origin": "FUTURE_EVENT",
+    "source_timestamp": "2026-09-02T00:20:00Z",
+    "intake_timestamp": "2026-09-02T00:21:00Z",
+    "outcome_availability_at_intake": "PENDING",
+    "source_record_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+    "source_provenance_status": "VERIFIABLE",
+    "source_provenance_digest": "2222222222222222222222222222222222222222222222222222222222222222",
+    "first_intake_status": "VERIFIABLE",
+    "first_intake_provenance_digest": "3333333333333333333333333333333333333333333333333333333333333333",
+    "candidate_exposure_status": "UNEXPOSED",
+    "candidate_exposure_provenance_digest": "4444444444444444444444444444444444444444444444444444444444444444"
+  },
+  "historical_unexposed": {
+    "opaque_case_id": "case-historical-a",
+    "case_origin": "HISTORICAL_UNEXPOSED",
+    "source_timestamp": "2025-01-15T08:00:00Z",
+    "intake_timestamp": "2026-09-02T00:22:00Z",
+    "outcome_availability_at_intake": "KNOWN",
+    "source_record_digest": "5555555555555555555555555555555555555555555555555555555555555555",
+    "source_provenance_status": "VERIFIABLE",
+    "source_provenance_digest": "6666666666666666666666666666666666666666666666666666666666666666",
+    "first_intake_status": "VERIFIABLE",
+    "first_intake_provenance_digest": "7777777777777777777777777777777777777777777777777777777777777777",
+    "candidate_exposure_status": "UNEXPOSED",
+    "candidate_exposure_provenance_digest": "8888888888888888888888888888888888888888888888888888888888888888"
+  },
+  "previously_exposed": {
+    "opaque_case_id": "case-exposed-a",
+    "case_origin": "HISTORICAL_UNEXPOSED",
+    "source_timestamp": "2025-02-01T08:00:00Z",
+    "intake_timestamp": "2026-09-02T00:23:00Z",
+    "outcome_availability_at_intake": "KNOWN",
+    "source_record_digest": "9999999999999999999999999999999999999999999999999999999999999999",
+    "source_provenance_status": "VERIFIABLE",
+    "source_provenance_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "first_intake_status": "VERIFIABLE",
+    "first_intake_provenance_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "candidate_exposure_status": "PREVIOUSLY_EXPOSED",
+    "candidate_exposure_provenance_digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  }
+}

@@ -1,0 +1,188 @@
+{
+  "claim_universe_lock": {
+    "cases": [
+      {
+        "claim_case_digest": "0c82e032151c433ddebae83d78f42d1c02a44899d2032975fd9c7370389b6f68",
+        "locked_claim_ids": [
+          "claim-a1",
+          "claim-a2"
+        ],
+        "opaque_case_id": "case-a"
+      },
+      {
+        "claim_case_digest": "4a13f75e0a75df3f3fd61e8f98b099310763035abcb7fb339f6739da7226328d",
+        "locked_claim_ids": [
+          "claim-b1"
+        ],
+        "opaque_case_id": "case-b"
+      }
+    ],
+    "claim_authority_digest": "579aec6020ba000fe1d0fa97e9c150532acf02e1f21c6eae9b360c07b011b4fb",
+    "claim_authority_profile": "synthetic-outcome-free-claim-authority-v1",
+    "claim_universe_digest": "adb32871aab9a45837a8154f7f3d7c98909b932b17f63ce9d178598d2265640f",
+    "locked_at": "2026-09-01T15:25:00Z",
+    "sampling_profile": "lin_tianji_claim_consumption_complete_census_v1",
+    "sampling_protocol_digest": "8e8a60947afbc5ab550818815ba037725c213682aa9d5c341e030e5532fd3803",
+    "schema_version": "v1.6-claim-consumption-sampling-claim-universe-lock.v1",
+    "source_manifest_digest": "38ce4f9fefab8df5aabae3cec58b43f2d93870a10e66174b2cd01a88bfbaf686"
+  },
+  "oracle": {
+    "cases": [
+      {
+        "case_id": "case-a",
+        "cutoff_contamination": false,
+        "expectations": [
+          {
+            "caveat_required": false,
+            "claim_id": "claim-a1",
+            "expected_authorization": "abstain_claim",
+            "maximum_specificity": null,
+            "minimum_acceptable_specificity": null
+          },
+          {
+            "caveat_required": false,
+            "claim_id": "claim-a2",
+            "expected_authorization": "abstain_claim",
+            "maximum_specificity": null,
+            "minimum_acceptable_specificity": null
+          }
+        ],
+        "oracle_case_digest": "5b466370ba9fdfb8a5dab24ed55dc1a7f49f2042ccc6c638b06667dd3d59c1c1"
+      },
+      {
+        "case_id": "case-b",
+        "cutoff_contamination": false,
+        "expectations": [
+          {
+            "caveat_required": false,
+            "claim_id": "claim-b1",
+            "expected_authorization": "abstain_claim",
+            "maximum_specificity": null,
+            "minimum_acceptable_specificity": null
+          }
+        ],
+        "oracle_case_digest": "e478217f423e98f9d5e19230959d821a0497ebb69b1d99e80715917adf405cdd"
+      }
+    ],
+    "oracle_profile": "synthetic-s1-identity-v1",
+    "rubric_digest": "7f3a0f2ac0cbcf0d3723822c2c494804b14e43626ce0d8387f2a85a3ce6ad77d",
+    "schema_version": "v1.6-claim-consumption-oracle.v1"
+  },
+  "protocol": {
+    "allowed_case_statuses": [
+      "EXCLUDE_AFTER_CUTOFF",
+      "EXCLUDE_INPUT_INVALID",
+      "EXCLUDE_NON_CONFIRMATION",
+      "EXCLUDE_OUT_OF_SCOPE",
+      "EXCLUDE_PREVIOUSLY_EXPOSED",
+      "INCLUDE"
+    ],
+    "allowed_exclusion_reason_codes": [
+      "after_cutoff",
+      "input_invalid",
+      "non_confirmation",
+      "out_of_scope",
+      "previously_exposed"
+    ],
+    "candidate_exposure_must_be_unexposed": true,
+    "claim_universe_must_be_outcome_free": true,
+    "complete_census_required": true,
+    "minimum_case_count_rule": "at_least_one_if_eligible",
+    "minimum_claim_count_rule": "at_least_one_if_eligible",
+    "promotion_allowed": false,
+    "protocol_digest": "8e8a60947afbc5ab550818815ba037725c213682aa9d5c341e030e5532fd3803",
+    "protocol_frozen_at": "2026-09-01T15:10:00Z",
+    "required_t1_policy_digest": "65a072b2de63d6f509cc79139442263695589feca28ee99da0ab976ba0c3118a",
+    "required_t1_policy_profile": "lin_tianji_claim_consumption_private_strict_zero_v1",
+    "sampling_profile": "lin_tianji_claim_consumption_complete_census_v1",
+    "schema_version": "v1.6-claim-consumption-sampling-protocol.v1"
+  },
+  "source_manifest": {
+    "cutoff_timestamp": "2026-08-31T23:59:59Z",
+    "records": [
+      {
+        "candidate_exposure_status": "UNEXPOSED",
+        "confirmation_status": "CONFIRMED",
+        "eligibility_facts_digest": "3c44708016b0ba2569af8494233da2bdbd8cbf7ad3f57f1d118d53778801aa0f",
+        "input_validity_status": "VALID",
+        "opaque_case_id": "case-a",
+        "record_digest": "40f957d8d3dd31348a5ce7afea29331a5f8595dd51753de62226028d282b59ce",
+        "scope_status": "IN_SCOPE",
+        "source_record_digest": "593b4f3f2cde28fdcc5ce475096809167533a4ca2d3c0a7d3a07707b4720c1d2",
+        "within_cutoff": true
+      },
+      {
+        "candidate_exposure_status": "UNEXPOSED",
+        "confirmation_status": "CONFIRMED",
+        "eligibility_facts_digest": "3c44708016b0ba2569af8494233da2bdbd8cbf7ad3f57f1d118d53778801aa0f",
+        "input_validity_status": "VALID",
+        "opaque_case_id": "case-b",
+        "record_digest": "51cd19f7959cbe6eb58b001cbd0f65e3660169f9e1823ae4f13fb3a5602b2df7",
+        "scope_status": "IN_SCOPE",
+        "source_record_digest": "e8c9081695b988957705fa3115a82b74da08c8fb6b638f483fc39e36f5cad770",
+        "within_cutoff": true
+      },
+      {
+        "candidate_exposure_status": "PREVIOUSLY_EXPOSED",
+        "confirmation_status": "CONFIRMED",
+        "eligibility_facts_digest": "21b229e345331c3f71b73265ae1868578d84d7719d2bf28528b42c054f168661",
+        "input_validity_status": "VALID",
+        "opaque_case_id": "case-c",
+        "record_digest": "e268614736cbf6bd62716afba6645831910391c287d55f1a6ffeaef38b12ce22",
+        "scope_status": "IN_SCOPE",
+        "source_record_digest": "78884914213a3258355daf61ba8867a5e5f62f73163499cf7019cd76ef4c5894",
+        "within_cutoff": true
+      },
+      {
+        "candidate_exposure_status": "PREVIOUSLY_EXPOSED",
+        "confirmation_status": "CONFIRMED",
+        "eligibility_facts_digest": "c0b67a8b0348a730136c87ab904f48ae5a42e63c616114646e9fcc21d40637b5",
+        "input_validity_status": "VALID",
+        "opaque_case_id": "case-d",
+        "record_digest": "2d7939a57070af0242fc6098240922c938363858f09792e515238ef41777eb5a",
+        "scope_status": "IN_SCOPE",
+        "source_record_digest": "5558a345b3343416b952b9fc05e8c5f13d98614684dc9ec1555cc2646a1b788b",
+        "within_cutoff": false
+      },
+      {
+        "candidate_exposure_status": "UNEXPOSED",
+        "confirmation_status": "NON_CONFIRMATION",
+        "eligibility_facts_digest": "beb46fe003ff8df87e6839c60c777d61f56f03c8f2e77acabbc8902328c350cd",
+        "input_validity_status": "VALID",
+        "opaque_case_id": "case-e",
+        "record_digest": "3c01d8b958ec4ed73fbee7f9d6c6f217060744f8244c654c31a83fac445c1be8",
+        "scope_status": "IN_SCOPE",
+        "source_record_digest": "ff761d85419705eb6991af750f03d76faed66f3e1ff11280b1e75c2dfca9a519",
+        "within_cutoff": true
+      },
+      {
+        "candidate_exposure_status": "UNEXPOSED",
+        "confirmation_status": "CONFIRMED",
+        "eligibility_facts_digest": "cfde811638dd7569fe9c823374695c840644ff80a75ff8840545306afed71e08",
+        "input_validity_status": "INVALID",
+        "opaque_case_id": "case-f",
+        "record_digest": "5fcb57678a079a7a2ab262ea93de5d723c9ee2d7022fa92ec742dad654bc21eb",
+        "scope_status": "IN_SCOPE",
+        "source_record_digest": "18e278ec99b5a40649baf8fa345102fa946d398bf2e02019b19c0632abcffdc4",
+        "within_cutoff": true
+      },
+      {
+        "candidate_exposure_status": "UNEXPOSED",
+        "confirmation_status": "CONFIRMED",
+        "eligibility_facts_digest": "aa6a2567b1454c3ec239f417cdbe864086ef22d5059962f9e8cb39b5016a189f",
+        "input_validity_status": "VALID",
+        "opaque_case_id": "case-g",
+        "record_digest": "b2a8b93231a689dd72645243f02623b4960d276542a7ffdd9b573d7e604fc7dd",
+        "scope_status": "OUT_OF_SCOPE",
+        "source_record_digest": "34341736a5ba7cba3d2b1d899b38c4535b7ccbb4de589857edc312513ed56858",
+        "within_cutoff": true
+      }
+    ],
+    "required_t1_policy_digest": "65a072b2de63d6f509cc79139442263695589feca28ee99da0ab976ba0c3118a",
+    "sampling_profile": "lin_tianji_claim_consumption_complete_census_v1",
+    "sampling_protocol_digest": "8e8a60947afbc5ab550818815ba037725c213682aa9d5c341e030e5532fd3803",
+    "schema_version": "v1.6-claim-consumption-sampling-source-manifest.v1",
+    "source_locked_at": "2026-09-01T15:20:00Z",
+    "source_manifest_digest": "38ce4f9fefab8df5aabae3cec58b43f2d93870a10e66174b2cd01a88bfbaf686"
+  }
+}

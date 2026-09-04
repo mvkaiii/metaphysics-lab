@@ -1,0 +1,11 @@
+{
+  "fixture_version": "v1.6.0-isolated-sandbox-known-reality.v1",
+  "classification": "operator_only_known_reality",
+  "privacy": "fictional_no_real_user_data",
+  "known_reality_context": {
+    "known_before_lock": true,
+    "event_date": "2027-04-15",
+    "event_time": "20:00",
+    "summary": "公司已排定一場內部提案簡報，這件事在本次問事前已確定。"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "intake_profile": "lin_tianji_claim_consumption_prospective_case_intake_v1",
+  "previous_registry_digest": null,
+  "promotion_allowed": false,
+  "records": [],
+  "registry_digest": "3875d640658ca9bc38848914d0da83b2b493747185079ffe6ed3ddf17877a974",
+  "registry_locked_at": "2026-09-02T00:24:22Z",
+  "schema_version": "v1.6-claim-consumption-prospective-case-intake-registry.v1"
+}

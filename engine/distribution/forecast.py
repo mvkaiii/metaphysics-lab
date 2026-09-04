@@ -34,6 +34,7 @@ from engine.ziwei.flowing_star_view import materialize_flowing_star_layer
 from engine.ziwei.flowing_stars import build_flowing_star_layer
 from engine.ziwei.models import ChartIdentity, LayerProvenance, StarLocationIndex
 from engine.ziwei.natal_models import ZiweiDecadalPeriod, ZiweiPalaceRecord
+from engine.ziwei.yearly_cycle import build_yearly_cycle_layer
 
 from .errors import DistributionError
 
@@ -458,13 +459,15 @@ def _fine_scope(scope, context, identity, palaces, star_locations):
     )
 
 
-def _yearly_scope(context, identity, palaces):
+def _yearly_scope(context, identity, palaces, star_locations):
     source = source_from_yearly(context, identity)
+    transformation = build_yearly_cycle_layer(source, identity, star_locations)
     flowing = build_flowing_star_layer(source)
     return _scope_envelope(
         scope="yearly",
         flowing_layer=flowing,
         palaces=palaces,
+        transformation_layer=transformation,
     )
 
 
@@ -549,7 +552,7 @@ def resolve_forecast_context(payload: Mapping[str, object]) -> dict:
             if scope in _FINE_RESOLVERS:
                 ziwei[scope] = _fine_scope(scope, context, identity, palaces, star_locations)
             elif scope == "yearly":
-                ziwei[scope] = _yearly_scope(context, identity, palaces)
+                ziwei[scope] = _yearly_scope(context, identity, palaces, star_locations)
             elif scope == "decadal":
                 ziwei[scope] = _decadal_scope(
                     project,

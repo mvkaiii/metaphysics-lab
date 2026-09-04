@@ -1,0 +1,66 @@
+{
+  "candidate_sha": "0123456789abcdef0123456789abcdef01234567",
+  "cases": [
+    {
+      "candidate_case_digest": "3f92195800b133ba29086a929a39ffd418d37af953b1babb0e9ef4572f322188",
+      "case_id": "oracle-case-b",
+      "claim_consumption_bundle": {
+        "claim_consumption_digest": "255051cc763d3ff7f3de5a0fb703599cf2d3cc1f0d38170fd99065df7cd2aab0",
+        "claim_evidence_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "coordination_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "decisions": [
+          {
+            "authorized_specificity": "event_family",
+            "claim_id": "finance",
+            "confidence_class": "moderate_confidence",
+            "coordination_relation": "single_system_support",
+            "decision": "render_with_caveat",
+            "original_effective_specificity": "concrete_event",
+            "primary_domain": "finance",
+            "reason_codes": [
+              "single_system_support"
+            ]
+          },
+          {
+            "authorized_specificity": "event_family",
+            "claim_id": "partnership",
+            "confidence_class": "moderate_confidence",
+            "coordination_relation": "single_system_support",
+            "decision": "abstain_claim",
+            "original_effective_specificity": "event_family",
+            "primary_domain": "partnership",
+            "reason_codes": [
+              "no_same_scope_target_support"
+            ]
+          }
+        ],
+        "profile_version": "lin_tianji_claim_consumption_v1-exp",
+        "target_scope": "yearly"
+      }
+    },
+    {
+      "candidate_case_digest": "0181bd24ae1f78f9b579701cf79e27478a9488aa508f08da49985390b1f7447c",
+      "case_id": "oracle-case-a",
+      "claim_consumption_bundle": {
+        "claim_consumption_digest": "3b026e787906ba4b67ecf949fa105f03189b3c24783bd0b3d602d4cb72381732",
+        "claim_evidence_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "coordination_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "decisions": [
+          {
+            "authorized_specificity": "event_family",
+            "claim_id": "career",
+            "confidence_class": "moderate_confidence",
+            "coordination_relation": "direct_domain_convergence",
+            "decision": "render",
+            "original_effective_specificity": "event_family",
+            "primary_domain": "career",
+            "reason_codes": []
+          }
+        ],
+        "profile_version": "lin_tianji_claim_consumption_v1-exp",
+        "target_scope": "yearly"
+      }
+    }
+  ],
+  "schema_version": "v1.6-claim-consumption-candidate-output.v1"
+}
