@@ -104,7 +104,7 @@ class RuleSourceReconciliationTests(unittest.TestCase):
         self.assertIn("## v1.3.0｜2026-08-23", changelog)
         self.assertIn("### Phase 2B｜Ziwei Fine Cycle Stem Resolver v1", changelog)
         self.assertIn("### Phase 2C｜Ziwei Flowing Stars", changelog)
-        self.assertIn("Metaphysics Lab Core：**v1.5.0**", version)
+        self.assertIn("Metaphysics Lab Core：**v1.6.0**", version)
         self.assertIn("命理推導計算規則：v1.4", version)
         self.assertIn("AI Distribution Pack", version)
         self.assertIn("runtime_info", version)
