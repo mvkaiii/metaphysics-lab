@@ -269,6 +269,8 @@ finalize calibration
 完成 Stage 2
 ```
 
+**Historical Blind Set 的揭露閘門必須以持久化 Case authority 為準。** `lock_historical_calibration` 必須帶入當前 authoritative `case_files`；只有 action 成功回傳有效 `lock_record_id` 與 `changed_files`，而且 `changed_files` 已實際套用到當前 Case 後，才算完成 Historical Blind Set lock。AI 在此之前不得對使用者說「已鎖定」、不得要求或接受歷史事件答案。若 lock action 失敗、缺少 Case authority、或無法確認變更已套用，必須停在揭露前 fail closed；口頭宣告、digest-only result 或事後補鎖都不能取代 pre-disclosure persistent lock。
+
 使用者選擇略過或稍後再做時，**未校準仍可直接進入**流年、未來、問事與重大決策分析，維持 `uncalibrated`。對外要清楚說明：「目前尚未完成歷史事件校準，因此以下可以正常分析，但主要依命盤本身前向判斷；這**不影響排盤本身的正確性**，只是**個人化落地形式與信心校準會少一層證據**。」此時不得把回答包裝成已完成事件校準的 Stage 2。
 
 不論使用者是否校準，anti-leak gate 都不變：Stage 1 鎖定前不得先讀歷史答案。

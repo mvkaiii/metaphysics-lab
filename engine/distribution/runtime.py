@@ -380,7 +380,23 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
         if action in ("lock_blind_forecast", "lock_historical_calibration", "finalize_historical_calibration"):
             from .calibration import finalize_historical_calibration, lock_blind_forecast, lock_historical_calibration
             handler = {"lock_blind_forecast": lock_blind_forecast, "lock_historical_calibration": lock_historical_calibration, "finalize_historical_calibration": finalize_historical_calibration}[action]
-            return _ok(action, handler(request))
+            if action == "lock_historical_calibration":
+                case_files = request.get("case_files")
+                if not isinstance(case_files, Mapping) or not case_files:
+                    raise DistributionError(
+                        "lock_authority_required",
+                        "historical calibration lock requires authoritative Case files",
+                    )
+            result = handler(request)
+            if action == "lock_historical_calibration":
+                lock_record_id = result.get("lock_record_id")
+                changed_files = result.get("changed_files")
+                if not isinstance(lock_record_id, str) or not lock_record_id.strip() or not isinstance(changed_files, Mapping):
+                    raise DistributionError(
+                        "lock_authority_required",
+                        "historical calibration lock did not produce persistent Case authority",
+                    )
+            return _ok(action, result)
         if action == "export_case_markdown":
             return _ok(action, _export_case(request))
         if action == "build_delivery_bundle":
