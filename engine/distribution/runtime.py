@@ -22,7 +22,7 @@ from .dependencies import (
     inspect_optional_external_dependencies,
 )
 from .errors import DistributionError
-from .manifest import load_capabilities
+from .manifest import CAPABILITY_MANIFEST_VERSION, load_capabilities
 
 
 def _ok(action: str, data: Mapping[str, object]) -> dict:
@@ -59,6 +59,7 @@ def runtime_info() -> dict:
         "runtime_schema_version": RUNTIME_SCHEMA_VERSION,
         "case_schema_version": CASE_SCHEMA_VERSION,
         "distribution_runtime_version": DISTRIBUTION_RUNTIME_VERSION,
+        "capability_manifest_version": CAPABILITY_MANIFEST_VERSION,
         "supported_actions": list(SUPPORTED_ACTIONS),
         "capabilities": load_capabilities(),
         "dependency_authority": {
