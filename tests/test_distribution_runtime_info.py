@@ -5,6 +5,8 @@ import types
 import unittest
 from unittest import mock
 
+from engine.distribution.manifest import load_capability_manifest
+
 
 class DistributionRuntimeInfoTests(unittest.TestCase):
     def _find_spec_or_none(self, name):
@@ -29,6 +31,11 @@ class DistributionRuntimeInfoTests(unittest.TestCase):
         self.assertEqual(data["runtime_schema_version"], "1.1")
         self.assertEqual(data["case_schema_version"], "1.1")
         self.assertEqual(data["distribution_runtime_version"], "1.1-exp")
+        self.assertEqual(data["capability_manifest_version"], "1.0")
+        self.assertEqual(
+            data["capabilities"],
+            load_capability_manifest()["capabilities"],
+        )
         for action in (
             "runtime_info",
             "prepare_historical_calibration",
