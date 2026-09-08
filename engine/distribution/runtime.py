@@ -403,6 +403,13 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
         if action == "build_delivery_bundle":
             from .delivery import build_delivery_bundle
             return _ok(action, build_delivery_bundle(request))
+        if action in ("diagnose_case", "plan_case_reconciliation"):
+            from .case_doctor import diagnose_case, plan_case_reconciliation
+            handler = {
+                "diagnose_case": diagnose_case,
+                "plan_case_reconciliation": plan_case_reconciliation,
+            }[action]
+            return _ok(action, handler(request))
         if action in ("validate_case", "migrate_case", "update_case_record"):
             from .case_pack import migrate_case, update_case_record, validate_case
             handler = {"validate_case": validate_case, "migrate_case": migrate_case, "update_case_record": update_case_record}[action]
