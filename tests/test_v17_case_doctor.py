@@ -84,6 +84,30 @@ class CaseDoctorTests(unittest.TestCase):
             index = next(name for name in files if name.endswith("00_專案索引.md"))
             expected_name = next(name for name in files if name.endswith("04_紫微基礎資料包.md"))
             files[index] = files[index].replace(expected_name, expected_name + ".wrong", 1)
+        elif kind == "canonical_generic_missing_record":
+            shared = {
+                "record_id": "evt-2024-shared",
+                "status": "verified",
+                "year": 2024,
+                "category": "work",
+                "summary": "Fictional shared event.",
+            }
+            files = self._append_verified(files, shared)
+            legacy = self._append_verified(dict(self.base_files), shared)
+            legacy = self._append_verified(
+                legacy,
+                {
+                    "record_id": "evt-2026-legacy-only",
+                    "status": "verified",
+                    "year": 2026,
+                    "category": "finance",
+                    "summary": "Fictional legacy-only event.",
+                },
+            )
+            legacy_tracking = next(
+                name for name in legacy if name.endswith("05_驗證事件紀錄.md")
+            )
+            files["驗證事件紀錄.md"] = legacy[legacy_tracking]
         elif kind == "exact_duplicate_tracking":
             files = self._append_verified(
                 files,
@@ -171,6 +195,22 @@ class CaseDoctorTests(unittest.TestCase):
             findings[0]["details"]["original_error_code"],
             "case_manifest_mismatch",
         )
+
+    def test_legacy_structured_record_missing_from_canonical_is_reported(self):
+        result = diagnose_case(self.fixture("CD-04"))
+        findings = [
+            finding
+            for finding in result["findings"]
+            if finding["code"] == "legacy_record_missing_from_canonical"
+        ]
+        self.assertEqual(result["health"], "WARN")
+        self.assertEqual(len(findings), 1)
+        self.assertEqual(findings[0]["severity"], "WARN")
+        self.assertEqual(findings[0]["details"]["slot"], "05_驗證事件紀錄.md")
+        self.assertEqual(
+            findings[0]["details"]["record_id"], "evt-2026-legacy-only"
+        )
+        self.assertEqual(findings[0]["files"], ["驗證事件紀錄.md"])
 
     def test_exact_duplicate_tracking_record_is_warn_only_and_never_auto_merged(self):
         result = diagnose_case(self.fixture("CD-05"))
