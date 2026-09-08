@@ -27,6 +27,8 @@ SUPPORTED_ACTIONS = (
     "finalize_historical_calibration",
     "export_case_markdown",
     "build_delivery_bundle",
+    "diagnose_case",
+    "plan_case_reconciliation",
     "validate_case",
     "migrate_case",
     "update_case_record",
