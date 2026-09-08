@@ -50,6 +50,25 @@ class CaseDoctorTests(unittest.TestCase):
             raise AssertionError(exported)
         cls.base_files = dict(exported["data"]["files"])
 
+    @staticmethod
+    def _append_verified(files, entry):
+        result = dispatch(
+            "update_case_record",
+            {
+                "case_files": files,
+                "filename": "05_驗證事件紀錄.md",
+                "operation": "append",
+                "updated_at": "2026-09-08T12:30:00+08:00",
+                "last_modified_by": "fixture",
+                "entry": entry,
+            },
+        )
+        if not result.get("ok"):
+            raise AssertionError(result)
+        updated = dict(files)
+        updated.update(result["data"]["changed_files"])
+        return updated
+
     def fixture(self, scenario_id):
         scenario = self.scenarios[scenario_id]
         files = dict(self.base_files)
@@ -65,6 +84,38 @@ class CaseDoctorTests(unittest.TestCase):
             index = next(name for name in files if name.endswith("00_專案索引.md"))
             expected_name = next(name for name in files if name.endswith("04_紫微基礎資料包.md"))
             files[index] = files[index].replace(expected_name, expected_name + ".wrong", 1)
+        elif kind == "exact_duplicate_tracking":
+            files = self._append_verified(
+                files,
+                {
+                    "record_id": "evt-2025-exact",
+                    "status": "verified",
+                    "year": 2025,
+                    "category": "work",
+                    "summary": "Fictional responsibility expansion.",
+                },
+            )
+            canonical = next(name for name in files if name.endswith("05_驗證事件紀錄.md"))
+            files["驗證事件紀錄.md"] = files[canonical]
+        elif kind == "possible_semantic_duplicate":
+            files = self._append_verified(
+                files,
+                {
+                    "record_id": "evt-2025-canonical",
+                    "status": "verified",
+                    "year": 2025,
+                    "category": "work",
+                    "summary": "Fictional responsibility expansion.",
+                },
+            )
+            canonical = next(name for name in files if name.endswith("05_驗證事件紀錄.md"))
+            legacy = files[canonical]
+            legacy = legacy.replace("evt-2025-canonical", "evt-2025-legacy")
+            legacy = legacy.replace(
+                "Fictional responsibility expansion.",
+                "Fictional cross-team ownership change.",
+            )
+            files["驗證事件紀錄.md"] = legacy
         elif kind == "clean_with_unrelated":
             files["reading-notes.md"] = "# Fictional reference notes\n"
         elif kind != "clean_base":
@@ -120,6 +171,43 @@ class CaseDoctorTests(unittest.TestCase):
             findings[0]["details"]["original_error_code"],
             "case_manifest_mismatch",
         )
+
+    def test_exact_duplicate_tracking_record_is_warn_only_and_never_auto_merged(self):
+        result = diagnose_case(self.fixture("CD-05"))
+        findings = [
+            finding
+            for finding in result["findings"]
+            if finding["code"] == "record_duplicate_exact"
+        ]
+        self.assertEqual(result["health"], "WARN")
+        self.assertEqual(len(findings), 1)
+        self.assertEqual(findings[0]["severity"], "WARN")
+        self.assertFalse(findings[0]["auto_merge_allowed"])
+        self.assertEqual(
+            findings[0]["details"]["record_ids"],
+            ["evt-2025-exact"],
+        )
+
+    def test_possible_semantic_duplicate_requires_user_resolution(self):
+        result = diagnose_case(self.fixture("CD-06"))
+        findings = [
+            finding
+            for finding in result["findings"]
+            if finding["code"] == "record_possible_semantic_duplicate"
+        ]
+        self.assertEqual(result["health"], "WARN")
+        self.assertEqual(len(findings), 1)
+        self.assertTrue(findings[0]["requires_user_resolution"])
+        self.assertEqual(
+            findings[0]["details"]["record_ids"],
+            ["evt-2025-canonical", "evt-2025-legacy"],
+        )
+
+    def test_duplicate_detection_is_deterministic_under_file_order_permutation(self):
+        payload = self.fixture("CD-06")
+        reversed_payload = dict(payload)
+        reversed_payload["project_files"] = dict(reversed(list(payload["project_files"].items())))
+        self.assertEqual(diagnose_case(payload), diagnose_case(reversed_payload))
 
     def test_unrelated_markdown_is_not_mislabeled_legacy(self):
         result = diagnose_case(self.fixture("CD-10"))
