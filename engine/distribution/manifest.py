@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import hashlib
 import json
 from pathlib import Path
 from typing import Any, Dict, Mapping, Optional
@@ -209,6 +210,23 @@ def load_capability_manifest(engine_root: Optional[Path] = None) -> dict:
         "manifest_version": CAPABILITY_MANIFEST_VERSION,
         "capabilities": {key: combined[key] for key in sorted(combined)},
     }
+
+
+def capability_manifest_digest(
+    manifest: Optional[Mapping[str, object]] = None,
+) -> str:
+    """Return SHA256 over canonical UTF-8 JSON for a capability manifest."""
+    source = load_capability_manifest() if manifest is None else manifest
+    if not isinstance(source, Mapping):
+        raise ValueError("capability manifest must be a mapping")
+    payload = json.dumps(
+        source,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
 
 
 def load_capabilities(engine_root: Optional[Path] = None) -> Dict[str, Dict[str, Any]]:
