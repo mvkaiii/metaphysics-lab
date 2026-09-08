@@ -292,6 +292,59 @@ def _duplicate_findings(records) -> list:
     return findings
 
 
+
+def _missing_record_findings(records) -> list:
+    findings = []
+    canonical_by_slot = {}
+    legacy_records = []
+    for row in records:
+        if row["source_kind"] == "canonical":
+            canonical_by_slot.setdefault(row["slot"], []).append(row)
+        else:
+            legacy_records.append(row)
+    seen = set()
+    for legacy in legacy_records:
+        candidates = canonical_by_slot.get(legacy["slot"], [])
+        if any(candidate["fingerprint"] == legacy["fingerprint"] for candidate in candidates):
+            continue
+        ambiguous = False
+        for candidate in candidates:
+            left_time = _first_explicit(candidate["record"], _TIME_KEYS)
+            right_time = _first_explicit(legacy["record"], _TIME_KEYS)
+            left_category = _first_explicit(candidate["record"], _CATEGORY_KEYS)
+            right_category = _first_explicit(legacy["record"], _CATEGORY_KEYS)
+            if (
+                left_time is not None
+                and right_time is not None
+                and left_time == right_time
+                and left_category is not None
+                and right_category is not None
+                and left_category == right_category
+            ):
+                ambiguous = True
+                break
+        if ambiguous:
+            continue
+        key = (legacy["slot"], legacy["file"], legacy["fingerprint"])
+        if key in seen:
+            continue
+        seen.add(key)
+        findings.append(
+            _finding(
+                "legacy_record_missing_from_canonical",
+                "WARN",
+                [legacy["file"]],
+                "A structured legacy tracking record is not present in the canonical Case.",
+                {
+                    "slot": legacy["slot"],
+                    "record_id": legacy["record_id"],
+                    "fingerprint": legacy["fingerprint"],
+                },
+            )
+        )
+    return findings
+
+
 def diagnose_case(payload: Mapping[str, object]) -> dict:
     """Return a deterministic, read-only diagnostic of Project Case files."""
     payload = _mapping(payload, "payload")
@@ -493,6 +546,7 @@ def diagnose_case(payload: Mapping[str, object]) -> dict:
         findings.append(_case_validation_finding(exc, authoritative_files))
     else:
         findings.extend(_duplicate_findings(structured_records))
+        findings.extend(_missing_record_findings(structured_records))
 
     findings = sorted(
         findings,
