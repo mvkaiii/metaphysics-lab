@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   apply:
-    if: github.event.head_commit.message == 'ci: apply task4 planner export'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +25,7 @@ jobs:
           if line not in text:
               path.write_text(text.rstrip() + '\n\n' + line + '\n', encoding='utf-8')
           PY
-      - name: Commit generated edit
+      - name: Commit edit when needed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
