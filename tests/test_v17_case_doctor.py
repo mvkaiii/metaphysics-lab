@@ -61,6 +61,10 @@ class CaseDoctorTests(unittest.TestCase):
                 "subject_id: subj_deadbeefcafe",
                 1,
             )
+        elif kind == "manifest_mismatch":
+            index = next(name for name in files if name.endswith("00_專案索引.md"))
+            expected_name = next(name for name in files if name.endswith("04_紫微基礎資料包.md"))
+            files[index] = files[index].replace(expected_name, expected_name + ".wrong", 1)
         elif kind == "clean_with_unrelated":
             files["reading-notes.md"] = "# Fictional reference notes\n"
         elif kind != "clean_base":
@@ -102,6 +106,20 @@ class CaseDoctorTests(unittest.TestCase):
         codes = {finding["code"] for finding in result["findings"]}
         self.assertIn("subject_id_conflict", codes)
         self.assertEqual(result["recommended_next_action"], "user_resolution_required")
+
+    def test_manifest_mismatch_maps_authoritative_validation_error(self):
+        result = diagnose_case(self.fixture("CD-08"))
+        self.assertEqual(result["health"], "BLOCKED")
+        findings = [
+            finding
+            for finding in result["findings"]
+            if finding["code"] == "canonical_filename_manifest_mismatch"
+        ]
+        self.assertEqual(len(findings), 1)
+        self.assertEqual(
+            findings[0]["details"]["original_error_code"],
+            "case_manifest_mismatch",
+        )
 
     def test_unrelated_markdown_is_not_mislabeled_legacy(self):
         result = diagnose_case(self.fixture("CD-10"))
