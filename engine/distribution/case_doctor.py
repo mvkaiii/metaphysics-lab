@@ -7,7 +7,7 @@ import json
 from typing import Mapping, Optional
 
 from .case_identity import parse_case_filename
-from .case_pack import CASE_FILES, parse_front_matter
+from .case_pack import CASE_FILES, parse_front_matter, validate_case
 from .errors import DistributionError
 
 
@@ -23,6 +23,12 @@ _GENERIC_LEGACY_BASENAMES = frozenset(
     }
 )
 _SAFE_ANALYSIS_SCOPES = ("natal", "yearly", "decision")
+_CASE_ERROR_MAP = {
+    "case_subject_mismatch": "subject_id_conflict",
+    "case_subject_filename_mismatch": "canonical_filename_manifest_mismatch",
+    "case_manifest_mismatch": "canonical_filename_manifest_mismatch",
+    "case_schema_incompatible": "case_schema_incompatible",
+}
 
 
 def _mapping(value: object, field: str) -> Mapping[str, object]:
@@ -120,6 +126,28 @@ def _classify_project_file(filename: str, text: str) -> dict:
     return {"category": "unrelated", "filename": filename}
 
 
+def _case_validation_finding(
+    error: DistributionError, authoritative_files
+) -> dict:
+    code = _CASE_ERROR_MAP.get(error.code, "case_validation_failed")
+    messages = {
+        "subject_id_conflict": "Canonical Case subject identity is inconsistent.",
+        "canonical_filename_manifest_mismatch": "Canonical Case filename or 00 manifest is inconsistent.",
+        "case_schema_incompatible": "Canonical Case schema is not supported by this runtime.",
+        "case_validation_failed": "Canonical Case failed authoritative validation.",
+    }
+    details = {"original_error_code": error.code}
+    if error.details:
+        details["validation_details"] = dict(error.details)
+    return _finding(
+        code,
+        "BLOCKING",
+        authoritative_files,
+        messages[code],
+        details,
+    )
+
+
 def diagnose_case(payload: Mapping[str, object]) -> dict:
     """Return a deterministic, read-only diagnostic of Project Case files."""
     payload = _mapping(payload, "payload")
@@ -191,14 +219,21 @@ def diagnose_case(payload: Mapping[str, object]) -> dict:
     findings = []
     canonical_subject = None
     identities = []
-    invalid_canonical = []
+
+    if authoritative_files:
+        canonical_case_files = {
+            filename: project_files[filename] for filename in authoritative_files
+        }
+        try:
+            validate_case({"case_files": canonical_case_files})
+        except DistributionError as exc:
+            findings.append(_case_validation_finding(exc, authoritative_files))
 
     for row in canonical_rows:
         filename = row["filename"]
         try:
             metadata, _ = parse_front_matter(project_files[filename])
         except DistributionError as exc:
-            invalid_canonical.append(filename)
             findings.append(
                 _finding(
                     "case_validation_failed",
@@ -254,12 +289,11 @@ def diagnose_case(payload: Mapping[str, object]) -> dict:
             key=lambda value: "" if value is None else str(value),
         )
         if len(subject_ids) > 1:
-            files_by_subject = sorted(filename for filename, _ in identities)
             findings.append(
                 _finding(
                     "subject_id_conflict",
                     "BLOCKING",
-                    files_by_subject,
+                    [filename for filename, _ in identities],
                     "Canonical Case files contain more than one subject_id.",
                     {"subject_ids": subject_ids},
                 )
