@@ -1,8 +1,10 @@
+import copy
 import math
 import unittest
 
 from engine.distribution.manifest import (
     CAPABILITY_MANIFEST_VERSION,
+    capability_manifest_digest,
     load_capability_manifest,
     validate_capability_registry_entry,
 )
@@ -17,6 +19,21 @@ class CapabilityManifestV1Tests(unittest.TestCase):
             list(manifest["capabilities"]),
             sorted(manifest["capabilities"]),
         )
+
+    def test_manifest_digest_is_deterministic_and_order_independent(self):
+        first = load_capability_manifest()
+        second = load_capability_manifest()
+        self.assertEqual(first, second)
+        first_digest = capability_manifest_digest(first)
+        self.assertEqual(len(first_digest), 64)
+        self.assertEqual(first_digest, capability_manifest_digest(second))
+
+        reordered = copy.deepcopy(first)
+        reordered["capabilities"] = {
+            key: reordered["capabilities"][key]
+            for key in reversed(list(reordered["capabilities"]))
+        }
+        self.assertEqual(first_digest, capability_manifest_digest(reordered))
 
     def test_required_core_fields_are_present(self):
         required = {
