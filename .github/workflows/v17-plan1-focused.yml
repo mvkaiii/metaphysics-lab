@@ -26,6 +26,7 @@ jobs:
           python -m unittest \
             tests.test_v17_capability_manifest \
             tests.test_v17_capability_docs_drift \
+            tests.test_v17_capability_distribution_parity \
             tests.test_distribution_runtime_info -v
       - name: Compile touched runtime
         run: |
