@@ -7,7 +7,7 @@ import json
 from typing import Mapping, Optional
 
 from .case_identity import parse_case_filename
-from .case_pack import CASE_FILES, parse_front_matter, validate_case
+from .case_pack import CASE_FILES, _record_entries, parse_front_matter, validate_case
 from .errors import DistributionError
 
 
@@ -22,6 +22,13 @@ _GENERIC_LEGACY_BASENAMES = frozenset(
         "命主索引.md",
     }
 )
+_GENERIC_TRACKING_SLOT_MAP = {
+    "驗證事件紀錄.md": "05_驗證事件紀錄.md",
+    "流年追蹤紀錄.md": "06_流年追蹤紀錄.md",
+    "問事追蹤紀錄.md": "07_問事追蹤紀錄.md",
+    "重大決策紀錄.md": "08_重大決策紀錄.md",
+}
+_TRACKING_SLOTS = frozenset(_GENERIC_TRACKING_SLOT_MAP.values())
 _SAFE_ANALYSIS_SCOPES = ("natal", "yearly", "decision")
 _CASE_ERROR_MAP = {
     "case_subject_mismatch": "subject_id_conflict",
@@ -29,6 +36,8 @@ _CASE_ERROR_MAP = {
     "case_manifest_mismatch": "canonical_filename_manifest_mismatch",
     "case_schema_incompatible": "case_schema_incompatible",
 }
+_TIME_KEYS = ("date", "event_date", "year", "target_year")
+_CATEGORY_KEYS = ("category", "record_category", "domain", "event_family")
 
 
 def _mapping(value: object, field: str) -> Mapping[str, object]:
@@ -85,6 +94,11 @@ def _diagnostic_digest(result_without_digest: Mapping[str, object]) -> str:
     return hashlib.sha256(_canonical_json(result_without_digest)).hexdigest()
 
 
+def record_fingerprint(record: Mapping[str, object]) -> str:
+    """Return a deterministic semantic fingerprint for one structured Case record."""
+    return hashlib.sha256(_canonical_json(record)).hexdigest()
+
+
 def _classify_project_file(filename: str, text: str) -> dict:
     """Classify one Project text file without changing it."""
     try:
@@ -114,10 +128,13 @@ def _classify_project_file(filename: str, text: str) -> dict:
             }
 
     if filename in _GENERIC_LEGACY_BASENAMES:
-        return {
+        row = {
             "category": "generic_legacy_known_name",
             "filename": filename,
         }
+        if filename in _GENERIC_TRACKING_SLOT_MAP:
+            row["slot"] = _GENERIC_TRACKING_SLOT_MAP[filename]
+        return row
 
     lowered = filename.lower()
     if "astralium" in lowered or "external" in lowered:
@@ -146,6 +163,133 @@ def _case_validation_finding(
         messages[code],
         details,
     )
+
+
+def _tracking_body(text: str) -> tuple:
+    try:
+        metadata, body = parse_front_matter(text)
+        return metadata, body
+    except DistributionError:
+        return {}, text
+
+
+def _structured_tracking_records(project_files: Mapping[str, object], classified) -> list:
+    records = []
+    for row in classified:
+        slot = row.get("slot")
+        if slot not in _TRACKING_SLOTS:
+            continue
+        if row["category"] not in {
+            "canonical_subject_aware",
+            "formal_legacy_case_1_0",
+            "generic_legacy_known_name",
+        }:
+            continue
+        filename = row["filename"]
+        metadata, body = _tracking_body(project_files[filename])
+        try:
+            parsed = _record_entries(
+                body,
+                legacy_record_ids=(
+                    row["category"] != "canonical_subject_aware"
+                    or metadata.get("case_schema_version") == "1.0"
+                ),
+            )
+        except DistributionError:
+            if row["category"] == "canonical_subject_aware":
+                raise
+            continue
+        source_kind = (
+            "canonical"
+            if row["category"] == "canonical_subject_aware"
+            else "legacy"
+        )
+        for record_id in sorted(parsed):
+            records.append(
+                {
+                    "file": filename,
+                    "slot": slot,
+                    "source_kind": source_kind,
+                    "record_id": record_id,
+                    "record": dict(parsed[record_id]),
+                    "fingerprint": record_fingerprint(parsed[record_id]),
+                }
+            )
+    return records
+
+
+def _first_explicit(record: Mapping[str, object], keys) -> object:
+    for key in keys:
+        if key in record and record[key] not in (None, ""):
+            return record[key]
+    return None
+
+
+def _duplicate_findings(records) -> list:
+    findings = []
+    seen_exact = set()
+    seen_possible = set()
+    for left_index, left in enumerate(records):
+        for right in records[left_index + 1 :]:
+            if left["source_kind"] == right["source_kind"]:
+                continue
+            if left["slot"] != right["slot"]:
+                continue
+            pair_files = tuple(sorted((left["file"], right["file"])))
+            if left["fingerprint"] == right["fingerprint"]:
+                key = (left["slot"], left["fingerprint"], pair_files)
+                if key in seen_exact:
+                    continue
+                seen_exact.add(key)
+                record_ids = sorted({left["record_id"], right["record_id"]})
+                finding = _finding(
+                    "record_duplicate_exact",
+                    "WARN",
+                    pair_files,
+                    "A legacy tracking record exactly duplicates a canonical Case record.",
+                    {
+                        "slot": left["slot"],
+                        "record_ids": record_ids,
+                        "fingerprint": left["fingerprint"],
+                    },
+                )
+                finding["auto_merge_allowed"] = False
+                findings.append(finding)
+                continue
+
+            left_time = _first_explicit(left["record"], _TIME_KEYS)
+            right_time = _first_explicit(right["record"], _TIME_KEYS)
+            left_category = _first_explicit(left["record"], _CATEGORY_KEYS)
+            right_category = _first_explicit(right["record"], _CATEGORY_KEYS)
+            if (
+                left_time is None
+                or right_time is None
+                or left_time != right_time
+                or left_category is None
+                or right_category is None
+                or left_category != right_category
+            ):
+                continue
+            record_ids = tuple(sorted((left["record_id"], right["record_id"])))
+            key = (left["slot"], left_time, left_category, record_ids, pair_files)
+            if key in seen_possible:
+                continue
+            seen_possible.add(key)
+            finding = _finding(
+                "record_possible_semantic_duplicate",
+                "WARN",
+                pair_files,
+                "Records share deterministic time and category metadata but are not identical.",
+                {
+                    "slot": left["slot"],
+                    "record_ids": list(record_ids),
+                    "time_value": left_time,
+                    "category_value": left_category,
+                },
+            )
+            finding["requires_user_resolution"] = True
+            findings.append(finding)
+    return findings
 
 
 def diagnose_case(payload: Mapping[str, object]) -> dict:
@@ -342,6 +486,13 @@ def diagnose_case(payload: Mapping[str, object]) -> dict:
                 "Formal legacy Case 1.0 files are present and require reconciliation review.",
             )
         )
+
+    try:
+        structured_records = _structured_tracking_records(project_files, classified)
+    except DistributionError as exc:
+        findings.append(_case_validation_finding(exc, authoritative_files))
+    else:
+        findings.extend(_duplicate_findings(structured_records))
 
     findings = sorted(
         findings,
