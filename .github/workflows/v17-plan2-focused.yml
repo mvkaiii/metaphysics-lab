@@ -25,4 +25,5 @@ jobs:
         run: |
           python -m unittest \
             tests.test_v17_case_doctor \
-            tests.test_v17_case_reconciliation -v
+            tests.test_v17_case_reconciliation \
+            tests.test_v17_case_doctor_runtime -v
