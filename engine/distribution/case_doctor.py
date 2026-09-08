@@ -529,3 +529,5 @@ def diagnose_case(payload: Mapping[str, object]) -> dict:
     }
     result["diagnostic_digest"] = _diagnostic_digest(result)
     return result
+
+from .case_reconciliation import plan_case_reconciliation
