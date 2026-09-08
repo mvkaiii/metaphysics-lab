@@ -32,6 +32,63 @@ class CapabilityManifestV1Tests(unittest.TestCase):
         for capability_id, capability in manifest["capabilities"].items():
             self.assertTrue(required <= set(capability), capability_id)
 
+    def test_v16_capability_maturity_and_routing_are_frozen(self):
+        capabilities = load_capability_manifest()["capabilities"]
+        expected = {
+            "ziwei.flow_month_palaces": ("implemented", "stable", "default"),
+            "ziwei.flow_day_palaces": ("implemented", "experimental", "on_demand"),
+            "ziwei.flow_hour_palaces": ("implemented", "experimental", "on_demand"),
+            "ziwei.flowing_stars": ("implemented", "experimental", "on_demand"),
+            "distribution.prospective_forecast_governance": (
+                "implemented",
+                "experimental",
+                "on_demand",
+            ),
+            "distribution.interpretation_contract": (
+                "implemented",
+                "experimental",
+                "on_demand",
+            ),
+        }
+        for capability_id, frozen in expected.items():
+            capability = capabilities[capability_id]
+            actual = (
+                capability["implementation"],
+                capability["maturity"],
+                capability["routing"],
+            )
+            self.assertEqual(actual, frozen, capability_id)
+
+    def test_ziwei_scope_specific_capabilities_expose_supported_scopes(self):
+        capabilities = load_capability_manifest()["capabilities"]
+        expected = {
+            "ziwei.flow_month_palaces": ["monthly"],
+            "ziwei.flow_day_palaces": ["daily"],
+            "ziwei.flow_hour_palaces": ["hourly"],
+            "ziwei.flow_month_stem": ["monthly"],
+            "ziwei.flow_day_stem": ["daily"],
+            "ziwei.flow_hour_stem": ["hourly"],
+            "ziwei.flow_month_transformations": ["monthly"],
+            "ziwei.flow_day_transformations": ["daily"],
+            "ziwei.flow_hour_transformations": ["hourly"],
+            "ziwei.flow_month_flying": ["monthly"],
+            "ziwei.flow_day_flying": ["daily"],
+            "ziwei.flow_hour_flying": ["hourly"],
+            "ziwei.flowing_stars": [
+                "decadal",
+                "yearly",
+                "monthly",
+                "daily",
+                "hourly",
+            ],
+        }
+        for capability_id, scopes in expected.items():
+            self.assertEqual(
+                capabilities[capability_id].get("supported_scopes"),
+                scopes,
+                capability_id,
+            )
+
     def test_validator_normalizes_json_safe_sequences(self):
         capability = {
             "id": "synthetic.capability",
