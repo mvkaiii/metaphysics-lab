@@ -342,6 +342,20 @@ control：`strong_control / acceptable_control` 可描述為相對低活化；`r
 8. AI 依 contract 轉成自然語言解讀。
 9. 當次 known reality／現實背景可以讓策略更具體，但只作用在策略層，不回寫 canonical contract，不得改變 ranking、不得提高 specificity、不得把 known reality 視為 prospective hit。
 
+## 5.7 Prospective Validation 2.0 context 分流
+
+對需要正式追蹤、日後可驗證的預測，在揭露結果、讀取驗證事件或進入事件校準之前，必須先呼叫 `classify_validation_context` 固定驗證情境；分類結果與原本的 prospective forecast lock 並存，不取代 v1.5 lock。
+
+- `clean_prospective`：只有提問與鎖定時結果仍未知、且預測窗真正位於 knowledge cutoff 之後的前向預測。只有此類在完成 adjudication 後可以進入 **clean prospective denominator**。
+- `conditional_prospective`：未來仍有不確定性，但在 lock 時已有部分或完整已知條件／安排。必須與乾淨前瞻結果分開統計，不得包裝成純盲判命中。
+- `hidden_existing_reality`：被問的事實在 knowledge cutoff 前已經存在，只是提問時尚未知。這是辨識既存現實，不是未來預測，不得進 clean prospective denominator。
+- `retrospective_calibration`：預測窗與事實都屬歷史回顧／校準用途，只能作校準證據，不得進 clean prospective denominator。
+
+已知安排、既存現實或歷史事件不得被靜默改標為 `clean_prospective`；若時間窗跨越 knowledge cutoff，先拆分或 fail closed，不得用單一紀錄混算。
+
+結果彙總使用 `build_validation_summary`。只有已完成驗證且 context 為 `clean_prospective` 的紀錄可形成乾淨分母；`pending` 與 `cannot_recall` 不得算入可評分分母。現階段不得從小樣本宣稱模型優於基準，應保留 `superiority_claim_status = "not_established"` 與 `accuracy_rate = None`，直到另有經核准的統計規則。
+
+
 若當次 contract 是 Interpretation v2 且包含 `coordination_relations`：
 
 - `coordination_relation` 是 **Python authority**。AI 僅負責把 Python 已計算的 coordination 語義轉成人可讀文字，不得從八字／紫微 raw evidence 重新判定 `coordination_relation`，也不得用 legacy `cross_system_relation` 覆蓋。
