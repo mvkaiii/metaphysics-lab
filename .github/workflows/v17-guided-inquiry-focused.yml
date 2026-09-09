@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   focused:
@@ -31,10 +31,51 @@ jobs:
           python -m pip install -r requirements.txt
           python -m pip install pytest==8.4.2
 
-      - name: Guided Inquiry runtime qualification
+      - name: Apply Task 6 runtime route and verify
         run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          constants = Path("engine/distribution/constants.py")
+          text = constants.read_text(encoding="utf-8")
+          old = '    "build_validation_summary",\n    "interpret_structural_evidence",'
+          new = '    "build_validation_summary",\n    "suggest_inquiries",\n    "interpret_structural_evidence",'
+          if new not in text:
+              if text.count(old) != 1:
+                  raise SystemExit("constants anchor mismatch")
+              constants.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+          runtime = Path("engine/distribution/runtime.py")
+          text = runtime.read_text(encoding="utf-8")
+          route = '        if action == "suggest_inquiries":\n            from .guided_inquiry import suggest_inquiries\n            return _ok(action, suggest_inquiries(request))\n'
+          if route not in text:
+              start = text.find('        if action in ("classify_validation_context", "build_validation_summary"):')
+              if start < 0:
+                  raise SystemExit("runtime validation anchor missing")
+              marker = '        if action == "interpret_structural_evidence":\n'
+              insert_at = text.find(marker, start)
+              if insert_at < 0:
+                  raise SystemExit("runtime insertion marker missing")
+              runtime.write_text(text[:insert_at] + route + text[insert_at:], encoding="utf-8")
+          PY
           python -m unittest \
             tests.test_v17_guided_inquiry \
             tests.test_v17_guided_inquiry_runtime \
             tests.test_v17_capability_manifest \
             tests.test_distribution_runtime_info -v
+          python -m compileall -q engine/distribution tests/test_v17_guided_inquiry_runtime.py
+          changed="$(git diff --name-only)"
+          if [ -n "$changed" ]; then
+            expected="engine/distribution/constants.py
+          engine/distribution/runtime.py"
+            if [ "$changed" != "$expected" ]; then
+              echo "Unexpected changed files:"
+              printf '%s\n' "$changed"
+              exit 1
+            fi
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add engine/distribution/constants.py engine/distribution/runtime.py
+            git commit -m "feat: expose Guided Inquiry runtime action"
+            git push origin HEAD:feature/v1.7-guided-inquiry
+          fi
