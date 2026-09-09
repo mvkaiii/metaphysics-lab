@@ -203,13 +203,17 @@ def suppression_reason(payload: Mapping[str, object]):
 
 def _entry_candidates(payload):
     rows = []
-    if payload["case_health"] == "WARN" and payload["case_integrity_action_available"]:
+    has_integrity = payload["case_health"] == "WARN" and payload["case_integrity_action_available"]
+    if has_integrity:
         rows.append(_row("integrity", None, None, "broad_domain", "broad_domain", "case_integrity_action"))
+
     rows.extend([
         _row("overview", None, "yearly", "broad_domain", "broad_domain", "entry_overview"),
         _row("deep_dive", "career", "natal", "broad_domain", "broad_domain", "entry_domain_career"),
-        _row("deep_dive", "finance", "natal", "broad_domain", "broad_domain", "entry_domain_finance"),
     ])
+    if not has_integrity:
+        rows.append(_row("deep_dive", "finance", "natal", "broad_domain", "broad_domain", "entry_domain_finance"))
+
     if payload["pending_forecast_available"]:
         rows.append(_row("validation", None, None, "broad_domain", "broad_domain", "pending_forecast_tracking"))
     return rows
