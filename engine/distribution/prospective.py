@@ -17,6 +17,8 @@ from .errors import DistributionError
 
 
 METHOD_VERSION = "lin_tianji_v1.5-exp"
+V2_METHOD_VERSION = "lin_tianji_v1.7-validation-v2-exp"
+V2_CLAIM_CONTRACT_VERSION = "2.0"
 
 _QUERY_ANCHOR_FIELDS = {
     "query_anchor_at",
@@ -53,6 +55,25 @@ _REQUIRED_CLAIM_FIELDS = {
 }
 _OPTIONAL_CLAIM_FIELDS = {"priority", "partial_if"}
 _CLAIM_FIELDS = _REQUIRED_CLAIM_FIELDS | _OPTIONAL_CLAIM_FIELDS
+_V2_REQUIRED_CLAIM_FIELDS = {
+    "claim_id",
+    "forecast_window",
+    "primary_domain",
+    "event_family",
+    "prediction",
+    "matched_if",
+    "not_matched_if",
+    "evidence_layers",
+    "evidence_time_scales",
+    "capability_maturity",
+    "confidence",
+    "knowledge_cutoff_at",
+    "context_class",
+    "clean_accuracy_eligible",
+    "conditional_accuracy_eligible",
+    "validation_context_input",
+}
+_V2_CLAIM_FIELDS = _V2_REQUIRED_CLAIM_FIELDS | _OPTIONAL_CLAIM_FIELDS
 _OUTCOME_FIELDS = {"observed_actual", "evaluation", "failure_mode"}
 _CONFIDENCE = {"high", "medium", "low"}
 _PRIORITIES = {"primary", "secondary"}
@@ -83,6 +104,14 @@ def _invalid_forecast(message: str, **details: object) -> DistributionError:
 
 def _invalid_validation_context(message: str, **details: object) -> DistributionError:
     return DistributionError("invalid_validation_context", message, details)
+
+
+def _validation_context_mismatch(message: str, **details: object) -> DistributionError:
+    return DistributionError("validation_context_mismatch", message, details)
+
+
+def _retrospective_claim_not_lockable(message: str, **details: object) -> DistributionError:
+    return DistributionError("retrospective_claim_not_lockable", message, details)
 
 
 def _text(value: object, field: str) -> str:
@@ -466,11 +495,153 @@ def validate_forecast_claim(claim: Mapping[str, object], anchor: Mapping[str, ob
     return _json_normalize(normalized, "invalid_forecast_claim")
 
 
-def lock_prospective_forecast(payload: Mapping[str, object]) -> dict:
-    """Freeze a deterministic, immutable-by-digest pre-outcome forecast record."""
-    if not isinstance(payload, Mapping) or set(payload) != {"anchor", "claims"}:
-        raise _invalid_forecast("prospective forecast payload must contain exactly anchor and claims")
+def _normalize_v2_claim_common(claim: Mapping[str, object], anchor: Mapping[str, object]) -> dict:
+    if not isinstance(claim, Mapping):
+        raise _invalid_claim("forecast claim must be a mapping")
+    if not isinstance(anchor, Mapping):
+        raise _invalid_claim("anchor must be a resolved query-anchor mapping")
 
+    keys = set(claim)
+    forbidden = sorted(keys & _OUTCOME_FIELDS)
+    missing = sorted(_V2_REQUIRED_CLAIM_FIELDS - keys)
+    unknown = sorted(keys - _V2_CLAIM_FIELDS)
+    if forbidden or missing or unknown:
+        raise _invalid_claim(
+            "v2 forecast claim fields do not match the fixed pre-outcome contract",
+            forbidden_outcome_fields=forbidden,
+            missing_fields=missing,
+            unknown_fields=unknown,
+        )
+
+    try:
+        _, zone = _zone(anchor.get("query_timezone"))
+        anchor_cutoff = _aware_iso(anchor.get("knowledge_cutoff_at"), "knowledge_cutoff_at", zone)
+    except DistributionError as exc:
+        raise _invalid_claim("anchor is not a valid resolved query anchor") from exc
+
+    if anchor.get("status") != "ok":
+        raise _invalid_claim("claim requires an active prospective window")
+
+    claim_id = _claim_text(claim.get("claim_id"), "claim_id")
+    primary_domain = _claim_text(claim.get("primary_domain"), "primary_domain")
+    event_family = _claim_text(claim.get("event_family"), "event_family")
+    prediction = _claim_text(claim.get("prediction"), "prediction")
+    matched_if = _claim_text(claim.get("matched_if"), "matched_if")
+    not_matched_if = _claim_text(claim.get("not_matched_if"), "not_matched_if")
+
+    priority = None
+    partial_if = None
+    if "priority" in claim:
+        priority = _claim_text(claim.get("priority"), "priority")
+        if priority not in _PRIORITIES:
+            raise _invalid_claim("unsupported priority", value=priority)
+    if "partial_if" in claim:
+        partial_if = _claim_text(claim.get("partial_if"), "partial_if")
+
+    forecast_window = claim.get("forecast_window")
+    if not isinstance(forecast_window, Mapping) or set(forecast_window) != {"start", "end"}:
+        raise _invalid_claim("forecast_window must contain exactly start and end")
+    window_start = _claim_datetime(forecast_window.get("start"), "forecast_window.start", zone)
+    window_end = _claim_datetime(forecast_window.get("end"), "forecast_window.end", zone)
+    if window_start >= window_end:
+        raise _invalid_claim("forecast_window.start must be earlier than forecast_window.end")
+
+    claim_cutoff = _claim_datetime(claim.get("knowledge_cutoff_at"), "knowledge_cutoff_at", zone)
+    if claim_cutoff != anchor_cutoff:
+        raise _invalid_claim("claim knowledge_cutoff_at must match the resolved query anchor")
+
+    capability_maturity = _claim_text(claim.get("capability_maturity"), "capability_maturity")
+    confidence = _claim_text(claim.get("confidence"), "confidence")
+    if capability_maturity not in _CAPABILITY_MATURITY:
+        raise _invalid_claim("unsupported capability_maturity", value=capability_maturity)
+    if confidence not in _CONFIDENCE:
+        raise _invalid_claim("unsupported confidence", value=confidence)
+
+    normalized = {
+        "claim_id": claim_id,
+        "forecast_window": {
+            "start": window_start.isoformat(),
+            "end": window_end.isoformat(),
+        },
+        "primary_domain": primary_domain,
+        "event_family": event_family,
+        "prediction": prediction,
+        "matched_if": matched_if,
+        "not_matched_if": not_matched_if,
+        "evidence_layers": _claim_sequence(claim.get("evidence_layers"), "evidence_layers"),
+        "evidence_time_scales": _claim_sequence(claim.get("evidence_time_scales"), "evidence_time_scales"),
+        "capability_maturity": capability_maturity,
+        "confidence": confidence,
+        "knowledge_cutoff_at": anchor_cutoff.isoformat(),
+    }
+    if priority is not None:
+        normalized["priority"] = priority
+    if partial_if is not None:
+        normalized["partial_if"] = partial_if
+    return normalized
+
+
+def validate_forecast_claim_v2(claim: Mapping[str, object], anchor: Mapping[str, object]) -> dict:
+    """Validate one v2 claim and recompute its context classification."""
+    normalized = _normalize_v2_claim_common(claim, anchor)
+
+    context_input = claim.get("validation_context_input")
+    try:
+        classification = classify_validation_context(context_input)
+    except DistributionError as exc:
+        raise _invalid_claim(
+            "validation_context_input is invalid",
+            validation_context_error=exc.code,
+        ) from exc
+
+    declared = {
+        "context_class": claim.get("context_class"),
+        "clean_accuracy_eligible": claim.get("clean_accuracy_eligible"),
+        "conditional_accuracy_eligible": claim.get("conditional_accuracy_eligible"),
+    }
+    expected = {
+        "context_class": classification["context_class"],
+        "clean_accuracy_eligible": classification["clean_accuracy_eligible"],
+        "conditional_accuracy_eligible": classification["conditional_accuracy_eligible"],
+    }
+    if declared != expected:
+        raise _validation_context_mismatch(
+            "declared validation context does not match recomputed context",
+            declared=declared,
+            expected=expected,
+        )
+    if not classification["prospective_lock_eligible"]:
+        raise _retrospective_claim_not_lockable(
+            "retrospective calibration claims cannot enter a prospective lock",
+            context_class=classification["context_class"],
+        )
+
+    normalized.update(expected)
+    normalized["validation_context_input"] = _json_normalize(
+        context_input,
+        "invalid_forecast_claim",
+    )
+    return _json_normalize(normalized, "invalid_forecast_claim")
+
+
+def _validate_claim_volume(normalized_claims: Sequence[Mapping[str, object]], *, label: str) -> None:
+    enhanced = ["priority" in claim or "partial_if" in claim for claim in normalized_claims]
+    if any(enhanced):
+        if not all("priority" in claim and "partial_if" in claim for claim in normalized_claims):
+            raise _invalid_forecast(
+                "%s claims must provide priority and partial_if for every claim" % label
+            )
+        primary_count = sum(claim["priority"] == "primary" for claim in normalized_claims)
+        secondary_count = sum(claim["priority"] == "secondary" for claim in normalized_claims)
+        if primary_count > 3 or secondary_count > 2:
+            raise _invalid_forecast(
+                "%s claim volume exceeds the fixed 3 primary / 2 secondary boundary" % label,
+                primary_count=primary_count,
+                secondary_count=secondary_count,
+            )
+
+
+def _lock_v1(payload: Mapping[str, object]) -> dict:
     anchor = payload.get("anchor")
     if not isinstance(anchor, Mapping):
         raise _invalid_forecast("anchor must be a resolved query-anchor mapping")
@@ -527,3 +698,75 @@ def lock_prospective_forecast(payload: Mapping[str, object]) -> dict:
         **locked_body,
         "canonical_digest": digest,
     }
+
+
+def _lock_v2(payload: Mapping[str, object]) -> dict:
+    if payload.get("claim_contract_version") != V2_CLAIM_CONTRACT_VERSION:
+        raise _invalid_forecast(
+            "unsupported claim_contract_version",
+            claim_contract_version=payload.get("claim_contract_version"),
+        )
+
+    anchor = payload.get("anchor")
+    if not isinstance(anchor, Mapping):
+        raise _invalid_forecast("anchor must be a resolved query-anchor mapping")
+    normalized_anchor = _validate_resolved_anchor(anchor)
+
+    claims = payload.get("claims")
+    if isinstance(claims, (str, bytes)) or not isinstance(claims, Sequence) or not claims:
+        raise _invalid_forecast("claims must be a non-empty sequence")
+
+    normalized_claims = []
+    claim_ids = set()
+    for claim in claims:
+        if not isinstance(claim, Mapping):
+            raise _invalid_forecast("each claim must be a mapping")
+        try:
+            normalized = validate_forecast_claim_v2(claim, normalized_anchor)
+        except DistributionError as exc:
+            if exc.code in {"validation_context_mismatch", "retrospective_claim_not_lockable"}:
+                raise
+            raise _invalid_forecast(
+                "prospective forecast contains an invalid v2 claim",
+                claim_id=claim.get("claim_id"),
+                claim_error=exc.code,
+            ) from exc
+        claim_id = normalized["claim_id"]
+        if claim_id in claim_ids:
+            raise _invalid_forecast("duplicate claim_id", claim_id=claim_id)
+        claim_ids.add(claim_id)
+        normalized_claims.append(normalized)
+
+    _validate_claim_volume(normalized_claims, label="v2")
+
+    locked_body = {
+        "method_version": V2_METHOD_VERSION,
+        "claim_contract_version": V2_CLAIM_CONTRACT_VERSION,
+        "anchor": normalized_anchor,
+        "claims": normalized_claims,
+    }
+    digest = hashlib.sha256(
+        _canonical_bytes(locked_body, "invalid_prospective_forecast")
+    ).hexdigest()
+    return {
+        "status": "locked",
+        **locked_body,
+        "canonical_digest": digest,
+    }
+
+
+def lock_prospective_forecast(payload: Mapping[str, object]) -> dict:
+    """Freeze a deterministic, immutable-by-digest pre-outcome forecast record."""
+    if not isinstance(payload, Mapping):
+        raise _invalid_forecast("prospective forecast payload must be a mapping")
+
+    keys = set(payload)
+    if keys == {"anchor", "claims"}:
+        return _lock_v1(payload)
+    if keys == {"anchor", "claims", "claim_contract_version"}:
+        return _lock_v2(payload)
+    raise _invalid_forecast(
+        "prospective forecast payload fields do not match a supported contract",
+        unknown_fields=sorted(keys - {"anchor", "claims", "claim_contract_version"}),
+        present_fields=sorted(keys),
+    )
