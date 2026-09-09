@@ -40,6 +40,13 @@ _ANSWER_FIELDS = frozenset({
     "related_domains",
 })
 _SCOPE_ORDER = {"yearly": 0, "monthly": 1, "daily": 2, "hourly": 3}
+_SUPPRESSION_BLOCKING_ORDER = (
+    "runtime_error",
+    "required_input",
+    "historical_disclosure",
+    "mutation_confirmation",
+    "non_metaphysics_utility",
+)
 
 
 def _invalid(message, **details):
@@ -178,14 +185,20 @@ def _suppressed(reason):
     }
 
 
-def _suppression_reason(payload):
+def _suppression_reason_normalized(payload):
     if payload["user_opted_out"]:
         return "user_opted_out"
     if payload["case_health"] == "BLOCKED":
         return "case_blocked"
-    if payload["blocking_state"] != "none":
-        return payload["blocking_state"]
+    for state in _SUPPRESSION_BLOCKING_ORDER:
+        if payload["blocking_state"] == state:
+            return state
     return None
+
+
+def suppression_reason(payload: Mapping[str, object]):
+    """Return the first applicable suppression reason for a valid policy payload."""
+    return _suppression_reason_normalized(_normalize(payload))
 
 
 def _entry_candidates(payload):
@@ -249,7 +262,7 @@ def _unique(rows):
 
 def suggest_inquiries(payload: Mapping[str, object]) -> dict:
     normalized = _normalize(payload)
-    reason = _suppression_reason(normalized)
+    reason = _suppression_reason_normalized(normalized)
     if reason is not None:
         return _suppressed(reason)
 
