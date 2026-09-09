@@ -48,6 +48,15 @@ class GuidedInquiryPolicyTests(unittest.TestCase):
         ]
         self.assertEqual(len(keys), len(set(keys)))
 
+    def test_warn_entry_with_pending_forecast_reserves_fourth_for_validation(self):
+        payload = self.scenario("GI-02")
+        payload["pending_forecast_available"] = True
+        result = suggest_inquiries(payload)
+        self.assertFalse(result["suppressed"])
+        self.assertEqual(len(result["suggestions"]), 4)
+        self.assertEqual(result["suggestions"][0]["type"], "integrity")
+        self.assertEqual(result["suggestions"][3]["type"], "validation")
+
     def test_post_answer_career_starts_with_deep_dive(self):
         result = suggest_inquiries(self.scenario("GI-04"))
         self.assertFalse(result["suppressed"])
