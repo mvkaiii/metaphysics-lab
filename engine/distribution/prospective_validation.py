@@ -30,10 +30,22 @@ _CONTEXT_INPUT_FIELDS = frozenset({
     "knowledge_state_at_lock",
     "prediction_window",
 })
+_VERIFICATION_STATES = frozenset({"pending", "matched", "partial", "not_matched", "cannot_recall"})
+_CONTEXT_OUTPUT_FIELDS = frozenset({
+    "status", "classifier_version", "forecast_id", "locked_at",
+    "knowledge_cutoff_at", "question_mode", "knowledge_state_at_lock",
+    "prediction_window", "context_class", "clean_denominator_eligible",
+    "adjudication_earliest_at", "outcome_status_at_lock", "reason_code",
+    "canonical_digest",
+})
 
 
 def _invalid(message, **details):
     return DistributionError("invalid_validation_context", message, details)
+
+
+def _invalid_summary(message, **details):
+    return DistributionError("invalid_validation_summary", message, details)
 
 
 def _text(value, field):
@@ -131,3 +143,71 @@ def classify_validation_context(payload: Mapping[str, object]) -> dict:
         "reason_code": reason_code,
     }
     return {**body, "canonical_digest": _digest(body)}
+
+
+def _verify_context(value):
+    if not isinstance(value, Mapping) or set(value) != _CONTEXT_OUTPUT_FIELDS:
+        raise _invalid_summary("validation_context fields do not match classifier output")
+    raw = {
+        "forecast_id": value["forecast_id"],
+        "locked_at": value["locked_at"],
+        "knowledge_cutoff_at": value["knowledge_cutoff_at"],
+        "question_mode": value["question_mode"],
+        "knowledge_state_at_lock": value["knowledge_state_at_lock"],
+        "prediction_window": dict(value["prediction_window"]),
+    }
+    try:
+        recomputed = classify_validation_context(raw)
+    except DistributionError as exc:
+        raise _invalid_summary("validation_context no longer satisfies classifier contract") from exc
+    if recomputed != dict(value):
+        raise _invalid_summary("validation_context digest or classified content was modified")
+    return recomputed
+
+
+def build_validation_summary(payload: Mapping[str, object]) -> dict:
+    if not isinstance(payload, Mapping) or set(payload) != {"records"}:
+        raise _invalid_summary("validation summary payload must contain exactly records")
+    records = payload.get("records")
+    if not isinstance(records, (list, tuple)) or not records:
+        raise _invalid_summary("records must be a non-empty sequence")
+
+    clean = {"scorable_count": 0, "matched_count": 0, "partial_count": 0, "not_matched_count": 0}
+    excluded = {
+        "conditional_prospective": 0,
+        "hidden_existing_reality": 0,
+        "retrospective_calibration": 0,
+    }
+    pending_count = 0
+    cannot_recall_count = 0
+
+    for index, record in enumerate(records):
+        if not isinstance(record, Mapping) or set(record) != {"validation_context", "verification_state"}:
+            raise _invalid_summary("each record must contain validation_context and verification_state", record_index=index)
+        context = _verify_context(record.get("validation_context"))
+        state = record.get("verification_state")
+        if state not in _VERIFICATION_STATES:
+            raise _invalid_summary("unsupported verification_state", record_index=index, verification_state=state)
+        if state == "pending":
+            pending_count += 1
+            continue
+        if state == "cannot_recall":
+            cannot_recall_count += 1
+            continue
+        if context["context_class"] != "clean_prospective":
+            excluded[context["context_class"]] += 1
+            continue
+        if context["clean_denominator_eligible"] is not True:
+            raise _invalid_summary("clean context must explicitly be denominator eligible", record_index=index)
+        clean["scorable_count"] += 1
+        clean[state + "_count"] += 1
+
+    return {
+        "status": "validation_summary",
+        "clean_denominator": clean,
+        "excluded_context_counts": excluded,
+        "pending_count": pending_count,
+        "cannot_recall_count": cannot_recall_count,
+        "accuracy_rate": None,
+        "superiority_claim_status": "not_established",
+    }
