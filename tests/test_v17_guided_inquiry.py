@@ -2,6 +2,7 @@ import json
 import unittest
 from copy import deepcopy
 from pathlib import Path
+from unittest.mock import patch
 
 from engine.distribution.errors import DistributionError
 from engine.distribution.guided_inquiry import suppression_reason, suggest_inquiries
@@ -72,6 +73,53 @@ class GuidedInquiryPolicyTests(unittest.TestCase):
         result = suggest_inquiries(self.scenario("GI-06"))
         self.assertFalse(result["suppressed"])
         self.assertIn("validation", [row["type"] for row in result["suggestions"]])
+
+    def test_post_answer_respects_specificity_time_and_related_domain_inputs(self):
+        payload = self.scenario("GI-04")
+        result = suggest_inquiries(payload)
+        self.assertFalse(result["suppressed"])
+        specificity_order = {"broad_domain": 0, "event_family": 1, "event_form": 2}
+        ceiling = specificity_order[payload["current_answer"]["allowed_specificity"]]
+        for row in result["suggestions"]:
+            self.assertLessEqual(specificity_order[row["requested_specificity"]], ceiling)
+            if row["type"] == "time_refine":
+                self.assertIn(row["target_scope"], payload["current_answer"]["time_refinement_scopes"])
+            if row["type"] == "related_domain":
+                self.assertIn(row["domain"], payload["current_answer"]["related_domains"])
+
+    def test_specificity_gate_filters_illegal_candidate_before_selection(self):
+        payload = self.scenario("GI-04")
+        injected = [
+            {
+                "type": "deep_dive",
+                "domain": "career",
+                "target_scope": "yearly",
+                "requested_specificity": "event_family",
+                "max_specificity": "event_family",
+                "reason_code": "legal_one",
+            },
+            {
+                "type": "deep_dive",
+                "domain": "career",
+                "target_scope": "yearly",
+                "requested_specificity": "event_form",
+                "max_specificity": "event_family",
+                "reason_code": "illegal_inflation",
+            },
+            {
+                "type": "related_domain",
+                "domain": "finance",
+                "target_scope": "yearly",
+                "requested_specificity": "broad_domain",
+                "max_specificity": "event_family",
+                "reason_code": "legal_two",
+            },
+        ]
+        with patch("engine.distribution.guided_inquiry._post_answer_candidates", return_value=injected):
+            result = suggest_inquiries(payload)
+        self.assertTrue(result["suppressed"])
+        self.assertEqual(result["suppression_reason"], "insufficient_legal_suggestions")
+        self.assertEqual(result["suggestions"], [])
 
     def test_hard_blocking_scenarios_are_suppressed(self):
         for scenario_id in ("GI-07", "GI-08", "GI-09", "GI-10"):
