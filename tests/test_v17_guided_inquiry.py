@@ -121,6 +121,42 @@ class GuidedInquiryPolicyTests(unittest.TestCase):
         self.assertEqual(result["suppression_reason"], "insufficient_legal_suggestions")
         self.assertEqual(result["suggestions"], [])
 
+    def test_time_refine_is_removed_when_manifest_scope_is_unavailable(self):
+        payload = self.scenario("GI-04")
+        unavailable_manifest = {
+            "manifest_version": "1.0",
+            "capabilities": {
+                "ziwei.flow_month_palaces": {
+                    "id": "ziwei.flow_month_palaces",
+                    "implementation": "not_implemented",
+                    "maturity": "stable",
+                    "routing": "unavailable",
+                    "supported_scopes": ["monthly"],
+                }
+            },
+        }
+        with patch(
+            "engine.distribution.manifest.load_capability_manifest",
+            return_value=unavailable_manifest,
+        ):
+            result = suggest_inquiries(payload)
+        self.assertTrue(result["suppressed"])
+        self.assertEqual(result["suppression_reason"], "insufficient_legal_suggestions")
+        self.assertEqual(result["suggestions"], [])
+
+    def test_experimental_time_refine_preserves_maturity_and_specificity_ceiling(self):
+        payload = self.scenario("GI-04")
+        payload["current_answer"]["time_refinement_scopes"] = ["daily"]
+        result = suggest_inquiries(payload)
+        self.assertFalse(result["suppressed"])
+        refinements = [row for row in result["suggestions"] if row["type"] == "time_refine"]
+        self.assertEqual(len(refinements), 1)
+        refinement = refinements[0]
+        self.assertEqual(refinement["target_scope"], "daily")
+        self.assertEqual(refinement["capability_maturity"], "experimental")
+        self.assertEqual(refinement["max_specificity"], "event_family")
+        self.assertEqual(refinement["requested_specificity"], "event_family")
+
     def test_hard_blocking_scenarios_are_suppressed(self):
         for scenario_id in ("GI-07", "GI-08", "GI-09", "GI-10"):
             with self.subTest(scenario_id=scenario_id):
