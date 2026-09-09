@@ -105,23 +105,17 @@ class DistributionProspectiveEvaluationTests(unittest.TestCase):
         self.assertEqual(result["evaluation"]["evaluated_at"], "2026-10-01T09:00:00+08:00")
         self.assertTrue(result["evaluation"]["scorable"])
 
-    def test_frozen_v1_lock_is_accepted_without_mutation(self):
+    def test_frozen_v1_evaluation_output_is_exact(self):
         evaluation = self._evaluation()
         fixture = _load_frozen_v1_fixture()
-        locked = fixture["expected_locked"]
+        payload = {
+            "locked_forecast": fixture["expected_locked"],
+            **fixture["evaluation_input"],
+        }
 
-        result = evaluation.evaluate_locked_claim(
-            {
-                "locked_forecast": locked,
-                "claim_id": "SYN-V1-001",
-                "verification_state": "matched",
-                "observed_actual": "A fictional project role changed during the frozen window.",
-                "evaluated_at": "2026-10-21T09:00:00+08:00",
-            }
-        )
+        result = evaluation.evaluate_locked_claim(payload)
 
-        self.assertEqual(result["locked_forecast_digest"], fixture["expected_canonical_digest"])
-        self.assertEqual(result["claim"], locked["claims"][0])
+        self.assertEqual(result, fixture["expected_evaluation"])
 
     def test_evaluation_rejects_locked_forecast_whose_prediction_was_changed_after_lock(self):
         evaluation = self._evaluation()
