@@ -51,7 +51,20 @@ _REQUIRED_FIELDS = frozenset(
     }
 )
 _OPTIONAL_FIELDS = frozenset({"notes", "failure_mode", "failure_evidence"})
-_LOCK_FIELDS = frozenset({"status", "method_version", "anchor", "claims", "canonical_digest"})
+_V1_LOCK_FIELDS = frozenset({"status", "method_version", "anchor", "claims", "canonical_digest"})
+_V2_LOCK_FIELDS = frozenset(
+    {"status", "method_version", "claim_contract_version", "anchor", "claims", "canonical_digest"}
+)
+_V2_CONTEXT_BUCKETS = {
+    "clean_prospective": "clean_prospective",
+    "conditional_prospective": "conditional_prospective",
+    "hidden_existing_reality": "hidden_existing_reality_research",
+}
+_VALIDATION_SUMMARY_BUCKETS = (
+    "clean_prospective",
+    "conditional_prospective",
+    "hidden_existing_reality_research",
+)
 
 
 def _invalid(message: str, **details: object) -> DistributionError:
@@ -137,24 +150,43 @@ def _failure_attribution(payload: Mapping[str, object], verification_state: str)
 
 
 def _verified_locked_forecast(value: object) -> dict:
-    if not isinstance(value, Mapping) or set(value) != _LOCK_FIELDS:
-        raise _invalid("locked_forecast fields do not match the Phase 1 lock contract")
+    if not isinstance(value, Mapping):
+        raise _invalid("locked_forecast must be a mapping")
+
+    fields = set(value)
+    if fields == _V1_LOCK_FIELDS:
+        recompute_payload = {
+            "anchor": value.get("anchor"),
+            "claims": value.get("claims"),
+        }
+    elif fields == _V2_LOCK_FIELDS:
+        recompute_payload = {
+            "anchor": value.get("anchor"),
+            "claims": value.get("claims"),
+            "claim_contract_version": value.get("claim_contract_version"),
+        }
+    else:
+        raise _invalid("locked_forecast fields do not match a supported prospective lock contract")
+
     if value.get("status") != "locked":
         raise _invalid("locked_forecast must have status locked")
 
     try:
-        recomputed = lock_prospective_forecast(
-            {
-                "anchor": value.get("anchor"),
-                "claims": value.get("claims"),
-            }
-        )
+        recomputed = lock_prospective_forecast(recompute_payload)
     except DistributionError as exc:
-        raise _invalid("locked_forecast no longer validates against the Phase 1 contract") from exc
+        raise _invalid("locked_forecast no longer validates against its prospective lock contract") from exc
 
     if recomputed != dict(value):
         raise _invalid("locked_forecast digest or immutable prediction content does not match")
     return recomputed
+
+
+def _v2_scoring_bucket(claim: Mapping[str, object]) -> str:
+    context_class = claim.get("context_class")
+    scoring_bucket = _V2_CONTEXT_BUCKETS.get(context_class)
+    if scoring_bucket is None:
+        raise _invalid("v2 locked claim has unsupported validation context", context_class=context_class)
+    return scoring_bucket
 
 
 def evaluate_locked_claim(payload: Mapping[str, object]) -> dict:
@@ -200,18 +232,24 @@ def evaluate_locked_claim(payload: Mapping[str, object]) -> dict:
         )
     failure_mode, failure_evidence = _failure_attribution(payload, verification_state)
 
-    clean_eligible = (
-        claim.get("contamination_state") == "clean_prospective"
-        and claim.get("evaluation_eligibility") == "clean_scorable"
-    )
-    scorable = clean_eligible and verification_state != "cannot_recall"
-
-    if verification_state == "cannot_recall":
-        exclusion_reason = "cannot_recall"
-    elif not clean_eligible:
-        exclusion_reason = claim.get("evaluation_eligibility") or "excluded_from_clean_accuracy"
+    is_v2 = locked.get("claim_contract_version") == "2.0"
+    if is_v2:
+        scoring_bucket = _v2_scoring_bucket(claim)
+        scorable = verification_state != "cannot_recall"
+        exclusion_reason = "cannot_recall" if verification_state == "cannot_recall" else None
     else:
-        exclusion_reason = None
+        clean_eligible = (
+            claim.get("contamination_state") == "clean_prospective"
+            and claim.get("evaluation_eligibility") == "clean_scorable"
+        )
+        scorable = clean_eligible and verification_state != "cannot_recall"
+
+        if verification_state == "cannot_recall":
+            exclusion_reason = "cannot_recall"
+        elif not clean_eligible:
+            exclusion_reason = claim.get("evaluation_eligibility") or "excluded_from_clean_accuracy"
+        else:
+            exclusion_reason = None
 
     evaluation = {
         "verification_state": verification_state,
@@ -222,6 +260,8 @@ def evaluate_locked_claim(payload: Mapping[str, object]) -> dict:
         "failure_mode": failure_mode,
         "failure_evidence": failure_evidence,
     }
+    if is_v2:
+        evaluation["scoring_bucket"] = scoring_bucket
     if "notes" in payload:
         evaluation["notes"] = _text(payload.get("notes"), "notes")
 
@@ -230,6 +270,84 @@ def evaluate_locked_claim(payload: Mapping[str, object]) -> dict:
         "locked_forecast_digest": locked["canonical_digest"],
         "claim": claim,
         "evaluation": evaluation,
+    }
+
+
+def build_validation_context_summary(records: object) -> dict:
+    """Summarize v2 evaluations without pooling distinct validation contexts."""
+    if not isinstance(records, (list, tuple)) or not records:
+        raise _invalid("validation context records must be a non-empty sequence")
+
+    buckets = {
+        bucket: {
+            "scorable_count": 0,
+            "matched_count": 0,
+            "partial_count": 0,
+            "not_matched_count": 0,
+            "cannot_recall_count": 0,
+        }
+        for bucket in _VALIDATION_SUMMARY_BUCKETS
+    }
+
+    for index, record in enumerate(records):
+        if not isinstance(record, Mapping) or record.get("status") != "evaluated":
+            raise _invalid("validation context record must have evaluated status", record_index=index)
+        _sha256_digest(
+            record.get("locked_forecast_digest"),
+            f"records[{index}].locked_forecast_digest",
+        )
+
+        claim = record.get("claim")
+        evaluation = record.get("evaluation")
+        if not isinstance(claim, Mapping) or not isinstance(evaluation, Mapping):
+            raise _invalid(
+                "validation context record requires claim and evaluation mappings",
+                record_index=index,
+            )
+
+        expected_bucket = _v2_scoring_bucket(claim)
+        scoring_bucket = evaluation.get("scoring_bucket")
+        if scoring_bucket != expected_bucket:
+            raise _invalid(
+                "evaluation scoring_bucket does not match claim validation context",
+                record_index=index,
+                expected_bucket=expected_bucket,
+                scoring_bucket=scoring_bucket,
+            )
+
+        verification_state = _text(
+            evaluation.get("verification_state"),
+            f"records[{index}].evaluation.verification_state",
+        )
+        if verification_state not in VERIFICATION_STATES:
+            raise _invalid(
+                "unsupported verification_state",
+                record_index=index,
+                verification_state=verification_state,
+            )
+
+        scorable = evaluation.get("scorable")
+        if type(scorable) is not bool:
+            raise _invalid("validation context record scorable must be boolean", record_index=index)
+        expected_scorable = verification_state != "cannot_recall"
+        if scorable != expected_scorable:
+            raise _invalid(
+                "validation context record scorable does not match verification state",
+                record_index=index,
+            )
+
+        bucket = buckets[scoring_bucket]
+        if verification_state == "cannot_recall":
+            bucket["cannot_recall_count"] += 1
+            continue
+
+        bucket["scorable_count"] += 1
+        bucket[f"{verification_state}_count"] += 1
+
+    return {
+        "status": "validation_context_summary",
+        "buckets": buckets,
+        "pooled_accuracy_denominator": None,
     }
 
 
