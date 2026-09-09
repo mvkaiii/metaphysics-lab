@@ -40,22 +40,22 @@ jobs:
           path = Path("tests/test_ai_distribution_bundle.py")
           text = path.read_text(encoding="utf-8")
           marker = "    def test_natal_request_matches_modular_runtime(self):\n"
-          method = '''    def test_guided_inquiry_request_matches_modular_runtime(self):
-              payload = {
-                  "mode": "entry",
-                  "case_health": "PASS",
-                  "user_opted_out": False,
-                  "blocking_state": "none",
-                  "case_integrity_action_available": False,
-                  "pending_forecast_available": False,
-                  "current_answer": None,
-              }
-              modular = dispatch("suggest_inquiries", payload)
-              self.assertTrue(modular["ok"], modular)
-              _, bundled = self.bundled_request("suggest_inquiries", payload)
-              self.assertEqual(bundled, modular)
-
-          '''
+          method = (
+              "    def test_guided_inquiry_request_matches_modular_runtime(self):\n"
+              "        payload = {\n"
+              "            \"mode\": \"entry\",\n"
+              "            \"case_health\": \"PASS\",\n"
+              "            \"user_opted_out\": False,\n"
+              "            \"blocking_state\": \"none\",\n"
+              "            \"case_integrity_action_available\": False,\n"
+              "            \"pending_forecast_available\": False,\n"
+              "            \"current_answer\": None,\n"
+              "        }\n"
+              "        modular = dispatch(\"suggest_inquiries\", payload)\n"
+              "        self.assertTrue(modular[\"ok\"], modular)\n"
+              "        _, bundled = self.bundled_request(\"suggest_inquiries\", payload)\n"
+              "        self.assertEqual(bundled, modular)\n\n"
+          )
           if "def test_guided_inquiry_request_matches_modular_runtime" not in text:
               if marker not in text:
                   raise SystemExit("bundle parity insertion marker missing")
@@ -84,7 +84,6 @@ jobs:
                 - name: Checkout validation ref
                   uses: actions/checkout@v4
                   with:
-                    ref: ${{ github.sha }}
                     fetch-depth: 0
 
                 - name: Set up Python 3.9
