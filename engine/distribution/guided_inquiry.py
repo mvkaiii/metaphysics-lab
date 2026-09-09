@@ -3,10 +3,12 @@ from __future__ import annotations
 
 from typing import Mapping
 
+from . import manifest as capability_manifest
 from .errors import DistributionError
 
 
 POLICY_VERSION = "guided_inquiry_v1"
+CAPABILITY_MAP_VERSION = "guided_inquiry_scope_map_v1"
 MODES = frozenset({"entry", "post_answer"})
 CASE_HEALTHS = frozenset({"PASS", "WARN", "BLOCKED"})
 BLOCKING_STATES = frozenset({
@@ -21,6 +23,12 @@ TARGET_SCOPES = frozenset({"natal", "yearly", "monthly", "daily", "hourly", "dec
 REFINEMENT_SCOPES = frozenset({"yearly", "monthly", "daily", "hourly"})
 SPECIFICITIES = frozenset({"broad_domain", "event_family", "event_form"})
 _SPECIFICITY = {"broad_domain": 0, "event_family": 1, "event_form": 2}
+_SCOPE_CAPABILITY_IDS_V1 = {
+    "yearly": "ziwei.flowing_stars",
+    "monthly": "ziwei.flow_month_palaces",
+    "daily": "ziwei.flow_day_palaces",
+    "hourly": "ziwei.flow_hour_palaces",
+}
 
 _INPUT_FIELDS = frozenset({
     "mode",
@@ -166,8 +174,8 @@ def _normalize(payload):
     return normalized
 
 
-def _row(kind, domain, target_scope, requested, maximum, reason):
-    return {
+def _row(kind, domain, target_scope, requested, maximum, reason, capability_maturity=None):
+    row = {
         "type": kind,
         "domain": domain,
         "target_scope": target_scope,
@@ -175,6 +183,9 @@ def _row(kind, domain, target_scope, requested, maximum, reason):
         "max_specificity": maximum,
         "reason_code": reason,
     }
+    if capability_maturity is not None:
+        row["capability_maturity"] = capability_maturity
+    return row
 
 
 def _suppressed(reason):
@@ -220,6 +231,50 @@ def _entry_candidates(payload):
     return rows
 
 
+def _refinement_capability(scope, manifest):
+    capability_id = _SCOPE_CAPABILITY_IDS_V1.get(scope)
+    if capability_id is None:
+        return None
+    capabilities = manifest.get("capabilities") if isinstance(manifest, Mapping) else None
+    if not isinstance(capabilities, Mapping):
+        return None
+    capability = capabilities.get(capability_id)
+    if not isinstance(capability, Mapping):
+        return None
+    if capability.get("implementation") != "implemented":
+        return None
+    if capability.get("routing") not in {"default", "on_demand"}:
+        return None
+    supported_scopes = capability.get("supported_scopes")
+    if not isinstance(supported_scopes, (list, tuple)) or scope not in supported_scopes:
+        return None
+    maturity = capability.get("maturity")
+    if maturity not in {"stable", "experimental"}:
+        return None
+    return capability
+
+
+def _time_refinement_candidate(answer):
+    if not answer["time_refinement_scopes"]:
+        return None
+    manifest = capability_manifest.load_capability_manifest()
+    for scope in answer["time_refinement_scopes"]:
+        capability = _refinement_capability(scope, manifest)
+        if capability is None:
+            continue
+        ceiling = answer["allowed_specificity"]
+        return _row(
+            "time_refine",
+            answer["primary_domain"],
+            scope,
+            ceiling,
+            ceiling,
+            "legal_time_refinement",
+            capability_maturity=capability["maturity"],
+        )
+    return None
+
+
 def _post_answer_candidates(payload):
     answer = payload["current_answer"]
     domain = answer["primary_domain"]
@@ -232,15 +287,9 @@ def _post_answer_candidates(payload):
         rows.append(_row("decision", domain, "decision", ceiling, ceiling, "compare_actionable_options"))
     if answer["forecast_lock_eligible"]:
         rows.append(_row("validation", domain, scope, ceiling, ceiling, "forecast_can_be_tracked"))
-    if answer["time_refinement_scopes"]:
-        rows.append(_row(
-            "time_refine",
-            domain,
-            answer["time_refinement_scopes"][0],
-            ceiling,
-            ceiling,
-            "legal_time_refinement",
-        ))
+    refinement = _time_refinement_candidate(answer)
+    if refinement is not None:
+        rows.append(refinement)
     for related_domain in answer["related_domains"]:
         rows.append(_row(
             "related_domain",
