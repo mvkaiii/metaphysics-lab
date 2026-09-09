@@ -68,5 +68,49 @@
     ],
     "canonical_digest": "6d1f1cac7971637eeea3da53bc76bc66364e0d172d71b5686995da74a54c3065"
   },
-  "expected_canonical_digest": "6d1f1cac7971637eeea3da53bc76bc66364e0d172d71b5686995da74a54c3065"
+  "expected_canonical_digest": "6d1f1cac7971637eeea3da53bc76bc66364e0d172d71b5686995da74a54c3065",
+  "evaluation_input": {
+    "claim_id": "SYN-V1-001",
+    "verification_state": "matched",
+    "observed_actual": "A fictional project role changed during the frozen window.",
+    "evaluated_at": "2026-10-21T09:00:00+08:00"
+  },
+  "expected_evaluation": {
+    "status": "evaluated",
+    "locked_forecast_digest": "6d1f1cac7971637eeea3da53bc76bc66364e0d172d71b5686995da74a54c3065",
+    "claim": {
+      "claim_id": "SYN-V1-001",
+      "forecast_window": {
+        "start": "2026-10-10T00:00:00+08:00",
+        "end": "2026-10-20T23:59:59+08:00"
+      },
+      "primary_domain": "career",
+      "event_family": "role_change",
+      "prediction": "A fictional project role changes.",
+      "matched_if": "A fictional project role changes during the window.",
+      "not_matched_if": "No fictional project role change occurs during the window.",
+      "evidence_layers": ["synthetic_bazi"],
+      "evidence_time_scales": ["yearly"],
+      "capability_maturity": "experimental",
+      "confidence": "medium",
+      "knowledge_cutoff_at": "2026-09-09T09:00:00+08:00",
+      "evaluation_eligibility": "clean_scorable",
+      "contamination_state": "clean_prospective",
+      "method_version": "lin_tianji_v1.5-exp"
+    },
+    "evaluation": {
+      "verification_state": "matched",
+      "observed_actual": "A fictional project role changed during the frozen window.",
+      "evaluated_at": "2026-10-21T09:00:00+08:00",
+      "scorable": true,
+      "score_exclusion_reason": null,
+      "failure_mode": "none",
+      "failure_evidence": {
+        "rule_violation": false,
+        "specification_ambiguity": false,
+        "algorithm_mismatch": false,
+        "signal_miss": false
+      }
+    }
+  }
 }
