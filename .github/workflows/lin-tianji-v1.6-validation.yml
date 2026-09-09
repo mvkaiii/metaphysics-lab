@@ -49,68 +49,64 @@ jobs:
           python - <<'PY'
           from pathlib import Path
 
-          def replace_once(path, old, new):
+          def insert_before_once(path, anchor, lines, marker):
               file = Path(path)
               text = file.read_text(encoding='utf-8')
-              if new in text:
+              if marker in text:
                   return False
-              if text.count(old) != 1:
-                  raise SystemExit(f'expected exactly one Task 3 anchor in {path}')
-              file.write_text(text.replace(old, new, 1), encoding='utf-8')
+              if text.count(anchor) != 1:
+                  raise SystemExit(f'expected exactly one insertion anchor in {path}')
+              insertion = '\n'.join(lines) + '\n'
+              file.write_text(text.replace(anchor, insertion + anchor, 1), encoding='utf-8')
               return True
 
           changed = False
-          changed |= replace_once(
-              'engine/distribution/constants.py',
-              '    "lock_prospective_forecast",\n    "interpret_structural_evidence",',
-              '    "lock_prospective_forecast",\n    "classify_validation_context",\n    "build_validation_summary",\n    "interpret_structural_evidence",',
-          )
+          constants_path = Path('engine/distribution/constants.py')
+          constants_text = constants_path.read_text(encoding='utf-8')
+          constants_anchor = '    "interpret_structural_evidence",'
+          if '    "classify_validation_context",' not in constants_text:
+              if constants_text.count(constants_anchor) != 1:
+                  raise SystemExit('expected exactly one constants insertion anchor')
+              constants_insert = '    "classify_validation_context",\n    "build_validation_summary",\n'
+              constants_path.write_text(constants_text.replace(constants_anchor, constants_insert + constants_anchor, 1), encoding='utf-8')
+              changed = True
 
-          capability_anchor = '    "distribution.structural_interpretation": {'
-          capability_entry = '''    "distribution.prospective_validation": {
-              "id": "distribution.prospective_validation",
-              "implementation": "implemented",
-              "maturity": "experimental",
-              "routing": "on_demand",
-              "rule_version": "prospective-validation-v2-exp",
-              "module": "engine.distribution.prospective_validation",
-              "dependencies": ("distribution.prospective_forecast_governance",),
-              "output_classification": "Validation governance metadata",
-              "ranking_authority": False,
-          },
-          '''
           cap_path = Path('engine/distribution/capabilities.py')
           cap_text = cap_path.read_text(encoding='utf-8')
+          capability_anchor = '    "distribution.structural_interpretation": {'
           if '"distribution.prospective_validation"' not in cap_text:
               if cap_text.count(capability_anchor) != 1:
                   raise SystemExit('expected exactly one capability insertion anchor')
-              cap_path.write_text(cap_text.replace(capability_anchor, capability_entry + capability_anchor, 1), encoding='utf-8')
+              capability_lines = [
+                  '    "distribution.prospective_validation": {',
+                  '        "id": "distribution.prospective_validation",',
+                  '        "implementation": "implemented",',
+                  '        "maturity": "experimental",',
+                  '        "routing": "on_demand",',
+                  '        "rule_version": "prospective-validation-v2-exp",',
+                  '        "module": "engine.distribution.prospective_validation",',
+                  '        "dependencies": ("distribution.prospective_forecast_governance",),',
+                  '        "output_classification": "Validation governance metadata",',
+                  '        "ranking_authority": False,',
+                  '    },',
+              ]
+              cap_path.write_text(cap_text.replace(capability_anchor, '\n'.join(capability_lines) + '\n' + capability_anchor, 1), encoding='utf-8')
               changed = True
 
-          runtime_old = '''        if action in ("resolve_query_anchor", "lock_prospective_forecast"):
-              from .prospective import lock_prospective_forecast, resolve_query_anchor
-              handler = {
-                  "resolve_query_anchor": resolve_query_anchor,
-                  "lock_prospective_forecast": lock_prospective_forecast,
-              }[action]
-              return _ok(action, handler(request))
-          if action == "interpret_structural_evidence":'''
-          runtime_new = '''        if action in ("resolve_query_anchor", "lock_prospective_forecast"):
-              from .prospective import lock_prospective_forecast, resolve_query_anchor
-              handler = {
-                  "resolve_query_anchor": resolve_query_anchor,
-                  "lock_prospective_forecast": lock_prospective_forecast,
-              }[action]
-              return _ok(action, handler(request))
-          if action in ("classify_validation_context", "build_validation_summary"):
-              from .prospective_validation import build_validation_summary, classify_validation_context
-              handler = {
-                  "classify_validation_context": classify_validation_context,
-                  "build_validation_summary": build_validation_summary,
-              }[action]
-              return _ok(action, handler(request))
-          if action == "interpret_structural_evidence":'''
-          changed |= replace_once('engine/distribution/runtime.py', runtime_old, runtime_new)
+          changed |= insert_before_once(
+              'engine/distribution/runtime.py',
+              '        if action == "interpret_structural_evidence":',
+              [
+                  '        if action in ("classify_validation_context", "build_validation_summary"):',
+                  '            from .prospective_validation import build_validation_summary, classify_validation_context',
+                  '            handler = {',
+                  '                "classify_validation_context": classify_validation_context,',
+                  '                "build_validation_summary": build_validation_summary,',
+                  '            }[action]',
+                  '            return _ok(action, handler(request))',
+              ],
+              'if action in ("classify_validation_context", "build_validation_summary"):',
+          )
 
           if not changed:
               print('Task 3 wiring already present')
