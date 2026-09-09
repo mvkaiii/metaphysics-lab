@@ -42,3 +42,24 @@ jobs:
             tests.test_v17_prospective_validation_runtime \
             tests.test_v17_prospective_validation_compatibility \
             tests.test_v17_prospective_validation_distribution -v
+
+      - name: Legacy prospective and distribution regressions
+        run: |
+          python -m unittest \
+            tests.test_distribution_prospective \
+            tests.test_distribution_prospective_v15_claim_shape \
+            tests.test_distribution_prospective_evaluation \
+            tests.test_distribution_case_pack \
+            tests.test_ai_distribution_acceptance \
+            tests.test_ai_distribution_build \
+            tests.test_ai_distribution_bundle \
+            tests.test_ai_distribution_portability -v
+
+      - name: Full repository regression
+        run: python -m unittest discover -s tests -p 'test*.py' -v
+
+      - name: Verify generated distribution and git hygiene
+        run: |
+          python tools/build_ai_distribution.py --output-dir dist/ai --check
+          git diff --check
+          test -z "$(git status --porcelain)"
