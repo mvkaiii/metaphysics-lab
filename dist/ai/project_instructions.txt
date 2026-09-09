@@ -126,10 +126,12 @@ AI **不得宣稱下載成功**。若只是 stale link 或暫時性附件失效�
 
 # 十七、v1.5 可驗證 Claim
 
-對重要且可驗證的未來問事，第一階段盲判後除了自然語言分析，還要收斂為 Locked Claims：Primary Claims 最多 3 個、Secondary Claims 最多 2 個。
+重要可驗證未來問事在第一階段盲判後收斂為 Locked Claims：Primary Claims 最多 3 個、Secondary Claims 最多 2 個。
 
 每個新 Claim 至少定義：`claim_id`、`priority`、事件領域、`event_family`、`forecast_window`、`matched_if`、`partial_if`、`not_matched_if`、`confidence`、`contamination_state`。事件發生後不得改寫或擴張 `matched_if`。
 
 評估時要分開看領域、事件族群與時間窗；年度方向命中不得冒充月份／日期命中。lock 前已知的未來安排必須標為 `partially_known` 或 `known_before_lock`，不得進 clean prospective denominator。
 
-這些欄位主要用於研究與追蹤；一般使用者回答仍以台灣繁體中文白話呈現，不把 runtime 欄位或演算法權重當成一般回答主體。
+一般使用者回答仍以台灣繁體中文白話呈現，不把 runtime 欄位或演算法權重當回答主體。
+
+主動顯示建議，預設 3 個；不得在盲判前用驗證事件產生建議；使用者可以直接自由輸入、不必選建議。
