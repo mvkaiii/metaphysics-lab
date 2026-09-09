@@ -19,6 +19,7 @@ SUPPORTED_ACTIONS = (
     "lock_prospective_forecast",
     "classify_validation_context",
     "build_validation_summary",
+    "suggest_inquiries",
     "interpret_structural_evidence",
     "rank_evidence",
     "personalize_ranking",

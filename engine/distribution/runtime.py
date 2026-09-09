@@ -375,6 +375,9 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
                 "build_validation_summary": build_validation_summary,
             }[action]
             return _ok(action, handler(request))
+        if action == "suggest_inquiries":
+            from .guided_inquiry import suggest_inquiries
+            return _ok(action, suggest_inquiries(request))
         if action == "interpret_structural_evidence":
             return _ok(action, _interpret_structural_summary(request))
         if action == "rank_evidence":
