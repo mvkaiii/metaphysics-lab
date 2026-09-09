@@ -1,5 +1,5 @@
 from pathlib import Path
-import importlib.util
+import types
 import unittest
 
 from engine.distribution.runtime import dispatch
@@ -13,9 +13,10 @@ DIST = ROOT / "dist" / "ai"
 class ProspectiveValidationDistributionTests(unittest.TestCase):
     @staticmethod
     def _load_bundle():
-        spec = importlib.util.spec_from_file_location("pv2_bundle", DIST / "metaphysics_lab.py")
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
+        path = DIST / "metaphysics_lab.py"
+        module = types.ModuleType("pv2_bundle")
+        module.__file__ = str(path)
+        exec(compile(path.read_text(encoding="utf-8"), str(path), "exec"), module.__dict__)
         return module
 
     @staticmethod
@@ -49,6 +50,10 @@ class ProspectiveValidationDistributionTests(unittest.TestCase):
         expected = build_ai_distribution.render_distribution(ROOT)
         for name, content in expected.items():
             self.assertEqual((DIST / name).read_bytes(), content, name)
+
+    def test_bundle_loader_does_not_write_bytecode_into_distribution(self):
+        self._load_bundle()
+        self.assertFalse((DIST / "__pycache__").exists())
 
     def test_bundled_runtime_exposes_validation_actions(self):
         module = self._load_bundle()
