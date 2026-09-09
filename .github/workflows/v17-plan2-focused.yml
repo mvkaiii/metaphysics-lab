@@ -6,7 +6,7 @@ on:
       - feature/v1.7-case-doctor-reconciliation
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   focused:
@@ -21,6 +21,74 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
+      - name: Apply Task 6 source contract
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("core/AI工作流程.md")
+          text = path.read_text(encoding="utf-8")
+          heading = "## 1.1 Case Doctor｜Case authority 前置檢查"
+          if heading not in text:
+              needle = "若 `metaphysics_lab.py` 不存在，而問題需要 runtime calculation，明確指出缺少 runtime；可以讀取既有 Case facts，但不得假裝重新計算。\n\n---\n\n# 二、runtime 使用規則"
+              section = '''若 `metaphysics_lab.py` 不存在，而問題需要 runtime calculation，明確指出缺少 runtime；可以讀取既有 Case facts，但不得假裝重新計算。
+
+## 1.1 Case Doctor｜Case authority 前置檢查
+
+既有私人 Case 在被當成正式 authority 使用前，先執行 runtime `diagnose_case`。Case Doctor 只做 deterministic 診斷與安全範圍判定，不自行修改使用者資料。
+
+- `PASS`：Case 結構與 authority 可直接使用，依一般流程繼續。
+- `WARN`：只在 `safe_analysis_scopes` 允許的範圍內繼續；若涉及 legacy、重複紀錄、缺漏或可能語意重複，先執行 `plan_case_reconciliation` 取得 dry-run 計畫，再向使用者說明需要確認的項目。
+- `BLOCKED`：不得把有衝突或 identity／manifest 不一致的 Case 當完整 authority；只能使用 `safe_analysis_scopes` 明確允許的安全範圍，或先完成必要的人工確認／修正。
+
+`plan_case_reconciliation` 只產生 deterministic reconciliation plan，不直接套用變更。任何需要使用者判斷的項目必須保留為 user choice；AI 不得自動合併可能只是語意相近的紀錄，**不得自動合併**不同來源或不同命主資料，也**不得自動刪除 legacy**。Legacy 檔案在 reconciliation 明確完成前仍保留原樣，避免資料遺失與 double-counting。
+
+若 Case Doctor 回報可安全分析的範圍小於使用者問題需要的範圍，先處理資料一致性；不得跳過診斷、不得因舊對話看起來一致就自行升格 authority。
+
+---
+
+# 二、runtime 使用規則'''
+              if needle not in text:
+                  raise SystemExit("Task 6 insertion anchor not found")
+              text = text.replace(needle, section, 1)
+              path.write_text(text, encoding="utf-8")
+          PY
+      - name: Rebuild official AI distribution
+        run: python tools/build_ai_distribution.py --output-dir dist/ai
+      - name: Restore read-only focused workflow
+        run: |
+          cat > .github/workflows/v17-plan2-focused.yml <<'YAML'
+          name: v1.7 Plan 2 Focused
+
+          on:
+            push:
+              branches:
+                - feature/v1.7-case-doctor-reconciliation
+
+          permissions:
+            contents: read
+
+          jobs:
+            focused:
+              runs-on: ubuntu-24.04
+              steps:
+                - uses: actions/checkout@v4
+                - uses: actions/setup-python@v5
+                  with:
+                    python-version: '3.9'
+                    cache: pip
+                - name: Install dependencies
+                  run: |
+                    python -m pip install --upgrade pip
+                    python -m pip install -r requirements.txt
+                - name: Case Doctor focused tests
+                  run: |
+                    python -m unittest \
+                      tests.test_v17_case_doctor \
+                      tests.test_v17_case_reconciliation \
+                      tests.test_v17_case_doctor_runtime \
+                      tests.test_v17_case_doctor_distribution -v
+          YAML
       - name: Case Doctor focused tests
         run: |
           python -m unittest \
@@ -28,3 +96,15 @@ jobs:
             tests.test_v17_case_reconciliation \
             tests.test_v17_case_doctor_runtime \
             tests.test_v17_case_doctor_distribution -v
+      - name: Commit verified Task 6 artifacts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add core/AI工作流程.md dist/ai .github/workflows/v17-plan2-focused.yml
+          git diff --cached --check
+          if git diff --cached --quiet; then
+            echo "No Task 6 changes to commit"
+          else
+            git commit -m "feat: wire Case Doctor into AI distribution"
+            git push origin HEAD:feature/v1.7-case-doctor-reconciliation
+          fi
