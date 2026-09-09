@@ -39,13 +39,13 @@ jobs:
           marker = '## 11.1 Guided Inquiry｜使用者呈現契約'
           if marker not in workflow:
               block = base64.b64decode(os.environ['WORKFLOW_BLOCK_B64']).decode('utf-8')
-              workflow_path.write_text(workflow.rstrip() + block + '\n', encoding='utf-8')
+              workflow_path.write_text(workflow.rstrip() + block.rstrip() + '\n', encoding='utf-8')
 
           instructions = instructions_path.read_text(encoding='utf-8')
           marker = '## Guided Inquiry｜對話導引底線'
           if marker not in instructions:
               block = base64.b64decode(os.environ['INSTRUCTIONS_BLOCK_B64']).decode('utf-8')
-              instructions_path.write_text(instructions.rstrip() + block + '\n', encoding='utf-8')
+              instructions_path.write_text(instructions.rstrip() + block.rstrip() + '\n', encoding='utf-8')
           PY
 
       - name: Verify Task 7 RED tests turn GREEN
