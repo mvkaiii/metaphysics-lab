@@ -49,7 +49,7 @@ class ProspectiveValidationSummaryTests(unittest.TestCase):
 
     def test_context_digest_tampering_fails_closed(self):
         context = self._context("tampered")
-        context["context_class"] = "clean_prospective"
+        context["context_class"] = "conditional_prospective"
         with self.assertRaises(DistributionError) as caught:
             build_validation_summary({"records": [
                 {"validation_context": context, "verification_state": "matched"},
