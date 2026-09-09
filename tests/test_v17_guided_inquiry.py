@@ -99,9 +99,9 @@ class GuidedInquiryPolicyTests(unittest.TestCase):
                 "reason_code": "legal_one",
             },
             {
-                "type": "deep_dive",
+                "type": "time_refine",
                 "domain": "career",
-                "target_scope": "yearly",
+                "target_scope": "monthly",
                 "requested_specificity": "event_form",
                 "max_specificity": "event_family",
                 "reason_code": "illegal_inflation",
