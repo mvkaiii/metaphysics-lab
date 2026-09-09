@@ -59,6 +59,14 @@ _PRIORITIES = {"primary", "secondary"}
 _CAPABILITY_MATURITY = {"stable", "experimental"}
 _CONTAMINATION_STATES = {"clean_prospective", "known_before_lock", "partially_known"}
 _EVALUATION_ELIGIBILITY = {"clean_scorable", "excluded_from_clean_accuracy"}
+_VALIDATION_CONTEXT_FIELDS = {
+    "target_time_relation_to_cutoff",
+    "known_arrangement_before_lock",
+    "claim_describes_known_fact",
+    "claim_depends_on_known_arrangement",
+    "outcome_known_before_lock",
+}
+_TARGET_TIME_RELATIONS = {"future", "past_or_present"}
 
 
 def _invalid(message: str, **details: object) -> DistributionError:
@@ -71,6 +79,10 @@ def _invalid_claim(message: str, **details: object) -> DistributionError:
 
 def _invalid_forecast(message: str, **details: object) -> DistributionError:
     return DistributionError("invalid_prospective_forecast", message, details)
+
+
+def _invalid_validation_context(message: str, **details: object) -> DistributionError:
+    return DistributionError("invalid_validation_context", message, details)
 
 
 def _text(value: object, field: str) -> str:
@@ -163,6 +175,89 @@ def _canonical_bytes(value: object, error_code: str) -> bytes:
         separators=(",", ":"),
         allow_nan=False,
     ).encode("utf-8")
+
+
+def classify_validation_context(payload: Mapping[str, object]) -> dict:
+    """Classify one claim from explicit epistemic metadata only."""
+    if not isinstance(payload, Mapping):
+        raise _invalid_validation_context("validation context payload must be a mapping")
+
+    keys = set(payload)
+    missing = sorted(_VALIDATION_CONTEXT_FIELDS - keys)
+    unknown = sorted(keys - _VALIDATION_CONTEXT_FIELDS)
+    if missing or unknown:
+        raise _invalid_validation_context(
+            "validation context fields do not match the fixed contract",
+            missing_fields=missing,
+            unknown_fields=unknown,
+        )
+
+    time_relation = payload.get("target_time_relation_to_cutoff")
+    if time_relation not in _TARGET_TIME_RELATIONS:
+        raise _invalid_validation_context(
+            "unsupported target_time_relation_to_cutoff",
+            value=time_relation,
+        )
+
+    boolean_fields = (
+        "known_arrangement_before_lock",
+        "claim_describes_known_fact",
+        "claim_depends_on_known_arrangement",
+        "outcome_known_before_lock",
+    )
+    for field in boolean_fields:
+        if type(payload.get(field)) is not bool:
+            raise _invalid_validation_context(
+                "%s must be boolean" % field,
+                field=field,
+            )
+
+    known_arrangement = payload["known_arrangement_before_lock"]
+    describes_known_fact = payload["claim_describes_known_fact"]
+    depends_on_known_arrangement = payload["claim_depends_on_known_arrangement"]
+    outcome_known = payload["outcome_known_before_lock"]
+
+    if depends_on_known_arrangement and not known_arrangement:
+        raise _invalid_validation_context(
+            "claim_depends_on_known_arrangement requires known_arrangement_before_lock"
+        )
+    if describes_known_fact and not (known_arrangement or outcome_known):
+        raise _invalid_validation_context(
+            "claim_describes_known_fact requires a known arrangement or known outcome"
+        )
+
+    if time_relation == "past_or_present":
+        context_class = "retrospective_calibration"
+        clean_eligible = False
+        conditional_eligible = False
+        lock_eligible = False
+        reason_code = "target_past_or_present"
+    elif describes_known_fact or outcome_known:
+        context_class = "hidden_existing_reality"
+        clean_eligible = False
+        conditional_eligible = False
+        lock_eligible = True
+        reason_code = "known_fact_or_outcome_before_lock"
+    elif known_arrangement or depends_on_known_arrangement:
+        context_class = "conditional_prospective"
+        clean_eligible = False
+        conditional_eligible = True
+        lock_eligible = True
+        reason_code = "known_future_arrangement"
+    else:
+        context_class = "clean_prospective"
+        clean_eligible = True
+        conditional_eligible = False
+        lock_eligible = True
+        reason_code = "future_unknown_at_lock"
+
+    return {
+        "context_class": context_class,
+        "clean_accuracy_eligible": clean_eligible,
+        "conditional_accuracy_eligible": conditional_eligible,
+        "prospective_lock_eligible": lock_eligible,
+        "reason_code": reason_code,
+    }
 
 
 def resolve_query_anchor(payload: Mapping[str, object]) -> dict:
