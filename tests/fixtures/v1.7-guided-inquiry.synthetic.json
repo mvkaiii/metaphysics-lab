@@ -1,0 +1,169 @@
+{
+  "GI-01": {
+    "mode": "entry",
+    "case_health": "PASS",
+    "user_opted_out": false,
+    "blocking_state": "none",
+    "case_integrity_action_available": false,
+    "pending_forecast_available": false,
+    "current_answer": null
+  },
+  "GI-02": {
+    "mode": "entry",
+    "case_health": "WARN",
+    "user_opted_out": false,
+    "blocking_state": "none",
+    "case_integrity_action_available": true,
+    "pending_forecast_available": false,
+    "current_answer": null
+  },
+  "GI-03": {
+    "mode": "entry",
+    "case_health": "PASS",
+    "user_opted_out": false,
+    "blocking_state": "none",
+    "case_integrity_action_available": false,
+    "pending_forecast_available": true,
+    "current_answer": null
+  },
+  "GI-04": {
+    "mode": "post_answer",
+    "case_health": "PASS",
+    "user_opted_out": false,
+    "blocking_state": "none",
+    "case_integrity_action_available": false,
+    "pending_forecast_available": false,
+    "current_answer": {
+      "primary_domain": "career",
+      "target_scope": "yearly",
+      "allowed_specificity": "event_family",
+      "time_refinement_scopes": ["monthly"],
+      "actionable_options_present": false,
+      "forecast_lock_eligible": false,
+      "related_domains": ["finance"]
+    }
+  },
+  "GI-05": {
+    "mode": "post_answer",
+    "case_health": "PASS",
+    "user_opted_out": false,
+    "blocking_state": "none",
+    "case_integrity_action_available": false,
+    "pending_forecast_available": false,
+    "current_answer": {
+      "primary_domain": "career",
+      "target_scope": "decision",
+      "allowed_specificity": "event_family",
+      "time_refinement_scopes": ["monthly"],
+      "actionable_options_present": true,
+      "forecast_lock_eligible": false,
+      "related_domains": ["finance"]
+    }
+  },
+  "GI-06": {
+    "mode": "post_answer",
+    "case_health": "PASS",
+    "user_opted_out": false,
+    "blocking_state": "none",
+    "case_integrity_action_available": false,
+    "pending_forecast_available": true,
+    "current_answer": {
+      "primary_domain": "finance",
+      "target_scope": "yearly",
+      "allowed_specificity": "event_family",
+      "time_refinement_scopes": ["monthly"],
+      "actionable_options_present": false,
+      "forecast_lock_eligible": true,
+      "related_domains": ["career"]
+    }
+  },
+  "GI-07": {
+    "mode": "entry",
+    "case_health": "BLOCKED",
+    "user_opted_out": false,
+    "blocking_state": "none",
+    "case_integrity_action_available": true,
+    "pending_forecast_available": false,
+    "current_answer": null
+  },
+  "GI-08": {
+    "mode": "entry",
+    "case_health": "PASS",
+    "user_opted_out": false,
+    "blocking_state": "historical_disclosure",
+    "case_integrity_action_available": false,
+    "pending_forecast_available": false,
+    "current_answer": null
+  },
+  "GI-09": {
+    "mode": "entry",
+    "case_health": "PASS",
+    "user_opted_out": false,
+    "blocking_state": "required_input",
+    "case_integrity_action_available": false,
+    "pending_forecast_available": false,
+    "current_answer": null
+  },
+  "GI-10": {
+    "mode": "entry",
+    "case_health": "PASS",
+    "user_opted_out": true,
+    "blocking_state": "none",
+    "case_integrity_action_available": false,
+    "pending_forecast_available": false,
+    "current_answer": null
+  },
+  "GI-11": {
+    "mode": "post_answer",
+    "case_health": "PASS",
+    "user_opted_out": false,
+    "blocking_state": "none",
+    "case_integrity_action_available": false,
+    "pending_forecast_available": false,
+    "current_answer": {
+      "primary_domain": "career",
+      "target_scope": "yearly",
+      "allowed_specificity": "broad_domain",
+      "time_refinement_scopes": [],
+      "actionable_options_present": false,
+      "forecast_lock_eligible": false,
+      "related_domains": ["finance"]
+    }
+  },
+  "GI-12": {
+    "payload_a": {
+      "mode": "post_answer",
+      "case_health": "PASS",
+      "user_opted_out": false,
+      "blocking_state": "none",
+      "case_integrity_action_available": false,
+      "pending_forecast_available": true,
+      "current_answer": {
+        "primary_domain": "career",
+        "target_scope": "yearly",
+        "allowed_specificity": "event_family",
+        "time_refinement_scopes": ["monthly"],
+        "actionable_options_present": true,
+        "forecast_lock_eligible": true,
+        "related_domains": ["finance", "relationship"]
+      }
+    },
+    "payload_b": {
+      "pending_forecast_available": true,
+      "case_integrity_action_available": false,
+      "blocking_state": "none",
+      "user_opted_out": false,
+      "case_health": "PASS",
+      "current_answer": {
+        "related_domains": ["finance", "relationship"],
+        "forecast_lock_eligible": true,
+        "actionable_options_present": true,
+        "time_refinement_scopes": ["monthly"],
+        "allowed_specificity": "event_family",
+        "target_scope": "yearly",
+        "primary_domain": "career"
+      },
+      "mode": "post_answer"
+    }
+  }
+}
