@@ -1,0 +1,44 @@
+name: v1.7 Plan 3 Focused
+
+on:
+  push:
+    branches:
+      - feature/v1.7-prospective-validation-2
+      - feature/v1.7-prospective-validation-2-recovery
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  focused:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout validation ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Prospective Validation 2.0 focused tests
+        run: |
+          python -m unittest \
+            tests.test_v17_prospective_validation_classifier \
+            tests.test_v17_prospective_validation_summary \
+            tests.test_v17_prospective_validation_runtime \
+            tests.test_v17_prospective_validation_compatibility \
+            tests.test_v17_prospective_validation_distribution -v
