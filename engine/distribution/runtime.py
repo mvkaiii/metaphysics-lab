@@ -368,6 +368,13 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
                 "lock_prospective_forecast": lock_prospective_forecast,
             }[action]
             return _ok(action, handler(request))
+        if action in ("classify_validation_context", "build_validation_summary"):
+            from .prospective_validation import build_validation_summary, classify_validation_context
+            handler = {
+                "classify_validation_context": classify_validation_context,
+                "build_validation_summary": build_validation_summary,
+            }[action]
+            return _ok(action, handler(request))
         if action == "interpret_structural_evidence":
             return _ok(action, _interpret_structural_summary(request))
         if action == "rank_evidence":

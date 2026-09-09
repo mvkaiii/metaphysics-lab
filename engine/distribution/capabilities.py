@@ -13,6 +13,17 @@ _CAPABILITIES = {
         "output_classification": "Forecast governance metadata",
         "ranking_authority": False,
     },
+    "distribution.prospective_validation": {
+        "id": "distribution.prospective_validation",
+        "implementation": "implemented",
+        "maturity": "experimental",
+        "routing": "on_demand",
+        "rule_version": "prospective-validation-v2-exp",
+        "module": "engine.distribution.prospective_validation",
+        "dependencies": ("distribution.prospective_forecast_governance",),
+        "output_classification": "Validation governance metadata",
+        "ranking_authority": False,
+    },
     "distribution.structural_interpretation": {
         "id": "distribution.structural_interpretation",
         "implementation": "implemented",

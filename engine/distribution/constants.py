@@ -17,6 +17,8 @@ SUPPORTED_ACTIONS = (
     "resolve_forecast_context",
     "resolve_query_anchor",
     "lock_prospective_forecast",
+    "classify_validation_context",
+    "build_validation_summary",
     "interpret_structural_evidence",
     "rank_evidence",
     "personalize_ranking",
