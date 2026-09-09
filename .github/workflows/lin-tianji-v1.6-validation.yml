@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   validation:
@@ -40,92 +40,6 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
           python -m pip install pytest==8.4.2
-
-      - name: Implement verified Task 3 wiring
-        if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
-        env:
-          HEAD_REF: ${{ github.head_ref }}
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          def insert_before_once(path, anchor, lines, marker):
-              file = Path(path)
-              text = file.read_text(encoding='utf-8')
-              if marker in text:
-                  return False
-              if text.count(anchor) != 1:
-                  raise SystemExit(f'expected exactly one insertion anchor in {path}')
-              insertion = '\n'.join(lines) + '\n'
-              file.write_text(text.replace(anchor, insertion + anchor, 1), encoding='utf-8')
-              return True
-
-          changed = False
-          constants_path = Path('engine/distribution/constants.py')
-          constants_text = constants_path.read_text(encoding='utf-8')
-          constants_anchor = '    "interpret_structural_evidence",'
-          if '    "classify_validation_context",' not in constants_text:
-              if constants_text.count(constants_anchor) != 1:
-                  raise SystemExit('expected exactly one constants insertion anchor')
-              constants_insert = '    "classify_validation_context",\n    "build_validation_summary",\n'
-              constants_path.write_text(constants_text.replace(constants_anchor, constants_insert + constants_anchor, 1), encoding='utf-8')
-              changed = True
-
-          cap_path = Path('engine/distribution/capabilities.py')
-          cap_text = cap_path.read_text(encoding='utf-8')
-          capability_anchor = '    "distribution.structural_interpretation": {'
-          if '"distribution.prospective_validation"' not in cap_text:
-              if cap_text.count(capability_anchor) != 1:
-                  raise SystemExit('expected exactly one capability insertion anchor')
-              capability_lines = [
-                  '    "distribution.prospective_validation": {',
-                  '        "id": "distribution.prospective_validation",',
-                  '        "implementation": "implemented",',
-                  '        "maturity": "experimental",',
-                  '        "routing": "on_demand",',
-                  '        "rule_version": "prospective-validation-v2-exp",',
-                  '        "module": "engine.distribution.prospective_validation",',
-                  '        "dependencies": ("distribution.prospective_forecast_governance",),',
-                  '        "output_classification": "Validation governance metadata",',
-                  '        "ranking_authority": False,',
-                  '    },',
-              ]
-              cap_path.write_text(cap_text.replace(capability_anchor, '\n'.join(capability_lines) + '\n' + capability_anchor, 1), encoding='utf-8')
-              changed = True
-
-          changed |= insert_before_once(
-              'engine/distribution/runtime.py',
-              '        if action == "interpret_structural_evidence":',
-              [
-                  '        if action in ("classify_validation_context", "build_validation_summary"):',
-                  '            from .prospective_validation import build_validation_summary, classify_validation_context',
-                  '            handler = {',
-                  '                "classify_validation_context": classify_validation_context,',
-                  '                "build_validation_summary": build_validation_summary,',
-                  '            }[action]',
-                  '            return _ok(action, handler(request))',
-              ],
-              'if action in ("classify_validation_context", "build_validation_summary"):',
-          )
-
-          if not changed:
-              print('Task 3 wiring already present')
-          PY
-          python tools/build_ai_distribution.py
-          python -m unittest \
-            tests.test_v17_prospective_validation_runtime \
-            tests.test_v17_capability_manifest \
-            tests.test_distribution_runtime_info \
-            tests.test_v17_capability_distribution_parity -v
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add engine/distribution/constants.py engine/distribution/runtime.py engine/distribution/capabilities.py dist/ai/metaphysics_lab.py
-          if git diff --cached --quiet; then
-            echo "No Task 3 source changes to commit"
-          else
-            git commit -m "feat: expose prospective validation v2 runtime actions"
-            git push origin HEAD:"${HEAD_REF}"
-          fi
 
       - name: Y1 yearly Ziwei qualification
         run: |
