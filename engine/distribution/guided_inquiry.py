@@ -258,7 +258,8 @@ def suggest_inquiries(payload: Mapping[str, object]) -> dict:
         if normalized["mode"] == "entry"
         else _post_answer_candidates(normalized)
     )
-    selected = candidates[:4] if len(candidates) >= 4 else candidates[:3]
+    allow_fourth = normalized["mode"] == "entry" and normalized["pending_forecast_available"]
+    selected = candidates[:4] if allow_fourth and len(candidates) >= 4 else candidates[:3]
     if len(selected) < 3:
         return _suppressed("insufficient_legal_suggestions")
     return {
