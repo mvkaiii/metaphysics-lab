@@ -361,13 +361,20 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
         if action == "resolve_forecast_context":
             from .forecast import resolve_forecast_context
             return _ok(action, resolve_forecast_context(request))
-        if action in ("resolve_query_anchor", "lock_prospective_forecast"):
-            from .prospective import lock_prospective_forecast, resolve_query_anchor
+        if action in ("resolve_query_anchor", "lock_prospective_forecast", "classify_validation_context"):
+            from .prospective import classify_validation_context, lock_prospective_forecast, resolve_query_anchor
             handler = {
                 "resolve_query_anchor": resolve_query_anchor,
                 "lock_prospective_forecast": lock_prospective_forecast,
+                "classify_validation_context": classify_validation_context,
             }[action]
             return _ok(action, handler(request))
+        if action == "evaluate_locked_claim":
+            from .prospective_evaluation import evaluate_locked_claim
+            return _ok(action, evaluate_locked_claim(request))
+        if action == "summarize_validation_contexts":
+            from .prospective_evaluation import build_validation_context_summary
+            return _ok(action, build_validation_context_summary(request.get("records")))
         if action == "interpret_structural_evidence":
             return _ok(action, _interpret_structural_summary(request))
         if action == "rank_evidence":
