@@ -33,6 +33,18 @@
 
 若 `metaphysics_lab.py` 不存在，而問題需要 runtime calculation，明確指出缺少 runtime；可以讀取既有 Case facts，但不得假裝重新計算。
 
+## 1.1 Case Doctor｜Case authority 前置檢查
+
+既有私人 Case 在被當成正式 authority 使用前，先執行 runtime `diagnose_case`。Case Doctor 只做 deterministic 診斷與安全範圍判定，不自行修改使用者資料。
+
+- `PASS`：Case 結構與 authority 可直接使用，依一般流程繼續。
+- `WARN`：只在 `safe_analysis_scopes` 允許的範圍內繼續；若涉及 legacy、重複紀錄、缺漏或可能語意重複，先執行 `plan_case_reconciliation` 取得 dry-run 計畫，再向使用者說明需要確認的項目。
+- `BLOCKED`：不得把有衝突或 identity／manifest 不一致的 Case 當完整 authority；只能使用 `safe_analysis_scopes` 明確允許的安全範圍，或先完成必要的人工確認／修正。
+
+`plan_case_reconciliation` 只產生 deterministic reconciliation plan，不直接套用變更。任何需要使用者判斷的項目必須保留為 user choice；AI 不得自動合併可能只是語意相近的紀錄，**不得自動合併**不同來源或不同命主資料，也**不得自動刪除 legacy**。Legacy 檔案在 reconciliation 明確完成前仍保留原樣，避免資料遺失與 double-counting。
+
+若 Case Doctor 回報可安全分析的範圍小於使用者問題需要的範圍，先處理資料一致性；不得跳過診斷、不得因舊對話看起來一致就自行升格 authority。
+
 ---
 
 # 二、runtime 使用規則
