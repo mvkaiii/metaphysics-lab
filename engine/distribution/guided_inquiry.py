@@ -20,6 +20,7 @@ BLOCKING_STATES = frozenset({
 TARGET_SCOPES = frozenset({"natal", "yearly", "monthly", "daily", "hourly", "decision"})
 REFINEMENT_SCOPES = frozenset({"yearly", "monthly", "daily", "hourly"})
 SPECIFICITIES = frozenset({"broad_domain", "event_family", "event_form"})
+_SPECIFICITY = {"broad_domain": 0, "event_family": 1, "event_form": 2}
 
 _INPUT_FIELDS = frozenset({
     "mode",
@@ -252,6 +253,18 @@ def _post_answer_candidates(payload):
     return rows
 
 
+def _specificity_legal(row, ceiling):
+    requested = row.get("requested_specificity")
+    maximum = row.get("max_specificity")
+    if requested not in _SPECIFICITY or maximum not in _SPECIFICITY:
+        return False
+    return (
+        _SPECIFICITY[requested] <= _SPECIFICITY[maximum]
+        and _SPECIFICITY[requested] <= _SPECIFICITY[ceiling]
+        and _SPECIFICITY[maximum] <= _SPECIFICITY[ceiling]
+    )
+
+
 def _unique(rows):
     result = []
     seen = set()
@@ -270,11 +283,19 @@ def suggest_inquiries(payload: Mapping[str, object]) -> dict:
     if reason is not None:
         return _suppressed(reason)
 
-    candidates = _unique(
+    raw_candidates = (
         _entry_candidates(normalized)
         if normalized["mode"] == "entry"
         else _post_answer_candidates(normalized)
     )
+    ceiling = (
+        "broad_domain"
+        if normalized["mode"] == "entry"
+        else normalized["current_answer"]["allowed_specificity"]
+    )
+    candidates = _unique([
+        row for row in raw_candidates if _specificity_legal(row, ceiling)
+    ])
     allow_fourth = normalized["mode"] == "entry" and normalized["pending_forecast_available"]
     selected = candidates[:4] if allow_fourth and len(candidates) >= 4 else candidates[:3]
     if len(selected) < 3:
