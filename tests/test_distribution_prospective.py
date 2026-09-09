@@ -1,9 +1,18 @@
 import importlib
 import importlib.util
+import json
 import unittest
 from datetime import datetime, timedelta
+from pathlib import Path
 
 from engine.distribution.errors import DistributionError
+
+
+_FROZEN_V1_FIXTURE = Path(__file__).parent / "fixtures" / "v1.7-v1-prospective-lock-frozen.json"
+
+
+def _load_frozen_v1_fixture():
+    return json.loads(_FROZEN_V1_FIXTURE.read_text(encoding="utf-8"))
 
 
 class DistributionProspectiveQueryAnchorTests(unittest.TestCase):
@@ -255,6 +264,19 @@ class DistributionProspectiveClaimTests(unittest.TestCase):
             self.assertNotIn("observed_actual", locked_claim)
             self.assertNotIn("evaluation", locked_claim)
             self.assertNotIn("failure_mode", locked_claim)
+
+    def test_v1_lock_matches_frozen_fixture_exactly(self):
+        prospective = self._prospective()
+        fixture = _load_frozen_v1_fixture()
+
+        result = prospective.lock_prospective_forecast(fixture["input"])
+
+        self.assertEqual(result, fixture["expected_locked"])
+        self.assertEqual(result["canonical_digest"], fixture["expected_canonical_digest"])
+        self.assertEqual(
+            result["canonical_digest"],
+            "6d1f1cac7971637eeea3da53bc76bc66364e0d172d71b5686995da74a54c3065",
+        )
 
     def test_claim_rejects_outcome_fields_at_lock_time(self):
         prospective = self._prospective()
