@@ -1,4 +1,4 @@
-name: v1.7 Guided Inquiry Build Artifacts
+name: v1.7 Guided Inquiry Finalize Distribution
 
 on:
   push:
@@ -6,17 +6,20 @@ on:
       - feature/v1.7-guided-inquiry
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  build:
+  finalize:
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout build ref
+      - name: Checkout branch head
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.sha }}
+          ref: feature/v1.7-guided-inquiry
           fetch-depth: 0
+
+      - name: Require triggering SHA to remain branch head
+        run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
 
       - name: Set up Python 3.9
         uses: actions/setup-python@v5
@@ -29,22 +32,123 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
+      - name: Add bundle smoke parity
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("tests/test_ai_distribution_bundle.py")
+          text = path.read_text(encoding="utf-8")
+          marker = "    def test_natal_request_matches_modular_runtime(self):\n"
+          method = '''    def test_guided_inquiry_request_matches_modular_runtime(self):
+              payload = {
+                  "mode": "entry",
+                  "case_health": "PASS",
+                  "user_opted_out": False,
+                  "blocking_state": "none",
+                  "case_integrity_action_available": False,
+                  "pending_forecast_available": False,
+                  "current_answer": None,
+              }
+              modular = dispatch("suggest_inquiries", payload)
+              self.assertTrue(modular["ok"], modular)
+              _, bundled = self.bundled_request("suggest_inquiries", payload)
+              self.assertEqual(bundled, modular)
+
+          '''
+          if "def test_guided_inquiry_request_matches_modular_runtime" not in text:
+              if marker not in text:
+                  raise SystemExit("bundle parity insertion marker missing")
+              text = text.replace(marker, method + marker, 1)
+              path.write_text(text, encoding="utf-8")
+          PY
+
+      - name: Persist Task 8 focused gates
+        run: |
+          cat > .github/workflows/v17-guided-inquiry-focused.yml <<'YAML'
+          name: v1.7 Guided Inquiry Focused
+
+          on:
+            push:
+              branches:
+                - feature/v1.7-guided-inquiry
+            workflow_dispatch:
+
+          permissions:
+            contents: read
+
+          jobs:
+            focused:
+              runs-on: ubuntu-24.04
+              steps:
+                - name: Checkout validation ref
+                  uses: actions/checkout@v4
+                  with:
+                    ref: ${{ github.sha }}
+                    fetch-depth: 0
+
+                - name: Set up Python 3.9
+                  uses: actions/setup-python@v5
+                  with:
+                    python-version: '3.9'
+                    cache: pip
+
+                - name: Install dependencies
+                  run: |
+                    python -m pip install --upgrade pip
+                    python -m pip install -r requirements.txt
+                    python -m pip install pytest==8.4.2
+
+                - name: Guided Inquiry distribution qualification
+                  run: |
+                    python -m unittest \
+                      tests.test_v17_guided_inquiry \
+                      tests.test_v17_guided_inquiry_runtime \
+                      tests.test_v17_guided_inquiry_ai_contract \
+                      tests.test_v17_guided_inquiry_distribution \
+                      tests.test_ai_distribution_bundle \
+                      tests.test_v17_capability_manifest \
+                      tests.test_distribution_runtime_info \
+                      tests.test_ai_distribution_docs \
+                      tests.test_project_ux_contract -v
+
+                - name: Verify deterministic distribution
+                  run: python tools/build_ai_distribution.py --check
+
+                - name: Compile focused runtime and distribution
+                  run: |
+                    python -m compileall -q engine tests tools dist/ai/metaphysics_lab.py
+          YAML
+
       - name: Rebuild deterministic AI distribution
         run: |
           python tools/build_ai_distribution.py
           python tools/build_ai_distribution.py --check
 
-      - name: Verify Project Instructions size contract
+      - name: Run Task 8 qualification
         run: |
-          python -m unittest tests.test_project_ux_contract -v
+          python -m unittest \
+            tests.test_v17_guided_inquiry \
+            tests.test_v17_guided_inquiry_runtime \
+            tests.test_v17_guided_inquiry_ai_contract \
+            tests.test_v17_guided_inquiry_distribution \
+            tests.test_ai_distribution_bundle \
+            tests.test_v17_capability_manifest \
+            tests.test_distribution_runtime_info \
+            tests.test_ai_distribution_docs \
+            tests.test_project_ux_contract -v
+          python -m compileall -q engine tests tools dist/ai/metaphysics_lab.py
 
-      - name: Upload rebuilt distribution
-        uses: actions/upload-artifact@v4
-        with:
-          name: guided-inquiry-dist
-          path: |
-            dist/ai/metaphysics_lab.py
-            dist/ai/metaphysics_core.md
-            dist/ai/project_instructions.txt
-          if-no-files-found: error
-          retention-days: 1
+      - name: Remove temporary finalizer and validate diff
+        run: |
+          git rm .github/workflows/v17-guided-inquiry-build-artifacts.yml
+          git diff --check
+          git status --short
+
+      - name: Commit Task 8 generated distribution
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist/ai tests/test_ai_distribution_bundle.py .github/workflows/v17-guided-inquiry-focused.yml
+          git commit -m "build: include Guided Inquiry in portable distribution"
+          git push origin HEAD:feature/v1.7-guided-inquiry
