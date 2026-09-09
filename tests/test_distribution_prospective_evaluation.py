@@ -1,8 +1,17 @@
 import copy
 import importlib
+import json
 import unittest
+from pathlib import Path
 
 from engine.distribution.errors import DistributionError
+
+
+_FROZEN_V1_FIXTURE = Path(__file__).parent / "fixtures" / "v1.7-v1-prospective-lock-frozen.json"
+
+
+def _load_frozen_v1_fixture():
+    return json.loads(_FROZEN_V1_FIXTURE.read_text(encoding="utf-8"))
 
 
 class DistributionProspectiveEvaluationTests(unittest.TestCase):
@@ -95,6 +104,24 @@ class DistributionProspectiveEvaluationTests(unittest.TestCase):
         )
         self.assertEqual(result["evaluation"]["evaluated_at"], "2026-10-01T09:00:00+08:00")
         self.assertTrue(result["evaluation"]["scorable"])
+
+    def test_frozen_v1_lock_is_accepted_without_mutation(self):
+        evaluation = self._evaluation()
+        fixture = _load_frozen_v1_fixture()
+        locked = fixture["expected_locked"]
+
+        result = evaluation.evaluate_locked_claim(
+            {
+                "locked_forecast": locked,
+                "claim_id": "SYN-V1-001",
+                "verification_state": "matched",
+                "observed_actual": "A fictional project role changed during the frozen window.",
+                "evaluated_at": "2026-10-21T09:00:00+08:00",
+            }
+        )
+
+        self.assertEqual(result["locked_forecast_digest"], fixture["expected_canonical_digest"])
+        self.assertEqual(result["claim"], locked["claims"][0])
 
     def test_evaluation_rejects_locked_forecast_whose_prediction_was_changed_after_lock(self):
         evaluation = self._evaluation()
