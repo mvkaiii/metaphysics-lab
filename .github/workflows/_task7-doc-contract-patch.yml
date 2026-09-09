@@ -1,0 +1,88 @@
+name: Task 7 Guided Inquiry doc contract patch
+
+on:
+  push:
+    branches:
+      - feature/v1.7-guided-inquiry
+    paths:
+      - .github/workflows/_task7-doc-contract-patch.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-doc-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Append Guided Inquiry source-doc contract
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          workflow_path = Path('core/AI工作流程.md')
+          instructions_path = Path('core/核心提示詞.md')
+
+          workflow_marker = '## 11.1 Guided Inquiry｜使用者呈現契約'
+          workflow_block = r'''
+
+## 11.1 Guided Inquiry｜使用者呈現契約
+
+Guided Inquiry 是對話導引，不是背景推播，也不是新的預測 authority。它只把目前已合法可問、可分析的方向轉成使用者可選的 **structured intents**；一般使用者看到的文字一律使用台灣繁體中文，內部可保留 `reason_code` 供稽核，但不需要把工程欄位直接顯示給使用者。
+
+- **第一次 assistant 回覆**：若使用者尚未提出 substantive 問題，主動顯示 3～4 個可直接接著問的方向，預設 3 個；若已有 substantive 問題先回答，再依回答結果決定是否附上後續建議。
+- 每個建議都必須先通過 capability、scope、evidence、blindness 與 safety gate。若不足 3 個合法建議就不顯示，不拿低品質或越權建議補數量。
+- 建議只能在目前允許的 **specificity ceiling** 內導引，不得提高 specificity；只有在既有 authority 與輸入精度已允許時，才可提出更細時間層、事件型態或決策比較。
+- 未來問事的第一階段盲判尚未鎖定前，不得在盲判前用驗證事件產生建議，也不得利用歷史答案暗示後續問題。
+- 建議是捷徑，不是強迫選單：使用者可以直接自由輸入、不必選建議。
+
+工作類問題的條件式呈現範例：
+
+- `把今年工作拆成月份，看哪些時段較適合主動推進`
+- `進一步區分目前訊號偏責任、專案角色、職稱或雇主變動`
+- `如果你手上已有兩個工作選項，可以直接做決策比較`
+
+以上範例都必須先通過當下 capability 與 specificity gate；不能因為範例存在就自動升高分析精度。
+'''
+
+          instructions_marker = '## Guided Inquiry｜對話導引底線'
+          instructions_block = r'''
+
+## Guided Inquiry｜對話導引底線
+
+在一般對話中，若目前有足夠合法方向可供使用者接續，主動顯示 3～4 個後續問題方向，預設 3 個；若不足 3 個合法建議就不顯示。已有 substantive 問題先回答，不得為了顯示選項而延後實際答案。
+
+Guided Inquiry 只能導引已被目前 capability、scope 與 evidence 允許的問題，不得提高 specificity，也不得在盲判前用驗證事件產生建議。建議不是強迫選單；使用者可以直接自由輸入、不必選建議。
+'''
+
+          workflow = workflow_path.read_text(encoding='utf-8')
+          if workflow_marker not in workflow:
+              workflow_path.write_text(workflow.rstrip() + workflow_block + '\n', encoding='utf-8')
+
+          instructions = instructions_path.read_text(encoding='utf-8')
+          if instructions_marker not in instructions:
+              instructions_path.write_text(instructions.rstrip() + instructions_block + '\n', encoding='utf-8')
+          PY
+
+      - name: Verify Task 7 RED tests turn GREEN
+        run: |
+          python -m unittest \
+            tests.test_v17_guided_inquiry_ai_contract \
+            tests.test_ai_distribution_docs -v
+
+      - name: Commit verified source-doc contract and remove temporary workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/_task7-doc-contract-patch.yml
+          git add core/AI工作流程.md core/核心提示詞.md
+          git diff --cached --check
+          git commit -m "docs: define Guided Inquiry AI contract"
+          git push origin HEAD:${GITHUB_REF_NAME}
