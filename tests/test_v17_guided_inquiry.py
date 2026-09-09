@@ -4,7 +4,7 @@ from copy import deepcopy
 from pathlib import Path
 
 from engine.distribution.errors import DistributionError
-from engine.distribution.guided_inquiry import suggest_inquiries
+from engine.distribution.guided_inquiry import suppression_reason, suggest_inquiries
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -72,6 +72,32 @@ class GuidedInquiryPolicyTests(unittest.TestCase):
                 self.assertEqual(result["suggestions"], [])
                 self.assertEqual(result["policy_version"], "guided_inquiry_v1")
 
+    def test_suppression_reason_precedence_is_deterministic(self):
+        payload = self.scenario("GI-01")
+        payload["user_opted_out"] = True
+        payload["case_health"] = "BLOCKED"
+        payload["blocking_state"] = "runtime_error"
+        self.assertEqual(suppression_reason(payload), "user_opted_out")
+
+        payload["user_opted_out"] = False
+        self.assertEqual(suppression_reason(payload), "case_blocked")
+
+        payload["case_health"] = "PASS"
+        self.assertEqual(suppression_reason(payload), "runtime_error")
+
+        for state in (
+            "required_input",
+            "historical_disclosure",
+            "mutation_confirmation",
+            "non_metaphysics_utility",
+        ):
+            with self.subTest(state=state):
+                payload["blocking_state"] = state
+                self.assertEqual(suppression_reason(payload), state)
+
+        payload["blocking_state"] = "none"
+        self.assertIsNone(suppression_reason(payload))
+
     def test_fewer_than_three_legal_candidates_suppresses_entire_block(self):
         result = suggest_inquiries(self.scenario("GI-11"))
         self.assertTrue(result["suppressed"])
@@ -91,9 +117,31 @@ class GuidedInquiryPolicyTests(unittest.TestCase):
         ).encode("utf-8")
         self.assertEqual(canonical(left), canonical(right))
 
+    def test_blindness_forbidden_fields_fail_closed(self):
+        forbidden = {
+            "verified_events": [],
+            "historical_actuals": [],
+            "ground_truth": {},
+            "event_text": "not allowed",
+        }
+        for field, value in forbidden.items():
+            with self.subTest(location="top_level", field=field):
+                payload = self.scenario("GI-01")
+                payload[field] = value
+                with self.assertRaises(DistributionError) as caught:
+                    suggest_inquiries(payload)
+                self.assertEqual(caught.exception.code, "invalid_guided_inquiry_payload")
+
+            with self.subTest(location="current_answer", field=field):
+                payload = self.scenario("GI-04")
+                payload["current_answer"][field] = value
+                with self.assertRaises(DistributionError) as caught:
+                    suggest_inquiries(payload)
+                self.assertEqual(caught.exception.code, "invalid_guided_inquiry_payload")
+
     def test_unknown_top_level_field_fails_closed(self):
         payload = self.scenario("GI-01")
-        payload["verified_events"] = []
+        payload["unknown_field"] = []
         with self.assertRaises(DistributionError) as caught:
             suggest_inquiries(payload)
         self.assertEqual(caught.exception.code, "invalid_guided_inquiry_payload")
@@ -127,7 +175,7 @@ class GuidedInquiryPolicyTests(unittest.TestCase):
         mutations = []
 
         unknown = deepcopy(base)
-        unknown["current_answer"]["event_text"] = "not allowed"
+        unknown["current_answer"]["other"] = "not allowed"
         mutations.append(unknown)
 
         duplicate_domain = deepcopy(base)
