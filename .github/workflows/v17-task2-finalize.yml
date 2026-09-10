@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   finalize:
-    if: github.actor != 'github-actions[bot]'
+    if: ${{ github.actor == 'mvkaiii' }}
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout triggering SHA
