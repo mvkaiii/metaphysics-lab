@@ -104,15 +104,16 @@ class V17ReleaseContractTests(unittest.TestCase):
             "tests.test_v17_capability_manifest",
             "tests.test_v17_case_doctor",
             "tests.test_v17_case_reconciliation",
-            "tests.test_v17_validation_context",
-            "tests.test_v17_prospective_lock_v2",
-            "tests.test_v17_prospective_evaluation_v2",
-            "tests.test_v17_guided_inquiry",
+            "tests.test_v17_prospective_validation_classifier",
+            "tests.test_v17_prospective_validation_summary",
+            "tests.test_v17_prospective_validation_runtime",
             "tests.test_v17_prospective_validation_compatibility",
+            "tests.test_v17_guided_inquiry",
             "python -m unittest discover -s tests -p 'test_*.py' -v",
             "python -m compileall -q engine tools tests",
             "python tools/build_release_package.py --verify",
             "Private outcome contamination scan",
+            "Verify clean tree",
         ):
             self.assertIn(required, workflow)
 

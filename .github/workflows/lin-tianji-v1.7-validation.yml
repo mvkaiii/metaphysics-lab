@@ -1,0 +1,114 @@
+name: 林氏天機 v1.7 Validation
+
+on:
+  push:
+    branches:
+      - 'release/v1.7.0-*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout validation ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Confirm validation SHA
+        run: |
+          echo "event=${{ github.event_name }}"
+          echo "github_sha=${{ github.sha }}"
+          echo "head_ref=${{ github.head_ref }}"
+          git log -1 --format=%H
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install pytest==8.4.2
+
+      - name: Rebuild and verify AI distribution
+        run: |
+          python tools/build_ai_distribution.py
+          python tools/build_ai_distribution.py --check
+
+      - name: Run v1.7 release-surface validation
+        run: python tools/run_v17_release_surface_validation.py --json
+
+      - name: Focused v1.7 reliability and usability suites
+        run: |
+          python -m unittest \
+            tests.test_v17_capability_manifest \
+            tests.test_v17_case_doctor \
+            tests.test_v17_case_reconciliation \
+            tests.test_v17_prospective_validation_classifier \
+            tests.test_v17_prospective_validation_summary \
+            tests.test_v17_prospective_validation_runtime \
+            tests.test_v17_prospective_validation_distribution \
+            tests.test_v17_guided_inquiry -v
+
+      - name: Preserve frozen prospective compatibility
+        run: |
+          python -m unittest \
+            tests.test_v17_prospective_validation_compatibility \
+            tests.test_distribution_prospective \
+            tests.test_distribution_prospective_v15_claim_shape -v
+
+      - name: Verify deterministic v1.7.0 three-file user package
+        run: python tools/build_release_package.py --verify --output "$RUNNER_TEMP/Metaphysics-Lab-v1.7.0-User-Package.zip"
+
+      - name: Full repository regression
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+
+      - name: Python 3.9 compile check
+        run: |
+          python -m compileall -q engine tools tests
+          python -c "compile(open('dist/ai/metaphysics_lab.py', encoding='utf-8').read(), 'dist/ai/metaphysics_lab.py', 'exec')"
+
+      - name: Private outcome contamination scan
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          forbidden_names = {
+              '驗證事件紀錄.md',
+              'Kai_CDBF04_05_驗證事件紀錄.md',
+              'adjudication-1.json',
+          }
+          roots = [Path('dist/ai'), Path('docs/release')]
+          bad = []
+          for root in roots:
+              if not root.exists():
+                  continue
+              for path in root.rglob('*'):
+                  if path.is_file() and path.name in forbidden_names:
+                      bad.append(str(path))
+          if bad:
+              raise SystemExit('forbidden private/outcome release artifacts: ' + ', '.join(sorted(bad)))
+          print('private/outcome release-artifact scan: PASS')
+          PY
+
+      - name: Verify clean tree
+        run: |
+          git diff --exit-code
+          test -z "$(git status --porcelain)"
+
+      - name: Upload generated distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: lin-tianji-v1.7-ai-distribution-${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          path: dist/ai/
+          if-no-files-found: error
