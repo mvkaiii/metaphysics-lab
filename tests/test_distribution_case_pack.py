@@ -1,5 +1,6 @@
 import unittest
 
+from engine.distribution.constants import PROJECT_CONTRACT_VERSION
 from engine.distribution.runtime import dispatch
 
 
@@ -92,7 +93,7 @@ class DistributionCasePackTests(unittest.TestCase):
             meta = self.front_matter(text)
             self.assertTrue(REQUIRED_META.issubset(meta), name)
             self.assertEqual(meta["case_schema_version"], "1.1")
-            self.assertEqual(meta["project_contract_version"], "1.1")
+            self.assertEqual(meta["project_contract_version"], PROJECT_CONTRACT_VERSION)
             self.assertEqual(meta["subject_id"], "subj_7f3a2c91d4e8")
             self.assertEqual(meta["subject_display_name"], "Kai")
             self.assertEqual(meta["subject_short_id"], "7F3A2C")
@@ -232,7 +233,7 @@ class DistributionCasePackTests(unittest.TestCase):
         for slot in ALL_SLOTS:
             text = files[actual(slot)]
             text = text.replace("case_schema_version: 1.1", "case_schema_version: 1.0", 1)
-            text = text.replace("project_contract_version: 1.1", "project_contract_version: 1.0", 1)
+            text = text.replace("project_contract_version: %s" % PROJECT_CONTRACT_VERSION, "project_contract_version: 1.0", 1)
             text = text.replace("subject_id: subj_7f3a2c91d4e8", "subject_id: case-legacy", 1)
             legacy[slot] = text
         result = dispatch("validate_case", {"case_files": legacy})

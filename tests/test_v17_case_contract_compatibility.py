@@ -101,7 +101,7 @@ class V17CaseContractCompatibilityTests(unittest.TestCase):
         self.assertEqual(validated["data"]["project_contract_version"], "1.1")
         tracking = next(text for name, text in merged.items() if name.endswith("05_驗證事件紀錄.md"))
         self.assertIn("project_contract_version: 1.1", tracking)
-        self.assertIn("runtime_version_if_applicable: 1.1-exp", tracking)
+        self.assertIn("runtime_version_if_applicable: 1.2-exp", tracking)
 
 
 if __name__ == "__main__":
