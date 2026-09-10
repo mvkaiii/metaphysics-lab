@@ -11,7 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE_SCHEMA_VERSION = "v1.7.0-isolated-sandbox-evidence.v1"
-SCRIPT_VERSION = "v1.7.0-isolated-sandbox-script.v1"
+SCRIPT_VERSION = "v1.7.0-isolated-sandbox-script.v2"
 BASE_FIXTURE_VERSION = "v1.7.0-isolated-sandbox-base.v1"
 SCRIPT_PATH = Path("docs/release/v1.7.0-isolated-sandbox-script.md")
 BASE_FIXTURE_PATH = Path("docs/release/v1.7.0-isolated-sandbox-base.json")
@@ -38,8 +38,9 @@ EVIDENCE_SEAL_ALLOWED_PATHS = frozenset({
 _REQUIRED_FIELDS = frozenset({
     "schema_version", "status", "script_version", "base_fixture_version",
     "tested_release_candidate_sha", "candidate_frozen_at", "executed_at",
-    "adjudicated_at", "sandbox_run_id", "sandbox_environment", "script_sha256",
-    "base_fixture_sha256", "transcript_sha256", "transcript_reference",
+    "adjudicated_at", "sandbox_run_id", "sandbox_environment", "model_ui_label",
+    "script_sha256", "base_fixture_sha256", "transcript_sha256",
+    "transcript_reference",
 })
 _BASE_REQUIRED_FIELDS = frozenset({
     "fixture_version", "classification", "privacy", "contains_private_user_data",
@@ -259,7 +260,7 @@ def validate_evidence(root, evidence_path, current_sha):
         errors.append("execution_not_after_candidate_freeze")
     if executed_at is not None and adjudicated_at is not None and adjudicated_at < executed_at:
         errors.append("adjudication_before_execution")
-    for key in ("sandbox_run_id", "sandbox_environment"):
+    for key in ("sandbox_run_id", "sandbox_environment", "model_ui_label"):
         if not _is_ready(fields.get(key, "")):
             errors.append("%s_missing" % key)
     for key in ("script_sha256", "base_fixture_sha256", "transcript_sha256"):

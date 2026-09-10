@@ -95,7 +95,7 @@ class V17SandboxContractTests(unittest.TestCase):
             "",
             "schema_version: v1.7.0-isolated-sandbox-evidence.v1",
             "status: PASS",
-            "script_version: v1.7.0-isolated-sandbox-script.v1",
+            "script_version: v1.7.0-isolated-sandbox-script.v2",
             "base_fixture_version: v1.7.0-isolated-sandbox-base.v1",
             "tested_release_candidate_sha: %s" % ("a" * 40),
             "candidate_frozen_at: 2026-09-10T18:00:00+08:00",
@@ -103,6 +103,7 @@ class V17SandboxContractTests(unittest.TestCase):
             "adjudicated_at: 2026-09-10T18:20:00+08:00",
             "sandbox_run_id: synthetic-unit-test",
             "sandbox_environment: synthetic-unit-test",
+            "model_ui_label: Synthetic Model Label",
             "script_sha256: %s" % _sha256(root / SCRIPT_PATH),
             "base_fixture_sha256: %s" % _sha256(root / BASE_FIXTURE_PATH),
             "transcript_sha256: %s" % _sha256(transcript),
@@ -157,6 +158,19 @@ class V17SandboxContractTests(unittest.TestCase):
             report = validator.validate_evidence(root, evidence, "a" * 40)
             self.assertEqual(report["status"], "FAIL")
             self.assertIn("base_fixture_contains_known_reality_context", report["errors"])
+
+    def test_validator_rejects_pending_model_ui_label(self):
+        validator = _load_validator()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            evidence = self._pass_evidence(root)
+            text = evidence.read_text(encoding="utf-8").replace(
+                "model_ui_label: Synthetic Model Label", "model_ui_label: PENDING"
+            )
+            evidence.write_text(text, encoding="utf-8")
+            report = validator.validate_evidence(root, evidence, "a" * 40)
+        self.assertEqual(report["status"], "FAIL")
+        self.assertIn("model_ui_label_missing", report["errors"])
 
 
 if __name__ == "__main__":
