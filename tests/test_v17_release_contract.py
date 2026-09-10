@@ -90,6 +90,32 @@ class V17ReleaseContractTests(unittest.TestCase):
     def test_v17_release_surface_validator_exists(self):
         self.assertTrue((ROOT / "tools" / "run_v17_release_surface_validation.py").is_file())
 
+    def test_v17_hosted_validation_workflow_contract(self):
+        workflow_path = ROOT / ".github" / "workflows" / "lin-tianji-v1.7-validation.yml"
+        self.assertTrue(workflow_path.is_file(), workflow_path.as_posix())
+        workflow = workflow_path.read_text(encoding="utf-8")
+        for required in (
+            "workflow_dispatch:",
+            "pull_request:",
+            "push:",
+            "python-version: '3.9'",
+            "python tools/build_ai_distribution.py --check",
+            "python tools/run_v17_release_surface_validation.py --json",
+            "tests.test_v17_capability_manifest",
+            "tests.test_v17_case_doctor",
+            "tests.test_v17_case_reconciliation",
+            "tests.test_v17_validation_context",
+            "tests.test_v17_prospective_lock_v2",
+            "tests.test_v17_prospective_evaluation_v2",
+            "tests.test_v17_guided_inquiry",
+            "tests.test_v17_prospective_validation_compatibility",
+            "python -m unittest discover -s tests -p 'test_*.py' -v",
+            "python -m compileall -q engine tools tests",
+            "python tools/build_release_package.py --verify",
+            "Private outcome contamination scan",
+        ):
+            self.assertIn(required, workflow)
+
     def test_version_docs_state_v17_release_boundaries(self):
         version = (ROOT / "VERSION.md").read_text(encoding="utf-8")
         changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
