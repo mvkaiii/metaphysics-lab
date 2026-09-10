@@ -65,7 +65,7 @@ class AIDistributionDocsTests(unittest.TestCase):
             self.assertIn(label, head)
         self.assertIn("下載區", head)
         self.assertIn("GitHub 顯示為 Assets", head)
-        self.assertIn("Metaphysics-Lab-v1.6.0-User-Package.zip", head)
+        self.assertIn("Metaphysics-Lab-v1.7.0-User-Package.zip", head)
         self.assertIn("解壓縮", head)
         self.assertIn("不要下載 GitHub 自動產生的 Source code", head)
         self.assertIn(STARTUP, head)

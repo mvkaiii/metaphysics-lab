@@ -6,7 +6,9 @@
 
 ## 1. 下載與安裝
 
-目前正式版本為 **v1.6.0｜2026-09-05**。優先下載 `Metaphysics-Lab-v1.6.0-User-Package.zip`；解壓後就是下面三個檔案。也可以在 Assets 單獨下載。
+目前版本識別為 **v1.7.0**（release candidate）。在 `v1.7.0` GitHub Release 正式建立前，公開最新正式 Release 仍是 v1.6.0。v1.7.0 維持 **Case Schema 1.1**，既有私人 Case 不需要重建。
+
+優先下載 `Metaphysics-Lab-v1.7.0-User-Package.zip`；解壓後就是下面三個檔案。也可以在 Assets 單獨下載。
 
 | 用途 | 實際檔名 | 安裝方式 |
 |---|---|---|
@@ -21,6 +23,8 @@
 3. 開啟 Project Instructions，把 `project_instructions.txt` 的全文複製進去。
 
 也就是**兩個上傳檔＋一份貼進 Project Instructions 的文字**。不需要下載 Source code，也不需要解壓縮原始碼。
+
+如果你是從 **v1.6.0 升級到 v1.7.0**，請三個檔案一起同步，不要只換 Runtime。保留 `命主索引.md`、既有 Case、驗證事件、流年／問事／重大決策紀錄與已鎖定預測；Case Schema 1.1 沒有 migration，也不要做破壞性 Case 重建。
 
 ChatGPT Project 與 Claude Project 的介面名稱可能不同，但概念相同。
 
@@ -104,9 +108,13 @@ Alex_7F3A2C_04_紫微基礎資料包.md
 
 之後真的有驗證事件、流年追蹤、一般問事或重大決策時，才逐步新增對應紀錄。
 
+v1.7 的 **Case Doctor** 會先做只讀診斷，必要時提出 reconciliation dry-run；它不會自行刪除 legacy 或其他使用者檔案。
+
 ## 8. 問未來的順序
 
-如果需要 歷史事件校準，AI 會先完成未受歷史事件影響的第一版盤面判斷，再請你驗證過去事件，最後才做第二階段校準。這樣可以避免先知道答案後再修改第一版預測。
+如果需要歷史事件校準，AI 會先完成未受歷史事件影響的第一版盤面判斷，再請你驗證過去事件，最後才做第二階段校準。這樣可以避免先知道答案後再修改第一版預測。
+
+v1.7 可主動顯示 **3～4 個**後續詢問方向，**預設 3 個**；建議只是導航，不限制自由輸入，也不能提高原本證據允許的 specificity 或信心。
 
 ## 9. Astralium／第三方盤的資料邊界
 
@@ -141,10 +149,12 @@ python metaphysics_lab.py request --input - --pretty
 
 ## 11. 平常更新
 
-一般 Runtime 更新只需要替換 Project 裡的 `metaphysics_lab.py`。
+一般 Runtime-only 更新通常只需要替換 Project 裡的 `metaphysics_lab.py`；但 **v1.6.0 → v1.7.0** 因 Project Contract 升到 1.2，請把 `metaphysics_lab.py`、`metaphysics_core.md`、`project_instructions.txt` 三個發行面一起同步。
 
-`metaphysics_core.md`、Project Instructions、`命主索引.md` 與私人 Case 不需要每次一起重建；只有 Project Contract 或 Case Schema 明確變更時才依 migration 指示處理。
+`命主索引.md` 與私人 Case 不需要重建；本次 Case Schema 仍維持 1.1。
 
 ## 12. 隱私
 
 `命主索引.md`、出生資料、Case Markdown、事件紀錄、第三方 raw chart、PDF 與截圖都屬私人資料，不要提交回公開／共用 GitHub repo。
+
+完整升級規則與 v1.7 邊界請見[更新與版本同步](更新與版本同步.md)與[發布說明-v1.7.0](發布說明-v1.7.0.md)。
