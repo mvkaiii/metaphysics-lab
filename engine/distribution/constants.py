@@ -1,9 +1,9 @@
 """Version constants for the portable AI distribution contract."""
 
-PROJECT_CONTRACT_VERSION = "1.1"
+PROJECT_CONTRACT_VERSION = "1.2"
 RUNTIME_SCHEMA_VERSION = "1.1"
 CASE_SCHEMA_VERSION = "1.1"
-DISTRIBUTION_RUNTIME_VERSION = "1.1-exp"
+DISTRIBUTION_RUNTIME_VERSION = "1.2-exp"
 
 SUPPORTED_ACTIONS = (
     "runtime_info",
