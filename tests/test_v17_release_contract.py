@@ -87,6 +87,9 @@ class V17ReleaseContractTests(unittest.TestCase):
         _, locked = ProspectiveValidationCompatibilityTests._legacy_lock()
         self.assertEqual(locked["canonical_digest"], FROZEN_V15_DIGEST)
 
+    def test_v17_release_surface_validator_exists(self):
+        self.assertTrue((ROOT / "tools" / "run_v17_release_surface_validation.py").is_file())
+
     def test_version_docs_state_v17_release_boundaries(self):
         version = (ROOT / "VERSION.md").read_text(encoding="utf-8")
         changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
