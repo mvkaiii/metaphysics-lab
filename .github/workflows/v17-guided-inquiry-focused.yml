@@ -1,18 +1,19 @@
-name: v1.7 Task 2 Artifact Build
+name: v1.7 Guided Inquiry Focused
 
 on:
   push:
     branches:
-      - release/v1.7.0-integration
+      - feature/v1.7-guided-inquiry
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  build:
+  focused:
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout integration head
+      - name: Checkout validation ref
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -29,50 +30,22 @@ jobs:
           python -m pip install -r requirements.txt
           python -m pip install pytest==8.4.2
 
-      - name: Apply Task 2 patch
-        run: python tools/v17_task2_patch.py
-
-      - name: Rebuild deterministic AI distribution
-        run: |
-          python tools/build_ai_distribution.py
-          python tools/build_ai_distribution.py --check
-
-      - name: Run Task 2 GREEN qualification
+      - name: Guided Inquiry distribution qualification
         run: |
           python -m unittest \
-            tests.test_v17_release_contract \
-            tests.test_v16_post_release_docs \
-            tests.test_v17_capability_docs_drift \
-            tests.test_v17_capability_distribution_parity \
+            tests.test_v17_guided_inquiry \
+            tests.test_v17_guided_inquiry_runtime \
+            tests.test_v17_guided_inquiry_ai_contract \
+            tests.test_v17_guided_inquiry_distribution \
+            tests.test_ai_distribution_bundle \
+            tests.test_v17_capability_manifest \
+            tests.test_distribution_runtime_info \
+            tests.test_ai_distribution_docs \
             tests.test_project_ux_contract -v
-          python -m compileall -q engine tests tools dist/ai/metaphysics_lab.py
-          git diff --check
-          git status --short
 
-      - name: Upload verified Task 2 files
-        uses: actions/upload-artifact@v4
-        with:
-          name: v17-task2-green-files
-          path: |
-            engine/distribution/constants.py
-            VERSION.md
-            CHANGELOG.md
-            dist/ai/metaphysics_lab.py
-            dist/ai/metaphysics_core.md
-            dist/ai/project_instructions.txt
-          if-no-files-found: error
-          retention-days: 1
+      - name: Verify deterministic distribution
+        run: python tools/build_ai_distribution.py --check
 
-      - name: Commit verified Task 2 files only
+      - name: Compile focused runtime and distribution
         run: |
-          if git diff --quiet -- engine/distribution/constants.py VERSION.md CHANGELOG.md dist/ai; then
-            echo "No Task 2 source or distribution changes to commit"
-            exit 0
-          fi
-          remote_sha="$(git ls-remote origin refs/heads/release/v1.7.0-integration | cut -f1)"
-          test "$remote_sha" = "$GITHUB_SHA"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add engine/distribution/constants.py VERSION.md CHANGELOG.md dist/ai
-          git commit -m "chore: set v1.7 runtime contract"
-          git push origin HEAD:release/v1.7.0-integration
+          python -m compileall -q engine tests tools dist/ai/metaphysics_lab.py
