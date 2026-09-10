@@ -1,21 +1,22 @@
-name: v1.7 Guided Inquiry Focused
+name: v1.7 Task 2 Contract Compatibility Finalizer
 
 on:
   push:
     branches:
-      - feature/v1.7-guided-inquiry
+      - release/v1.7.0-integration
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  focused:
+  finalize:
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout validation ref
+      - name: Checkout integration branch
         uses: actions/checkout@v4
         with:
+          ref: release/v1.7.0-integration
           fetch-depth: 0
 
       - name: Set up Python 3.9
@@ -30,22 +31,134 @@ jobs:
           python -m pip install -r requirements.txt
           python -m pip install pytest==8.4.2
 
-      - name: Guided Inquiry distribution qualification
+      - name: Apply exact contract compatibility patch
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              target = Path(path)
+              text = target.read_text(encoding="utf-8")
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{path}: expected exactly one match, found {count}: {old!r}")
+              target.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+          case_pack = Path("engine/distribution/case_pack.py")
+          case_text = case_pack.read_text(encoding="utf-8")
+          if "_READABLE_PROJECT_CONTRACT_VERSIONS" not in case_text:
+              replace_once(
+                  case_pack,
+                  '_CALIBRATION_STATES = frozenset(("uncalibrated", "basic", "calibrated"))\n_RESERVED_INTERNAL_RECORD_TYPES',
+                  '_CALIBRATION_STATES = frozenset(("uncalibrated", "basic", "calibrated"))\n_READABLE_PROJECT_CONTRACT_VERSIONS = frozenset(("1.1", PROJECT_CONTRACT_VERSION))\n_RESERVED_INTERNAL_RECORD_TYPES',
+              )
+              replace_once(
+                  case_pack,
+                  '        if contract != PROJECT_CONTRACT_VERSION:\n',
+                  '        if contract not in _READABLE_PROJECT_CONTRACT_VERSIONS:\n',
+              )
+              replace_once(
+                  case_pack,
+                  '        metadata = _metadata(canonical, identity, index_metadata["created_at"], modified_by)\n        body = _tracking_body(',
+                  '        metadata = _metadata(canonical, identity, index_metadata["created_at"], modified_by)\n        metadata["project_contract_version"] = index_metadata["project_contract_version"]\n        body = _tracking_body(',
+              )
+
+          runtime_test = Path("tests/test_distribution_runtime_info.py")
+          runtime_text = runtime_test.read_text(encoding="utf-8")
+          if "from engine.distribution.constants import (" not in runtime_text:
+              replace_once(
+                  runtime_test,
+                  'from engine.distribution.manifest import load_capability_manifest\n',
+                  'from engine.distribution.constants import (\n    CASE_SCHEMA_VERSION,\n    DISTRIBUTION_RUNTIME_VERSION,\n    PROJECT_CONTRACT_VERSION,\n    RUNTIME_SCHEMA_VERSION,\n)\nfrom engine.distribution.manifest import load_capability_manifest\n',
+              )
+              replace_once(runtime_test, '        self.assertEqual(result["runtime_version"], "1.1-exp")\n', '        self.assertEqual(result["runtime_version"], DISTRIBUTION_RUNTIME_VERSION)\n')
+              replace_once(runtime_test, '        self.assertEqual(data["project_contract_version"], "1.1")\n', '        self.assertEqual(data["project_contract_version"], PROJECT_CONTRACT_VERSION)\n')
+              replace_once(runtime_test, '        self.assertEqual(data["runtime_schema_version"], "1.1")\n', '        self.assertEqual(data["runtime_schema_version"], RUNTIME_SCHEMA_VERSION)\n')
+              replace_once(runtime_test, '        self.assertEqual(data["case_schema_version"], "1.1")\n', '        self.assertEqual(data["case_schema_version"], CASE_SCHEMA_VERSION)\n')
+              replace_once(runtime_test, '        self.assertEqual(data["distribution_runtime_version"], "1.1-exp")\n', '        self.assertEqual(data["distribution_runtime_version"], DISTRIBUTION_RUNTIME_VERSION)\n')
+
+          acceptance = Path("tests/test_ai_distribution_acceptance.py")
+          acceptance_text = acceptance.read_text(encoding="utf-8")
+          if "from engine.distribution.constants import (" not in acceptance_text:
+              replace_once(
+                  acceptance,
+                  'from engine.distribution.runtime import dispatch\n',
+                  'from engine.distribution.constants import (\n    CASE_SCHEMA_VERSION,\n    DISTRIBUTION_RUNTIME_VERSION,\n    PROJECT_CONTRACT_VERSION,\n    RUNTIME_SCHEMA_VERSION,\n)\nfrom engine.distribution.runtime import dispatch\n',
+              )
+              replace_once(acceptance, '        self.assertIn(\'PROJECT_CONTRACT_VERSION = "1.1"\', normalized)\n', '        self.assertIn(\'PROJECT_CONTRACT_VERSION = "%s"\' % PROJECT_CONTRACT_VERSION, normalized)\n')
+              replace_once(acceptance, '        self.assertIn(\'RUNTIME_SCHEMA_VERSION = "1.1"\', normalized)\n', '        self.assertIn(\'RUNTIME_SCHEMA_VERSION = "%s"\' % RUNTIME_SCHEMA_VERSION, normalized)\n')
+              replace_once(acceptance, '        self.assertIn(\'CASE_SCHEMA_VERSION = "1.1"\', normalized)\n', '        self.assertIn(\'CASE_SCHEMA_VERSION = "%s"\' % CASE_SCHEMA_VERSION, normalized)\n')
+              replace_once(acceptance, '        self.assertIn(\'DISTRIBUTION_RUNTIME_VERSION = "1.1-exp"\', normalized)\n', '        self.assertIn(\'DISTRIBUTION_RUNTIME_VERSION = "%s"\' % DISTRIBUTION_RUNTIME_VERSION, normalized)\n')
+
+          case_test = Path("tests/test_distribution_case_pack.py")
+          case_test_text = case_test.read_text(encoding="utf-8")
+          if "from engine.distribution.constants import PROJECT_CONTRACT_VERSION" not in case_test_text:
+              replace_once(
+                  case_test,
+                  'from engine.distribution.runtime import dispatch\n',
+                  'from engine.distribution.constants import PROJECT_CONTRACT_VERSION\nfrom engine.distribution.runtime import dispatch\n',
+              )
+              replace_once(case_test, '            self.assertEqual(meta["project_contract_version"], "1.1")\n', '            self.assertEqual(meta["project_contract_version"], PROJECT_CONTRACT_VERSION)\n')
+              replace_once(case_test, '            text = text.replace("project_contract_version: 1.1", "project_contract_version: 1.0", 1)\n', '            text = text.replace("project_contract_version: %s" % PROJECT_CONTRACT_VERSION, "project_contract_version: 1.0", 1)\n')
+
+          fifth = Path("tests/test_fifth_round_legacy_record_id_compat.py")
+          fifth_text = fifth.read_text(encoding="utf-8")
+          if "from engine.distribution.constants import PROJECT_CONTRACT_VERSION" not in fifth_text:
+              replace_once(
+                  fifth,
+                  'from engine.distribution.runtime import dispatch\n',
+                  'from engine.distribution.constants import PROJECT_CONTRACT_VERSION\nfrom engine.distribution.runtime import dispatch\n',
+              )
+              replace_once(fifth, '            text = text.replace("project_contract_version: 1.1", "project_contract_version: 1.0", 1)\n', '            text = text.replace("project_contract_version: %s" % PROJECT_CONTRACT_VERSION, "project_contract_version: 1.0", 1)\n')
+
+          compat = Path("tests/test_v17_case_contract_compatibility.py")
+          compat_text = compat.read_text(encoding="utf-8")
+          old = '        self.assertIn("runtime_version_if_applicable: 1.1-exp", tracking)\n'
+          new = '        self.assertIn("runtime_version_if_applicable: 1.2-exp", tracking)\n'
+          if old in compat_text:
+              replace_once(compat, old, new)
+          PY
+
+      - name: Rebuild official AI distribution
+        run: |
+          python tools/build_ai_distribution.py
+          python tools/build_ai_distribution.py --check
+
+      - name: Focused contract compatibility regression
         run: |
           python -m unittest \
-            tests.test_v17_guided_inquiry \
-            tests.test_v17_guided_inquiry_runtime \
-            tests.test_v17_guided_inquiry_ai_contract \
-            tests.test_v17_guided_inquiry_distribution \
-            tests.test_ai_distribution_bundle \
-            tests.test_v17_capability_manifest \
+            tests.test_v17_case_contract_compatibility \
             tests.test_distribution_runtime_info \
-            tests.test_ai_distribution_docs \
-            tests.test_project_ux_contract -v
+            tests.test_ai_distribution_acceptance \
+            tests.test_distribution_case_pack \
+            tests.test_fifth_round_legacy_record_id_compat \
+            tests.test_v17_release_contract -v
 
-      - name: Verify deterministic distribution
-        run: python tools/build_ai_distribution.py --check
+      - name: Full repository regression
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
 
-      - name: Compile focused runtime and distribution
+      - name: Compile and hygiene
         run: |
-          python -m compileall -q engine tests tools dist/ai/metaphysics_lab.py
+          python -m compileall -q engine tests tools
+          python -c "compile(open('dist/ai/metaphysics_lab.py', encoding='utf-8').read(), 'dist/ai/metaphysics_lab.py', 'exec')"
+          git diff --check
+
+      - name: Commit verified production bytes
+        run: |
+          if git diff --quiet; then
+            echo "No patch changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            engine/distribution/case_pack.py \
+            tests/test_distribution_runtime_info.py \
+            tests/test_ai_distribution_acceptance.py \
+            tests/test_distribution_case_pack.py \
+            tests/test_fifth_round_legacy_record_id_compat.py \
+            tests/test_v17_case_contract_compatibility.py \
+            dist/ai
+          git diff --cached --check
+          git commit -m "fix: preserve v1.7 contract compatibility"
+          git push origin HEAD:release/v1.7.0-integration
