@@ -1,4 +1,5 @@
 name: v1.7 Task 2 Finalize
+# Temporary integration finalizer; removed after Task 2 GREEN commit.
 
 on:
   push:
