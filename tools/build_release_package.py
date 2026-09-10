@@ -8,8 +8,8 @@ import json
 import zipfile
 from pathlib import Path
 
-RELEASE_VERSION = "1.6.0"
-USER_PACKAGE_NAME = "Metaphysics-Lab-v1.6.0-User-Package.zip"
+RELEASE_VERSION = "1.7.0"
+USER_PACKAGE_NAME = "Metaphysics-Lab-v1.7.0-User-Package.zip"
 USER_ASSETS = (
     "metaphysics_core.md",
     "metaphysics_lab.py",
@@ -77,7 +77,7 @@ def verify_user_package(package_bytes: bytes, distribution_dir: Path) -> dict:
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Build deterministic Metaphysics Lab user package")
     parser.add_argument("--distribution-dir", default="dist/ai")
-    parser.add_argument("--output", default=USER_PACKAGE_NAME)
+    parser.add_argument("--output")
     parser.add_argument("--verify", action="store_true")
     args = parser.parse_args(argv)
     root = Path(__file__).resolve().parents[1]
@@ -86,13 +86,18 @@ def main(argv=None):
         distribution = root / distribution
     package = render_user_package(distribution)
     report = verify_user_package(package, distribution)
-    if not args.verify:
-        output = Path(args.output)
+
+    output_arg = args.output
+    if output_arg is None and not args.verify:
+        output_arg = USER_PACKAGE_NAME
+    if output_arg is not None:
+        output = Path(output_arg)
         if not output.is_absolute():
             output = root / output
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_bytes(package)
         report["output"] = str(output)
+
     print(json.dumps(report, ensure_ascii=False, sort_keys=True))
     return 0
 

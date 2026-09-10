@@ -14,6 +14,7 @@ from tests.test_v17_prospective_validation_compatibility import (
     FROZEN_V15_DIGEST,
     ProspectiveValidationCompatibilityTests,
 )
+from tools import build_release_package
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -59,6 +60,13 @@ class V17ReleaseContractTests(unittest.TestCase):
         self.assertEqual(RUNTIME_SCHEMA_VERSION, "1.1")
         self.assertEqual(CASE_SCHEMA_VERSION, "1.1")
         self.assertEqual(DISTRIBUTION_RUNTIME_VERSION, "1.2-exp")
+
+    def test_current_release_package_builder_is_v170_successor(self):
+        self.assertEqual(build_release_package.RELEASE_VERSION, "1.7.0")
+        self.assertEqual(
+            build_release_package.USER_PACKAGE_NAME,
+            "Metaphysics-Lab-v1.7.0-User-Package.zip",
+        )
 
     def test_v16_public_actions_remain_and_v17_actions_are_registered(self):
         supported = set(SUPPORTED_ACTIONS)

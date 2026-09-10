@@ -5,18 +5,19 @@ from pathlib import Path
 
 from engine.distribution.capabilities import get_capability as get_distribution_capability
 from engine.historical.capabilities import get_capability as get_historical_capability
-from tools import build_release_package
 
 ROOT = Path(__file__).resolve().parents[1]
+V16_USER_PACKAGE = "Metaphysics-Lab-v1.6.0-User-Package.zip"
+V16_USER_PACKAGE_SHA256 = "30c6a4ff1dade6da2cdbf1b9d53463df4936c8a5b887d8a73cb1fbd2359c83eb"
 
 
 class V16ReleaseContractTests(unittest.TestCase):
-    def test_release_package_identity_is_v160(self):
-        self.assertEqual(build_release_package.RELEASE_VERSION, "1.6.0")
-        self.assertEqual(
-            build_release_package.USER_PACKAGE_NAME,
-            "Metaphysics-Lab-v1.6.0-User-Package.zip",
-        )
+    def test_v16_release_package_identity_is_preserved_as_historical_snapshot(self):
+        version = (ROOT / "VERSION.md").read_text(encoding="utf-8")
+        changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+        self.assertIn(V16_USER_PACKAGE_SHA256, version)
+        self.assertIn(V16_USER_PACKAGE, changelog)
+        self.assertIn(V16_USER_PACKAGE_SHA256, changelog)
 
     def test_v1_defaults_remain_stable_while_v16_research_layers_ship_non_default(self):
         selector = get_historical_capability("historical.activation_selector")
