@@ -20,11 +20,11 @@ text = text.replace(old, new, 1)
 replacements = (
     (
         "使用者不是在讀 AI 報告。預設先把盤面訊號翻成現實中可能發生的事情，再視解讀偏好補命理原因。",
-        "預設先把盤面訊號翻成現實情境，再依偏好補命理原因。",
+        "預設把盤面訊號翻成現實情境，依偏好補命理原因。",
     ),
     (
         "External / Project raw views 不互相覆寫，Resolved 也不得把 CONFLICT 改寫成 MATCH。對使用者聊天時預設不用這些工程名詞，改說「外部命盤」「本次系統推算」「校對後採用結果」「命盤校對」；只有問題本身是在做 runtime 除錯、schema 驗證、程式整合或開發稽核等真正的技術工作，而且使用者明確要求技術檢查時，才展開必要的原始術語。",
-        "External / Project raw views 不互相覆寫，Resolved 不得把 CONFLICT 改寫成 MATCH。一般對話改說「外部命盤」「本次系統推算」「校對後採用結果」「命盤校對」；只有實際做 runtime 除錯、schema 驗證、程式整合或開發稽核且明確要求技術檢查時，才展開必要原始術語。",
+        "External / Project raw views 不互相覆寫，Resolved 不得把 CONFLICT 改寫成 MATCH。一般對話說「外部命盤」「本次系統推算」「校對後採用結果」「命盤校對」；只有做 runtime 除錯、schema 驗證、程式整合或開發稽核且明確要求技術檢查時，才展開術語。",
     ),
 )
 for old_text, new_text in replacements:
