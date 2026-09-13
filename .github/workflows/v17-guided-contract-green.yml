@@ -41,3 +41,5 @@ jobs:
           git add core/核心提示詞.md dist/ai/project_instructions.txt
           git commit -m 'fix: restore v1.7 guided inquiry instruction contract'
           git push origin HEAD:release/v1.7.0-integration
+
+# trigger: helper present
