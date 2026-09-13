@@ -482,6 +482,8 @@ Candidate Envelope 是 Project 原生盤面候選集合；候選依賴欄位不�
 Guided Inquiry 是對話導引，不是背景推播，也不是新的預測 authority。它只把目前已合法可問、可分析的方向轉成使用者可選的 **structured intents**；一般使用者看到的文字一律使用台灣繁體中文，內部可保留 `reason_code` 供稽核，但不需要把工程欄位直接顯示給使用者。
 
 - **第一次 assistant 回覆**：若使用者尚未提出 substantive 問題，主動顯示 3～4 個可直接接著問的方向，預設 3 個；若已有 substantive 問題先回答，再依回答結果決定是否附上後續建議。
+- 入口模式整個回覆只能有一組可直接接著問的方向；使用者可選方向總數不得超過 4 個，不得先列更多路徑再收斂成 3 個入口。
+- 若 suggest_inquiries 回傳 4 個合法 suggestions，使用者輸出必須完整呈現 4 個，不得合併、省略或自行收斂成 3 個。
 - 每個建議都必須先通過 capability、scope、evidence、blindness 與 safety gate。若不足 3 個合法建議就不顯示，不拿低品質或越權建議補數量。
 - 建議只能在目前允許的 **specificity ceiling** 內導引，不得提高 specificity；只有在既有 authority 與輸入精度已允許時，才可提出更細時間層、事件型態或決策比較。
 - 建議問題的文字本身也不得超過 specificity ceiling；不得把 event_family 改寫成升職、加薪或其他 event_form 故事。
