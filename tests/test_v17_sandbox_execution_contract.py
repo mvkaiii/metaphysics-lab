@@ -21,7 +21,7 @@ SETUP_MESSAGES = {
 class V17SandboxExecutionContractTests(unittest.TestCase):
     def test_script_v2_freezes_conversation_grouping_and_setup_messages(self):
         script = SCRIPT_PATH.read_text(encoding="utf-8")
-        self.assertIn("script_version: v1.7.0-isolated-sandbox-script.v2", script)
+        self.assertIn("script_version: v1.7.0-isolated-sandbox-script.v3", script)
         self.assertIn("S03 continues the S02 conversation", script)
         self.assertIn("S06 Step A and Step B stay in the same conversation", script)
         self.assertIn("All other scenarios start in a fresh conversation", script)

@@ -11,7 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE_SCHEMA_VERSION = "v1.7.0-isolated-sandbox-evidence.v1"
-SCRIPT_VERSION = "v1.7.0-isolated-sandbox-script.v2"
+SCRIPT_VERSION = "v1.7.0-isolated-sandbox-script.v3"
 BASE_FIXTURE_VERSION = "v1.7.0-isolated-sandbox-base.v1"
 SCRIPT_PATH = Path("docs/release/v1.7.0-isolated-sandbox-script.md")
 BASE_FIXTURE_PATH = Path("docs/release/v1.7.0-isolated-sandbox-base.json")

@@ -285,7 +285,9 @@ def _post_answer_candidates(payload):
     ]
     if answer["actionable_options_present"]:
         rows.append(_row("decision", domain, "decision", ceiling, ceiling, "compare_actionable_options"))
-    if answer["forecast_lock_eligible"]:
+    if payload["pending_forecast_available"]:
+        rows.append(_row("validation", domain, scope, ceiling, ceiling, "pending_forecast_tracking"))
+    elif answer["forecast_lock_eligible"]:
         rows.append(_row("validation", domain, scope, ceiling, ceiling, "forecast_can_be_tracked"))
     refinement = _time_refinement_candidate(answer)
     if refinement is not None:
@@ -345,7 +347,7 @@ def suggest_inquiries(payload: Mapping[str, object]) -> dict:
     candidates = _unique([
         row for row in raw_candidates if _specificity_legal(row, ceiling)
     ])
-    allow_fourth = normalized["mode"] == "entry" and normalized["pending_forecast_available"]
+    allow_fourth = normalized["pending_forecast_available"]
     selected = candidates[:4] if allow_fourth and len(candidates) >= 4 else candidates[:3]
     if len(selected) < 3:
         return _suppressed("insufficient_legal_suggestions")

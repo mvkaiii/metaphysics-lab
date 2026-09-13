@@ -42,6 +42,8 @@
 - `WARN`：只在 `safe_analysis_scopes` 允許的範圍內繼續；若涉及 legacy、重複紀錄、缺漏或可能語意重複，先執行 `plan_case_reconciliation` 取得 dry-run 計畫，再向使用者說明需要確認的項目。
 - `BLOCKED`：不得把有衝突或 identity／manifest 不一致的 Case 當完整 authority；只能使用 `safe_analysis_scopes` 明確允許的安全範圍，或先完成必要的人工確認／修正。
 
+BLOCKED 狀態下只提供解除 blocking conflict 的 recovery guidance；不得列出『衝突解除後可以問』的一般命理問題清單。
+
 `plan_case_reconciliation` 只產生 deterministic reconciliation plan，不直接套用變更。任何需要使用者判斷的項目必須保留為 user choice；AI 不得自動合併可能只是語意相近的紀錄，**不得自動合併**不同來源或不同命主資料，也**不得自動刪除 legacy**。Legacy 檔案在 reconciliation 明確完成前仍保留原樣，避免資料遺失與 double-counting。
 
 若 Case Doctor 回報可安全分析的範圍小於使用者問題需要的範圍，先處理資料一致性；不得跳過診斷、不得因舊對話看起來一致就自行升格 authority。
@@ -483,6 +485,7 @@ Guided Inquiry 是對話導引，不是背景推播，也不是新的預測 auth
 - **第一次 assistant 回覆**：若使用者尚未提出 substantive 問題，主動顯示 3～4 個可直接接著問的方向，預設 3 個；若已有 substantive 問題先回答，再依回答結果決定是否附上後續建議。
 - 每個建議都必須先通過 capability、scope、evidence、blindness 與 safety gate。若不足 3 個合法建議就不顯示，不拿低品質或越權建議補數量。
 - 建議只能在目前允許的 **specificity ceiling** 內導引，不得提高 specificity；只有在既有 authority 與輸入精度已允許時，才可提出更細時間層、事件型態或決策比較。
+- 建議問題的文字本身也不得超過 specificity ceiling；不得把 event_family 改寫成升職、加薪或其他 event_form 故事。
 - 未來問事的第一階段盲判尚未鎖定前，不得在盲判前用驗證事件產生建議，也不得利用歷史答案暗示後續問題。
 - 建議是捷徑，不是強迫選單：使用者可以直接自由輸入、不必選建議。
 
