@@ -42,4 +42,4 @@ jobs:
           git commit -m 'fix: restore v1.7 guided inquiry instruction contract'
           git push origin HEAD:release/v1.7.0-integration
 
-# trigger: helper v2
+# trigger: helper v3
