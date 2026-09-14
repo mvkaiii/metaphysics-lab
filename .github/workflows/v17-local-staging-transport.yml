@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  persist-source-transport:
+  persist-delta-transport:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout helper branch
@@ -32,17 +32,20 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Build and verify exact candidate artifacts
+      - name: Build, verify and create v1.5-to-v1.7 delta transport
         run: |
           set -euo pipefail
-          rm -rf transport/v17 transport/v17-src
-          mkdir -p "$RUNNER_TEMP/v17-kit" transport/v17-src
+          rm -rf transport/v17 transport/v17-src transport/v17-delta
+          mkdir -p "$RUNNER_TEMP/v17-kit" transport/v17-delta
           python tools/build_release_package.py --verify --output "$RUNNER_TEMP/v17-kit/Metaphysics-Lab-v1.7.0-User-Package.zip"
           cp docs/release/v1.7.0-isolated-sandbox-script.md "$RUNNER_TEMP/v17-kit/v1.7.0-isolated-sandbox-script.md"
           cp docs/release/v1.7.0-isolated-sandbox-base.json "$RUNNER_TEMP/v17-kit/v1.7.0-isolated-sandbox-base.json"
+          git show v1.5.0:dist/ai/metaphysics_lab.py > "$RUNNER_TEMP/metaphysics_lab_v1.5.0.py"
+          test "$(git hash-object "$RUNNER_TEMP/metaphysics_lab_v1.5.0.py")" = "21809e4adfa90c9fd3ed37220623deef1696fd0d"
           python - <<'PY'
           from pathlib import Path
           import base64
+          import difflib
           import hashlib
           import io
           import json
@@ -55,11 +58,11 @@ jobs:
           candidate = '7c9c4a390a05cc78460bfcb615db76bc4c1791c7'
           expected_package = '57933797496f4b943e0cff20997a45a35dce760521d8add4254fd5f8fb952741'
           expected_kit = 'bba33cf6cb88669988570f0a6c2250808d0339655dce283c3dd2ea102644e9b1'
+          expected_base_git_blob = '21809e4adfa90c9fd3ed37220623deef1696fd0d'
           root = Path(os.environ['RUNNER_TEMP']) / 'v17-kit'
-          transport = Path('transport/v17-src')
+          transport = Path('transport/v17-delta')
           chunk_size = 24000
           line_width = 120
-          magic = b'V17SRC1\0'
 
           def sha_bytes(data):
               return hashlib.sha256(data).hexdigest()
@@ -73,7 +76,7 @@ jobs:
               raise SystemExit(f'user package SHA mismatch: {actual_package}')
 
           script = root / 'v1.7.0-isolated-sandbox-script.md'
-          base = root / 'v1.7.0-isolated-sandbox-base.json'
+          base_json = root / 'v1.7.0-isolated-sandbox-base.json'
           readme = root / 'README-START-HERE.md'
           readme.write_text(
               '# Metaphysics Lab v1.7.0 Isolated Sandbox Kit v3\n\n'
@@ -91,7 +94,7 @@ jobs:
           )
           checks = {
               'Metaphysics-Lab-v1.7.0-User-Package.zip': sha(package),
-              'v1.7.0-isolated-sandbox-base.json': sha(base),
+              'v1.7.0-isolated-sandbox-base.json': sha(base_json),
               'v1.7.0-isolated-sandbox-script.md': sha(script),
               'README-START-HERE.md': sha(readme),
           }
@@ -119,15 +122,34 @@ jobs:
           if actual_kit != expected_kit:
               raise SystemExit(f'sandbox kit SHA mismatch: {actual_kit}')
 
+          base_runtime = (Path(os.environ['RUNNER_TEMP']) / 'metaphysics_lab_v1.5.0.py').read_bytes()
+          target_runtime = Path('dist/ai/metaphysics_lab.py').read_bytes()
+          base_lines = base_runtime.splitlines(keepends=True)
+          target_lines = target_runtime.splitlines(keepends=True)
+          matcher = difflib.SequenceMatcher(None, base_lines, target_lines, autojunk=False)
+          delta = io.BytesIO()
+          delta.write(b'V17DELTA1\0')
+          ops = matcher.get_opcodes()
+          delta.write(struct.pack('>I', len(ops)))
+          for tag, i1, i2, j1, j2 in ops:
+              if tag == 'equal':
+                  delta.write(b'E')
+                  delta.write(struct.pack('>II', i1, i2 - i1))
+              else:
+                  literal = b''.join(target_lines[j1:j2])
+                  delta.write(b'L')
+                  delta.write(struct.pack('>Q', len(literal)))
+                  delta.write(literal)
+
           records = {
+              'runtime.delta': delta.getvalue(),
               'dist/ai/metaphysics_core.md': Path('dist/ai/metaphysics_core.md').read_bytes(),
-              'dist/ai/metaphysics_lab.py': Path('dist/ai/metaphysics_lab.py').read_bytes(),
               'dist/ai/project_instructions.txt': Path('dist/ai/project_instructions.txt').read_bytes(),
               'docs/release/v1.7.0-isolated-sandbox-script.md': Path('docs/release/v1.7.0-isolated-sandbox-script.md').read_bytes(),
               'docs/release/v1.7.0-isolated-sandbox-base.json': Path('docs/release/v1.7.0-isolated-sandbox-base.json').read_bytes(),
           }
           raw = io.BytesIO()
-          raw.write(magic)
+          raw.write(b'V17BUNDLE1\0')
           raw.write(struct.pack('>I', len(records)))
           for name in sorted(records):
               name_bytes = name.encode('utf-8')
@@ -136,18 +158,24 @@ jobs:
               raw.write(name_bytes)
               raw.write(struct.pack('>Q', len(data)))
               raw.write(data)
-          source_blob = lzma.compress(raw.getvalue(), preset=9 | lzma.PRESET_EXTREME)
-          encoded = base64.b64encode(source_blob).decode('ascii')
+          payload = lzma.compress(raw.getvalue(), preset=9 | lzma.PRESET_EXTREME)
+          encoded = base64.b64encode(payload).decode('ascii')
           parts = [encoded[i:i + chunk_size] for i in range(0, len(encoded), chunk_size)]
           for index, chunk in enumerate(parts):
-              wrapped = '\n'.join(textwrap.wrap(chunk, line_width)) + '\n'
-              (transport / f'part-{index:02d}.b64').write_text(wrapped, encoding='ascii')
+              (transport / f'part-{index:02d}.b64').write_text('\n'.join(textwrap.wrap(chunk, line_width)) + '\n', encoding='ascii')
           meta = {
               'candidate': candidate,
+              'base_release': 'v1.5.0',
+              'base_runtime_git_blob_sha1': expected_base_git_blob,
+              'base_runtime_sha256': sha_bytes(base_runtime),
+              'base_runtime_size': len(base_runtime),
+              'target_runtime_sha256': sha_bytes(target_runtime),
+              'target_runtime_size': len(target_runtime),
+              'runtime_delta_size': len(delta.getvalue()),
               'package_sha256': actual_package,
               'kit_sha256': actual_kit,
-              'source_transport_sha256': sha_bytes(source_blob),
-              'source_transport_size': len(source_blob),
+              'transport_sha256': sha_bytes(payload),
+              'transport_size': len(payload),
               'b64_len': len(encoded),
               'chunk_size': chunk_size,
               'line_width': line_width,
@@ -165,5 +193,5 @@ jobs:
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add -A transport
           git diff --cached --check
-          git commit -m 'ci: persist compressed v1.7 source transport'
+          git commit -m 'ci: persist compact v1.5-to-v1.7 delta transport'
           git push origin HEAD:ci/v17-local-staging-7c9c4-transport
