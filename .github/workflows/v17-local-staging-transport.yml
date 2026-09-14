@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  persist-delta-transport:
+  persist-xdelta-transport:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout helper branch
@@ -32,20 +32,29 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Build, verify and create v1.5-to-v1.7 delta transport
+      - name: Install xdelta3
         run: |
           set -euo pipefail
-          rm -rf transport/v17 transport/v17-src transport/v17-delta
-          mkdir -p "$RUNNER_TEMP/v17-kit" transport/v17-delta
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xdelta3
+          xdelta3 -V
+
+      - name: Build, verify and create binary delta transport
+        run: |
+          set -euo pipefail
+          rm -rf transport
+          mkdir -p "$RUNNER_TEMP/v17-kit" transport/v17-xdelta
           python tools/build_release_package.py --verify --output "$RUNNER_TEMP/v17-kit/Metaphysics-Lab-v1.7.0-User-Package.zip"
           cp docs/release/v1.7.0-isolated-sandbox-script.md "$RUNNER_TEMP/v17-kit/v1.7.0-isolated-sandbox-script.md"
           cp docs/release/v1.7.0-isolated-sandbox-base.json "$RUNNER_TEMP/v17-kit/v1.7.0-isolated-sandbox-base.json"
           git show v1.5.0:dist/ai/metaphysics_lab.py > "$RUNNER_TEMP/metaphysics_lab_v1.5.0.py"
           test "$(git hash-object "$RUNNER_TEMP/metaphysics_lab_v1.5.0.py")" = "21809e4adfa90c9fd3ed37220623deef1696fd0d"
+          xdelta3 -e -9 -s "$RUNNER_TEMP/metaphysics_lab_v1.5.0.py" dist/ai/metaphysics_lab.py "$RUNNER_TEMP/runtime.xdelta"
+          xdelta3 -d -s "$RUNNER_TEMP/metaphysics_lab_v1.5.0.py" "$RUNNER_TEMP/runtime.xdelta" "$RUNNER_TEMP/runtime.roundtrip.py"
+          cmp dist/ai/metaphysics_lab.py "$RUNNER_TEMP/runtime.roundtrip.py"
           python - <<'PY'
           from pathlib import Path
           import base64
-          import difflib
           import hashlib
           import io
           import json
@@ -60,13 +69,12 @@ jobs:
           expected_kit = 'bba33cf6cb88669988570f0a6c2250808d0339655dce283c3dd2ea102644e9b1'
           expected_base_git_blob = '21809e4adfa90c9fd3ed37220623deef1696fd0d'
           root = Path(os.environ['RUNNER_TEMP']) / 'v17-kit'
-          transport = Path('transport/v17-delta')
+          transport = Path('transport/v17-xdelta')
           chunk_size = 24000
           line_width = 120
 
           def sha_bytes(data):
               return hashlib.sha256(data).hexdigest()
-
           def sha(path):
               return sha_bytes(path.read_bytes())
 
@@ -98,17 +106,8 @@ jobs:
               'v1.7.0-isolated-sandbox-script.md': sha(script),
               'README-START-HERE.md': sha(readme),
           }
-          (root / 'CHECKSUMS.txt').write_text(
-              ''.join(f'{digest}  {name}\n' for name, digest in checks.items()),
-              encoding='utf-8',
-          )
-          members = [
-              'README-START-HERE.md',
-              'CHECKSUMS.txt',
-              'Metaphysics-Lab-v1.7.0-User-Package.zip',
-              'v1.7.0-isolated-sandbox-base.json',
-              'v1.7.0-isolated-sandbox-script.md',
-          ]
+          (root / 'CHECKSUMS.txt').write_text(''.join(f'{digest}  {name}\n' for name, digest in checks.items()), encoding='utf-8')
+          members = ['README-START-HERE.md','CHECKSUMS.txt','Metaphysics-Lab-v1.7.0-User-Package.zip','v1.7.0-isolated-sandbox-base.json','v1.7.0-isolated-sandbox-script.md']
           kit = Path(os.environ['RUNNER_TEMP']) / 'Metaphysics-Lab-v1.7.0-Isolated-Sandbox-Kit-v3.zip'
           with zipfile.ZipFile(kit, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
               for name in members:
@@ -124,32 +123,15 @@ jobs:
 
           base_runtime = (Path(os.environ['RUNNER_TEMP']) / 'metaphysics_lab_v1.5.0.py').read_bytes()
           target_runtime = Path('dist/ai/metaphysics_lab.py').read_bytes()
-          base_lines = base_runtime.splitlines(keepends=True)
-          target_lines = target_runtime.splitlines(keepends=True)
-          matcher = difflib.SequenceMatcher(None, base_lines, target_lines, autojunk=False)
-          delta = io.BytesIO()
-          delta.write(b'V17DELTA1\0')
-          ops = matcher.get_opcodes()
-          delta.write(struct.pack('>I', len(ops)))
-          for tag, i1, i2, j1, j2 in ops:
-              if tag == 'equal':
-                  delta.write(b'E')
-                  delta.write(struct.pack('>II', i1, i2 - i1))
-              else:
-                  literal = b''.join(target_lines[j1:j2])
-                  delta.write(b'L')
-                  delta.write(struct.pack('>Q', len(literal)))
-                  delta.write(literal)
-
           records = {
-              'runtime.delta': delta.getvalue(),
+              'runtime.xdelta': (Path(os.environ['RUNNER_TEMP']) / 'runtime.xdelta').read_bytes(),
               'dist/ai/metaphysics_core.md': Path('dist/ai/metaphysics_core.md').read_bytes(),
               'dist/ai/project_instructions.txt': Path('dist/ai/project_instructions.txt').read_bytes(),
               'docs/release/v1.7.0-isolated-sandbox-script.md': Path('docs/release/v1.7.0-isolated-sandbox-script.md').read_bytes(),
               'docs/release/v1.7.0-isolated-sandbox-base.json': Path('docs/release/v1.7.0-isolated-sandbox-base.json').read_bytes(),
           }
           raw = io.BytesIO()
-          raw.write(b'V17BUNDLE1\0')
+          raw.write(b'V17XDELTA1\0')
           raw.write(struct.pack('>I', len(records)))
           for name in sorted(records):
               name_bytes = name.encode('utf-8')
@@ -171,7 +153,7 @@ jobs:
               'base_runtime_size': len(base_runtime),
               'target_runtime_sha256': sha_bytes(target_runtime),
               'target_runtime_size': len(target_runtime),
-              'runtime_delta_size': len(delta.getvalue()),
+              'xdelta_size': len(records['runtime.xdelta']),
               'package_sha256': actual_package,
               'kit_sha256': actual_kit,
               'transport_sha256': sha_bytes(payload),
@@ -193,5 +175,5 @@ jobs:
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add -A transport
           git diff --cached --check
-          git commit -m 'ci: persist compact v1.5-to-v1.7 delta transport'
+          git commit -m 'ci: persist compact xdelta v1.7 transport'
           git push origin HEAD:ci/v17-local-staging-7c9c4-transport
