@@ -1,0 +1,33 @@
+{
+  "b64_len": 1084028,
+  "candidate": "7c9c4a390a05cc78460bfcb615db76bc4c1791c7",
+  "chunk_size": 24000,
+  "kit_sha256": "bba33cf6cb88669988570f0a6c2250808d0339655dce283c3dd2ea102644e9b1",
+  "line_width": 120,
+  "package_sha256": "57933797496f4b943e0cff20997a45a35dce760521d8add4254fd5f8fb952741",
+  "records": {
+    "dist/ai/metaphysics_core.md": {
+      "sha256": "d91c22765bcc77fd69693eb99b23ec7ea51dcfcb0a53c96eb69dbcae88953f36",
+      "size": 66967
+    },
+    "dist/ai/metaphysics_lab.py": {
+      "sha256": "da37e2859b3282efe30b80394dfc1beb3dfd14676c4972d177260df6a40ca9c6",
+      "size": 1042369
+    },
+    "dist/ai/project_instructions.txt": {
+      "sha256": "85255a4226f67dab048715775b761de978d9157f29feac027dc3197eb157a619",
+      "size": 16007
+    },
+    "docs/release/v1.7.0-isolated-sandbox-base.json": {
+      "sha256": "d40228ec25f07f6241182387cde99f1b5de902a798f6f74a6baa1c3ed0f957e6",
+      "size": 746
+    },
+    "docs/release/v1.7.0-isolated-sandbox-script.md": {
+      "sha256": "9ad878a6c3496edf382b9c1249e82bc62373bb2f6c6240bef1facd720e922b7f",
+      "size": 9896
+    }
+  },
+  "source_transport_sha256": "a38d4b556ab36644eec1e14aeaa86486b183f9c7dea072f404f5cb4e67bca30c",
+  "source_transport_size": 813020,
+  "total_parts": 46
+}
