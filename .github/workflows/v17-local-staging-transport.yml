@@ -1,0 +1,135 @@
+name: v1.7 Local Staging Transport
+
+on:
+  push:
+    branches:
+      - ci/v17-local-staging-7c9c4-transport
+    paths:
+      - .github/workflows/v17-local-staging-transport.yml
+
+permissions:
+  contents: read
+
+jobs:
+  emit-kit-chunk:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        part: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@v4
+        with:
+          ref: 7c9c4a390a05cc78460bfcb615db76bc4c1791c7
+          fetch-depth: 0
+
+      - name: Confirm exact candidate
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "7c9c4a390a05cc78460bfcb615db76bc4c1791c7"
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Build deterministic sandbox kit and emit one transport chunk
+        env:
+          PART: ${{ matrix.part }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/v17-kit"
+          python tools/build_release_package.py --verify --output "$RUNNER_TEMP/v17-kit/Metaphysics-Lab-v1.7.0-User-Package.zip"
+          cp docs/release/v1.7.0-isolated-sandbox-script.md "$RUNNER_TEMP/v17-kit/v1.7.0-isolated-sandbox-script.md"
+          cp docs/release/v1.7.0-isolated-sandbox-base.json "$RUNNER_TEMP/v17-kit/v1.7.0-isolated-sandbox-base.json"
+          python - <<'PY'
+          from pathlib import Path
+          import base64
+          import hashlib
+          import os
+          import textwrap
+          import zipfile
+
+          root = Path(os.environ['RUNNER_TEMP']) / 'v17-kit'
+          candidate = '7c9c4a390a05cc78460bfcb615db76bc4c1791c7'
+          expected_package = '57933797496f4b943e0cff20997a45a35dce760521d8add4254fd5f8fb952741'
+          chunk_size = 90000
+          part = int(os.environ['PART'])
+
+          def sha(path):
+              return hashlib.sha256(path.read_bytes()).hexdigest()
+
+          package = root / 'Metaphysics-Lab-v1.7.0-User-Package.zip'
+          actual_package = sha(package)
+          if actual_package != expected_package:
+              raise SystemExit(f'user package SHA mismatch: {actual_package}')
+
+          script = root / 'v1.7.0-isolated-sandbox-script.md'
+          base = root / 'v1.7.0-isolated-sandbox-base.json'
+          readme = root / 'README-START-HERE.md'
+          readme.write_text(
+              '# Metaphysics Lab v1.7.0 Isolated Sandbox Kit v3\n\n'
+              f'Tested release candidate: `{candidate}`\n\n'
+              '這個 kit 只用於 v1.7.0 最終 isolated sandbox qualification。請建立一個全新的 ChatGPT Project，不要沿用之前的 sandbox Project 或對話。\n\n'
+              '1. 解壓 `Metaphysics-Lab-v1.7.0-User-Package.zip`。\n'
+              '2. 將 `metaphysics_lab.py`、`metaphysics_core.md` 上傳到新 Project 的 Sources。\n'
+              '3. 將 `project_instructions.txt` 的完整內容貼到 Project Instructions；不要把它當第四個 Source。\n'
+              '4. 將 `v1.7.0-isolated-sandbox-base.json` 上傳到同一個 Project 的 Sources。\n'
+              '5. 執行前記下介面上「實際顯示」的 model UI label，大小寫與文字必須逐字保存，不要自行正規化。\n'
+              '6. 嚴格依 `v1.7.0-isolated-sandbox-script.md` 的 conversation grouping、setup message 與 prompt 執行 S01-S12。\n'
+              '7. 不重試、不補答、不改寫失敗回覆；所有 setup prompt、scenario prompt 與 assistant response 都逐字保存。\n\n'
+              'Release gate 只有在 S01-S12 與全部 critical rubrics 都 PASS，且 evidence validator 回傳 `release_allowed: true` 時才可關閉。\n',
+              encoding='utf-8',
+          )
+
+          checks = {
+              'Metaphysics-Lab-v1.7.0-User-Package.zip': sha(package),
+              'v1.7.0-isolated-sandbox-base.json': sha(base),
+              'v1.7.0-isolated-sandbox-script.md': sha(script),
+              'README-START-HERE.md': sha(readme),
+          }
+          (root / 'CHECKSUMS.txt').write_text(
+              ''.join(f'{digest}  {name}\n' for name, digest in checks.items()),
+              encoding='utf-8',
+          )
+
+          members = [
+              'README-START-HERE.md',
+              'CHECKSUMS.txt',
+              'Metaphysics-Lab-v1.7.0-User-Package.zip',
+              'v1.7.0-isolated-sandbox-base.json',
+              'v1.7.0-isolated-sandbox-script.md',
+          ]
+          out = Path(os.environ['RUNNER_TEMP']) / 'Metaphysics-Lab-v1.7.0-Isolated-Sandbox-Kit-v3.zip'
+          with zipfile.ZipFile(out, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+              for name in members:
+                  data = (root / name).read_bytes()
+                  info = zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0))
+                  info.compress_type = zipfile.ZIP_DEFLATED
+                  info.create_system = 3
+                  info.external_attr = 0o100644 << 16
+                  archive.writestr(info, data, compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
+
+          raw = out.read_bytes()
+          encoded = base64.b64encode(raw).decode('ascii')
+          total_parts = (len(encoded) + chunk_size - 1) // chunk_size
+          kit_sha = hashlib.sha256(raw).hexdigest()
+          print(
+              'TRANSPORT_META '
+              f'candidate={candidate} package_sha256={actual_package} '
+              f'kit_sha256={kit_sha} kit_size={len(raw)} b64_len={len(encoded)} '
+              f'chunk_size={chunk_size} total_parts={total_parts} requested_part={part}'
+          )
+          if total_parts > 16:
+              raise SystemExit(f'transport matrix too small: total_parts={total_parts}')
+          if part >= total_parts:
+              print(f'TRANSPORT_EMPTY_PART {part}')
+              raise SystemExit(0)
+          chunk = encoded[part * chunk_size:(part + 1) * chunk_size]
+          print(f'TRANSPORT_CHUNK_BEGIN {part}')
+          for line in textwrap.wrap(chunk, 120):
+              print(line)
+          print(f'TRANSPORT_CHUNK_END {part}')
+          PY
