@@ -1,0 +1,81 @@
+name: v1.7 Superseded Artifact Cleanup
+
+on:
+  push:
+    branches:
+      - ci/v17-local-staging-7c9c4-transport
+    paths:
+      - .github/workflows/v17-artifact-cleanup.yml
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Delete allowlisted superseded validation artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          current_candidate='7c9c4a390a05cc78460bfcb615db76bc4c1791c7'
+          declare -A expected_sha=(
+            [10309748862]='b5394baea345f1f08be2bd2a3f54fa7ff33ab953'
+            [10309487866]='b5394baea345f1f08be2bd2a3f54fa7ff33ab953'
+            [10309574320]='b5394baea345f1f08be2bd2a3f54fa7ff33ab953'
+            [10310253318]='b5394baea345f1f08be2bd2a3f54fa7ff33ab953'
+            [10309863804]='b5394baea345f1f08be2bd2a3f54fa7ff33ab953'
+
+            [10310316911]='fb91f9b3dbc1436c0d4bc7ec29e228cbfcc98f88'
+            [10310003501]='fb91f9b3dbc1436c0d4bc7ec29e228cbfcc98f88'
+            [10309888910]='fb91f9b3dbc1436c0d4bc7ec29e228cbfcc98f88'
+            [10310327038]='fb91f9b3dbc1436c0d4bc7ec29e228cbfcc98f88'
+            [10310253267]='fb91f9b3dbc1436c0d4bc7ec29e228cbfcc98f88'
+
+            [10309888845]='3df93c91d1df7de73678c6cddc7875754c6fa8b5'
+            [10309399871]='3df93c91d1df7de73678c6cddc7875754c6fa8b5'
+            [10309937378]='3df93c91d1df7de73678c6cddc7875754c6fa8b5'
+            [10309704173]='3df93c91d1df7de73678c6cddc7875754c6fa8b5'
+
+            [10309982337]='35929fb3a5e700e7d7bafed34828b8ce0570433a'
+            [10310118437]='35929fb3a5e700e7d7bafed34828b8ce0570433a'
+            [10309494329]='35929fb3a5e700e7d7bafed34828b8ce0570433a'
+            [10309532778]='35929fb3a5e700e7d7bafed34828b8ce0570433a'
+          )
+
+          ids=(
+            10309748862 10309487866 10309574320 10310253318 10309863804
+            10310316911 10310003501 10309888910 10310327038 10310253267
+            10309888845 10309399871 10309937378 10309704173
+            10309982337 10310118437 10309494329 10309532778
+          )
+
+          deleted=0
+          for id in "${ids[@]}"; do
+            meta="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${id}")"
+            actual_sha="$(jq -r '.workflow_run.head_sha' <<<"$meta")"
+            name="$(jq -r '.name' <<<"$meta")"
+            expected="${expected_sha[$id]}"
+
+            test "$actual_sha" = "$expected"
+            test "$actual_sha" != "$current_candidate"
+            case "$name" in
+              lin-tianji-v1.5-ai-distribution-*|lin-tianji-v1.5-rebuilt-ai-distribution-*|lin-tianji-v1.6-ai-distribution-*|lin-tianji-v1.7-ai-distribution-*) ;;
+              *) echo "Refusing unexpected artifact name: $id $name" >&2; exit 1 ;;
+            esac
+
+            echo "Deleting artifact $id: $name ($actual_sha)"
+            gh api --method DELETE "repos/${GITHUB_REPOSITORY}/actions/artifacts/${id}"
+            if gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${id}" >/dev/null 2>&1; then
+              echo "Artifact still exists after DELETE: $id" >&2
+              exit 1
+            fi
+            deleted=$((deleted + 1))
+          done
+
+          test "$deleted" -eq 18
+          echo "Deleted and verified 18 allowlisted superseded artifacts."
