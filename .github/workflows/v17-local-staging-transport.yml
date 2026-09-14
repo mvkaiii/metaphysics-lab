@@ -8,39 +8,35 @@ on:
       - .github/workflows/v17-local-staging-transport.yml
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  emit-kit-chunk:
+  persist-kit-transport:
     runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      max-parallel: 4
-      matrix:
-        part: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
     steps:
-      - name: Checkout exact candidate
+      - name: Checkout helper branch
         uses: actions/checkout@v4
         with:
-          ref: 7c9c4a390a05cc78460bfcb615db76bc4c1791c7
+          ref: ci/v17-local-staging-7c9c4-transport
           fetch-depth: 0
 
-      - name: Confirm exact candidate
+      - name: Confirm helper is semantically exact candidate
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "7c9c4a390a05cc78460bfcb615db76bc4c1791c7"
+          git diff --quiet 7c9c4a390a05cc78460bfcb615db76bc4c1791c7 -- . \
+            ':(exclude).github/workflows/v17-local-staging-transport.yml' \
+            ':(exclude)transport/v17/**'
 
       - name: Set up Python 3.9
         uses: actions/setup-python@v5
         with:
           python-version: '3.9'
 
-      - name: Build deterministic sandbox kit and emit one transport chunk
-        env:
-          PART: ${{ matrix.part }}
+      - name: Build deterministic kit and persist transport parts
         run: |
           set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/v17-kit"
+          rm -rf transport/v17
+          mkdir -p "$RUNNER_TEMP/v17-kit" transport/v17
           python tools/build_release_package.py --verify --output "$RUNNER_TEMP/v17-kit/Metaphysics-Lab-v1.7.0-User-Package.zip"
           cp docs/release/v1.7.0-isolated-sandbox-script.md "$RUNNER_TEMP/v17-kit/v1.7.0-isolated-sandbox-script.md"
           cp docs/release/v1.7.0-isolated-sandbox-base.json "$RUNNER_TEMP/v17-kit/v1.7.0-isolated-sandbox-base.json"
@@ -48,15 +44,15 @@ jobs:
           from pathlib import Path
           import base64
           import hashlib
+          import json
           import os
-          import textwrap
           import zipfile
 
           root = Path(os.environ['RUNNER_TEMP']) / 'v17-kit'
+          transport = Path('transport/v17')
           candidate = '7c9c4a390a05cc78460bfcb615db76bc4c1791c7'
           expected_package = '57933797496f4b943e0cff20997a45a35dce760521d8add4254fd5f8fb952741'
           chunk_size = 90000
-          part = int(os.environ['PART'])
 
           def sha(path):
               return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -114,22 +110,28 @@ jobs:
 
           raw = out.read_bytes()
           encoded = base64.b64encode(raw).decode('ascii')
-          total_parts = (len(encoded) + chunk_size - 1) // chunk_size
-          kit_sha = hashlib.sha256(raw).hexdigest()
-          print(
-              'TRANSPORT_META '
-              f'candidate={candidate} package_sha256={actual_package} '
-              f'kit_sha256={kit_sha} kit_size={len(raw)} b64_len={len(encoded)} '
-              f'chunk_size={chunk_size} total_parts={total_parts} requested_part={part}'
-          )
-          if total_parts > 16:
-              raise SystemExit(f'transport matrix too small: total_parts={total_parts}')
-          if part >= total_parts:
-              print(f'TRANSPORT_EMPTY_PART {part}')
-              raise SystemExit(0)
-          chunk = encoded[part * chunk_size:(part + 1) * chunk_size]
-          print(f'TRANSPORT_CHUNK_BEGIN {part}')
-          for line in textwrap.wrap(chunk, 120):
-              print(line)
-          print(f'TRANSPORT_CHUNK_END {part}')
+          parts = [encoded[i:i + chunk_size] for i in range(0, len(encoded), chunk_size)]
+          for index, chunk in enumerate(parts):
+              (transport / f'part-{index:02d}.b64').write_text(chunk, encoding='ascii')
+          meta = {
+              'candidate': candidate,
+              'package_sha256': actual_package,
+              'kit_sha256': hashlib.sha256(raw).hexdigest(),
+              'kit_size': len(raw),
+              'b64_len': len(encoded),
+              'chunk_size': chunk_size,
+              'total_parts': len(parts),
+          }
+          (transport / 'meta.json').write_text(json.dumps(meta, sort_keys=True) + '\n', encoding='utf-8')
+          print(json.dumps(meta, sort_keys=True))
           PY
+
+      - name: Commit transport-only files
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add transport/v17
+          git diff --cached --check
+          git commit -m 'ci: persist v1.7 sandbox transport chunks'
+          git push origin HEAD:ci/v17-local-staging-7c9c4-transport
