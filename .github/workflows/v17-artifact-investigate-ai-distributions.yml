@@ -1,0 +1,33 @@
+name: v1.7 Investigate Old AI Distribution Artifacts
+
+on:
+  push:
+    branches:
+      - ci/v17-local-staging-7c9c4-transport
+    paths:
+      - .github/workflows/v17-artifact-investigate-ai-distributions.yml
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  investigate:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Inventory old validation AI distribution artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          current='7c9c4a390a05cc78460bfcb615db76bc4c1791c7'
+          v160='c325d754112df71c6747e17262d2e781d2864441'
+          tmp="$(mktemp)"
+          gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100" \
+            --jq '.artifacts[] | {id,name,size_in_bytes,expired,created_at,head_sha:.workflow_run.head_sha,run_id:.workflow_run.id}' \
+            | jq -s --arg current "$current" --arg v160 "$v160" '[.[]
+                | select(.head_sha != $current and .head_sha != $v160)
+                | select(.name | test("^lin-tianji-v1\\.(5|6|7)-(rebuilt-)?ai-distribution-"))
+              ]' > "$tmp"
+          jq '{count:length,bytes:(map(.size_in_bytes)|add // 0),by_sha:(group_by(.head_sha)|map({head_sha:.[0].head_sha,count:length,bytes:(map(.size_in_bytes)|add // 0)})|sort_by(.bytes)|reverse),items:(sort_by(.created_at)|reverse|.[:30])}' "$tmp"
