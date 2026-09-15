@@ -1,0 +1,28 @@
+name: v1.7 Investigate Superseded Candidate Artifacts
+
+on:
+  push:
+    branches:
+      - ci/v17-local-staging-7c9c4-transport
+    paths:
+      - .github/workflows/v17-artifact-investigate-superseded.yml
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  investigate:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Inventory artifacts on explicitly superseded v1.7 candidates
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp)"
+          gh api --paginate "repos/${GITHUB_REPOSITORY}/actions/artifacts?per_page=100" \
+            --jq '.artifacts[] | {id,name,size_in_bytes,expired,created_at,head_sha:.workflow_run.head_sha,run_id:.workflow_run.id}' \
+            | jq -s '[.[] | select(.head_sha == "aaa0e3ff31bdccfad089f2ba63cc7c783c740c39" or .head_sha == "b8c85fad8e91ecbdc6f965e370162e6d5fab37da" or .head_sha == "4fdc08f9523aec22752367c6811fbfb6ecb02fc7")]' > "$tmp"
+          jq '{count:length,bytes:(map(.size_in_bytes)|add // 0),items:(sort_by(.head_sha,.id))}' "$tmp"
