@@ -45,8 +45,8 @@ jobs:
           artifacts = json.loads(Path(sys.argv[1]).read_text(encoding='utf-8'))
           selected = select_ai_distribution_cleanup_artifacts(artifacts)
 
-          expected_count = 365
-          expected_bytes = 284_897_065
+          expected_count = 362
+          expected_bytes = 282_839_032
           actual_count = len(selected)
           actual_bytes = sum(item['size_in_bytes'] for item in selected)
           if actual_count != expected_count or actual_bytes != expected_bytes:
@@ -84,5 +84,5 @@ jobs:
               echo "Deleted and verified $deleted artifacts..."
             fi
           done < /tmp/v17-artifact-cleanup-ai-ids.txt
-          test "$deleted" -eq 365
-          echo "Deleted and verified $deleted old AI distribution artifacts (284897065 bytes)."
+          test "$deleted" -eq 362
+          echo "Deleted and verified $deleted old AI distribution artifacts (282839032 bytes)."
