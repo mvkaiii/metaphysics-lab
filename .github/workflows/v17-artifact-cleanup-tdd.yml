@@ -9,6 +9,8 @@ on:
       - tools/v17_artifact_cleanup_policy_test.py
       - tools/v17_artifact_cleanup_phase2_policy.py
       - tools/v17_artifact_cleanup_phase2_policy_test.py
+      - tools/v17_artifact_cleanup_ai_policy.py
+      - tools/v17_artifact_cleanup_ai_policy_test.py
       - .github/workflows/v17-artifact-cleanup-tdd.yml
 
 permissions:
@@ -26,3 +28,4 @@ jobs:
         run: |
           python tools/v17_artifact_cleanup_policy_test.py
           python tools/v17_artifact_cleanup_phase2_policy_test.py
+          python tools/v17_artifact_cleanup_ai_policy_test.py
