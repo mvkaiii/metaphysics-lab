@@ -1,8 +1,30 @@
 # Metaphysics Lab 版本
 
-> `VERSION.md` 是給開發、驗證與版本治理看的**技術版本表**。第一次使用請先看 `README.md` 或 `docs/快速開始.md`；一般使用者版 v1.7.0 發布說明見 `docs/發布說明-v1.7.0.md`。
+> `VERSION.md` 是給開發、驗證與版本治理看的**技術版本表**。第一次使用請先看 `README.md` 或 `docs/快速開始.md`；一般使用者版 v1.7.1 發布說明見 `docs/發布說明-v1.7.1.md`。
 >
 > 歷史 Release snapshot 不因後續 qualification 或文件更新回寫改造。正式發版只固定 release identity；**release 本身不改變 capability maturity**，目前執行能力仍以 `runtime_info` 為技術權威來源。
+
+## v1.7.1 Release Snapshot
+
+v1.7.1 是已正式發布的 **release identity metadata patch**，發布日期為 **2026-09-25**（Asia/Taipei）。它不新增命理算法、不改 capability maturity，也不改 Case Schema；重點是讓 runtime 可以直接區分「整體 Release 版本」與「內部 Runtime component 版本」。
+
+```text
+Release Version            1.7.1
+Project Contract           1.2
+Runtime Schema             1.1
+Case Schema                1.1
+AI Distribution Runtime    1.2-exp
+Capability Manifest        1.0
+```
+
+- `runtime_info` 新增 `release_version: 1.7.1`；`distribution_runtime_version` 仍為 `1.2-exp`。
+- v1.7.0 → v1.7.1 只需要替換 `metaphysics_lab.py`；核心規則與 Project Instructions 不變。
+- v1.6/v1.7 時期建立的 Case metadata 保留歷史 provenance，不因 patch 強制批次改寫。
+- Selector v1、Interpretation v1 與所有 Experimental capability maturity / routing 全部維持 v1.7.0 狀態。
+- deterministic v1.7.1 User Package SHA256：`771f8493cd07b298c7971f38c601ce17a8acfcce5dab43c72e245f7b282943e8`。
+- 正式 release target 以 Git tag `v1.7.1` 指向的 commit 為 authority；歷史 `v1.7.0` tag / Release / assets 不回寫改造。
+
+---
 
 ## v1.7.0 Release Snapshot
 
@@ -25,14 +47,14 @@ Capability Manifest       1.0
 
 ## 最新正式發布
 
-- Metaphysics Lab Core：**v1.7.0**
-- 發布日期：**2026-09-24**
-- 正式 release commit：`24760aa8766eb2691c8878f2cd8b97f0b37f8964`
-- Git tag / GitHub Release：`v1.7.0` 已正式發布。
-- 正式受測 candidate：`3153d5a49909094e16151c2cbbc487c2579dbff4`。
-- Release baseline：v1.6 正式 baseline + Capability Manifest 1.0 + Case Doctor / Legacy Reconciliation + Prospective Validation 2.0 + Guided Inquiry；selector v1 / interpretation v1 保持 default，Experimental capability 不因發版自動 promotion。
-- Fresh isolated sandbox：`12/12 PASS`；critical rubrics `10/10 PASS`；sealed evidence validator `release_allowed=true`。
-- deterministic v1.7.0 User Package SHA256：`7de4285c0e7c79e2d4a311ec8a16b0866ac0820a303eb9a288dd63d50798cdd7`。
+- Metaphysics Lab Core：**v1.7.1**
+- 發布日期：**2026-09-25**
+- Git tag / GitHub Release：`v1.7.1` 已正式發布；tag target 是正式 release identity authority。
+- Metadata implementation base：`3d4380a0b78ba61d3545bc67642cfe67cfc26545`。
+- Release baseline：v1.7.0 正式 baseline + `runtime_info.release_version` + release/package SSOT；AI Distribution Runtime 仍為 1.2-exp。
+- Case Schema / Project Contract：`1.1 / 1.2`，沒有 migration。
+- Selector v1 / interpretation v1 保持 default；Experimental capability 不因 patch promotion。
+- deterministic v1.7.1 User Package SHA256：`771f8493cd07b298c7971f38c601ce17a8acfcce5dab43c72e245f7b282943e8`。
 
 主要元件：
 
