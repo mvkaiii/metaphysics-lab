@@ -5,11 +5,17 @@ import argparse
 import hashlib
 import io
 import json
+import sys
 import zipfile
 from pathlib import Path
 
-RELEASE_VERSION = "1.7.0"
-USER_PACKAGE_NAME = "Metaphysics-Lab-v1.7.0-User-Package.zip"
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from engine.distribution.constants import RELEASE_VERSION
+
+USER_PACKAGE_NAME = "Metaphysics-Lab-v%s-User-Package.zip" % RELEASE_VERSION
 USER_ASSETS = (
     "metaphysics_core.md",
     "metaphysics_lab.py",

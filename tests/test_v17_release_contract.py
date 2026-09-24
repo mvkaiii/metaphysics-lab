@@ -6,6 +6,7 @@ from engine.distribution.constants import (
     CASE_SCHEMA_VERSION,
     DISTRIBUTION_RUNTIME_VERSION,
     PROJECT_CONTRACT_VERSION,
+    RELEASE_VERSION,
     RUNTIME_SCHEMA_VERSION,
     SUPPORTED_ACTIONS,
 )
@@ -60,12 +61,13 @@ class V17ReleaseContractTests(unittest.TestCase):
         self.assertEqual(RUNTIME_SCHEMA_VERSION, "1.1")
         self.assertEqual(CASE_SCHEMA_VERSION, "1.1")
         self.assertEqual(DISTRIBUTION_RUNTIME_VERSION, "1.2-exp")
+        self.assertEqual(RELEASE_VERSION, "1.7.1")
 
-    def test_current_release_package_builder_is_v170_successor(self):
-        self.assertEqual(build_release_package.RELEASE_VERSION, "1.7.0")
+    def test_current_release_package_builder_is_v171_patch(self):
+        self.assertEqual(build_release_package.RELEASE_VERSION, "1.7.1")
         self.assertEqual(
             build_release_package.USER_PACKAGE_NAME,
-            "Metaphysics-Lab-v1.7.0-User-Package.zip",
+            "Metaphysics-Lab-v1.7.1-User-Package.zip",
         )
 
     def test_v16_public_actions_remain_and_v17_actions_are_registered(self):

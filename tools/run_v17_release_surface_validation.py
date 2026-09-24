@@ -13,7 +13,7 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 from engine.distribution.capabilities import get_capability as get_distribution_capability
-from engine.distribution.constants import CASE_SCHEMA_VERSION
+from engine.distribution.constants import CASE_SCHEMA_VERSION, RELEASE_VERSION
 from engine.distribution.manifest import (
     CAPABILITY_MANIFEST_VERSION,
     capability_manifest_digest,
@@ -24,7 +24,6 @@ from engine.historical.capabilities import get_capability as get_historical_capa
 from tools import build_ai_distribution, build_release_package
 
 
-RELEASE_VERSION = "1.7.0"
 RELEASE_SURFACE_CHECKS = (
     "capability_manifest_v1",
     "case_doctor_contract",
