@@ -15,7 +15,7 @@ DIST_INSTRUCTIONS = ROOT / "dist" / "ai" / "project_instructions.txt"
 class V17SandboxFollowupRegressionTests(unittest.TestCase):
     def test_s03_contract_does_not_use_opt_out_language(self):
         script = SCRIPT.read_text(encoding="utf-8")
-        self.assertIn("script_version: v1.7.0-isolated-sandbox-script.v3", script)
+        self.assertIn("script_version: v1.7.0-isolated-sandbox-script.v4", script)
         self.assertIn("User prompt: `好，接著還能看什麼？`", script)
         s03 = script.split("### S03", 1)[1].split("### S04", 1)[0]
         self.assertNotIn("User prompt: `先到這裡。`", s03)
