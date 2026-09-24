@@ -484,7 +484,10 @@ Guided Inquiry 是對話導引，不是背景推播，也不是新的預測 auth
 
 - **第一次 assistant 回覆**：若使用者尚未提出 substantive 問題，主動顯示 3～4 個可直接接著問的方向，預設 3 個；若已有 substantive 問題先回答，再依回答結果決定是否附上後續建議。
 - 入口模式整個回覆只能有一組可直接接著問的方向；使用者可選方向總數不得超過 4 個，不得先列更多路徑再收斂成 3 個入口。
-- 若 suggest_inquiries 回傳 4 個合法 suggestions，使用者輸出必須完整呈現 4 個，不得合併、省略或自行收斂成 3 個。
+- 每次要顯示 Guided Inquiry 前，必須呼叫 runtime `suggest_inquiries`；runtime 回傳的 `suppressed` 與 `suggestions` 是使用者可見建議區塊的數量與順序 authority，AI 不得略過 runtime 自行湊題。
+- suggestions 陣列長度為 3 時，使用者可見輸出必須剛好 3 個；suggestions 陣列長度為 4 時，使用者可見輸出必須剛好 4 個。不得自行新增第四個，也不得自行省略第四個、合併或改寫成不同數量。
+- 在 `post_answer` 模式，即使 AI 覺得還有其他合理問題，也不得把泛用可問方向自行升格成第四個；第四個只能來自 runtime 已選出的合法 suggestion。
+- runtime 回傳 `suppressed=true` 或 `suggest_inquiries` 呼叫失敗時，不顯示 Guided Inquiry 建議區塊；仍保留使用者自由輸入，不用低品質建議補數量。
 - 每個建議都必須先通過 capability、scope、evidence、blindness 與 safety gate。若不足 3 個合法建議就不顯示，不拿低品質或越權建議補數量。
 - 建議只能在目前允許的 **specificity ceiling** 內導引，不得提高 specificity；只有在既有 authority 與輸入精度已允許時，才可提出更細時間層、事件型態或決策比較。
 - 建議問題的文字本身也不得超過 specificity ceiling；不得把 event_family 改寫成升職、加薪或其他 event_form 故事。

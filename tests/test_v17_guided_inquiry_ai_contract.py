@@ -41,6 +41,28 @@ class GuidedInquiryAIContractTests(unittest.TestCase):
                 self.assertIn(phrase, self.workflow)
         self.assertIn("使用者可以直接自由輸入、不必選建議", self.workflow)
 
+    def test_runtime_suggestion_count_is_mandatory_render_authority(self):
+        workflow_required = (
+            "每次要顯示 Guided Inquiry 前，必須呼叫 runtime `suggest_inquiries`",
+            "suggestions 陣列長度為 3 時，使用者可見輸出必須剛好 3 個",
+            "suggestions 陣列長度為 4 時，使用者可見輸出必須剛好 4 個",
+            "不得自行新增第四個",
+            "不得自行省略第四個",
+        )
+        for phrase in workflow_required:
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, self.workflow)
+
+        instructions_required = (
+            "必須先呼叫 runtime `suggest_inquiries`",
+            "不得自行決定顯示 3 個或 4 個",
+            "不得自行新增第四個",
+            "不得自行省略第四個",
+        )
+        for phrase in instructions_required:
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, self.instructions)
+
     def test_workflow_contains_conditional_career_rendering_examples(self):
         examples = (
             "把今年工作拆成月份，看哪些時段較適合主動推進",
