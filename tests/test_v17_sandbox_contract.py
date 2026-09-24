@@ -95,7 +95,7 @@ class V17SandboxContractTests(unittest.TestCase):
             "",
             "schema_version: v1.7.0-isolated-sandbox-evidence.v1",
             "status: PASS",
-            "script_version: v1.7.0-isolated-sandbox-script.v3",
+            "script_version: v1.7.0-isolated-sandbox-script.v4",
             "base_fixture_version: v1.7.0-isolated-sandbox-base.v1",
             "tested_release_candidate_sha: %s" % ("a" * 40),
             "candidate_frozen_at: 2026-09-10T18:00:00+08:00",
