@@ -1,12 +1,12 @@
 # Metaphysics Lab 版本
 
-> `VERSION.md` 是給開發、驗證與版本治理看的**技術版本表**。第一次使用請先看 `README.md` 或 `docs/快速開始.md`；一般使用者版 v1.6.0 發布說明見 `docs/發布說明-v1.6.0.md`。
+> `VERSION.md` 是給開發、驗證與版本治理看的**技術版本表**。第一次使用請先看 `README.md` 或 `docs/快速開始.md`；一般使用者版 v1.7.0 發布說明見 `docs/發布說明-v1.7.0.md`。
 >
 > 歷史 Release snapshot 不因後續 qualification 或文件更新回寫改造。正式發版只固定 release identity；**release 本身不改變 capability maturity**，目前執行能力仍以 `runtime_info` 為技術權威來源。
 
-## v1.7.0 Release Contract｜整合候選
+## v1.7.0 Release Snapshot
 
-v1.7.0 定位為**可靠性與可用性版本**。此區塊描述目前整合候選的版本契約；在正式 Git tag / GitHub Release 建立前，`v1.6.0` 仍是最新正式發布。發布日期不在 implementation 階段預填，而是在正式 Release 執行時依 Asia/Taipei 當地日期確定。
+v1.7.0 是已正式發布的**可靠性與可用性版本**。正式 release target 為 `24760aa8766eb2691c8878f2cd8b97f0b37f8964`，受測 software candidate 為 `3153d5a49909094e16151c2cbbc487c2579dbff4`；發布日期為 **2026-09-24**（Asia/Taipei）。
 
 ```text
 Project Contract          1.2
@@ -25,11 +25,14 @@ Capability Manifest       1.0
 
 ## 最新正式發布
 
-- Metaphysics Lab Core：**v1.6.0**
-- 發布日期：**2026-09-05**
-- 正式 release commit：`c325d754112df71c6747e17262d2e781d2864441`
-- Git tag / GitHub Release：`v1.6.0` 已正式發布。
-- Release baseline：v1.5 default contract 保持不變 + v1.6 結構化能力 + Y1 年度紫微四化（Experimental / Project-derived）+ Historical Calibration persistent lock + 林氏天機預測驗證 + v1.6 發行面驗證 + v1.6 隔離沙盒對話驗證。
+- Metaphysics Lab Core：**v1.7.0**
+- 發布日期：**2026-09-24**
+- 正式 release commit：`24760aa8766eb2691c8878f2cd8b97f0b37f8964`
+- Git tag / GitHub Release：`v1.7.0` 已正式發布。
+- 正式受測 candidate：`3153d5a49909094e16151c2cbbc487c2579dbff4`。
+- Release baseline：v1.6 正式 baseline + Capability Manifest 1.0 + Case Doctor / Legacy Reconciliation + Prospective Validation 2.0 + Guided Inquiry；selector v1 / interpretation v1 保持 default，Experimental capability 不因發版自動 promotion。
+- Fresh isolated sandbox：`12/12 PASS`；critical rubrics `10/10 PASS`；sealed evidence validator `release_allowed=true`。
+- deterministic v1.7.0 User Package SHA256：`7de4285c0e7c79e2d4a311ec8a16b0866ac0820a303eb9a288dd63d50798cdd7`。
 
 主要元件：
 
@@ -45,17 +48,21 @@ Capability Manifest       1.0
 - Ziwei Fine Cycle：v1.0-exp
 - Ziwei Flowing Stars：v1.0-exp
 - Historical Activation Selector：v1.0-exp
-- AI Distribution Runtime：v1.1-exp
+- AI Distribution Runtime：v1.2-exp
 - Runtime Schema：v1.1
 - Build Format：v1.1
-- Project Contract：v1.1
+- Project Contract：v1.2
 - Case Schema：v1.1
+- Capability Manifest：v1.0
 - 問事追蹤制度：v1.0
 
 ---
 
 ## v1.6.0 Release Snapshot
 
+- Metaphysics Lab Core：**v1.6.0**
+- 發布日期：**2026-09-05**
+- 正式 release commit：`c325d754112df71c6747e17262d2e781d2864441`
 - 軟體 release 與 research-model promotion 分開管理；`promotion_allowed=false` 不因 v1.6.0 發布而改變。
 - Historical Activation Selector 正式 default 仍是 v1；Interpretation Contract 正式 default 仍是 v1。
 - Y1 年度紫微四化已納入正式軟體，但定位仍為 **Experimental / Project-derived**；這只證明 calculation path 可執行、可重現、受版本管理，不代表預測效度已被證明。
