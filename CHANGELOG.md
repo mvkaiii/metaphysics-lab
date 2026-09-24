@@ -2,6 +2,16 @@
 
 這份文件保存正式版本與尚未發布變更的技術紀錄。第一次使用 Metaphysics Lab 請先看 `README.md`；目前正式版本為 **v1.7.0｜2026-09-24**，一般使用者發布說明見 `docs/發布說明-v1.7.0.md`。
 
+## Unreleased｜v1.7.1 patch
+
+### Release identity metadata
+
+- `runtime_info` 新增 `release_version`，用來明確區分整體 Metaphysics Lab Release 版本與內部 AI Distribution Runtime 版本。
+- 本 patch 的 release identity 目標為 `v1.7.1`；AI Distribution Runtime **仍維持 `1.2-exp`**，Project Contract 仍為 `1.2`，Runtime Schema / Case Schema 仍為 `1.1`。
+- `build_release_package.py` 改由單一 `RELEASE_VERSION` authority 產生 User Package 名稱，避免 release 名稱與 runtime/component 版本混淆。
+- 不修改八字／紫微演算法、不提升任何 Experimental capability maturity、不改 selector / interpretation default，也不要求既有 Case migration 或 metadata 批次重寫。
+- v1.6/v1.7 時期建立的 Case front matter 保留其歷史 provenance；舊 `project_contract_version: 1.1` 仍是合法可讀資料，不因安裝 v1.7.1 而強制覆寫。
+
 ## v1.7.0｜2026-09-24
 
 ### 正式軟體 Release
