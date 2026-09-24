@@ -5,8 +5,13 @@ import argparse
 import hashlib
 import io
 import json
+import sys
 import zipfile
 from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 
 from engine.distribution.constants import RELEASE_VERSION
 
