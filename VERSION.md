@@ -4,6 +4,25 @@
 >
 > 歷史 Release snapshot 不因後續 qualification 或文件更新回寫改造。正式發版只固定 release identity；**release 本身不改變 capability maturity**，目前執行能力仍以 `runtime_info` 為技術權威來源。
 
+## v1.7.0 Release Contract｜整合候選
+
+v1.7.0 定位為**可靠性與可用性版本**。此區塊描述目前整合候選的版本契約；在正式 Git tag / GitHub Release 建立前，`v1.6.0` 仍是最新正式發布。發布日期不在 implementation 階段預填，而是在正式 Release 執行時依 Asia/Taipei 當地日期確定。
+
+```text
+Project Contract          1.2
+Runtime Schema            1.1
+Case Schema               1.1
+AI Distribution Runtime   1.2-exp
+Capability Manifest       1.0
+```
+
+- **Case Schema 1.1 維持不變**；既有 Case 不需要破壞性重建，也不需要 schema migration。
+- Historical Activation **selector v1** 與 Interpretation Contract **interpretation v1** 繼續作為正式 default；v1.7 發布本身不構成 v2 promotion。
+- **Guided Inquiry** 是建議式導覽與追問導航，**不是新的命理證據**，不得提高既有盤面或 capability 的 specificity / confidence authority。
+- Capability Manifest、Case Doctor、Prospective Validation 2.0 與 Guided Inquiry 的加入不會自動提升任何 Experimental capability maturity。
+
+---
+
 ## 最新正式發布
 
 - Metaphysics Lab Core：**v1.6.0**

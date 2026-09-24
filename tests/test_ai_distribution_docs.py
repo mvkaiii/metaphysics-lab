@@ -15,6 +15,8 @@ CHANGELOG = ROOT / "CHANGELOG.md"
 RELEASE_NOTES = ROOT / "docs" / "發布說明-v1.4.0.md"
 HISTORICAL_V130_RELEASE_NOTES = ROOT / "docs" / "發布說明-v1.3.0.md"
 PROJECT_INSTRUCTIONS = ROOT / "dist" / "ai" / "project_instructions.txt"
+CORE_WORKFLOW = ROOT / "core" / "AI工作流程.md"
+PROJECT_INSTRUCTIONS_SOURCE = ROOT / "core" / "核心提示詞.md"
 
 USER_ARTIFACTS = (
     "metaphysics_lab.py",
@@ -63,7 +65,7 @@ class AIDistributionDocsTests(unittest.TestCase):
             self.assertIn(label, head)
         self.assertIn("下載區", head)
         self.assertIn("GitHub 顯示為 Assets", head)
-        self.assertIn("Metaphysics-Lab-v1.6.0-User-Package.zip", head)
+        self.assertIn("Metaphysics-Lab-v1.7.0-User-Package.zip", head)
         self.assertIn("解壓縮", head)
         self.assertIn("不要下載 GitHub 自動產生的 Source code", head)
         self.assertIn(STARTUP, head)
@@ -169,6 +171,23 @@ class AIDistributionDocsTests(unittest.TestCase):
         self.assertIn("Astralium", text)
         self.assertIn("可選", text)
         self.assertTrue(HISTORICAL_V130_RELEASE_NOTES.exists())
+
+    def test_guided_inquiry_contract_lives_in_distribution_source_docs(self):
+        combined = (
+            CORE_WORKFLOW.read_text(encoding="utf-8")
+            + "\n"
+            + PROJECT_INSTRUCTIONS_SOURCE.read_text(encoding="utf-8")
+        )
+        for phrase in (
+            "主動顯示",
+            "3～4 個",
+            "預設 3 個",
+            "不足 3 個合法建議就不顯示",
+            "不得提高 specificity",
+            "使用者可以直接自由輸入、不必選建議",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, combined)
 
 
 if __name__ == "__main__":

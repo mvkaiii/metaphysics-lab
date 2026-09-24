@@ -1,0 +1,27 @@
+{
+  "fixture_version": "v1.7.0-isolated-sandbox-base.v1",
+  "classification": "synthetic_test_case",
+  "privacy": "fictional_no_real_user_data",
+  "contains_private_user_data": false,
+  "contains_outcome_data": false,
+  "subject": {
+    "classification": "fictional_subject",
+    "subject_id": "SYNTH-V17-001",
+    "display_name": "測試命主甲",
+    "birth_input": {
+      "calendar": "gregorian",
+      "date": "1992-06-18",
+      "time": "09:30",
+      "place": "Taipei, Taiwan",
+      "sex": "female"
+    }
+  },
+  "baseline": {
+    "case_health": "PASS",
+    "case_schema_version": "1.1",
+    "project_contract_version": "1.2",
+    "historical_blind_disclosure_pending": false,
+    "pending_forecast": false,
+    "target_year": 2027
+  }
+}

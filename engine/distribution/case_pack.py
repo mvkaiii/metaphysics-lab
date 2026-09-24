@@ -89,6 +89,7 @@ _LEGACY_SUBJECT_PATTERN = re.compile(r"^[A-Za-z0-9._-]+$")
 _OPAQUE_SUBJECT_PATTERN = re.compile(r"^subj_[0-9a-f]{12,}$")
 _SHORT_ID_PATTERN = re.compile(r"^[0-9A-F]{6,}$")
 _CALIBRATION_STATES = frozenset(("uncalibrated", "basic", "calibrated"))
+_READABLE_PROJECT_CONTRACT_VERSIONS = frozenset(("1.1", PROJECT_CONTRACT_VERSION))
 _RESERVED_INTERNAL_RECORD_TYPES = frozenset(("historical_calibration_lock",))
 _RECORD_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:@+-]*$")
 
@@ -555,7 +556,7 @@ def validate_case(payload: Mapping[str, object]) -> dict:
         if set(files) != set(CASE_FILES) or contract != "1.0" or any(not parsed_by_canonical[name]["legacy"] for name in CASE_FILES):
             raise DistributionError("case_schema_incompatible", "legacy Case schema 1.0 requires the complete bare nine-file contract 1.0 pack")
     elif schema == CASE_SCHEMA_VERSION:
-        if contract != PROJECT_CONTRACT_VERSION:
+        if contract not in _READABLE_PROJECT_CONTRACT_VERSIONS:
             raise DistributionError("case_contract_incompatible", "Case Project Contract version is not supported by this runtime", {"project_contract_version": contract})
         if identity is None:
             raise DistributionError("invalid_case_metadata", "Case schema 1.1 requires subject identity metadata")
@@ -822,6 +823,7 @@ def _update_case_record(payload: Mapping[str, object], *, allow_reserved_interna
         identity = _identity_from_metadata(index_metadata)
         actual_target = canonical_case_filename(identity, canonical)
         metadata = _metadata(canonical, identity, index_metadata["created_at"], modified_by)
+        metadata["project_contract_version"] = index_metadata["project_contract_version"]
         body = _tracking_body({"05_驗證事件紀錄.md": "驗證事件紀錄", "06_流年追蹤紀錄.md": "流年追蹤紀錄", "07_問事追蹤紀錄.md": "問事追蹤紀錄", "08_重大決策紀錄.md": "重大決策紀錄"}[canonical], identity["subject_display_name"])
         index_actual = actual_by_canonical["00_專案索引.md"]
         changed[index_actual] = _set_index_materialized(files["00_專案索引.md"], canonical, actual_target, updated_at, modified_by)

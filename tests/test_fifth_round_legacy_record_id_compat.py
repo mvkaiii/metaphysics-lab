@@ -1,5 +1,6 @@
 import unittest
 
+from engine.distribution.constants import PROJECT_CONTRACT_VERSION
 from engine.distribution.runtime import dispatch
 
 
@@ -87,7 +88,7 @@ class FifthRoundLegacyRecordIdCompatibilityTests(unittest.TestCase):
         for slot in ALL_SLOTS:
             text = cls.current_files[cls._actual_name(slot)]
             text = text.replace("case_schema_version: 1.1", "case_schema_version: 1.0", 1)
-            text = text.replace("project_contract_version: 1.1", "project_contract_version: 1.0", 1)
+            text = text.replace("project_contract_version: %s" % PROJECT_CONTRACT_VERSION, "project_contract_version: 1.0", 1)
             text = text.replace("subject_id: subj_a1b2c3d4e5f6", "subject_id: case-legacy", 1)
             if slot == "07_問事追蹤紀錄.md":
                 text = text.replace("### legacy-07", "### %s" % record_id, 1)

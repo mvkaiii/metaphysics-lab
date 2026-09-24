@@ -4,17 +4,19 @@ Metaphysics Lab 是一套把**命盤計算**和**AI 命理解讀**分開的命�
 
 核心概念很簡單：**Python 負責固定計算，AI 負責解讀。** 一般使用者不需要先理解 repo、模組或 capability，也不需要自己決定八字／紫微該跑哪個程式。
 
-目前正式版本為 **v1.6.0（2026-09-05）**。
+目前版本識別為 **v1.7.0**（release candidate）。在 `v1.7.0` Git tag / GitHub Release 正式建立前，公開最新正式 Release 仍是 v1.6.0；這不改變本候選版的安裝與升級契約。v1.7.0 維持 **Case Schema 1.1**，既有 Case 不需要重建。
 
 ## 第一次使用
 
-最簡單的方式是到 GitHub Release 的**下載區（GitHub 顯示為 Assets）**下載 `Metaphysics-Lab-v1.6.0-User-Package.zip`。下載後只需要解壓縮這個 User Package；ZIP 內固定只有下面 3 個檔案，也可以單獨下載。**不要下載 GitHub 自動產生的 Source code ZIP 當成使用者包。**
+最簡單的方式是到 GitHub Release 的**下載區（GitHub 顯示為 Assets）**下載 `Metaphysics-Lab-v1.7.0-User-Package.zip`。下載後只需要解壓縮這個 User Package；ZIP 內固定只有下面 3 個檔案，也可以單獨下載。**不要下載 GitHub 自動產生的 Source code ZIP 當成使用者包。**
 
 | 用途 | 實際檔名 | 你要做什麼 |
 |---|---|---|
 | **命理計算程式** | `metaphysics_lab.py` | 上傳到 ChatGPT Project 或 Claude Project |
 | **命理分析核心規則** | `metaphysics_core.md` | 上傳到 Project |
 | **Project 設定指令** | `project_instructions.txt` | 打開後，把全文貼到 Project Instructions |
+
+如果你是從 **v1.6.0 升級到 v1.7.0**，請三個檔案一起同步：替換 `metaphysics_lab.py`、替換 `metaphysics_core.md`，並把新版 `project_instructions.txt` 全文重新貼到 Project Instructions。保留既有 `命主索引.md`、私人 Case、驗證事件與追蹤紀錄；本次沒有 Case Schema migration，也不要做破壞性 Case 重建。
 
 設定完成後，先對 AI 說：
 
@@ -51,6 +53,7 @@ Astralium 仍然可以提供八字／紫微第三方排盤，但現在回到**�
 - [命盤資料準備指南](docs/命盤資料準備指南.md)
 - [Astralium 資料取得指南](docs/Astralium資料取得指南.md)
 - [更新與版本同步](docs/更新與版本同步.md)
+- [v1.7.0 發布說明](docs/發布說明-v1.7.0.md)
 
 ## 命盤資料可以怎麼提供？
 
@@ -79,6 +82,12 @@ Astralium 仍然可以提供八字／紫微第三方排盤，但現在回到**�
 流年、未來趨勢與重大決策採「**先盲判，再事件校準**」：第一版先根據盤面與必要現實條件完成，不先偷看已驗證事件；之後才用你已確認的人生事件校準落地形式與信心。
 
 Project 原生本命與由本命／運限／目標時間建立的 **Project 推導盤面** 會分開標示，避免把衍生計算冒充原始第三方資料。
+
+## v1.7 的使用導航與可靠性
+
+v1.7 新增 Guided Inquiry：AI 可以主動顯示 3～4 個後續詢問方向，預設 3 個，但你仍可自由輸入任何問題；這些建議只是導航，不是新的命理證據，也不能提高原本證據允許的 specificity 或信心。
+
+Case Doctor 用來診斷 authority、legacy、duplicate 與 conflict，並可提出 reconciliation dry-run；它不會自行刪除使用者檔案。Prospective Validation 2.0 會分開 clean、conditional、hidden-existing-reality 與 retrospective context，避免把已知安排混入乾淨預測命中率。
 
 ## 如果 AI 無法執行 Python
 

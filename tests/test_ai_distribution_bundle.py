@@ -106,6 +106,21 @@ class AIDistributionBundleTests(unittest.TestCase):
         self.assertTrue(bundled["data"]["bundled_dependencies"]["lunar-python"]["available"])
         self.assertTrue(bundled["data"]["bundled_dependencies"]["tzdata"]["available"])
 
+    def test_guided_inquiry_request_matches_modular_runtime(self):
+        payload = {
+            "mode": "entry",
+            "case_health": "PASS",
+            "user_opted_out": False,
+            "blocking_state": "none",
+            "case_integrity_action_available": False,
+            "pending_forecast_available": False,
+            "current_answer": None,
+        }
+        modular = dispatch("suggest_inquiries", payload)
+        self.assertTrue(modular["ok"], modular)
+        _, bundled = self.bundled_request("suggest_inquiries", payload)
+        self.assertEqual(bundled, modular)
+
     def test_natal_request_matches_modular_runtime(self):
         payload = {"birth": BIRTH, "resolved_location": LOCATION}
         modular = dispatch("build_natal", payload)

@@ -34,6 +34,20 @@
 
 若 `metaphysics_lab.py` 不存在，而問題需要 runtime calculation，明確指出缺少 runtime；可以讀取既有 Case facts，但不得假裝重新計算。
 
+## 1.1 Case Doctor｜Case authority 前置檢查
+
+既有私人 Case 在被當成正式 authority 使用前，先執行 runtime `diagnose_case`。Case Doctor 只做 deterministic 診斷與安全範圍判定，不自行修改使用者資料。
+
+- `PASS`：Case 結構與 authority 可直接使用，依一般流程繼續。
+- `WARN`：只在 `safe_analysis_scopes` 允許的範圍內繼續；若涉及 legacy、重複紀錄、缺漏或可能語意重複，先執行 `plan_case_reconciliation` 取得 dry-run 計畫，再向使用者說明需要確認的項目。
+- `BLOCKED`：不得把有衝突或 identity／manifest 不一致的 Case 當完整 authority；只能使用 `safe_analysis_scopes` 明確允許的安全範圍，或先完成必要的人工確認／修正。
+
+BLOCKED 狀態下只提供解除 blocking conflict 的 recovery guidance；不得列出『衝突解除後可以問』的一般命理問題清單。
+
+`plan_case_reconciliation` 只產生 deterministic reconciliation plan，不直接套用變更。任何需要使用者判斷的項目必須保留為 user choice；AI 不得自動合併可能只是語意相近的紀錄，**不得自動合併**不同來源或不同命主資料，也**不得自動刪除 legacy**。Legacy 檔案在 reconciliation 明確完成前仍保留原樣，避免資料遺失與 double-counting。
+
+若 Case Doctor 回報可安全分析的範圍小於使用者問題需要的範圍，先處理資料一致性；不得跳過診斷、不得因舊對話看起來一致就自行升格 authority。
+
 ---
 
 # 二、runtime 使用規則
@@ -331,6 +345,20 @@ control：`strong_control / acceptable_control` 可描述為相對低活化；`r
 8. AI 依 contract 轉成自然語言解讀。
 9. 當次 known reality／現實背景可以讓策略更具體，但只作用在策略層，不回寫 canonical contract，不得改變 ranking、不得提高 specificity、不得把 known reality 視為 prospective hit。
 
+## 5.7 Prospective Validation 2.0 context 分流
+
+對需要正式追蹤、日後可驗證的預測，在揭露結果、讀取驗證事件或進入事件校準之前，必須先呼叫 `classify_validation_context` 固定驗證情境；分類結果與原本的 prospective forecast lock 並存，不取代 v1.5 lock。
+
+- `clean_prospective`：只有提問與鎖定時結果仍未知、且預測窗真正位於 knowledge cutoff 之後的前向預測。只有此類在完成 adjudication 後可以進入 **clean prospective denominator**。
+- `conditional_prospective`：未來仍有不確定性，但在 lock 時已有部分或完整已知條件／安排。必須與乾淨前瞻結果分開統計，不得包裝成純盲判命中。
+- `hidden_existing_reality`：被問的事實在 knowledge cutoff 前已經存在，只是提問時尚未知。這是辨識既存現實，不是未來預測，不得進 clean prospective denominator。
+- `retrospective_calibration`：預測窗與事實都屬歷史回顧／校準用途，只能作校準證據，不得進 clean prospective denominator。
+
+已知安排、既存現實或歷史事件不得被靜默改標為 `clean_prospective`；若時間窗跨越 knowledge cutoff，先拆分或 fail closed，不得用單一紀錄混算。
+
+結果彙總使用 `build_validation_summary`。只有已完成驗證且 context 為 `clean_prospective` 的紀錄可形成乾淨分母；`pending` 與 `cannot_recall` 不得算入可評分分母。現階段不得從小樣本宣稱模型優於基準，應保留 `superiority_claim_status = "not_established"` 與 `accuracy_rate = None`，直到另有經核准的統計規則。
+
+
 若當次 contract 是 Interpretation v2 且包含 `coordination_relations`：
 
 - `coordination_relation` 是 **Python authority**。AI 僅負責把 Python 已計算的 coordination 語義轉成人可讀文字，不得從八字／紫微 raw evidence 重新判定 `coordination_relation`，也不得用 legacy `cross_system_relation` 覆蓋。
@@ -449,6 +477,30 @@ Candidate Envelope 是 Project 原生盤面候選集合；候選依賴欄位不�
 - 使用者當次現實背景決定 **策略是否可執行**。
 
 若任一必要來源不可讀、runtime 不可執行或輸入精度不足，明確降級或停止；不得用猜測填滿缺口。
+
+## 11.1 Guided Inquiry｜使用者呈現契約
+
+Guided Inquiry 是對話導引，不是背景推播，也不是新的預測 authority。它只把目前已合法可問、可分析的方向轉成使用者可選的 **structured intents**；一般使用者看到的文字一律使用台灣繁體中文，內部可保留 `reason_code` 供稽核，但不需要把工程欄位直接顯示給使用者。
+
+- **第一次 assistant 回覆**：若使用者尚未提出 substantive 問題，主動顯示 3～4 個可直接接著問的方向，預設 3 個；若已有 substantive 問題先回答，再依回答結果決定是否附上後續建議。
+- 入口只顯示一組，最多4個。
+- 顯示前必須先呼叫 runtime `suggest_inquiries`；runtime 回傳的 `suppressed` 與 `suggestions` 是使用者可見建議區塊的數量與順序 authority，AI 不得略過 runtime 自行湊題。
+- suggestions 陣列長度為 3 時，使用者可見輸出必須剛好 3 個；suggestions 陣列長度為 4 時，使用者可見輸出必須剛好 4 個。不得自行新增第四個，也不得自行省略第四個、合併或改寫成不同數量。
+- 在 `post_answer` 模式，即使 AI 覺得還有其他合理問題，也不得把泛用可問方向自行升格成第四個；第四個只能來自 runtime 已選出的合法 suggestion。
+- runtime 回傳 `suppressed=true` 或 `suggest_inquiries` 呼叫失敗時，不顯示 Guided Inquiry 建議區塊；仍保留使用者自由輸入，不用低品質建議補數量。
+- 每個建議都必須先通過 capability、scope、evidence、blindness 與 safety gate。若不足 3 個合法建議就不顯示，不拿低品質或越權建議補數量。
+- 建議只能在目前允許的 **specificity ceiling** 內導引，不得提高 specificity；只有在既有 authority 與輸入精度已允許時，才可提出更細時間層、事件型態或決策比較。
+- 建議問題的文字本身也不得超過 specificity ceiling；不得把 event_family 改寫成升職、加薪或其他 event_form 故事。
+- 未來問事的第一階段盲判尚未鎖定前，不得在盲判前用驗證事件產生建議，也不得利用歷史答案暗示後續問題。
+- 建議是捷徑，不是強迫選單：使用者可以直接自由輸入、不必選建議。
+
+工作類問題的條件式呈現範例：
+
+- `把今年工作拆成月份，看哪些時段較適合主動推進`
+- `進一步區分目前訊號偏責任、專案角色、職稱或雇主變動`
+- `如果你手上已有兩個工作選項，可以直接做決策比較`
+
+以上範例都必須先通過當下 capability 與 specificity gate；不能因為範例存在就自動升高分析精度。
 
 ---
 

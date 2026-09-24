@@ -22,7 +22,7 @@ from .dependencies import (
     inspect_optional_external_dependencies,
 )
 from .errors import DistributionError
-from .manifest import load_capabilities
+from .manifest import CAPABILITY_MANIFEST_VERSION, load_capabilities
 
 
 def _ok(action: str, data: Mapping[str, object]) -> dict:
@@ -59,6 +59,7 @@ def runtime_info() -> dict:
         "runtime_schema_version": RUNTIME_SCHEMA_VERSION,
         "case_schema_version": CASE_SCHEMA_VERSION,
         "distribution_runtime_version": DISTRIBUTION_RUNTIME_VERSION,
+        "capability_manifest_version": CAPABILITY_MANIFEST_VERSION,
         "supported_actions": list(SUPPORTED_ACTIONS),
         "capabilities": load_capabilities(),
         "dependency_authority": {
@@ -367,6 +368,16 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
                 "lock_prospective_forecast": lock_prospective_forecast,
             }[action]
             return _ok(action, handler(request))
+        if action in ("classify_validation_context", "build_validation_summary"):
+            from .prospective_validation import build_validation_summary, classify_validation_context
+            handler = {
+                "classify_validation_context": classify_validation_context,
+                "build_validation_summary": build_validation_summary,
+            }[action]
+            return _ok(action, handler(request))
+        if action == "suggest_inquiries":
+            from .guided_inquiry import suggest_inquiries
+            return _ok(action, suggest_inquiries(request))
         if action == "interpret_structural_evidence":
             return _ok(action, _interpret_structural_summary(request))
         if action == "rank_evidence":
@@ -402,6 +413,13 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
         if action == "build_delivery_bundle":
             from .delivery import build_delivery_bundle
             return _ok(action, build_delivery_bundle(request))
+        if action in ("diagnose_case", "plan_case_reconciliation"):
+            from .case_doctor import diagnose_case, plan_case_reconciliation
+            handler = {
+                "diagnose_case": diagnose_case,
+                "plan_case_reconciliation": plan_case_reconciliation,
+            }[action]
+            return _ok(action, handler(request))
         if action in ("validate_case", "migrate_case", "update_case_record"):
             from .case_pack import migrate_case, update_case_record, validate_case
             handler = {"validate_case": validate_case, "migrate_case": migrate_case, "update_case_record": update_case_record}[action]

@@ -1,0 +1,12 @@
+{
+  "CD-01": {"kind": "clean_base", "description": "clean subject-aware 1.1 Base5"},
+  "CD-02": {"kind": "clean_progressive", "description": "clean 1.1 with progressive tracking"},
+  "CD-03": {"kind": "canonical_generic_duplicate", "description": "canonical plus generic legacy duplicates"},
+  "CD-04": {"kind": "canonical_generic_missing_record", "description": "canonical plus generic legacy missing record"},
+  "CD-05": {"kind": "exact_duplicate_tracking", "description": "exact duplicate tracking record"},
+  "CD-06": {"kind": "possible_semantic_duplicate", "description": "possible semantic duplicate with different record id and text"},
+  "CD-07": {"kind": "subject_id_conflict", "description": "subject identity conflict"},
+  "CD-08": {"kind": "manifest_mismatch", "description": "00 canonical filename manifest mismatch"},
+  "CD-09": {"kind": "formal_legacy_1_0", "description": "formal legacy 1.0 nine-file pack"},
+  "CD-10": {"kind": "clean_with_unrelated", "description": "unrelated Markdown alongside clean Case"}
+}
