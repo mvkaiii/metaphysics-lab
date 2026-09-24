@@ -5,6 +5,8 @@ import sys
 import unittest
 from pathlib import Path
 
+from engine.distribution.constants import RELEASE_VERSION
+
 
 ROOT = Path(__file__).resolve().parents[1]
 VALIDATOR = ROOT / "tools" / "run_v17_release_surface_validation.py"
@@ -40,7 +42,7 @@ class V17ReleaseSurfaceValidationTests(unittest.TestCase):
     def test_validator_reports_required_named_checks_and_passes(self):
         module = self._load_validator()
         report = module.run(ROOT / "dist" / "ai")
-        self.assertEqual(report["release_version"], "1.7.0")
+        self.assertEqual(report["release_version"], RELEASE_VERSION)
         self.assertEqual(tuple(row["check"] for row in report["checks"]), EXPECTED_CHECKS)
         for row in report["checks"]:
             self.assertIn(row["status"], {"PASS", "FAIL"})
