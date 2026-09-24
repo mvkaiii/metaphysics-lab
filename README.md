@@ -6,9 +6,20 @@ Metaphysics Lab 是一套把**命盤計算**和**AI 命理解讀**分開的命�
 
 目前最新正式版本為 **v1.7.0｜2026-09-24**，Git tag / GitHub Release `v1.7.0` 已正式建立。v1.7.0 維持 **Case Schema 1.1**，既有 Case 不需要重建。
 
-## 第一次使用
+正式下載頁：[Metaphysics Lab v1.7.0](https://github.com/mvkaiii/metaphysics-lab/releases/tag/v1.7.0)。到 GitHub Release 的**下載區（GitHub 顯示為 Assets）**，優先下載 `Metaphysics-Lab-v1.7.0-User-Package.zip`。**不要下載 GitHub 自動產生的 Source code ZIP 當成使用者包。**
 
-最簡單的方式是到 GitHub Release 的**下載區（GitHub 顯示為 Assets）**下載 `Metaphysics-Lab-v1.7.0-User-Package.zip`。下載後只需要解壓縮這個 User Package；ZIP 內固定只有下面 3 個檔案，也可以單獨下載。**不要下載 GitHub 自動產生的 Source code ZIP 當成使用者包。**
+## 最新版安裝／升級操作
+
+1. 下載 `Metaphysics-Lab-v1.7.0-User-Package.zip`。
+2. 解壓縮後確認只有 `metaphysics_lab.py`、`metaphysics_core.md`、`project_instructions.txt` 三個正式檔案。
+3. 新 Project：上傳 `metaphysics_lab.py` 與 `metaphysics_core.md`，再把 `project_instructions.txt` 全文貼到 Project Instructions。
+4. 從 v1.6.0 升級：三個發行檔案要一起同步；**保留** `命主索引.md`、私人 Case、本命資料、驗證事件、追蹤紀錄與所有已鎖定預測。
+5. 本次 **Case Schema 仍是 1.1**，不要重建 `subject_id`、清空 05～08，或重做既有 blind forecast。
+6. 完成後請 AI 執行 `runtime_info`，確認 Project Contract `1.2`、Runtime Schema `1.1`、Case Schema `1.1`、AI Distribution Runtime `1.2-exp`、Capability Manifest `1.0`。
+
+## 第一次建立命理專案
+
+User Package 內固定只有下面 3 個檔案，也可以從同一個 Release 的 Assets 個別下載。
 
 | 用途 | 實際檔名 | 你要做什麼 |
 |---|---|---|
