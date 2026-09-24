@@ -6,7 +6,7 @@
 
 ## 1. 下載與安裝
 
-目前版本識別為 **v1.7.0**（release candidate）。在 `v1.7.0` GitHub Release 正式建立前，公開最新正式 Release 仍是 v1.6.0。v1.7.0 維持 **Case Schema 1.1**，既有私人 Case 不需要重建。
+目前最新正式版本為 **v1.7.0｜2026-09-24**，GitHub Release `v1.7.0` 已正式建立。v1.7.0 維持 **Case Schema 1.1**，既有私人 Case 不需要重建。
 
 優先下載 `Metaphysics-Lab-v1.7.0-User-Package.zip`；解壓後就是下面三個檔案。也可以在 Assets 單獨下載。
 
