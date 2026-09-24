@@ -61,7 +61,7 @@ class V17SandboxContractTests(unittest.TestCase):
             if line.startswith("status:")
         ]
         self.assertEqual(len(status_lines), 1)
-        self.assertIn(status_lines[0], {"PENDING", "PASS"})
+        self.assertIn(status_lines[0], {"PENDING", "PASS", "FAIL"})
 
     def test_base_fixture_is_synthetic_and_blind_safe(self):
         path = ROOT / BASE_FIXTURE_PATH

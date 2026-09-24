@@ -483,8 +483,8 @@ Candidate Envelope 是 Project 原生盤面候選集合；候選依賴欄位不�
 Guided Inquiry 是對話導引，不是背景推播，也不是新的預測 authority。它只把目前已合法可問、可分析的方向轉成使用者可選的 **structured intents**；一般使用者看到的文字一律使用台灣繁體中文，內部可保留 `reason_code` 供稽核，但不需要把工程欄位直接顯示給使用者。
 
 - **第一次 assistant 回覆**：若使用者尚未提出 substantive 問題，主動顯示 3～4 個可直接接著問的方向，預設 3 個；若已有 substantive 問題先回答，再依回答結果決定是否附上後續建議。
-- 入口模式整個回覆只能有一組可直接接著問的方向；使用者可選方向總數不得超過 4 個，不得先列更多路徑再收斂成 3 個入口。
-- 每次要顯示 Guided Inquiry 前，必須呼叫 runtime `suggest_inquiries`；runtime 回傳的 `suppressed` 與 `suggestions` 是使用者可見建議區塊的數量與順序 authority，AI 不得略過 runtime 自行湊題。
+- 入口只顯示一組，最多4個。
+- 顯示前必須先呼叫 runtime `suggest_inquiries`；runtime 回傳的 `suppressed` 與 `suggestions` 是使用者可見建議區塊的數量與順序 authority，AI 不得略過 runtime 自行湊題。
 - suggestions 陣列長度為 3 時，使用者可見輸出必須剛好 3 個；suggestions 陣列長度為 4 時，使用者可見輸出必須剛好 4 個。不得自行新增第四個，也不得自行省略第四個、合併或改寫成不同數量。
 - 在 `post_answer` 模式，即使 AI 覺得還有其他合理問題，也不得把泛用可問方向自行升格成第四個；第四個只能來自 runtime 已選出的合法 suggestion。
 - runtime 回傳 `suppressed=true` 或 `suggest_inquiries` 呼叫失敗時，不顯示 Guided Inquiry 建議區塊；仍保留使用者自由輸入，不用低品質建議補數量。

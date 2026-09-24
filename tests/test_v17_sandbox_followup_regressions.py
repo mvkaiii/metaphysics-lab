@@ -48,16 +48,22 @@ class V17SandboxFollowupRegressionTests(unittest.TestCase):
         self.assertEqual(result["suggestions"][2]["reason_code"], "pending_forecast_tracking")
 
     def test_entry_presentation_has_one_visible_batch_and_never_more_than_four(self):
-        required = "入口模式整個回覆只能有一組可直接接著問的方向；使用者可選方向總數不得超過 4 個，不得先列更多路徑再收斂成 3 個入口。"
+        required = "入口只顯示一組，最多4個。"
         for path in (AI_WORKFLOW, PROJECT_INSTRUCTIONS, DIST_CORE, DIST_INSTRUCTIONS):
             with self.subTest(path=path.name):
                 self.assertIn(required, path.read_text(encoding="utf-8"))
 
     def test_four_policy_suggestions_must_all_be_rendered(self):
-        required = "若 suggest_inquiries 回傳 4 個合法 suggestions，使用者輸出必須完整呈現 4 個，不得合併、省略或自行收斂成 3 個。"
+        required = (
+            "顯示前必須先呼叫 runtime `suggest_inquiries`",
+            "不得自行新增第四個",
+            "不得自行省略第四個",
+        )
         for path in (AI_WORKFLOW, PROJECT_INSTRUCTIONS, DIST_CORE, DIST_INSTRUCTIONS):
-            with self.subTest(path=path.name):
-                self.assertIn(required, path.read_text(encoding="utf-8"))
+            text = path.read_text(encoding="utf-8")
+            for phrase in required:
+                with self.subTest(path=path.name, phrase=phrase):
+                    self.assertIn(phrase, text)
 
     def test_case_blocked_presentation_is_recovery_only(self):
         required = "BLOCKED 狀態下只提供解除 blocking conflict 的 recovery guidance；不得列出『衝突解除後可以問』的一般命理問題清單。"

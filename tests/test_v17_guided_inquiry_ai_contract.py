@@ -43,7 +43,7 @@ class GuidedInquiryAIContractTests(unittest.TestCase):
 
     def test_runtime_suggestion_count_is_mandatory_render_authority(self):
         workflow_required = (
-            "每次要顯示 Guided Inquiry 前，必須呼叫 runtime `suggest_inquiries`",
+            "顯示前必須先呼叫 runtime `suggest_inquiries`",
             "suggestions 陣列長度為 3 時，使用者可見輸出必須剛好 3 個",
             "suggestions 陣列長度為 4 時，使用者可見輸出必須剛好 4 個",
             "不得自行新增第四個",
