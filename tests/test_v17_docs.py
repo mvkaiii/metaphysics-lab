@@ -62,7 +62,7 @@ class V17DocsTests(unittest.TestCase):
             "1.2-exp",
             "Case Schema",
             "只替換 `metaphysics_lab.py`",
-            "不要求批次覆寫",
+            "不要求為了看起來像新版而批次覆寫",
             "Experimental",
         ):
             with self.subTest(phrase=phrase):
