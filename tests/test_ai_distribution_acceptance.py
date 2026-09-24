@@ -6,6 +6,7 @@ from engine.distribution.constants import (
     CASE_SCHEMA_VERSION,
     DISTRIBUTION_RUNTIME_VERSION,
     PROJECT_CONTRACT_VERSION,
+    RELEASE_VERSION,
     RUNTIME_SCHEMA_VERSION,
 )
 from engine.distribution.runtime import dispatch
@@ -38,6 +39,7 @@ class AIDistributionAcceptanceTests(unittest.TestCase):
         self.assertIn("GENERATED FILE - DO NOT EDIT", text)
         self.assertRegex(text, r'SOURCE_DIGEST = [\'\"][0-9a-f]{64}[\'\"]')
         normalized = text.replace("'", '"')
+        self.assertIn('RELEASE_VERSION = "%s"' % RELEASE_VERSION, normalized)
         self.assertIn('PROJECT_CONTRACT_VERSION = "%s"' % PROJECT_CONTRACT_VERSION, normalized)
         self.assertIn('RUNTIME_SCHEMA_VERSION = "%s"' % RUNTIME_SCHEMA_VERSION, normalized)
         self.assertIn('CASE_SCHEMA_VERSION = "%s"' % CASE_SCHEMA_VERSION, normalized)
@@ -66,6 +68,8 @@ class AIDistributionAcceptanceTests(unittest.TestCase):
     def test_runtime_capabilities_remain_unpromoted(self):
         result = dispatch("runtime_info", {})
         self.assertTrue(result["ok"], result)
+        self.assertEqual(result["data"]["release_version"], RELEASE_VERSION)
+        self.assertEqual(result["data"]["distribution_runtime_version"], DISTRIBUTION_RUNTIME_VERSION)
         caps = result["data"]["capabilities"]
         self.assertEqual(caps["ziwei.flowing_stars"]["maturity"], "experimental")
         self.assertEqual(caps["ziwei.flowing_stars"]["routing"], "on_demand")
