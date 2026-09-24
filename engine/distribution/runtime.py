@@ -13,6 +13,7 @@ from .constants import (
     CASE_SCHEMA_VERSION,
     DISTRIBUTION_RUNTIME_VERSION,
     PROJECT_CONTRACT_VERSION,
+    RELEASE_VERSION,
     RUNTIME_SCHEMA_VERSION,
     SUPPORTED_ACTIONS,
 )
@@ -55,6 +56,7 @@ def _offline_location_registry_info() -> dict:
 
 def runtime_info() -> dict:
     return {
+        "release_version": RELEASE_VERSION,
         "project_contract_version": PROJECT_CONTRACT_VERSION,
         "runtime_schema_version": RUNTIME_SCHEMA_VERSION,
         "case_schema_version": CASE_SCHEMA_VERSION,
