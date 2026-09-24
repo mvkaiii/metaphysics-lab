@@ -3,19 +3,20 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CURRENT_VERSION = "v1.7.0"
-USER_PACKAGE = "Metaphysics-Lab-v1.7.0-User-Package.zip"
+CURRENT_VERSION = "v1.7.1"
+USER_PACKAGE = "Metaphysics-Lab-v1.7.1-User-Package.zip"
 CURRENT_DOCS = (
     ROOT / "README.md",
     ROOT / "docs" / "快速開始.md",
     ROOT / "docs" / "安裝到ChatGPT-Project.md",
     ROOT / "docs" / "更新與版本同步.md",
 )
-RELEASE_NOTES = ROOT / "docs" / "發布說明-v1.7.0.md"
+RELEASE_NOTES = ROOT / "docs" / "發布說明-v1.7.1.md"
+HISTORICAL_V170_RELEASE_NOTES = ROOT / "docs" / "發布說明-v1.7.0.md"
 
 
 class V17DocsTests(unittest.TestCase):
-    def test_current_user_docs_identify_v170_and_case_schema_1_1(self):
+    def test_current_user_docs_identify_v171_and_case_schema_1_1(self):
         for path in CURRENT_DOCS:
             text = path.read_text(encoding="utf-8")
             with self.subTest(path=path.name):
@@ -26,7 +27,7 @@ class V17DocsTests(unittest.TestCase):
                     f"{path}: must explicitly preserve existing Case data without destructive rebuild",
                 )
 
-    def test_install_surfaces_point_to_v170_three_file_user_package(self):
+    def test_install_surfaces_point_to_v171_three_file_user_package(self):
         for relative in (
             "README.md",
             "docs/快速開始.md",
@@ -50,24 +51,35 @@ class V17DocsTests(unittest.TestCase):
         self.assertIn("保留", text)
         self.assertIn("Case Schema 1.1", text)
 
-    def test_v170_release_notes_state_reliability_and_governance_boundaries(self):
+    def test_v171_release_notes_state_metadata_patch_and_historical_v170_boundaries(self):
         self.assertTrue(RELEASE_NOTES.exists())
         text = RELEASE_NOTES.read_text(encoding="utf-8")
+        for phrase in (
+            "Metaphysics Lab v1.7.1",
+            "release identity metadata patch",
+            "release_version",
+            "AI Distribution Runtime",
+            "1.2-exp",
+            "Case Schema",
+            "只替換 `metaphysics_lab.py`",
+            "不要求批次覆寫",
+            "Experimental",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, text)
+
+        historical = HISTORICAL_V170_RELEASE_NOTES.read_text(encoding="utf-8")
         for phrase in (
             "Metaphysics Lab v1.7.0",
             "3～4 個",
             "預設 3 個",
             "Case Doctor",
-            "不自動刪除",
             "conditional_prospective",
             "hidden_existing_reality",
             "clean prospective denominator",
-            "Case Schema 1.1",
-            "Experimental",
-            "不因 v1.7 發布而自動升級",
         ):
-            with self.subTest(phrase=phrase):
-                self.assertIn(phrase, text)
+            with self.subTest(historical_phrase=phrase):
+                self.assertIn(phrase, historical)
 
 
 if __name__ == "__main__":
