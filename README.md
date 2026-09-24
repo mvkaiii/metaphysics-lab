@@ -4,7 +4,7 @@ Metaphysics Lab 是一套把**命盤計算**和**AI 命理解讀**分開的命�
 
 核心概念很簡單：**Python 負責固定計算，AI 負責解讀。** 一般使用者不需要先理解 repo、模組或 capability，也不需要自己決定八字／紫微該跑哪個程式。
 
-目前版本識別為 **v1.7.0**（release candidate）。在 `v1.7.0` Git tag / GitHub Release 正式建立前，公開最新正式 Release 仍是 v1.6.0；這不改變本候選版的安裝與升級契約。v1.7.0 維持 **Case Schema 1.1**，既有 Case 不需要重建。
+目前最新正式版本為 **v1.7.0｜2026-09-24**，Git tag / GitHub Release `v1.7.0` 已正式建立。v1.7.0 維持 **Case Schema 1.1**，既有 Case 不需要重建。
 
 ## 第一次使用
 
