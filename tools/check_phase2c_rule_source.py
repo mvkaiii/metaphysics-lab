@@ -16,7 +16,7 @@ _REQUIRED_STATES = {
     "ziwei.flowing_stars": "implemented/experimental/on_demand",
 }
 
-_EXPECTED_RELEASE_IDENTITY = "v1.7.0"
+_EXPECTED_RELEASE_IDENTITY = "v1.7.1"
 
 
 def _state(capability_id: str) -> str:

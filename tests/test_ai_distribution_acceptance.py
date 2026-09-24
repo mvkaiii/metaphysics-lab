@@ -80,15 +80,16 @@ class AIDistributionAcceptanceTests(unittest.TestCase):
         self.assertEqual(caps["historical.activation_selector"]["maturity"], "experimental")
         self.assertEqual(caps["historical.activation_selector"]["routing"], "on_demand")
 
-    def test_formal_release_is_v1_7_0_without_capability_promotion(self):
+    def test_formal_release_is_v1_7_1_without_capability_promotion(self):
         text = (ROOT / "VERSION.md").read_text(encoding="utf-8")
         formal = text.split("## 歷史版本", 1)[0]
-        self.assertIn("Metaphysics Lab Core：**v1.7.0**", formal)
-        self.assertIn("發布日期：**2026-09-24**", formal)
-        self.assertIn("正式 release commit：`24760aa8766eb2691c8878f2cd8b97f0b37f8964`", formal)
+        self.assertIn("Metaphysics Lab Core：**v1.7.1**", formal)
+        self.assertIn("發布日期：**2026-09-25**", formal)
+        self.assertIn("Metadata implementation base：`3d4380a0b78ba61d3545bc67642cfe67cfc26545`", formal)
         self.assertNotIn("PENDING_FINAL_QUALIFICATION", formal)
         self.assertIn("AI Distribution Pack", text)
         self.assertIn("AI Distribution Runtime：v1.2-exp", text)
+        self.assertIn("Release Version            1.7.1", text)
         self.assertIn("release 本身不改變 capability maturity", text)
         self.assertNotRegex(formal, r"最新正式發布[\s\S]{0,100}v1\.4\.0")
 

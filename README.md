@@ -4,18 +4,18 @@ Metaphysics Lab 是一套把**命盤計算**和**AI 命理解讀**分開的命�
 
 核心概念很簡單：**Python 負責固定計算，AI 負責解讀。** 一般使用者不需要先理解 repo、模組或 capability，也不需要自己決定八字／紫微該跑哪個程式。
 
-目前最新正式版本為 **v1.7.0｜2026-09-24**，Git tag / GitHub Release `v1.7.0` 已正式建立。v1.7.0 維持 **Case Schema 1.1**，既有 Case 不需要重建。
+目前最新正式版本為 **v1.7.1｜2026-09-25**，Git tag / GitHub Release `v1.7.1` 已正式建立。v1.7.1 維持 **Case Schema 1.1**，既有 Case 不需要重建。`runtime_info` 現在會同時回報 Release `1.7.1` 與 AI Distribution Runtime `1.2-exp`，兩者是不同版本層級。
 
-正式下載頁：[Metaphysics Lab v1.7.0](https://github.com/mvkaiii/metaphysics-lab/releases/tag/v1.7.0)。到 GitHub Release 的**下載區（GitHub 顯示為 Assets）**，優先下載 `Metaphysics-Lab-v1.7.0-User-Package.zip`。**不要下載 GitHub 自動產生的 Source code ZIP 當成使用者包。**
+正式下載頁：[Metaphysics Lab v1.7.1](https://github.com/mvkaiii/metaphysics-lab/releases/tag/v1.7.1)。到 GitHub Release 的**下載區（GitHub 顯示為 Assets）**，優先下載 `Metaphysics-Lab-v1.7.1-User-Package.zip`。**不要下載 GitHub 自動產生的 Source code ZIP 當成使用者包。**
 
 ## 最新版安裝／升級操作
 
-1. 下載 `Metaphysics-Lab-v1.7.0-User-Package.zip`。
+1. 下載 `Metaphysics-Lab-v1.7.1-User-Package.zip`。
 2. 解壓縮後確認只有 `metaphysics_lab.py`、`metaphysics_core.md`、`project_instructions.txt` 三個正式檔案。
 3. 新 Project：上傳 `metaphysics_lab.py` 與 `metaphysics_core.md`，再把 `project_instructions.txt` 全文貼到 Project Instructions。
-4. 從 v1.6.0 升級：三個發行檔案要一起同步；**保留** `命主索引.md`、私人 Case、本命資料、驗證事件、追蹤紀錄與所有已鎖定預測。
-5. 本次 **Case Schema 仍是 1.1**，不要重建 `subject_id`、清空 05～08，或重做既有 blind forecast。
-6. 完成後請 AI 執行 `runtime_info`，確認 Project Contract `1.2`、Runtime Schema `1.1`、Case Schema `1.1`、AI Distribution Runtime `1.2-exp`、Capability Manifest `1.0`。
+4. 若已是 v1.7.0：只需替換 `metaphysics_lab.py`；`metaphysics_core.md` 與 Project Instructions 不需要重貼。從 v1.6.0 或更早版本升到 v1.7 系列時，再依更新指南同步三檔。
+5. **保留** `命主索引.md`、私人 Case、本命資料、驗證事件、追蹤紀錄與所有已鎖定預測；Case Schema 仍是 1.1，不要重建 `subject_id`、清空 05～08，或重做既有 blind forecast。
+6. 完成後請 AI 執行 `runtime_info`，確認 Release `1.7.1`、Project Contract `1.2`、Runtime Schema `1.1`、Case Schema `1.1`、AI Distribution Runtime `1.2-exp`、Capability Manifest `1.0`。
 
 ## 第一次建立命理專案
 
@@ -27,7 +27,9 @@ User Package 內固定只有下面 3 個檔案，也可以從同一個 Release �
 | **命理分析核心規則** | `metaphysics_core.md` | 上傳到 Project |
 | **Project 設定指令** | `project_instructions.txt` | 打開後，把全文貼到 Project Instructions |
 
-如果你是從 **v1.6.0 升級到 v1.7.0**，請三個檔案一起同步：替換 `metaphysics_lab.py`、替換 `metaphysics_core.md`，並把新版 `project_instructions.txt` 全文重新貼到 Project Instructions。保留既有 `命主索引.md`、私人 Case、驗證事件與追蹤紀錄；本次沒有 Case Schema migration，也不要做破壞性 Case 重建。
+如果你已經是 **v1.7.0**，升到 **v1.7.1** 只需要替換 `metaphysics_lab.py`；這個 patch 只補 Release identity metadata，不改 Project Contract、核心提示詞或 Case Schema。
+
+如果你是從 **v1.6.0 升級到 v1.7 系列**，仍請依 v1.7.0 的三檔升級規則同步 `metaphysics_lab.py`、`metaphysics_core.md` 與 `project_instructions.txt`。保留既有 `命主索引.md`、私人 Case、驗證事件與追蹤紀錄；不要做破壞性 Case 重建。
 
 設定完成後，先對 AI 說：
 
