@@ -1,10 +1,10 @@
 # 變更紀錄
 
-這份文件保存正式版本與尚未發布變更的技術紀錄。第一次使用 Metaphysics Lab 請先看 `README.md`；目前正式版本為 **v1.6.0｜2026-09-05**，一般使用者發布說明見 `docs/發布說明-v1.6.0.md`。
+這份文件保存正式版本與尚未發布變更的技術紀錄。第一次使用 Metaphysics Lab 請先看 `README.md`；目前正式版本為 **v1.7.0｜2026-09-24**，一般使用者發布說明見 `docs/發布說明-v1.7.0.md`。
 
-## v1.7.0｜發行日期於正式 Release 執行時確定
+## v1.7.0｜2026-09-24
 
-### 可靠性與可用性整合候選
+### 正式軟體 Release
 
 - 新增 Capability Manifest 1.0，讓 runtime capability 的 implementation、maturity、routing 與版本資訊有單一可驗證來源。
 - 新增 Case Doctor + Legacy Reconciliation，以唯讀診斷與明確 reconciliation plan 處理 legacy / duplicate / subject-integrity 問題；不自動刪除或合併使用者檔案。
@@ -12,7 +12,9 @@
 - 新增 Guided Inquiry，預設提供 3 個、必要時 4 個建議方向；它只做對話導航，不讀取盲判前禁止的驗證事件，且**不是新的命理證據**。
 - Project Contract 升為 1.2；Runtime Schema 與 **Case Schema 1.1** 維持不變。既有 Case **不需要破壞性重建**或 schema migration。
 - Historical Activation **selector v1** 與 Interpretation Contract **interpretation v1** 仍是 default；本 release 不包含 v2 promotion，也不因發版提升 Experimental capability maturity。
-- AI Distribution Runtime 目標版本為 1.2-exp；正式發布日期、release candidate SHA、User Package digest 與 sandbox evidence 只在正式 Release gate 完成後記錄，不在 implementation 階段預填。
+- AI Distribution Runtime 為 1.2-exp；正式受測 candidate：`3153d5a49909094e16151c2cbbc487c2579dbff4`；正式 release target：`24760aa8766eb2691c8878f2cd8b97f0b37f8964`。
+- Fresh isolated sandbox `測試-5`：S01～S12 `12/12 PASS`、critical rubrics `10/10 PASS`，sealed evidence validator 回傳 `release_allowed=true` / `errors=[]`。
+- deterministic User Package：`Metaphysics-Lab-v1.7.0-User-Package.zip`，SHA256 `7de4285c0e7c79e2d4a311ec8a16b0866ac0820a303eb9a288dd63d50798cdd7`；GitHub Release 維持四項 assets：User Package ZIP、`metaphysics_lab.py`、`metaphysics_core.md`、`project_instructions.txt`。
 
 ## v1.6.0｜2026-09-05
 
