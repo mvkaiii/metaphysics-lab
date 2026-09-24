@@ -6,7 +6,7 @@ Metaphysics Lab 是一套把**命盤計算**和**AI 命理解讀**分開的命�
 
 目前最新正式版本為 **v1.7.0｜2026-09-24**，Git tag / GitHub Release `v1.7.0` 已正式建立。v1.7.0 維持 **Case Schema 1.1**，既有 Case 不需要重建。
 
-正式下載頁：[Metaphysics Lab v1.7.0](https://github.com/mvkaiii/metaphysics-lab/releases/tag/v1.7.0)。到 GitHub Release 的**下載區（GitHub 顯示為 Assets）**，優先下載 `Metaphysics-Lab-v1.7.0-User-Package.zip`；**不要把 GitHub 自動產生的 Source code ZIP 當成使用者包**。
+正式下載頁：[Metaphysics Lab v1.7.0](https://github.com/mvkaiii/metaphysics-lab/releases/tag/v1.7.0)。到 GitHub Release 的**下載區（GitHub 顯示為 Assets）**，優先下載 `Metaphysics-Lab-v1.7.0-User-Package.zip`。**不要下載 GitHub 自動產生的 Source code ZIP 當成使用者包。**
 
 ## 最新版安裝／升級操作
 
