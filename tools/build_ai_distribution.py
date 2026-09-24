@@ -32,6 +32,7 @@ from engine.distribution.constants import (
     CASE_SCHEMA_VERSION,
     DISTRIBUTION_RUNTIME_VERSION,
     PROJECT_CONTRACT_VERSION,
+    RELEASE_VERSION,
     RUNTIME_SCHEMA_VERSION,
 )
 from engine.vendor.manifest import bundled_vendor_manifest
@@ -90,6 +91,7 @@ from pathlib import Path, PurePosixPath
 
 BUILD_FORMAT_VERSION = @@BUILD_FORMAT_VERSION@@
 SOURCE_DIGEST = @@SOURCE_DIGEST@@
+RELEASE_VERSION = @@RELEASE_VERSION@@
 PROJECT_CONTRACT_VERSION = @@PROJECT_CONTRACT_VERSION@@
 RUNTIME_SCHEMA_VERSION = @@RUNTIME_SCHEMA_VERSION@@
 CASE_SCHEMA_VERSION = @@CASE_SCHEMA_VERSION@@
@@ -383,6 +385,7 @@ def _render_bundle(repo_root: Path) -> str:
     replacements = {
         "@@BUILD_FORMAT_VERSION@@": repr(BUILD_FORMAT_VERSION),
         "@@SOURCE_DIGEST@@": repr(source_digest),
+        "@@RELEASE_VERSION@@": repr(RELEASE_VERSION),
         "@@PROJECT_CONTRACT_VERSION@@": repr(PROJECT_CONTRACT_VERSION),
         "@@RUNTIME_SCHEMA_VERSION@@": repr(RUNTIME_SCHEMA_VERSION),
         "@@CASE_SCHEMA_VERSION@@": repr(CASE_SCHEMA_VERSION),
