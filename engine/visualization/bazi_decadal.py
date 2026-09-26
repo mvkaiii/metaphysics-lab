@@ -8,7 +8,7 @@ import hashlib
 import json
 import math
 import re
-from typing import Any, Mapping
+from typing import Any, Mapping, Optional
 
 from engine.distribution.manifest import capability_manifest_digest
 from .contract import validate_chart
@@ -38,7 +38,7 @@ def _sha256(value: Any) -> str:
     return hashlib.sha256(canonical_json_bytes(value)).hexdigest()
 
 
-def _forbidden_input(value: Any, path: str = "input") -> str | None:
+def _forbidden_input(value: Any, path: str = "input") -> Optional[str]:
     forbidden = {
         "case",
         "freeform_case",
@@ -151,7 +151,7 @@ def _validate_root(input_view: Mapping[str, Any]) -> None:
         raise ValueError("source_capabilities must be a list")
 
 
-def _source_capability(input_view: Mapping[str, Any], manifest: Mapping[str, Any]) -> dict | None:
+def _source_capability(input_view: Mapping[str, Any], manifest: Mapping[str, Any]) -> Optional[dict]:
     capabilities = input_view["source_capabilities"]
     if len(capabilities) != 1 or not isinstance(capabilities[0], Mapping):
         return None
