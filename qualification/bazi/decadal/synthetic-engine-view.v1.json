@@ -1,0 +1,139 @@
+{
+  "schema_version": "1.0",
+  "classification": "synthetic_bazi_decadal_engine_view",
+  "source_commit": "872c60b2e959ea48d25524b74686e488f576ec6f",
+  "source_type": "synthetic_engine_output",
+  "engine_source": {
+    "source_commit": "872c60b2e959ea48d25524b74686e488f576ec6f",
+    "entrypoint": "engine.bazi.natal.build_bazi_natal",
+    "serializer": "engine.natal.orchestration._serialize_bazi",
+    "files": [
+      {
+        "path": "engine/bazi/natal.py",
+        "git_blob_sha1": "2c0ec78efe8f1b0c83a1e19b2b037f08039e6495",
+        "sha256": "5e9870a0be687545ff642a0d6806cef9f5216032d1c87be3935e135e843173e3"
+      },
+      {
+        "path": "engine/bazi/natal_models.py",
+        "git_blob_sha1": "7272400777f87a158610bc4372c2563225a13dd5",
+        "sha256": "bd844a53e0b368c3cf05f8ab370cd99c7da8c637b4668d57723f9a5d8c05b633"
+      },
+      {
+        "path": "engine/natal/orchestration.py",
+        "git_blob_sha1": "06c746e5853c87a870294350e99ab6a397cc0a17",
+        "sha256": "dc255b8d3778f1c503391d6bf4adc938af61f4282e726e4a219ff83d45113172"
+      }
+    ]
+  },
+  "generation": {
+    "entrypoint": "engine.bazi.natal.build_bazi_natal",
+    "serializer": "engine.natal.orchestration._serialize_bazi",
+    "reproduction_test": "python -m unittest tests.test_bazi_decadal_qualification.BaziDecadalQualificationTests.test_fixture_decadal_values_match_existing_project_engine_serializer -v"
+  },
+  "birth_vector": {
+    "reported_datetime": "1984-03-13T19:20:00",
+    "sex": "male",
+    "timezone": "Asia/Taipei",
+    "resolved_location": {
+      "canonical_name": "Taipei, Taiwan",
+      "latitude": 25.0375,
+      "longitude": 121.5637,
+      "provider_name": "public-fixture",
+      "provider_version": "1",
+      "resolution_status": "resolved",
+      "provider_reference": "public:taipei"
+    }
+  },
+  "profile": {
+    "profile_id": "bazi-natal-project-v1",
+    "rule_version": "1.0-exp",
+    "decadal_rule": "three-days-one-year-v1",
+    "age_basis": "continuous_years_from_jie_interval",
+    "interval_semantics": "needs_confirmation"
+  },
+  "effective_datetime": "1984-03-13T19:20:00+08:00",
+  "timezone": "Asia/Taipei",
+  "decadal_direction": "forward",
+  "periods": [
+    {
+      "index": 1,
+      "pillar": "\u620a\u8fb0",
+      "start_age_years": 7.376851851851852,
+      "end_age_years": 17.376851851851853,
+      "start_datetime": "1991-07-30T03:29:19.800000+08:00",
+      "end_datetime": "2001-07-29T13:41:19.800000+08:00"
+    },
+    {
+      "index": 2,
+      "pillar": "\u5df1\u5df3",
+      "start_age_years": 17.376851851851853,
+      "end_age_years": 27.376851851851853,
+      "start_datetime": "2001-07-29T13:41:19.800000+08:00",
+      "end_datetime": "2011-07-29T23:53:19.800000+08:00"
+    },
+    {
+      "index": 3,
+      "pillar": "\u5e9a\u5348",
+      "start_age_years": 27.376851851851853,
+      "end_age_years": 37.37685185185185,
+      "start_datetime": "2011-07-29T23:53:19.800000+08:00",
+      "end_datetime": "2021-07-29T10:05:19.800000+08:00"
+    },
+    {
+      "index": 4,
+      "pillar": "\u8f9b\u672a",
+      "start_age_years": 37.37685185185185,
+      "end_age_years": 47.37685185185185,
+      "start_datetime": "2021-07-29T10:05:19.800000+08:00",
+      "end_datetime": "2031-07-29T20:17:19.800000+08:00"
+    },
+    {
+      "index": 5,
+      "pillar": "\u58ec\u7533",
+      "start_age_years": 47.37685185185185,
+      "end_age_years": 57.37685185185185,
+      "start_datetime": "2031-07-29T20:17:19.800000+08:00",
+      "end_datetime": "2041-07-29T06:29:19.800000+08:00"
+    },
+    {
+      "index": 6,
+      "pillar": "\u7678\u9149",
+      "start_age_years": 57.37685185185185,
+      "end_age_years": 67.37685185185185,
+      "start_datetime": "2041-07-29T06:29:19.800000+08:00",
+      "end_datetime": "2051-07-29T16:41:19.800000+08:00"
+    },
+    {
+      "index": 7,
+      "pillar": "\u7532\u620c",
+      "start_age_years": 67.37685185185185,
+      "end_age_years": 77.37685185185185,
+      "start_datetime": "2051-07-29T16:41:19.800000+08:00",
+      "end_datetime": "2061-07-29T02:53:19.800000+08:00"
+    },
+    {
+      "index": 8,
+      "pillar": "\u4e59\u4ea5",
+      "start_age_years": 77.37685185185185,
+      "end_age_years": 87.37685185185185,
+      "start_datetime": "2061-07-29T02:53:19.800000+08:00",
+      "end_datetime": "2071-07-29T13:05:19.800000+08:00"
+    },
+    {
+      "index": 9,
+      "pillar": "\u4e19\u5b50",
+      "start_age_years": 87.37685185185185,
+      "end_age_years": 97.37685185185185,
+      "start_datetime": "2071-07-29T13:05:19.800000+08:00",
+      "end_datetime": "2081-07-28T23:17:19.800000+08:00"
+    },
+    {
+      "index": 10,
+      "pillar": "\u4e01\u4e11",
+      "start_age_years": 97.37685185185185,
+      "end_age_years": 107.37685185185185,
+      "start_datetime": "2081-07-28T23:17:19.800000+08:00",
+      "end_datetime": "2091-07-29T09:29:19.800000+08:00"
+    }
+  ]
+}

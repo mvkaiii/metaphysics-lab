@@ -1,0 +1,42 @@
+{
+  "repository": "mvkaiii/metaphysics-lab",
+  "current_candidate_shas": [
+    "872c60b2e959ea48d25524b74686e488f576ec6f",
+    "933cdc735de345e1bb7cf45eb679beb46b10a237",
+    "270ee223f779f6621c0c74434799886f1df4af92"
+  ],
+  "frozen_release_shas": [
+    "872c60b2e959ea48d25524b74686e488f576ec6f",
+    "24760aa8766eb2691c8878f2cd8b97f0b37f8964",
+    "c325d754112df71c6747e17262d2e781d2864441"
+  ],
+  "protected_artifact_ids": [
+    10900492481,
+    10900567224,
+    10901001174,
+    10900802188
+  ],
+  "protected_release_asset_names": [
+    "Metaphysics-Lab-v1.7.1-User-Package.zip",
+    "Metaphysics-Lab-v1.7.0-User-Package.zip",
+    "Metaphysics-Lab-v1.6.0-User-Package.zip",
+    "metaphysics_lab.py",
+    "metaphysics_core.md",
+    "project_instructions.txt"
+  ],
+  "protected_evidence_names": [
+    "lin-tianji-v1.7-ai-distribution-933cdc735de345e1bb7cf45eb679beb46b10a237",
+    "lin-tianji-v1.6-ai-distribution-933cdc735de345e1bb7cf45eb679beb46b10a237",
+    "lin-tianji-v1.5-ai-distribution-933cdc735de345e1bb7cf45eb679beb46b10a237",
+    "lin-tianji-v1.5-rebuilt-ai-distribution-933cdc735de345e1bb7cf45eb679beb46b10a237"
+  ],
+  "protected_evidence_markers": [
+    "evidence",
+    "qualification",
+    "sandbox"
+  ],
+  "protected_evidence_sha256": [
+    "sha256:cc43e3b0f85947035740fc3e579f09a9ff8f7df03510f7b737500378b2dd2fb5",
+    "sha256:8250e963c38753c7b35d8841c22572087d582a9d9c27ccbe286883be655d9fbe"
+  ]
+}

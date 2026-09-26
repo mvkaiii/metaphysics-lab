@@ -47,6 +47,11 @@ ARTIFACT_NAMES = (
     "project_instructions.txt",
 )
 _FIRST_PARTY_TEXT_PREFIXES = ("engine/", "templates/")
+# Visualization is an experimental repository capability. Keep it out of the
+# frozen v1.7.1 AI distribution until a later release explicitly adopts its
+# public runtime surface; adding a module must not silently rewrite the
+# historical three-file package identity.
+_EXCLUDED_ENGINE_PREFIXES = ("engine/visualization/",)
 _SINGLE_BUNDLE_INPUTS = (
     "vendor/manifest.json",
     "data/birth_places/registry.v1.json",
@@ -301,7 +306,10 @@ def discover_bundle_inputs(repo_root: Path) -> List[str]:
         if path.is_symlink():
             raise ValueError("bundle input must not be a symlink: %s" % path.relative_to(root).as_posix())
         if path.is_file():
-            paths.append(path.relative_to(root).as_posix())
+            relative = path.relative_to(root).as_posix()
+            if any(relative.startswith(prefix) for prefix in _EXCLUDED_ENGINE_PREFIXES):
+                continue
+            paths.append(relative)
     for path in (root / "templates").rglob("*.tmpl"):
         if path.is_symlink():
             raise ValueError("bundle input must not be a symlink: %s" % path.relative_to(root).as_posix())

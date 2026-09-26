@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metaphysics-lab.invalid/schemas/visualization/chart.v1.schema.json",
+  "title": "Metaphysics Lab Visualization Chart v1",
+  "type": "object",
+  "required": ["chart_type", "schema_version", "status", "reason_codes", "view_context", "source_capabilities", "data", "annotations", "authorities", "provenance", "limitations"],
+  "properties": {
+    "chart_type": {"const": "bazi_decadal_timeline"},
+    "schema_version": {"const": "1.0"},
+    "status": {"enum": ["ready", "unsupported"]},
+    "reason_codes": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "view_context": {"$ref": "#/$defs/viewContext"},
+    "source_capabilities": {"type": "array", "items": {"$ref": "#/$defs/sourceCapability"}},
+    "data": {"oneOf": [{"$ref": "#/$defs/data"}, {"type": "null"}]},
+    "annotations": {"type": "array", "items": {"$ref": "#/$defs/annotation"}},
+    "authorities": {"type": "object", "additionalProperties": {"$ref": "#/$defs/authority"}},
+    "provenance": {"$ref": "#/$defs/provenance"},
+    "limitations": {"type": "array", "items": {"$ref": "#/$defs/limitation"}}
+  },
+  "additionalProperties": false,
+  "oneOf": [
+    {"properties": {"status": {"const": "ready"}, "data": {"$ref": "#/$defs/data"}}},
+    {"properties": {"status": {"const": "unsupported"}, "data": {"type": "null"}, "source_capabilities": {"const": []}, "annotations": {"const": []}, "authorities": {"const": {}}}}
+  ],
+  "$defs": {
+    "viewContext": {
+      "type": "object", "additionalProperties": false,
+      "required": ["as_of", "timezone", "visibility_mode", "locale"],
+      "properties": {"as_of": {"type": "string", "format": "date-time"}, "timezone": {"type": "string", "minLength": 1}, "visibility_mode": {"enum": ["blind", "identified"]}, "locale": {"const": "zh-TW"}}
+    },
+    "sourceCapability": {
+      "type": "object", "additionalProperties": false,
+      "required": ["capability_id", "scope", "profile_id", "rule_version", "maturity", "routing"],
+      "properties": {"capability_id": {"type": "string"}, "scope": {"type": "string"}, "profile_id": {"type": "string"}, "rule_version": {"type": "string"}, "maturity": {"enum": ["stable", "experimental"]}, "routing": {"enum": ["default", "on_demand"]}}
+    },
+    "data": {"type": "object", "additionalProperties": false, "required": ["age_basis", "time_basis", "direction", "periods", "current_period_id", "year_overlays"], "properties": {"age_basis": {"type": "object"}, "time_basis": {"type": "object"}, "direction": {"enum": ["forward", "reverse", null]}, "periods": {"type": "array", "minItems": 1}, "current_period_id": {"type": ["string", "null"]}, "year_overlays": {"type": "array"}}},
+    "annotation": {"type": "object", "additionalProperties": false},
+    "authority": {"type": "object", "additionalProperties": false, "required": ["classification", "source_refs", "transformation", "confidence"], "properties": {"classification": {"enum": ["original_chart_fact", "verified_data", "project_derived", "verified_event", "metaphysical_inference", "research_hypothesis", "current_real_world_context"]}, "source_refs": {"type": "array", "items": {"type": "string"}}, "transformation": {"type": "string"}, "confidence": {"type": ["number", "null"]}}},
+    "provenance": {"type": "object", "additionalProperties": false, "required": ["repo", "source_commit", "release_version", "distribution_runtime_version", "manifest_sha256", "source_payload_sha256", "projection_version"], "properties": {"repo": {"type": "string"}, "source_commit": {"type": ["string", "null"]}, "release_version": {"type": ["string", "null"]}, "distribution_runtime_version": {"type": ["string", "null"]}, "manifest_sha256": {"type": ["string", "null"]}, "source_payload_sha256": {"type": ["string", "null"]}, "projection_version": {"type": "string"}}},
+    "limitation": {"type": "object", "additionalProperties": false, "required": ["code", "message", "scope"], "properties": {"code": {"type": "string"}, "message": {"type": "string"}, "scope": {"type": "string"}}}
+  }
+}
