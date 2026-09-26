@@ -1,0 +1,92 @@
+{
+  "birth_vector": {
+    "reported_datetime": "1984-03-13T19:20:00",
+    "resolved_location": {
+      "canonical_name": "Taipei, Taiwan",
+      "latitude": 25.0375,
+      "longitude": 121.5637,
+      "provider_name": "public-fixture",
+      "provider_reference": "public:taipei",
+      "provider_version": "1",
+      "resolution_status": "resolved"
+    },
+    "sex": "male",
+    "timezone": "Asia/Taipei"
+  },
+  "boundary_semantics": {
+    "interval_convention": null,
+    "reason": "The current engine stores adjacent endpoints, but the public contract has not yet chosen inclusive versus half-open semantics.",
+    "status": "needs_confirmation"
+  },
+  "classification": "bazi_decadal_qualification_packet",
+  "coverage": {
+    "adjacent_boundary_count": 9,
+    "direction": "forward",
+    "effective_datetime": "1984-03-13T19:20:00+08:00",
+    "period_count": 10,
+    "timezone": "Asia/Taipei"
+  },
+  "engine_source": {
+    "entrypoint": "engine.bazi.natal.build_bazi_natal",
+    "files": [
+      {
+        "git_blob_sha1": "2c0ec78efe8f1b0c83a1e19b2b037f08039e6495",
+        "path": "engine/bazi/natal.py",
+        "sha256": "5e9870a0be687545ff642a0d6806cef9f5216032d1c87be3935e135e843173e3"
+      },
+      {
+        "git_blob_sha1": "7272400777f87a158610bc4372c2563225a13dd5",
+        "path": "engine/bazi/natal_models.py",
+        "sha256": "bd844a53e0b368c3cf05f8ab370cd99c7da8c637b4668d57723f9a5d8c05b633"
+      },
+      {
+        "git_blob_sha1": "06c746e5853c87a870294350e99ab6a397cc0a17",
+        "path": "engine/natal/orchestration.py",
+        "sha256": "dc255b8d3778f1c503391d6bf4adc938af61f4282e726e4a219ff83d45113172"
+      }
+    ],
+    "serializer": "engine.natal.orchestration._serialize_bazi",
+    "source_commit": "872c60b2e959ea48d25524b74686e488f576ec6f"
+  },
+  "fixture": {
+    "path": "qualification/bazi/decadal/synthetic-engine-view.v1.json",
+    "sha256": "2c5411953e2caddfbddf29a63a3ef51481d05d289b8075f7fb7726a785d7e231"
+  },
+  "generation": {
+    "entrypoint": "engine.bazi.natal.build_bazi_natal",
+    "reproduction_test": "python -m unittest tests.test_bazi_decadal_qualification.BaziDecadalQualificationTests.test_fixture_decadal_values_match_existing_project_engine_serializer -v",
+    "serializer": "engine.natal.orchestration._serialize_bazi"
+  },
+  "independent_reference": {
+    "reason": "No independent reference packet is bound to the same Project age and endpoint profile.",
+    "status": "not_available"
+  },
+  "known_limitations": [
+    "Synthetic engine output proves structural continuity only.",
+    "Age basis and endpoint semantics require explicit human confirmation.",
+    "No ten-god or element overlay is qualified for this packet.",
+    "No prospective evidence or event claim is included."
+  ],
+  "maturity_promotion": false,
+  "project_profile": {
+    "age_basis": "continuous_years_from_jie_interval",
+    "decadal_rule": "three-days-one-year-v1",
+    "interval_semantics": "needs_confirmation",
+    "profile_id": "bazi-natal-project-v1",
+    "rule_version": "1.0-exp"
+  },
+  "promotion_decision": "not_decided",
+  "result": "NEEDS_EVIDENCE",
+  "schema_version": "1.0",
+  "source_commit": "872c60b2e959ea48d25524b74686e488f576ec6f",
+  "source_type": "synthetic_engine_output",
+  "verification_contract": {
+    "execution_count": null,
+    "execution_status": "awaiting exact-candidate hosted workflow evidence",
+    "failure_count": null,
+    "focused_test_command": "python -m unittest tests.test_bazi_decadal_qualification -v",
+    "packet_check_command": "python tools/build_bazi_decadal_qualification.py --check",
+    "required_python": "3.9",
+    "source_reproduction_command": "python -m unittest tests.test_bazi_decadal_qualification.BaziDecadalQualificationTests.test_fixture_decadal_values_match_existing_project_engine_serializer -v"
+  }
+}
