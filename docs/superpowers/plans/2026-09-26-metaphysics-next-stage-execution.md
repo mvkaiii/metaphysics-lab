@@ -10,7 +10,16 @@
 
 **Spec:** [12週Roadmap與完整設計](../specs/2026-09-26-metaphysics-next-stage-roadmap.md)。執行者先完整讀spec，再讀本計畫；兩份一起交接。
 
-狀態：PROPOSED。使用者確認後，先執行Task 0–2；後續依gate繼續，不要求每個小步驟重複確認，但不得越過明示的人類決策點。12週不是一個無限範圍的大PR。Luna Max為使用者選定的實作者；本文件不冒充已切換模型。
+狀態：**Task 0–2 APPROVED FOR LUNA EXECUTION；Task 3–10 NOT AUTHORIZED。** 使用者已接受roadmap方向，但本輪只做到Capability Evidence Index／Qualification Matrix與repo現況盤點。Task 2完成後強制停下回報，取得下一階段明確授權才能繼續；不是通過G1就自動開始Task 3，也不是依G2自動進入Task 4。Luna Max為使用者選定的實作者；本次文件更新沒有執行Task 0–2，也不冒充已切換模型。
+
+### 本輪checkpoint與共用現況
+
+- baseline：`872c60b2e959ea48d25524b74686e488f576ec6f`，fresh verify後從main建立隔離工作線；若main不再等於baseline，停止實作並回報差異，不能默換受測版本。
+- 允許：Task 0–2的index／builder／validator／tests、生成矩陣、source snapshot、branch residual ledger；TDD只針對這些治理工具。
+- 不允許：Task 3 qualification實作、Task 4 Visualization Data Contract、Task 5–6大運projection／renderer、Task 7–9治理工具移植／archive／pilot實作。可記錄缺口與後續建議，不提前寫其程式。
+- 現況依相連roadmap第8.1節：PR #219、#221原base refs缺失，head branches仍保留。不得retarget／merge／重建base／刪head；API內base SHA只是歷史metadata。
+- planning／artifact lifecycle分支先保留，等正式承接後由另一工作流評估。三條flow-time／month-boundary線須完整residual／blob audit才有去留討論依據；局部相同不能代表可刪。
+- 本次同步文件的docs分支commit授權僅限文件更新，不延伸至Luna產品／工具變更的commit或push；本機完成時如實回報LOCAL VERIFIED／REMOTE NOT APPLIED。
 
 ## Global Constraints
 
@@ -56,7 +65,7 @@ Task 1–2、4–6、7、8、9各為可獨立review的工作單元；不把所�
 
 **Read:** 現行AGENTS／README、六份capability registries、manifest、相關workflow；不要只照本文件假設環境。
 
-- [ ] 讀取repo remote、branch、HEAD、status；用GitHub API確認main／v1.7.1 tag／release target與資產清單。若main已前進，列出與baseline差異並判斷影響；不可reset遠端或把新main當成同一baseline。
+- [ ] 讀取repo remote、branch、HEAD、status；用GitHub API確認main／v1.7.1 tag／release target與資產清單。若main已前進，列出與baseline差異並停止實作，等待baseline決策；不可reset遠端或把新main當成同一baseline。
 - [ ] 記錄v1.7.1、v1.7.0、v1.6.0各自tag解析後commit與release assets metadata，作之後只讀比對。遇到歷史identity改變就停止。
 - [ ] 依已授權範圍建立隔離worktree。確認不是`release/v1.6.0-integration`；保留原工作區的未提交文件。
 - [ ] 唯讀檢查Python／依賴；缺套件先回報。不改production來繞過套件缺失；需要安裝時說明隔離環境與取得授權。
@@ -95,9 +104,12 @@ python -m unittest tests.test_v17_capability_manifest tests.test_v17_capability_
 - [ ] 從六registry填全部30項，flowing_stars展開五scope、selector／interpretation展開supported profiles；action-only與dependency references另表記錄。
 - [ ] 精讀並綁定現有flow-time、month-boundary、natal、phase2b/phase2c、prospective evidence；不得只讀摘要status欄。
 - [ ] 用固定source SHA與Git blob比較記錄「相同、不同、不在main、未查」；區分三dot compare的分支歷史和main→branch真正內容差異。
-- [ ] 為#219與portable挑代表性相同blob列出證據；對#200真正殘餘差異做bounded review。不merge分支來取得文件。
+- [ ] fresh核對PR #219／#221 metadata、原base ref存在性與head SHA，記錄missing-base狀態；不retarget／merge／重建base或刪head。不把404單獨當全repo不可讀，也不把PR保存的base SHA當ref存在證明。
+- [ ] 對#219、portable、三條flow-time／month-boundary及#200記錄residual／blob audit覆蓋範圍。完整audit須逐檔列main/head blob、different/missing內容、tests/docs/evidence承接與未解缺口；尚未完成則明示PARTIAL／NOT SAFE TO DELETE。不得從抽樣或commit數推定可刪，不merge分支來取得文件。
 - [ ] 生成人可讀matrix；`--check`零差異、invalid source fixtures會FAIL、private資料scan無洩漏。
-- [ ] 人類確認首批qualification scope與不適用prospective的理由。沒有這個決策，不進行Stable promotion。
+- [ ] 列出首批qualification scope、不適用prospective的理由及需要人類決定的事項，僅作下一階段提案，不執行Task 3或修改maturity。
+
+**Task 0–2 STOP CHECKPOINT(強制)：** 回報fresh baseline與docs來源SHA、changed files、index／matrix coverage、實際RED/GREEN與focused regression結果、證據缺口、PR missing-base狀態、各branch audit完整度、Git狀態及local/remote分界。既有qualification evidence、production／core／dist、Case Schema、defaults與歷史release皆不可因本輪而變動。完成後停止，等待使用者授權下一階段；下列Task 3–10保留作roadmap，不能自動執行。
 
 ## Task 3：首批qualification與promotion packet
 
@@ -234,6 +246,6 @@ git status --short
 
 ## 建議交給Luna的起始指令
 
-> 請先完整讀取本計畫及相連roadmap。只操作mvkaiii/metaphysics-lab，從fresh verify的main建立隔離工作線，不在存放規劃文件的v1.6舊branch實作。先完成Task 0–2，回報baseline、capability矩陣、證據缺口與實際RED/GREEN結果，再依G2進入視覺化契約。不要自行promotion、改Case Schema/default、merge研究branch、commit/push、刪artifact/branch、tag或release。遇到明示人類決策gate停下並列出具體待決事項；不用為每個已批准的小步驟重複詢問。
+> 請完整讀取本計畫及相連roadmap，僅執行已批准的Task 0–2。只操作mvkaiii/metaphysics-lab，fresh verify main與baseline 872c60b2e959ea48d25524b74686e488f576ec6f一致後建立隔離工作線，不在v1.6舊branch實作。完成Capability Evidence Index／Qualification Matrix與repo現況盤點後，回報實際RED/GREEN、證據缺口、PR #219／#221 missing-base狀態、branch audit完整度、Git狀態，然後強制停止等候下一階段授權。不要提前進Task 3；Visualization Data Contract是Task 4，不在本輪範圍。不要promotion、改Case Schema/default、修改既有qualification evidence、retarget/merge研究PR、刪branch/artifact、commit/push、tag或release。planning／artifact lifecycle與未完整稽核的qualification分支一律保留。main若已前進，先回報，不自行換baseline。
 
 本計畫自我檢查：六workstreams映射到Task 1–10；全部七epics的門檻在spec第5節；五個Review Focus各有對應tests；future research未假設PASS；SVG與projection簽名一致；歷史release及production semantics保持保護。
