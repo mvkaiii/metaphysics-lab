@@ -57,6 +57,46 @@
     "reproduction_test": "python -m unittest tests.test_bazi_decadal_qualification.BaziDecadalQualificationTests.test_fixture_decadal_values_match_existing_project_engine_serializer -v",
     "serializer": "engine.natal.orchestration._serialize_bazi"
   },
+  "hosted_verification": {
+    "candidate_commit": "270ee223f779f6621c0c74434799886f1df4af92",
+    "engineering_verification_status": "PASS",
+    "environment": {
+      "python": "3.9.25",
+      "runner": "GitHub Actions ubuntu-latest"
+    },
+    "full_repository_regression": {
+      "failures": 0,
+      "status": "PASS",
+      "tests": 1292
+    },
+    "qualification_status": "NEEDS_EVIDENCE",
+    "task_module_regression": {
+      "included_in": "full_repository_regression",
+      "module": "tests.test_bazi_decadal_qualification",
+      "status": "PASS",
+      "tests": 21
+    },
+    "workflow_runs": [
+      {
+        "conclusion": "success",
+        "job_id": 108393960224,
+        "run_id": 36238276699,
+        "workflow": "Lin Tianji v1.5 Validation"
+      },
+      {
+        "conclusion": "success",
+        "job_id": 108393960734,
+        "run_id": 36238276717,
+        "workflow": "Lin Tianji v1.6 Validation"
+      },
+      {
+        "conclusion": "success",
+        "job_id": 108393960350,
+        "run_id": 36238276720,
+        "workflow": "Lin Tianji v1.7 Validation"
+      }
+    ]
+  },
   "independent_reference": {
     "reason": "No independent reference packet is bound to the same Project age and endpoint profile.",
     "status": "not_available"
@@ -81,12 +121,13 @@
   "source_commit": "872c60b2e959ea48d25524b74686e488f576ec6f",
   "source_type": "synthetic_engine_output",
   "verification_contract": {
-    "execution_count": null,
-    "execution_status": "awaiting exact-candidate hosted workflow evidence",
-    "failure_count": null,
+    "execution_count": 1292,
+    "execution_status": "PASS: exact-candidate hosted regression; engineering verification only",
+    "failure_count": 0,
     "focused_test_command": "python -m unittest tests.test_bazi_decadal_qualification -v",
     "packet_check_command": "python tools/build_bazi_decadal_qualification.py --check",
     "required_python": "3.9",
-    "source_reproduction_command": "python -m unittest tests.test_bazi_decadal_qualification.BaziDecadalQualificationTests.test_fixture_decadal_values_match_existing_project_engine_serializer -v"
+    "source_reproduction_command": "python -m unittest tests.test_bazi_decadal_qualification.BaziDecadalQualificationTests.test_fixture_decadal_values_match_existing_project_engine_serializer -v",
+    "verification_candidate_commit": "270ee223f779f6621c0c74434799886f1df4af92"
   }
 }

@@ -1,0 +1,20 @@
+# v1.7 planning archive
+
+This directory preserves selected v1.7 planning material for historical reference. It is **not current capability truth, qualification evidence, release policy, or an instruction to resume unfinished work**. Planned, `NOT STARTED`, and `PASS` labels in these source documents describe their original context only; they do not establish present-day status or qualification.
+
+Every source is pinned to commit [`0d7370eb54fb77c9f4f788ad838a78d06217d24b`](https://github.com/mvkaiii/metaphysics-lab/tree/0d7370eb54fb77c9f4f788ad838a78d06217d24b). `sources.json` records the Git blob ID, raw-blob byte length, and SHA256. Two central documents are retained as byte-for-byte copies under `original/`; the other six are referenced by immutable commit and source path to keep the archive within the approved minimum scope.
+
+## Historical documents and current crosswalk
+
+| Historical source | Archive form | Current crosswalk (not authority by itself) |
+| --- | --- | --- |
+| [Reliability + Guided Inquiry design](https://github.com/mvkaiii/metaphysics-lab/blob/0d7370eb54fb77c9f4f788ad838a78d06217d24b/docs/superpowers/specs/2026-09-08-v1.7-reliability-guided-inquiry-design.md) | [`original/docs/superpowers/specs/2026-09-08-v1.7-reliability-guided-inquiry-design.md`](original/docs/superpowers/specs/2026-09-08-v1.7-reliability-guided-inquiry-design.md) | Implemented areas have source and tests in `engine/distribution/case_doctor.py`, `engine/distribution/case_reconciliation.py`, `engine/distribution/prospective_validation.py`, and `engine/distribution/guided_inquiry.py`. Capability metadata and qualification status must be read from the current manifest and qualification records, not inferred from this design. |
+| [Planning index](https://github.com/mvkaiii/metaphysics-lab/blob/0d7370eb54fb77c9f4f788ad838a78d06217d24b/docs/superpowers/plans/2026-09-08-v1.7-planning-index.md) | [`original/docs/superpowers/plans/2026-09-08-v1.7-planning-index.md`](original/docs/superpowers/plans/2026-09-08-v1.7-planning-index.md) | The current capability inventory is maintained in the canonical manifest and the capability qualification matrix; neither this historical index nor its completion marks override them. |
+| Capability Manifest v1 plan | Immutable source link in [`sources.json`](sources.json) | Implementation/tests: `engine/distribution/capabilities.py`, `tests/test_v17_capability_manifest.py`; current qualification status remains evidence-bound. |
+| Case Doctor + Reconciliation plan | Immutable source link in [`sources.json`](sources.json) | Implementation/tests: `engine/distribution/case_doctor.py`, `engine/distribution/case_reconciliation.py`, and the `tests/test_v17_case_*` suites. |
+| Prospective Validation 2.0 plan | Immutable source link in [`sources.json`](sources.json) | Implementation/tests: `engine/distribution/prospective_validation.py` and `tests/test_v17_prospective_validation_*`; historical plans do not establish a prospective pilot result. |
+| Guided Inquiry plan | Immutable source link in [`sources.json`](sources.json) | Implementation/tests: `engine/distribution/guided_inquiry.py` and `tests/test_v17_guided_inquiry*`; runtime behavior and qualification must be checked against the current code and evidence. |
+| Integration + Release plan | Immutable source link in [`sources.json`](sources.json) | Release identity and policy come from the current protected tags, releases, and release qualification records; this plan is not a current release procedure. |
+| Direct implementation ledger | Immutable source link in [`sources.json`](sources.json) | Historical progress ledger only. Its status entries must not be converted into current tasks or evidence. |
+
+The source links above are pinned to the historical commit. For the authoritative current state, inspect the current branch's source, manifest, tests, qualification evidence, and release records together. Any unresolved correspondence should remain `needs_verification` rather than being inferred from a matching title.

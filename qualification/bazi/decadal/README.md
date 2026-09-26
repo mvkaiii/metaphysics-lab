@@ -38,11 +38,21 @@ python -m tools.build_bazi_decadal_qualification --check
 python -m unittest tests.test_bazi_decadal_qualification -v
 ```
 
-The required hosted validation environment is Python 3.9. This packet does not
-claim its verification commands passed; exact-candidate workflow results and
-test counts are reported separately. The source-reproduction test cannot
-complete in the current Windows checkout while private vendored tzdata
-materialization fails its integrity check.
+The required hosted validation environment is Python 3.9. The generated packet
+records engineering verification for exact candidate
+`270ee223f779f6621c0c74434799886f1df4af92`: the v1.5, v1.6, and v1.7 hosted
+validation jobs passed, and each full repository regression ran 1,292 tests.
+The 21 tests in `tests.test_bazi_decadal_qualification`, including fixture
+reproduction through the existing engine serializer, passed as part of those
+full regressions; they were not a separate hosted workflow step. See the
+`hosted_verification` object in `public-project-contract-v1.json` for run and
+job IDs. This is engineering verification only and does not change the packet's
+`NEEDS_EVIDENCE` qualification result.
+
+The isolated Windows checkout still cannot complete the source-reproduction
+test because private vendored tzdata materialization fails its integrity check.
+That local platform limitation is separate from the successful exact-candidate
+Python 3.9 hosted runs; no vendor or production bytes were changed.
 
 The packet contains no case, event, prospective outcome, ten-god overlay or
 element overlay.

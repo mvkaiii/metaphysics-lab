@@ -31,6 +31,20 @@
 | #219 | `research/v1.6-yearly-ziwei-transformations-y1` @ `3d6bba9efa37b105aee198215f90f00e3ed99229` | `impl/v1.6-legacy-adapter-paired-evaluation` | `eaf03116bf5e02b08b4b51caed2cb2c31f796686` | `404` | 保留；不retarget、不merge、不刪除head |
 | #221 | `research/v1.6-prospective-claim-authority-set` @ `e28a51e9cb60961838300b8a0aea8e25696e9fb4` | `research/v1.6-prospective-window-scope-v1` | `c2d111b3e1b410a7208b8d4ba0585e8000d30a87` | `404` | 保留；不retarget、不merge、不刪除head |
 
+## Task9 fresh GitHub revalidation
+
+Observed on `2026-09-26` from read-only GitHub PR, branch, commit, and recursive tree endpoints. The complete recursive trees for the listed commits were not truncated. These exact tree comparisons supersede ambiguous earlier `Changed files` counts for these three research lines; they do not authorize branch cleanup.
+
+| Ref | Fresh state / exact HEAD | PR file-list count | HEAD tree vs baseline `main@872c60b` | Finding |
+| --- | --- | ---: | --- | --- |
+| PR #219 | Open, draft; head `3d6bba9efa37b105aee198215f90f00e3ed99229`; declared base `impl/v1.6-legacy-adapter-paired-evaluation@eaf03116bf5e02b08b4b51caed2cb2c31f796686` has no current branch result | 14 | 8 paths absent from main; 34 existing paths have different blobs | PR body records retrospective Y1 pipeline status, `PROSPECTIVE_NOT_EXECUTED`, and `promotion_allowed=false`. The tree still has Y1-specific benchmark/docs/tools and differing existing files. Preserve the research evidence; do not retarget or merge. |
+| PR #221 | Open, draft; head `e28a51e9cb60961838300b8a0aea8e25696e9fb4`; declared base `research/v1.6-prospective-window-scope-v1@c2d111b3e1b410a7208b8d4ba0585e8000d30a87` has no current branch result | 8 | 18 paths absent from main; 37 existing paths have different blobs | PR-specific files add the composite claim-authority set. Its PR body records `PRIVATE_S1_NOT_YET_LOCKED`, no oracle, no private scoring, and `promotion_allowed=false`. The larger tree delta also includes the stacked window-scope line; do not mistake it for the PR-only file list. |
+| `research/v1.6-prospective-arm-freeze-v1` | Branch exists at `dc95050640addf31e57ec637fdcf8e1483c42fb5` | n/a | 21 paths absent from main; 36 existing paths have different blobs | Relative to PR #221's exact tree, this branch adds the arm-freeze workflow/module/test plus Y1 files and changes two existing paths. It is a separate research artifact, not a main capability or authorization to run private scoring. |
+
+The two missing PR base branches were checked by branch search; their PR metadata still retains the historical base SHAs. No base was recreated, and no PR or branch was changed. Tree-level differences confirm residual content remains; they are not a branch-deletion audit or merge recommendation.
+
+Sources: [PR #219](https://github.com/mvkaiii/metaphysics-lab/pull/219), [PR #221](https://github.com/mvkaiii/metaphysics-lab/pull/221), [arm-freeze branch](https://github.com/mvkaiii/metaphysics-lab/tree/research/v1.6-prospective-arm-freeze-v1), and exact baseline commit [`872c60b2e959ea48d25524b74686e488f576ec6f`](https://github.com/mvkaiii/metaphysics-lab/commit/872c60b2e959ea48d25524b74686e488f576ec6f).
+
 ## Selected target-blob findings
 
 - Bazi flow-time、Ziwei flow-time與month-boundary的qualification README／fixtures／tests／builders，在本次selected target audit中已與main相同；這只能證明選定檔案的blob一致，不能取代完整residual audit。

@@ -78,6 +78,46 @@ GENERATION_METHOD = {
         "test_fixture_decadal_values_match_existing_project_engine_serializer -v"
     ),
 }
+HOSTED_VERIFICATION = {
+    "candidate_commit": "270ee223f779f6621c0c74434799886f1df4af92",
+    "environment": {
+        "runner": "GitHub Actions ubuntu-latest",
+        "python": "3.9.25",
+    },
+    "full_repository_regression": {
+        "tests": 1292,
+        "failures": 0,
+        "status": "PASS",
+    },
+    "task_module_regression": {
+        "module": "tests.test_bazi_decadal_qualification",
+        "tests": 21,
+        "status": "PASS",
+        "included_in": "full_repository_regression",
+    },
+    "workflow_runs": [
+        {
+            "workflow": "Lin Tianji v1.5 Validation",
+            "run_id": 36238276699,
+            "job_id": 108393960224,
+            "conclusion": "success",
+        },
+        {
+            "workflow": "Lin Tianji v1.6 Validation",
+            "run_id": 36238276717,
+            "job_id": 108393960734,
+            "conclusion": "success",
+        },
+        {
+            "workflow": "Lin Tianji v1.7 Validation",
+            "run_id": 36238276720,
+            "job_id": 108393960350,
+            "conclusion": "success",
+        },
+    ],
+    "engineering_verification_status": "PASS",
+    "qualification_status": "NEEDS_EVIDENCE",
+}
 
 
 def canonical_json(payload: Mapping[str, Any]) -> str:
@@ -265,10 +305,12 @@ def build_report(
             "packet_check_command": "python tools/build_bazi_decadal_qualification.py --check",
             "focused_test_command": "python -m unittest tests.test_bazi_decadal_qualification -v",
             "required_python": "3.9",
-            "execution_count": None,
-            "failure_count": None,
-            "execution_status": "awaiting exact-candidate hosted workflow evidence",
+            "verification_candidate_commit": HOSTED_VERIFICATION["candidate_commit"],
+            "execution_count": HOSTED_VERIFICATION["full_repository_regression"]["tests"],
+            "failure_count": HOSTED_VERIFICATION["full_repository_regression"]["failures"],
+            "execution_status": "PASS: exact-candidate hosted regression; engineering verification only",
         },
+        "hosted_verification": HOSTED_VERIFICATION,
         "fixture": {
             "path": _display_path(fixture_path),
             "sha256": fixture_sha256,

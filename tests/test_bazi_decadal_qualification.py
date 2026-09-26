@@ -209,6 +209,40 @@ class BaziDecadalQualificationTests(unittest.TestCase):
 
         self.assertEqual(canonical_json(first), canonical_json(second))
 
+    def test_report_records_exact_hosted_engineering_verification_without_qualification(self):
+        report = build_report(_fixture(), Path("fixture.json"), "b" * 64)
+
+        hosted = report["hosted_verification"]
+        self.assertEqual(
+            hosted["candidate_commit"],
+            "270ee223f779f6621c0c74434799886f1df4af92",
+        )
+        self.assertEqual(hosted["environment"]["python"], "3.9.25")
+        self.assertEqual(hosted["full_repository_regression"], {
+            "tests": 1292,
+            "failures": 0,
+            "status": "PASS",
+        })
+        self.assertEqual(hosted["task_module_regression"], {
+            "module": "tests.test_bazi_decadal_qualification",
+            "tests": 21,
+            "status": "PASS",
+            "included_in": "full_repository_regression",
+        })
+        self.assertTrue(all(run["conclusion"] == "success" for run in hosted["workflow_runs"]))
+        self.assertEqual(
+            [(run["run_id"], run["job_id"]) for run in hosted["workflow_runs"]],
+            [
+                (36238276699, 108393960224),
+                (36238276717, 108393960734),
+                (36238276720, 108393960350),
+            ],
+        )
+        self.assertEqual(report["verification_contract"]["execution_count"], 1292)
+        self.assertEqual(report["verification_contract"]["failure_count"], 0)
+        self.assertEqual(report["result"], "NEEDS_EVIDENCE")
+        self.assertIs(report["maturity_promotion"], False)
+
     def test_fixture_digest_is_independent_of_checkout_line_endings(self):
         fixture = _fixture()
         fixture_bytes = canonical_json(fixture).encode("utf-8")
