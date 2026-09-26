@@ -114,6 +114,10 @@ class AIDistributionBuildTests(unittest.TestCase):
         self.assertTrue(all(not path.startswith("tests/") for path in paths))
         self.assertTrue(all(not path.startswith("qualification/") for path in paths))
         self.assertTrue(all(not path.startswith("docs/") for path in paths))
+        self.assertTrue(
+            all(not path.startswith("engine/visualization/") for path in paths),
+            "experimental visualization modules must not mutate the frozen v1.7.1 distribution",
+        )
         allowed = (
             "engine/",
             "templates/",
