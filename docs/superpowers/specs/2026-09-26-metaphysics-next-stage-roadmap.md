@@ -1,12 +1,24 @@
 # Metaphysics Lab：下一階段12週Roadmap
 
-規劃日期：2026-09-26，Asia/Taipei。狀態：**PROPOSED／待使用者確認，不是實作授權或qualification evidence**。
+規劃日期：2026-09-26，Asia/Taipei。狀態：**Roadmap方向已接受；本輪僅Task 0–2獲准交接Luna執行。Task 3–10仍是後續提案，不是qualification evidence。**
 
 適用repo：`mvkaiii/metaphysics-lab`。研究baseline：`872c60b2e959ea48d25524b74686e488f576ec6f`(v1.7.1)。搭配[Luna執行計畫](../plans/2026-09-26-metaphysics-next-stage-execution.md)閱讀。
 
 證據限制：本次以GitHub API、固定SHA原始碼、tree/blob比對、release metadata與既有qualification文件進行唯讀調查。沒有重新執行baseline測試、下載驗證Release二進位檔、實測GitHub寫入權限或宣告新的sandbox PASS。文件中的PASS若指既有資料，均是「repo內紀錄」，不是本次fresh verification。遠端狀態會變，執行前必須重新確認。
 
 ## 1. Executive recommendation
+
+### 本輪已確認的決策邊界(2026-09-26更新)
+
+使用者接受v1.8方向，僅授權Luna從fresh main執行Execution Plan的Task 0–2：baseline確認、Capability Evidence Index／Qualification Matrix、repo與research branch現況盤點。**Task 2完成後必須停下回報，取得下一階段明確授權才能繼續。** 下述12週順序與Top 5 next actions是長期roadmap，不是本輪連續執行授權。
+
+- baseline維持`872c60b2e959ea48d25524b74686e488f576ec6f`；執行前fresh verify。若main前進，先停止實作並回報差異，不能默換baseline或reset main。
+- 不提前進Task 3 qualification實作；Visualization Data Contract是**Task 4**，不在Task 0–2 checkpoint內；大運時間軸同樣不在本輪。
+- 不做Stable promotion、Case Schema migration、selector／interpretation default變更、research branch直接merge或歷史Release修改。
+- `plan/v1.7-reliability-guided-inquiry`與`ci/v17-artifact-lifecycle-20260915`先保留；須待歷史文件歸檔與version-neutral governance tooling正式承接後，再由另一工作流評估去留，不預先授權刪除。
+- 舊qualification分支的代表性核心blob相同，只能支持局部內容已承接；刪除前仍需完整residual／blob audit與明確授權。沒有完整承接證據一律保留。
+- PR #219／#221按第8.1節的missing-base狀態處理，不能自行retarget、merge或刪head branch。
+- 本次文件同步只允許commit到`docs/next-stage-roadmap-20260926`；不是Luna產品變更的commit／push／merge授權。既有qualification evidence保持不變；Task 0–2只新增索引與現況紀錄，不改寫PASS。
 
 下一個產品目標建議為**v1.8.0：Capability Evidence + Explainable Visualization**，不是v2.0，也不把新增視覺化塞進v1.7.2。
 
@@ -409,6 +421,15 @@ G2後建立真正ready的synthetic golden fixture：來源為固定engine輸出�
 
 下列均為本次讀取時的head，執行前fresh verify。ahead／behind不作去留依據；沒有任何刪branch授權。
 
+**2026-09-26補充查核：PR仍open不表示原base branch存在。** GitHub PR API仍保存base ref／SHA作歷史metadata；branch清單共12項，不包含下列兩個base，對各base的Git ref直接查詢也均回傳404。兩個head branches仍在清單中；因此本輪按missing-base的research/archive evidence保留，不直接修PR拓樸。
+
+| PR | 原base ref(API metadata) | 歷史base SHA | 處理限制 |
+| --- | --- | --- | --- |
+| #219 | `impl/v1.6-legacy-adapter-paired-evaluation` | `eaf03116bf5e02b08b4b51caed2cb2c31f796686` | 不retarget、不merge、不刪`research/v1.6-yearly-ziwei-transformations-y1` |
+| #221 | `research/v1.6-prospective-window-scope-v1` | `c2d111b3e1b410a7208b8d4ba0585e8000d30a87` | 不retarget、不merge、不刪`research/v1.6-prospective-claim-authority-set` |
+
+查核來源：[PR #219 metadata](https://api.github.com/repos/mvkaiii/metaphysics-lab/pulls/219)、[PR #221 metadata](https://api.github.com/repos/mvkaiii/metaphysics-lab/pulls/221)、[branch inventory](https://api.github.com/repos/mvkaiii/metaphysics-lab/branches?per_page=100)。這是時間點快照，不保證未來狀態相同；Task 0–2須重新查核並保存結果。若歷史base commit無法讀取，標示證據缺口，不以main替代舊base來重建原PR語意。
+
 | 線／固定head | 查核結果 | Roadmap處置 |
 | --- | --- | --- |
 | #221 `e28a51e9cb60961838300b8a0aea8e25696e9fb4` | claim authority／universe／window等模組不在main；PR描述qualified，但PRIVATE_S1_NOT_YET_LOCKED、ORACLE_NOT_CREATED、PRIVATE_SCORING_NOT_EXECUTED、promotion_allowed=false | WS3高優先：擇取governance契約、先補TDD與main相容性；不整包merge，不把PR文字當fresh evidence |
@@ -421,6 +442,8 @@ G2後建立真正ready的synthetic golden fixture：來源為固定engine輸出�
 | portable offline natal `c6771cde49b0a8936841d98a6ae7b7c4a3f4eca9` | branch有大量獨有commits，但離線registry/data、calendar、distribution natal/dependencies、vendor及多項portable tests已有main相同blob | W1最多兩個工作日做殘餘semantic inventory；必要bug另案，其餘研究保留；不重建整條pipeline、不刪branch |
 
 PR來源：[#221](https://github.com/mvkaiii/metaphysics-lab/pull/221)、[#219](https://github.com/mvkaiii/metaphysics-lab/pull/219)、[#200](https://github.com/mvkaiii/metaphysics-lab/pull/200)。Y1 PR中retrospective coverage提升及大量indeterminate不構成預測優勢；本輪不沿用舊run數作新candidate qualification。
+
+完整residual audit應記錄固定main/head/base、所有branch-specific路徑的blob比對、不同內容的語意承接、獨有tests/docs/evidence與未解缺口。patch／commit數及抽樣相同blob不能替代完整比對。Task 0–2可交付部分盤點，但必須標`PARTIAL／NOT SAFE TO DELETE`，不得藉checkpoint產生刪除建議或執行housekeeping。
 
 ### 8.2 v1.7 planning branch歸檔
 
