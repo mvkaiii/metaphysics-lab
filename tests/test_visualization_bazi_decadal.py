@@ -112,6 +112,26 @@ class BaziDecadalVisualizationTests(unittest.TestCase):
         self.assertIsNone(period["elements"])
         self.assertEqual(period["optional_reasons"]["ten_god"], "NO_QUALIFIED_SOURCE")
 
+    def test_non_null_optional_engine_fields_carry_authority_refs(self):
+        fixture = _fixture()
+        period = fixture["project_natal"]["bazi"]["decadal_periods"][0]
+        period["ten_god"] = {"label": "正官"}
+        period["elements"] = {"primary": "木"}
+        fixture["provenance"]["source_payload_sha256"] = __import__("hashlib").sha256(
+            canonical_json_bytes(fixture["project_natal"])
+        ).hexdigest()
+        chart = project_bazi_decadal(
+            fixture,
+            self.manifest,
+            as_of="2005-01-01T00:00:00+08:00",
+            timezone="Asia/Taipei",
+            visibility_mode="blind",
+        )
+        authority_refs = chart["data"]["periods"][0]["authority_refs"]
+        self.assertIn("/ten_god", authority_refs)
+        self.assertIn("/elements", authority_refs)
+        self.assertEqual(validate_chart(chart), [])
+
     def test_source_maturity_matches_manifest(self):
         fixture = _fixture()
         fixture["source_capabilities"][0]["maturity"] = "stable"

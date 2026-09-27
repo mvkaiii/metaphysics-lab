@@ -271,6 +271,17 @@ def project_bazi_decadal(
         }
         ten_god = deepcopy(source_period.get("ten_god")) if "ten_god" in source_period else None
         elements = deepcopy(source_period.get("elements")) if "elements" in source_period else None
+        authority_refs = {
+            "/pillar": [authority_id],
+            "/age_start_years": [authority_id],
+            "/age_end_years": [authority_id],
+            "/start_at": [authority_id],
+            "/end_at": [authority_id],
+        }
+        if ten_god is not None:
+            authority_refs["/ten_god"] = [authority_id]
+        if elements is not None:
+            authority_refs["/elements"] = [authority_id]
         period = {
             "id": period_id,
             "index": index,
@@ -285,13 +296,7 @@ def project_bazi_decadal(
                 "ten_god": "NO_QUALIFIED_SOURCE" if ten_god is None else "SOURCE_ENGINE_OUTPUT",
                 "elements": "NO_QUALIFIED_SOURCE" if elements is None else "SOURCE_ENGINE_OUTPUT",
             },
-            "authority_refs": {
-                "/pillar": [authority_id],
-                "/age_start_years": [authority_id],
-                "/age_end_years": [authority_id],
-                "/start_at": [authority_id],
-                "/end_at": [authority_id],
-            },
+            "authority_refs": authority_refs,
         }
         projected_periods.append(period)
         if start_dt <= as_of_dt < end_dt:

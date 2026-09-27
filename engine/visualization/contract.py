@@ -346,6 +346,29 @@ def _validate_chart(chart: Mapping[str, Any]) -> list[str]:
                     chart.get("authorities") if isinstance(chart.get("authorities"), Mapping) else {},
                     errors, project_derived_only=True,
                 )
+                authority_refs = period.get("authority_refs")
+                if isinstance(authority_refs, Mapping):
+                    required_authority_fields = {
+                        "/pillar",
+                        "/age_start_years",
+                        "/age_end_years",
+                        "/start_at",
+                        "/end_at",
+                    }
+                    for semantic_field in sorted(required_authority_fields):
+                        refs = authority_refs.get(semantic_field)
+                        if not isinstance(refs, list) or not refs:
+                            errors.append(
+                                f"{path}.authority_refs.{semantic_field}: semantic field requires an authority reference"
+                            )
+                    for optional in ("ten_god", "elements"):
+                        if period.get(optional) is not None:
+                            semantic_field = f"/{optional}"
+                            refs = authority_refs.get(semantic_field)
+                            if not isinstance(refs, list) or not refs:
+                                errors.append(
+                                    f"{path}.authority_refs.{semantic_field}: non-null semantic field requires an authority reference"
+                                )
             current = data.get("current_period_id")
             if current is not None and current not in period_ids:
                 errors.append("data.current_period_id: must reference a period or be null")
