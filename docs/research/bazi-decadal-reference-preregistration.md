@@ -1,6 +1,6 @@
 # 大運reference預註冊準備紀錄
 
-Methodology：`APPROVED WITH CONSTRAINTS`。Packet：`NOT_SEALED`。Comparison：`NOT_STARTED`。Task3：`NEEDS_EVIDENCE`。
+Methodology：`APPROVED WITH CONSTRAINTS`。Comparator contract：`ENGINEERING_READY`。Packet：`NOT_SEALED`。Comparison：`NOT_STARTED`。Task3：`NEEDS_EVIDENCE`。
 
 依據：[人工決策](../superpowers/phase-gates/2026-09-27-review-decisions.md)。此文件不是reference結果、完整預註冊或PASS證據。
 
@@ -16,6 +16,16 @@ Methodology：`APPROVED WITH CONSTRAINTS`。Packet：`NOT_SEALED`。Comparison�
 | 判定規則 | 每欄MATCH／MISMATCH／NOT_COMPARABLE／MISSING_REFERENCE；缺口不能計入通過；整包仍待人工review |
 | Oracle | 尚未建立；須有未接觸production實作／輸出的獨立實作者，先固定程式與expected值，再交比較者 |
 | 封存 | 來源bytes、案例、規格、oracle、expected值、容差與規則均須有版本／SHA256及先後順序紀錄 |
+
+## Comparator工程狀態
+
+已新增 `tools/compare_bazi_decadal_reference.py` 與
+`tests/test_bazi_decadal_reference_comparison.py`。比較器只驗證 sealed packet 與逐欄
+JSON Pointer comparison，不產生 expected values、不呼叫 production 算法，也不作
+qualification / promotion 決策。完整 oracle 交接邊界見
+[`bazi-decadal-independent-oracle-handoff.md`](bazi-decadal-independent-oracle-handoff.md)。
+
+比較器完成只代表後續證據有固定消費契約；不代表 reference packet 已封存。
 
 ## 獨立性與暴露紀錄
 
