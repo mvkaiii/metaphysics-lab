@@ -149,6 +149,7 @@ contract.
 - [x] Public decision receipt records D01–D12 all APPROVED by human decision owner
 - [x] Validator enforces that ALL_ITEMS_APPROVED alone does not authorize pilot start
 - [x] D01–D12 explicitly approved by human decision owner at `2026-09-27T17:55:00+08:00`
+- [x] Protocol body synchronized with the approved D01–D12 receipt; stale PENDING language removed
 - [ ] Separate explicit human authorization to start the real pilot
 
 D01–D12 approval is complete, but no real case, prediction lock, outcome/oracle access or scoring is authorized by this checklist. A separate pilot-start authorization is still required.
