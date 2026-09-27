@@ -14,10 +14,10 @@
   },
   "private_evidence": {
     "status": "VERIFIED_PRIVATE_WITHHELD",
-    "public_private_digest": false,
     "public_case_id": false,
     "public_birth_data": false,
-    "public_prediction_or_outcome_payload": false
+    "public_prediction_or_outcome_payload": false,
+    "digest_disclosure": false
   },
   "intake": {
     "eligibility_status": "INELIGIBLE_PREVIOUSLY_EXPOSED",
