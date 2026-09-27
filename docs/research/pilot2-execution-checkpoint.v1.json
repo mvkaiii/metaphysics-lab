@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0",
+  "pilot_id": "Pilot-2",
+  "checkpoint_status": "HALTED_NON_QUALIFYING",
+  "process_stage": "CLAIM_UNIVERSE_LOCK",
+  "deviation_code": "MULTI_SEGMENT_YEARLY_EFA_UNIVERSE_UNRESOLVED",
+  "governance": {
+    "pcg01_status": "READY_BEFORE_CANDIDATE_PROCESSING",
+    "intake_status": "ELIGIBLE_FOR_S1_SOURCE",
+    "source_manifest_status": "FROZEN_BEFORE_CANDIDATE_PROCESSING",
+    "exposure_status": "UNEXPOSED_BEFORE_CANDIDATE_PROCESSING"
+  },
+  "structural_observation": {
+    "snapshot_count": 5,
+    "child_count_per_snapshot": [
+      28,
+      28,
+      28,
+      28,
+      28
+    ],
+    "child_sets_identical": false,
+    "union_child_count": 45,
+    "intersection_child_count": 11,
+    "approved_multi_snapshot_selector_exists": false,
+    "approved_union_or_intersection_rule_exists": false
+  },
+  "contract_boundary": {
+    "window_claim_scope": "yearly",
+    "timing_scope": "monthly",
+    "s1_requirement": "EXACT_COMPLETE_EFA_INVENTORY",
+    "arm_freeze_source_requirement": "ONE_ALREADY_SELECTED_YEARLY_STRUCTURAL_RANKING_SOURCE",
+    "retrospective_rule_invention_allowed": false
+  },
+  "execution_state": {
+    "claim_universe_lock": "NOT_CREATED",
+    "prediction_lock": "NOT_CREATED",
+    "outcome_collection": "NOT_STARTED",
+    "adjudication": "NOT_STARTED",
+    "scoring": "NOT_STARTED"
+  },
+  "interpretation": {
+    "process_conformance_met": false,
+    "predictive_validity_evidence_created": false,
+    "qualification_evidence_created": false,
+    "stable_promotion_effect": false
+  },
+  "next_action": {
+    "pilot2_resume": "PROHIBITED",
+    "retry_requires": "NEW_PILOT_ID_AND_NEW_PROTOCOL_VERSION",
+    "required_contract_delta": "PRE_REGISTER_DETERMINISTIC_YEARLY_AUTHORITY_REFERENCE_OR_MULTI_SNAPSHOT_AGGREGATION_BEFORE_CANDIDATE_PROCESSING"
+  }
+}
