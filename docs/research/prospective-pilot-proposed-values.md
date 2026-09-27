@@ -1,11 +1,10 @@
 # Prospective Pilot-1 proposed approval values
 
-Status: **PROPOSED_READY_FOR_HUMAN_APPROVAL**
-Protocol: `DRAFT_PENDING_HUMAN_APPROVAL`
-Pilot: `NOT_STARTED`
+Status: **APPROVED_BY_HUMAN_DECISION_OWNER**
+Protocol decisions: `ALL_ITEMS_APPROVED`
+Pilot: `READY_FOR_START_AUTHORIZATION`
 
-This file records proposed values for D01-D12. It does not change the committed
-decision receipt, does not approve any item, and does not authorize pilot start.
+This file preserves the values proposed for D01-D12 and records that the human decision owner explicitly approved them on `2026-09-27T17:55:00+08:00`. The public decision receipt is updated separately. This approval still does not authorize pilot start.
 
 ## Design correction from earlier discussion
 
@@ -47,9 +46,7 @@ generalization, superiority, or Experimental-to-Stable promotion.
 
 ## Approval boundary
 
-If the human approves these values, D01-D12 may be converted from `PENDING` to
-`APPROVED` in the public decision receipt with de-identified summaries. That
-still does **not** authorize real pilot execution.
+The human decision owner explicitly approved these values. D01-D12 are therefore recorded as `APPROVED` in the public decision receipt with de-identified summaries. This still does **not** authorize real pilot execution.
 
 Before pilot start, the separate start authorization must additionally bind:
 
@@ -60,6 +57,4 @@ Before pilot start, the separate start authorization must additionally bind:
 - approved private storage/access record;
 - start authorizer role and timestamp.
 
-Until that separate authorization exists, `pilot_status` remains no further than
-`READY_FOR_START_AUTHORIZATION` and no real case, prediction lock, outcome
-collection or scoring may begin.
+Until that separate authorization exists, `pilot_status` remains `READY_FOR_START_AUTHORIZATION` and no real case, prediction lock, outcome collection or scoring may begin.

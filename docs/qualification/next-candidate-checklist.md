@@ -115,8 +115,8 @@ Task 3 gap does not invalidate Experimental engineering delivery, but it blocks 
 
 ### Task 9
 
-Protocol：`DRAFT_PENDING_HUMAN_APPROVAL`  
-Pilot：`NOT_STARTED`
+Protocol decisions：`ALL_ITEMS_APPROVED`  
+Pilot：`READY_FOR_START_AUTHORIZATION`
 
 Pilot-1 concrete proposed values are documented in
 `docs/research/prospective-pilot-proposed-values.md` with status
@@ -134,23 +134,24 @@ research contract and is not relabeled as the Visualization `[start,end)`
 contract.
 
 
-- [ ] D01 study owner / roles
-- [ ] D02 lawful data / consent / retention / withdrawal
-- [ ] D03 target population / eligibility / census
-- [ ] D04 claim universe
-- [ ] D05 arms / comparator
-- [ ] D06 time scope
-- [ ] D07 outcome definition
-- [ ] D08 blinding
-- [ ] D09 metrics
-- [ ] D10 sample / stopping
-- [ ] D11 withdrawal / deviation
-- [ ] D12 publication / privacy
-- [x] Public decision-receipt template committed with all D01–D12 PENDING
+- [x] D01 study owner / roles
+- [x] D02 lawful data / consent / retention / withdrawal
+- [x] D03 target population / eligibility / census
+- [x] D04 claim universe
+- [x] D05 arms / comparator
+- [x] D06 time scope
+- [x] D07 outcome definition
+- [x] D08 blinding
+- [x] D09 metrics
+- [x] D10 sample / stopping
+- [x] D11 withdrawal / deviation
+- [x] D12 publication / privacy
+- [x] Public decision receipt records D01–D12 all APPROVED by human decision owner
 - [x] Validator enforces that ALL_ITEMS_APPROVED alone does not authorize pilot start
+- [x] D01–D12 explicitly approved by human decision owner at `2026-09-27T17:55:00+08:00`
 - [ ] Separate explicit human authorization to start the real pilot
 
-No real case, prediction lock, outcome/oracle access or scoring is authorized by this checklist.
+D01–D12 approval is complete, but no real case, prediction lock, outcome/oracle access or scoring is authorized by this checklist. A separate pilot-start authorization is still required.
 
 ## Final gate
 

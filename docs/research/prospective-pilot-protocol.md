@@ -114,3 +114,19 @@ Do not start a real pilot until all of the following are recorded and approved:
 **Current decision:** `NOT_STARTED`. No participant/case was enrolled, no prediction was locked, no outcome was inspected, no pilot metric was computed, and no qualification or promotion evidence was created.
 
 **Human review requested:** approve, amend, or reject the decision table and the proposed single-authority chain before any real-data implementation or pilot run.
+
+## Pilot-1 approved decision supplement
+
+The human decision owner explicitly approved D01-D12 on
+`2026-09-27T17:55:00+08:00`. The normative approved values are preserved in
+`docs/research/prospective-pilot-proposed-values.md` and the public receipt in
+`docs/research/prospective-pilot-decision-receipt.template.json`.
+
+This moves governance only to `READY_FOR_START_AUTHORIZATION`. It does not
+authorize a real case, prediction lock, outcome collection, oracle access,
+adjudication, scoring, merge, release, or Stable promotion.
+
+Before start, the final sealed protocol must bind exact candidate commit,
+candidate package SHA256, manifest SHA256, protocol SHA256 and the approved
+private storage/access record, followed by a separate explicit human start
+authorization.
