@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "pilot_id": "Pilot-2",
+  "gate_profile": "pilot2_pre_candidate_gate_v1",
+  "gate_status": "BLOCKED",
+  "prerequisites": {
+    "protocol_decisions_approved": false,
+    "start_authorization_bound": false,
+    "source_census_frozen": false,
+    "intake_registry_valid": false,
+    "intake_eligible_for_s1": false,
+    "s1_source_manifest_frozen": false,
+    "s1_candidate_exposure_unexposed": false,
+    "s1_manifest_predates_candidate_processing": false
+  },
+  "public_bindings": {
+    "candidate_commit": null,
+    "package_sha256": null,
+    "manifest_sha256": null,
+    "protocol_sha256": null,
+    "window_policy_digest": null
+  },
+  "candidate_case_processing_allowed": false,
+  "private_material_disclosed": false,
+  "manual_override_allowed": false
+}
