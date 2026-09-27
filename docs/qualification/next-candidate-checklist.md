@@ -118,6 +118,22 @@ Task 3 gap does not invalidate Experimental engineering delivery, but it blocks 
 Protocol：`DRAFT_PENDING_HUMAN_APPROVAL`  
 Pilot：`NOT_STARTED`
 
+Pilot-1 concrete proposed values are documented in
+`docs/research/prospective-pilot-proposed-values.md` with status
+`PROPOSED_READY_FOR_HUMAN_APPROVAL`. This proposal does not modify the public
+decision receipt.
+
+Fresh contract review supersedes the earlier conversational 7-day / 12-attempt
+idea. The existing prospective-window research contract accepts only
+calendar-aligned, same-civil-year, multi-month windows and maps them to yearly
+claim authority with monthly timing. The current Pilot-1 proposal therefore uses
+one real end-to-end case and proposes
+`2026-11-01T00:00:00+08:00` through
+`2026-12-31T23:59:59+08:00`. This timestamp convention belongs to that
+research contract and is not relabeled as the Visualization `[start,end)`
+contract.
+
+
 - [ ] D01 study owner / roles
 - [ ] D02 lawful data / consent / retention / withdrawal
 - [ ] D03 target population / eligibility / census
