@@ -163,8 +163,8 @@ D01–D12 approval and explicit pilot-start authorization were completed. During
 ### Pilot-2
 
 Protocol decisions：`ALL_ITEMS_APPROVED`  
-Pilot：`AUTHORIZED_NOT_STARTED`  
-Pre-candidate gate：`READY`
+Pilot：`HALTED_NON_QUALIFYING`  
+Pre-candidate gate：`READY_BEFORE_HALT`
 
 Pilot-2 is a new pilot ID/protocol version created from the Pilot-1 process
 failure. It does not inherit Pilot-1 approval, start authorization, eligibility,
@@ -191,6 +191,13 @@ case identity, or exposure status.
 - [x] Candidate exposure validated as `UNEXPOSED` before candidate processing
 - [x] PCG-01 READY receipt committed before candidate reads the case
 - [x] PCG-01 READY at `2026-09-27T23:36:22+08:00`; supporting evidence remains private under D12
+- [x] Candidate processing began only after PCG-01 READY
+- [x] Yearly-only claim-universe scan confirmed five structural snapshots each with 28 EFA children but non-identical child sets
+- [x] No approved multi-snapshot selector / union / intersection rule exists in the frozen prospective contracts
+- [x] Pilot-2 halted fail-closed at `CLAIM_UNIVERSE_LOCK` before any prediction lock
+- [x] Public de-identified halt checkpoint committed at `docs/research/pilot2-execution-checkpoint.v1.json`
+- [x] No outcome/adjudication/scoring evidence created
+- [ ] Any retry requires a new pilot ID/protocol version with claim-universe reference/aggregation semantics preregistered before candidate processing
 
 D01-D12, PCG-01, and Pilot-2 start authorization are approved. Private source census/intake/S1 may now be built in order. **Do not execute the candidate on a real Pilot-2 case** until PCG-01 is READY.
 
