@@ -21,6 +21,21 @@
 | D11 Withdrawal/deviation | 不靜默刪除、補答案或重寫失敗 | 退出、遲到、無法判定、缺失、偏離分類、撤回資料與計數可保留範圍 | PENDING |
 | D12 Publication/privacy | 僅核准的去識別化彙總，避免small-cell及hash洩漏 | 公開欄位、抑制規則、披露審查者、審查程序與保存期限 | PENDING |
 
+## Pilot-1具體建議值
+
+已完成逐項具體化，見
+[`prospective-pilot-proposed-values.md`](prospective-pilot-proposed-values.md)。
+
+重要修正：早期討論中的「7天 window／12 attempts」不採用。Fresh review 顯示既有
+`prospective_window_scope` research contract 只接受 calendar-aligned、same-year、
+multi-month window，並映射為 yearly claim authority + monthly timing；因此 Pilot-1
+proposal 改為單一 end-to-end case，建議 window 為
+`2026-11-01T00:00:00+08:00` → `2026-12-31T23:59:59+08:00`。
+
+這些仍是 **PROPOSED**，committed decision receipt 的 D01-D12 仍全部 `PENDING`。
+使用者下一次明確核准時，才把 public receipt 逐列改成 `APPROVED`；而且完成十二列
+核准後仍只到 `READY_FOR_START_AUTHORIZATION`，不等於 pilot start。
+
 ## Decision receipt工程契約
 
 已新增公開、去識別化 decision receipt template：
