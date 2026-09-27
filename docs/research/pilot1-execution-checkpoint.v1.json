@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "pilot_id": "Pilot-1",
+  "checkpoint_status": "HALTED_NON_QUALIFYING",
+  "checkpoint_classification": "PUBLIC_DEIDENTIFIED_PROCESS_SUMMARY",
+  "start_authorization_status": "AUTHORIZED",
+  "process_stage": "S1_SOURCE_MANIFEST",
+  "deviation_code": "S1_SOURCE_MANIFEST_NOT_FROZEN_BEFORE_CANDIDATE_EXPOSURE",
+  "finding": {
+    "source_file_census_predated_candidate_processing": true,
+    "schema_valid_s1_source_manifest_predated_candidate_processing": false,
+    "fail_closed_required": true,
+    "replacement_case_allowed_under_pilot1": false
+  },
+  "private_evidence": {
+    "status": "VERIFIED_PRIVATE_WITHHELD",
+    "public_private_digest": false,
+    "public_case_id": false,
+    "public_birth_data": false,
+    "public_prediction_or_outcome_payload": false
+  },
+  "intake": {
+    "eligibility_status": "INELIGIBLE_PREVIOUSLY_EXPOSED",
+    "reason_code": "previously_exposed"
+  },
+  "s1": {
+    "frame_status": "EXCLUDE_PREVIOUSLY_EXPOSED",
+    "exclusion_reason_code": "previously_exposed",
+    "receipt_status": "INELIGIBLE",
+    "included_case_count": 0,
+    "locked_claim_count": 0
+  },
+  "execution_state": {
+    "prediction_lock": "NOT_CREATED",
+    "outcome_collection": "NOT_STARTED",
+    "adjudication": "NOT_STARTED",
+    "scoring": "NOT_STARTED",
+    "verified_event_calibration": "NOT_STARTED"
+  },
+  "interpretation": {
+    "pilot1_process_conformance_met": false,
+    "predictive_validity_evidence_created": false,
+    "qualification_evidence_created": false,
+    "stable_promotion_effect": false
+  },
+  "next_action": {
+    "pilot1_replacement_case": "PROHIBITED",
+    "retry_requires": "NEW_PILOT_ID_AND_NEW_PROTOCOL_VERSION",
+    "sequencing_requirement": "FREEZE_SCHEMA_VALID_INTAKE_AND_S1_SOURCE_MANIFEST_BEFORE_ANY_CANDIDATE_CASE_PROCESSING"
+  }
+}

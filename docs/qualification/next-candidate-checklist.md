@@ -116,7 +116,7 @@ Task 3 gap does not invalidate Experimental engineering delivery, but it blocks 
 ### Task 9
 
 Protocol decisions：`ALL_ITEMS_APPROVED`  
-Pilot：`AUTHORIZED_NOT_STARTED`
+Pilot：`HALTED_NON_QUALIFYING`
 
 Pilot-1 concrete proposed values are documented in
 `docs/research/prospective-pilot-proposed-values.md` with status
@@ -152,8 +152,13 @@ contract.
 - [x] Protocol body synchronized with the approved D01–D12 receipt; stale PENDING language removed
 - [x] Separate explicit human authorization granted at `2026-09-27T19:35:00+08:00`
 - [x] Pilot-1 public start seal committed at `docs/research/pilot1-start-seal.v1.json`; private storage/access record verified outside public Git
+- [x] Pilot-1 execution reached the S1 source-manifest gate and failed closed as `INELIGIBLE_PREVIOUSLY_EXPOSED`
+- [x] Public de-identified execution checkpoint committed at `docs/research/pilot1-execution-checkpoint.v1.json`
+- [x] Prediction lock remained `NOT_CREATED`; no outcome/adjudication/scoring/verified-event calibration occurred
+- [x] D10 enforced: no replacement case under Pilot-1
+- [ ] Any retry must use a new pilot ID/protocol version and freeze schema-valid intake + S1 source manifest before candidate case processing
 
-D01–D12 approval and explicit pilot-start authorization are complete. The frozen start seal binds candidate `79eae136a65aeb14a913a3ecdb2310d22f2ece74`, package SHA256 `cb175e2d482fe9ca8e2d46d6c55c4b0237f1cbb9a631e0d3c50aef75f8e1e0c4`, capability manifest SHA256 `d11a63ec5194fb49939f4b02583a8bddf7bcfb0e9e7bbd9f547af1047837e7b0`, and protocol SHA256 `3c836f6c711b7675960722923f8e8c6199081f1be14ffb4995024b7979762126`. No real case, prediction lock, outcome collection, adjudication, or scoring has yet occurred.
+D01–D12 approval and explicit pilot-start authorization were completed. During actual execution, Pilot-1 failed closed at the S1 source-manifest gate: a private source-file census existed before candidate processing, but the schema-valid S1 source manifest had not been frozen before the case was processed by the candidate. Frozen-contract validation therefore classified the case as previously exposed and excluded it. No prediction lock, outcome collection, adjudication, scoring, verified-event calibration, qualification evidence, or promotion evidence was created. D10 prohibits a replacement case under Pilot-1.
 
 ## Final gate
 
