@@ -1,11 +1,10 @@
 # Pilot-2 proposed approval values
 
-Status: **PROPOSED_READY_FOR_HUMAN_APPROVAL**  
-Protocol decisions: `PENDING_ITEM_APPROVAL`  
-Pilot: `NOT_STARTED`
+Status: **APPROVED_BY_HUMAN_DECISION_OWNER**  
+Protocol decisions: `ALL_ITEMS_APPROVED`  
+Pilot: `READY_FOR_START_AUTHORIZATION`
 
-Pilot-2 carries forward the parts of Pilot-1 that were not implicated in the
-failure, but it is a new protocol and requires fresh human approval.
+Pilot-2 carries forward the parts of Pilot-1 that were not implicated in the failure. The human decision owner explicitly approved D01-D12 and PCG-01 at `2026-09-27T23:00:15+08:00`. This approval does not authorize pilot start or candidate processing.
 
 | ID | Proposed Pilot-2 value | Material delta from Pilot-1 |
 | --- | --- | --- |
@@ -37,4 +36,4 @@ in the correct chronological order.
 PCG-01 has no human bypass. If it fails, Pilot-2 halts before candidate case
 processing.
 
-Approval of D01-D12 should also explicitly approve PCG-01.
+PCG-01 is explicitly approved as a mandatory no-bypass pre-candidate gate. Approval does not open the gate; its prerequisites must still be satisfied in order.

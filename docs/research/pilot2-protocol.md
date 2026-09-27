@@ -1,7 +1,7 @@
-# Prospective Pilot-2 protocol — sequencing-corrected draft
+# Prospective Pilot-2 protocol — human-approved decisions pending start seal
 
-**Protocol decision status:** `PENDING_ITEM_APPROVAL`  
-**Pilot status:** `NOT_STARTED`  
+**Protocol decision status:** `ALL_ITEMS_APPROVED`  
+**Pilot status:** `READY_FOR_START_AUTHORIZATION`  
 **Start authorization:** `NOT_AUTHORIZED`  
 **Candidate case processing:** `PROHIBITED_UNTIL_PRE_CANDIDATE_GATE_READY`
 
@@ -39,9 +39,9 @@ case/window is not reusable.
 
 ## Proposed time scope
 
-Proposed timezone: `Asia/Taipei`.
+Approved timezone: `Asia/Taipei`.
 
-Proposed new outcome window:
+Approved new outcome window:
 
 `2027-01-01T00:00:00+08:00` → `2027-02-28T23:59:59+08:00`
 
@@ -49,7 +49,7 @@ This matches the existing prospective-window resolver class:
 calendar-aligned, same-civil-year, multi-month, yearly claim authority with
 monthly timing. A 72-hour maturity delay follows the window end.
 
-The window remains proposed until D06 is explicitly approved.
+D06 is explicitly approved for this window. It is still not executable until the separate Pilot-2 start authorization and PCG-01 sequencing prerequisites are satisfied.
 
 ## Mandatory pre-candidate gate
 
@@ -105,11 +105,8 @@ Public Git may contain only:
 
 ## Pilot-2 decision gate
 
-D01-D12 are not inherited automatically from Pilot-1. Proposed values are in
-`pilot2-proposed-values.md`. The committed Pilot-2 decision receipt remains all
-PENDING until the human decision owner explicitly approves Pilot-2.
+D01-D12 are not inherited from Pilot-1. The human decision owner explicitly approved Pilot-2 D01-D12 and PCG-01 at `2026-09-27T23:00:15+08:00`. The committed Pilot-2 decision receipt records all twelve items as APPROVED, and `pilot2-pcg01-decision.v1.json` records PCG-01 as mandatory/no-bypass.
 
-Even after D01-D12 approval, a separate Pilot-2 start authorization is required.
+A separate Pilot-2 start authorization is still required. Until that authorization is complete, do not freeze the real Pilot-2 source census or create a real intake record, S1 source manifest, candidate output, claim lock, or prediction lock.
 
-Until both gates are complete, do not create a real intake record, S1 source
-manifest, candidate output, claim lock, or prediction lock.
+After start authorization, the private source census/intake/S1 chain may be built, but candidate processing remains prohibited until PCG-01 validates READY.

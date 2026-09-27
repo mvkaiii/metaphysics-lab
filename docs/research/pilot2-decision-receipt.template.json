@@ -1,103 +1,127 @@
 {
   "schema_version": "1.0",
-  "protocol_decision_status": "PENDING_ITEM_APPROVAL",
-  "pilot_status": "NOT_STARTED",
+  "protocol_decision_status": "ALL_ITEMS_APPROVED",
+  "pilot_status": "READY_FOR_START_AUTHORIZATION",
   "decisions": [
     {
       "id": "D01",
-      "status": "PENDING",
-      "public_summary": "",
-      "approver_role": null,
-      "approved_at": null,
-      "evidence_refs": []
+      "status": "APPROVED",
+      "public_summary": "Approved Pilot-2 self-pilot roles with prediction and outcome/adjudication information contexts separated.",
+      "approver_role": "human_decision_owner",
+      "approved_at": "2026-09-27T23:00:15+08:00",
+      "evidence_refs": [
+        "docs/research/pilot2-proposed-values.md"
+      ]
     },
     {
       "id": "D02",
-      "status": "PENDING",
-      "public_summary": "",
-      "approver_role": null,
-      "approved_at": null,
-      "evidence_refs": []
+      "status": "APPROVED",
+      "public_summary": "Approved owner-only data use; private raw material remains outside public Git and private storage/access must be bound before start.",
+      "approver_role": "human_decision_owner",
+      "approved_at": "2026-09-27T23:00:15+08:00",
+      "evidence_refs": [
+        "docs/research/pilot2-proposed-values.md"
+      ]
     },
     {
       "id": "D03",
-      "status": "PENDING",
-      "public_summary": "",
-      "approver_role": null,
-      "approved_at": null,
-      "evidence_refs": []
+      "status": "APPROVED",
+      "public_summary": "Approved one new future case/window packet with no replacement; formal intake and S1 source manifest must predate candidate processing.",
+      "approver_role": "human_decision_owner",
+      "approved_at": "2026-09-27T23:00:15+08:00",
+      "evidence_refs": [
+        "docs/research/pilot2-proposed-values.md"
+      ]
     },
     {
       "id": "D04",
-      "status": "PENDING",
-      "public_summary": "",
-      "approver_role": null,
-      "approved_at": null,
-      "evidence_refs": []
+      "status": "APPROVED",
+      "public_summary": "Approved future_forecast complete deterministic EFA child universe; no cherry-picking/free-text additions; exact-match S1 validation follows PCG-01 readiness.",
+      "approver_role": "human_decision_owner",
+      "approved_at": "2026-09-27T23:00:15+08:00",
+      "evidence_refs": [
+        "docs/research/pilot2-proposed-values.md"
+      ]
     },
     {
       "id": "D05",
-      "status": "PENDING",
-      "public_summary": "",
-      "approver_role": null,
-      "approved_at": null,
-      "evidence_refs": []
+      "status": "APPROVED",
+      "public_summary": "Approved single candidate arm; no superiority claim; fresh Pilot-2 candidate/package/manifest/protocol seal required.",
+      "approver_role": "human_decision_owner",
+      "approved_at": "2026-09-27T23:00:15+08:00",
+      "evidence_refs": [
+        "docs/research/pilot2-proposed-values.md"
+      ]
     },
     {
       "id": "D06",
-      "status": "PENDING",
-      "public_summary": "",
-      "approver_role": null,
-      "approved_at": null,
-      "evidence_refs": []
+      "status": "APPROVED",
+      "public_summary": "Approved Asia/Taipei window 2027-01-01T00:00:00+08:00 through 2027-02-28T23:59:59+08:00 with 72-hour maturity delay.",
+      "approver_role": "human_decision_owner",
+      "approved_at": "2026-09-27T23:00:15+08:00",
+      "evidence_refs": [
+        "docs/research/pilot2-proposed-values.md"
+      ]
     },
     {
       "id": "D07",
-      "status": "PENDING",
-      "public_summary": "",
-      "approver_role": null,
-      "approved_at": null,
-      "evidence_refs": []
+      "status": "APPROVED",
+      "public_summary": "Approved SUPPORTED/CONTRADICTED/INDETERMINATE/OUT_OF_UNIVERSE adjudication labels and fixed evidence hierarchy.",
+      "approver_role": "human_decision_owner",
+      "approved_at": "2026-09-27T23:00:15+08:00",
+      "evidence_refs": [
+        "docs/research/pilot2-proposed-values.md"
+      ]
     },
     {
       "id": "D08",
-      "status": "PENDING",
-      "public_summary": "",
-      "approver_role": null,
-      "approved_at": null,
-      "evidence_refs": []
+      "status": "APPROVED",
+      "public_summary": "Approved outcome-blind prediction and post-seal adjudication; no prediction context may exist before PCG-01 READY.",
+      "approver_role": "human_decision_owner",
+      "approved_at": "2026-09-27T23:00:15+08:00",
+      "evidence_refs": [
+        "docs/research/pilot2-proposed-values.md"
+      ]
     },
     {
       "id": "D09",
-      "status": "PENDING",
-      "public_summary": "",
-      "approver_role": null,
-      "approved_at": null,
-      "evidence_refs": []
+      "status": "APPROVED",
+      "public_summary": "Approved process-conformance primary success criterion including PCG-01 conformance; hit rate remains descriptive only.",
+      "approver_role": "human_decision_owner",
+      "approved_at": "2026-09-27T23:00:15+08:00",
+      "evidence_refs": [
+        "docs/research/pilot2-proposed-values.md"
+      ]
     },
     {
       "id": "D10",
-      "status": "PENDING",
-      "public_summary": "",
-      "approver_role": null,
-      "approved_at": null,
-      "evidence_refs": []
+      "status": "APPROVED",
+      "public_summary": "Approved exactly one new real case, no replacement, no result-dependent stop; pre-candidate gate failure halts Pilot-2.",
+      "approver_role": "human_decision_owner",
+      "approved_at": "2026-09-27T23:00:15+08:00",
+      "evidence_refs": [
+        "docs/research/pilot2-proposed-values.md"
+      ]
     },
     {
       "id": "D11",
-      "status": "PENDING",
-      "public_summary": "",
-      "approver_role": null,
-      "approved_at": null,
-      "evidence_refs": []
+      "status": "APPROVED",
+      "public_summary": "Approved append-only deviations and explicit prohibition on retrospective repair of intake/S1 timing or exposure status.",
+      "approver_role": "human_decision_owner",
+      "approved_at": "2026-09-27T23:00:15+08:00",
+      "evidence_refs": [
+        "docs/research/pilot2-proposed-values.md"
+      ]
     },
     {
       "id": "D12",
-      "status": "PENDING",
-      "public_summary": "",
-      "approver_role": null,
-      "approved_at": null,
-      "evidence_refs": []
+      "status": "APPROVED",
+      "public_summary": "Approved de-identified process-only public disclosure; no n=1 claim/outcome-level or private identifying material.",
+      "approver_role": "human_decision_owner",
+      "approved_at": "2026-09-27T23:00:15+08:00",
+      "evidence_refs": [
+        "docs/research/pilot2-proposed-values.md"
+      ]
     }
   ],
   "pilot_start_authorization": {

@@ -4,7 +4,7 @@
   "gate_profile": "pilot2_pre_candidate_gate_v1",
   "gate_status": "BLOCKED",
   "prerequisites": {
-    "protocol_decisions_approved": false,
+    "protocol_decisions_approved": true,
     "start_authorization_bound": false,
     "source_census_frozen": false,
     "intake_registry_valid": false,

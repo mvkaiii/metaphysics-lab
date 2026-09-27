@@ -162,8 +162,8 @@ D01–D12 approval and explicit pilot-start authorization were completed. During
 
 ### Pilot-2
 
-Protocol decisions：`PENDING_ITEM_APPROVAL`  
-Pilot：`NOT_STARTED`  
+Protocol decisions：`ALL_ITEMS_APPROVED`  
+Pilot：`READY_FOR_START_AUTHORIZATION`  
 Pre-candidate gate：`BLOCKED`
 
 Pilot-2 is a new pilot ID/protocol version created from the Pilot-1 process
@@ -181,7 +181,8 @@ case identity, or exposure status.
 - [x] Private-material disclosure prohibited in public gate
 - [x] Candidate/public digest bindings required once start authorization is bound
 - [x] Proposed future window is new and non-overlapping: `2027-01-01T00:00:00+08:00` → `2027-02-28T23:59:59+08:00`
-- [ ] Human approval of Pilot-2 D01-D12 + PCG-01
+- [x] Human approval of Pilot-2 D01-D12 + PCG-01 at `2026-09-27T23:00:15+08:00`
+- [x] PCG-01 recorded as mandatory/no-bypass in `docs/research/pilot2-pcg01-decision.v1.json`
 - [ ] Separate Pilot-2 start authorization / final seal
 - [ ] Private source census for the new case frozen
 - [ ] Private intake registry validated as `ELIGIBLE_FOR_S1_SOURCE`
@@ -189,8 +190,7 @@ case identity, or exposure status.
 - [ ] Candidate exposure independently validated as `UNEXPOSED`
 - [ ] PCG-01 receipt reaches READY before candidate reads the case
 
-Until all required Pilot-2 gates are satisfied, **do not execute the candidate on
-a real Pilot-2 case**.
+D01-D12 and PCG-01 are approved. **Do not execute the candidate on a real Pilot-2 case.** A separate Pilot-2 start authorization must occur first; after that, source census/intake/S1 may be built, while candidate processing remains blocked until PCG-01 is READY.
 
 ## Final gate
 
