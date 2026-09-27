@@ -122,28 +122,31 @@ def validate_decision_receipt(receipt: Mapping[str, Any]) -> list[str]:
         decision_id = row.get("id")
         if decision_id not in _DECISION_IDS:
             errors.append(f"{path}.id: expected one of D01-D12")
+            decision_path = path
         elif decision_id in rows_by_id:
             errors.append(f"{path}.id: duplicate decision {decision_id}")
+            decision_path = f"{path}({decision_id})"
         else:
             rows_by_id[decision_id] = row
+            decision_path = f"{path}({decision_id})"
         status = row.get("status")
         if status not in _ROW_STATUSES:
-            errors.append(f"{path}.status: unsupported status")
+            errors.append(f"{decision_path}.status: unsupported status")
             continue
         refs = row.get("evidence_refs")
         if not isinstance(refs, list) or any(not isinstance(ref, str) or not ref for ref in refs):
-            errors.append(f"{path}.evidence_refs: expected a list of non-empty strings")
+            errors.append(f"{decision_path}.evidence_refs: expected a list of non-empty strings")
         if status == "PENDING":
             if row.get("public_summary") != "":
-                errors.append(f"{path}.public_summary: PENDING decision must use an empty public summary")
+                errors.append(f"{decision_path}.public_summary: PENDING decision must use an empty public summary")
             if row.get("approver_role") is not None:
-                errors.append(f"{path}.approver_role: PENDING decision must be null")
+                errors.append(f"{decision_path}.approver_role: PENDING decision must be null")
             if row.get("approved_at") is not None:
-                errors.append(f"{path}.approved_at: PENDING decision must be null")
+                errors.append(f"{decision_path}.approved_at: PENDING decision must be null")
         else:
-            _nonempty(row.get("public_summary"), f"{path}.public_summary", errors)
-            _nonempty(row.get("approver_role"), f"{path}.approver_role", errors)
-            _offset_datetime(row.get("approved_at"), f"{path}.approved_at", errors)
+            _nonempty(row.get("public_summary"), f"{decision_path}.public_summary", errors)
+            _nonempty(row.get("approver_role"), f"{decision_path}.approver_role", errors)
+            _offset_datetime(row.get("approved_at"), f"{decision_path}.approved_at", errors)
 
     actual_ids = set(rows_by_id)
     if actual_ids != _DECISION_IDS:
