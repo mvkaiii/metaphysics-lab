@@ -2,6 +2,7 @@
 
 **Protocol status:** `DRAFT_PENDING_HUMAN_APPROVAL`
 **Pilot status:** `NOT_STARTED`
+**Framework decision (2026-09-27):** `APPROVED FOR FINALIZATION`; `PILOT NOT AUTHORIZED`. See the [item-by-item human review form](prospective-pilot-review.md) and [decision record](../superpowers/phase-gates/2026-09-27-review-decisions.md). All pre-run choices below remain pending.
 **Repository baseline reviewed:** `872c60b2e959ea48d25524b74686e488f576ec6f`
 **No real cases, outcomes, oracle, or scoring were accessed or created for this draft.**
 
