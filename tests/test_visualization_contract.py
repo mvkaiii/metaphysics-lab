@@ -232,6 +232,60 @@ class VisualizationContractTests(unittest.TestCase):
         self.assertEqual(schema["properties"]["schema_version"]["const"], "1.0")
         self.assertEqual(len(schema["oneOf"]), 2)
 
+    def test_schema_structural_defs_match_chart_v1_contract(self):
+        schema = json.loads(
+            (ROOT / "schemas" / "visualization" / "chart.v1.schema.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        defs = schema["$defs"]
+        for name in ("ageBasis", "timeBasis", "period", "optionalReasons", "authorityRefs", "annotation"):
+            self.assertIn(name, defs)
+        self.assertEqual(defs["data"]["properties"]["age_basis"]["$ref"], "#/$defs/ageBasis")
+        self.assertEqual(defs["data"]["properties"]["time_basis"]["$ref"], "#/$defs/timeBasis")
+        self.assertEqual(defs["data"]["properties"]["periods"]["items"]["$ref"], "#/$defs/period")
+        self.assertEqual(
+            set(defs["period"]["required"]),
+            {
+                "id", "index", "pillar", "age_start_years", "age_end_years",
+                "start_at", "end_at", "ten_god", "elements",
+                "optional_reasons", "authority_refs",
+            },
+        )
+        self.assertEqual(defs["data"]["properties"]["year_overlays"]["maxItems"], 0)
+        self.assertEqual(schema["properties"]["annotations"]["maxItems"], 0)
+
+    def test_schema_status_branches_lock_reason_code_shape(self):
+        schema = json.loads(
+            (ROOT / "schemas" / "visualization" / "chart.v1.schema.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        ready, unsupported = schema["oneOf"]
+        self.assertEqual(ready["properties"]["reason_codes"]["const"], [])
+        self.assertEqual(unsupported["properties"]["reason_codes"]["minItems"], 1)
+
+    def test_identified_annotations_are_fail_closed_until_supported(self):
+        chart = _ready_chart()
+        chart["view_context"]["visibility_mode"] = "identified"
+        chart["annotations"] = [
+            {
+                "target_id": "period-1",
+                "text": "future annotation",
+                "authority_refs": ["period-1-derived"],
+                "visibility": "identified",
+                "evidence_refs": [],
+            }
+        ]
+        errors = validate_chart(chart)
+        self.assertTrue(any("annotation" in error.lower() and "unsupported" in error.lower() for error in errors), errors)
+
+    def test_year_overlays_are_fail_closed_until_supported(self):
+        chart = _ready_chart()
+        chart["data"]["year_overlays"] = [{"id": "future-overlay"}]
+        errors = validate_chart(chart)
+        self.assertTrue(any("year_overlays" in error and "unsupported" in error.lower() for error in errors), errors)
+
 
 if __name__ == "__main__":
     unittest.main()
