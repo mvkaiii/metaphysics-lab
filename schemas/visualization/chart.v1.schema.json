@@ -3,40 +3,562 @@
   "$id": "https://metaphysics-lab.invalid/schemas/visualization/chart.v1.schema.json",
   "title": "Metaphysics Lab Visualization Chart v1",
   "type": "object",
-  "required": ["chart_type", "schema_version", "status", "reason_codes", "view_context", "source_capabilities", "data", "annotations", "authorities", "provenance", "limitations"],
+  "required": [
+    "chart_type",
+    "schema_version",
+    "status",
+    "reason_codes",
+    "view_context",
+    "source_capabilities",
+    "data",
+    "annotations",
+    "authorities",
+    "provenance",
+    "limitations"
+  ],
   "properties": {
-    "chart_type": {"const": "bazi_decadal_timeline"},
-    "schema_version": {"const": "1.0"},
-    "status": {"enum": ["ready", "unsupported"]},
-    "reason_codes": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
-    "view_context": {"$ref": "#/$defs/viewContext"},
-    "source_capabilities": {"type": "array", "items": {"$ref": "#/$defs/sourceCapability"}},
-    "data": {"oneOf": [{"$ref": "#/$defs/data"}, {"type": "null"}]},
-    "annotations": {"type": "array", "items": {"$ref": "#/$defs/annotation"}},
-    "authorities": {"type": "object", "additionalProperties": {"$ref": "#/$defs/authority"}},
-    "provenance": {"$ref": "#/$defs/provenance"},
-    "limitations": {"type": "array", "items": {"$ref": "#/$defs/limitation"}}
+    "chart_type": {
+      "const": "bazi_decadal_timeline"
+    },
+    "schema_version": {
+      "const": "1.0"
+    },
+    "status": {
+      "enum": [
+        "ready",
+        "unsupported"
+      ]
+    },
+    "reason_codes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "view_context": {
+      "$ref": "#/$defs/viewContext"
+    },
+    "source_capabilities": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/sourceCapability"
+      }
+    },
+    "data": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/data"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "annotations": {
+      "type": "array",
+      "maxItems": 0,
+      "items": {
+        "$ref": "#/$defs/annotation"
+      }
+    },
+    "authorities": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/authority"
+      }
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/limitation"
+      }
+    }
   },
   "additionalProperties": false,
   "oneOf": [
-    {"properties": {"status": {"const": "ready"}, "data": {"$ref": "#/$defs/data"}}},
-    {"properties": {"status": {"const": "unsupported"}, "data": {"type": "null"}, "source_capabilities": {"const": []}, "annotations": {"const": []}, "authorities": {"const": {}}}}
+    {
+      "properties": {
+        "status": {
+          "const": "ready"
+        },
+        "reason_codes": {
+          "const": []
+        },
+        "data": {
+          "$ref": "#/$defs/data"
+        }
+      }
+    },
+    {
+      "properties": {
+        "status": {
+          "const": "unsupported"
+        },
+        "reason_codes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "data": {
+          "type": "null"
+        },
+        "source_capabilities": {
+          "const": []
+        },
+        "annotations": {
+          "const": []
+        },
+        "authorities": {
+          "const": {}
+        }
+      }
+    }
   ],
   "$defs": {
     "viewContext": {
-      "type": "object", "additionalProperties": false,
-      "required": ["as_of", "timezone", "visibility_mode", "locale"],
-      "properties": {"as_of": {"type": "string", "format": "date-time"}, "timezone": {"type": "string", "minLength": 1}, "visibility_mode": {"enum": ["blind", "identified"]}, "locale": {"const": "zh-TW"}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "as_of",
+        "timezone",
+        "visibility_mode",
+        "locale"
+      ],
+      "properties": {
+        "as_of": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "timezone": {
+          "type": "string",
+          "minLength": 1
+        },
+        "visibility_mode": {
+          "enum": [
+            "blind",
+            "identified"
+          ]
+        },
+        "locale": {
+          "const": "zh-TW"
+        }
+      }
     },
     "sourceCapability": {
-      "type": "object", "additionalProperties": false,
-      "required": ["capability_id", "scope", "profile_id", "rule_version", "maturity", "routing"],
-      "properties": {"capability_id": {"type": "string"}, "scope": {"type": "string"}, "profile_id": {"type": "string"}, "rule_version": {"type": "string"}, "maturity": {"enum": ["stable", "experimental"]}, "routing": {"enum": ["default", "on_demand"]}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capability_id",
+        "scope",
+        "profile_id",
+        "rule_version",
+        "maturity",
+        "routing"
+      ],
+      "properties": {
+        "capability_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1
+        },
+        "profile_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rule_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "maturity": {
+          "enum": [
+            "stable",
+            "experimental"
+          ]
+        },
+        "routing": {
+          "enum": [
+            "default",
+            "on_demand"
+          ]
+        }
+      }
     },
-    "data": {"type": "object", "additionalProperties": false, "required": ["age_basis", "time_basis", "direction", "periods", "current_period_id", "year_overlays"], "properties": {"age_basis": {"type": "object"}, "time_basis": {"type": "object"}, "direction": {"enum": ["forward", "reverse", null]}, "periods": {"type": "array", "minItems": 1}, "current_period_id": {"type": ["string", "null"]}, "year_overlays": {"type": "array"}}},
-    "annotation": {"type": "object", "additionalProperties": false},
-    "authority": {"type": "object", "additionalProperties": false, "required": ["classification", "source_refs", "transformation", "confidence"], "properties": {"classification": {"enum": ["original_chart_fact", "verified_data", "project_derived", "verified_event", "metaphysical_inference", "research_hypothesis", "current_real_world_context"]}, "source_refs": {"type": "array", "items": {"type": "string"}}, "transformation": {"type": "string"}, "confidence": {"type": ["number", "null"]}}},
-    "provenance": {"type": "object", "additionalProperties": false, "required": ["repo", "source_commit", "release_version", "distribution_runtime_version", "manifest_sha256", "source_payload_sha256", "projection_version"], "properties": {"repo": {"type": "string"}, "source_commit": {"type": ["string", "null"]}, "release_version": {"type": ["string", "null"]}, "distribution_runtime_version": {"type": ["string", "null"]}, "manifest_sha256": {"type": ["string", "null"]}, "source_payload_sha256": {"type": ["string", "null"]}, "projection_version": {"type": "string"}}},
-    "limitation": {"type": "object", "additionalProperties": false, "required": ["code", "message", "scope"], "properties": {"code": {"type": "string"}, "message": {"type": "string"}, "scope": {"type": "string"}}}
+    "ageBasis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "description",
+        "rounding_policy"
+      ],
+      "properties": {
+        "id": {
+          "const": "continuous_years_from_jie_interval"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rounding_policy": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "timeBasis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "calendar",
+        "boundary_policy",
+        "interval_convention",
+        "source_timezone"
+      ],
+      "properties": {
+        "calendar": {
+          "type": "string",
+          "minLength": 1
+        },
+        "boundary_policy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "interval_convention": {
+          "const": "[start_at,end_at)"
+        },
+        "source_timezone": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "authorityRefs": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "optionalReasons": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ten_god",
+        "elements"
+      ],
+      "properties": {
+        "ten_god": {
+          "type": "string",
+          "minLength": 1
+        },
+        "elements": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "period": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index",
+        "pillar",
+        "age_start_years",
+        "age_end_years",
+        "start_at",
+        "end_at",
+        "ten_god",
+        "elements",
+        "optional_reasons",
+        "authority_refs"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "pillar": {
+          "type": "string",
+          "minLength": 1
+        },
+        "age_start_years": {
+          "type": "number"
+        },
+        "age_end_years": {
+          "type": "number"
+        },
+        "start_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "end_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "ten_god": {
+          "oneOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "elements": {
+          "oneOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "optional_reasons": {
+          "$ref": "#/$defs/optionalReasons"
+        },
+        "authority_refs": {
+          "$ref": "#/$defs/authorityRefs"
+        }
+      }
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "age_basis",
+        "time_basis",
+        "direction",
+        "periods",
+        "current_period_id",
+        "year_overlays"
+      ],
+      "properties": {
+        "age_basis": {
+          "$ref": "#/$defs/ageBasis"
+        },
+        "time_basis": {
+          "$ref": "#/$defs/timeBasis"
+        },
+        "direction": {
+          "enum": [
+            "forward",
+            "reverse",
+            null
+          ]
+        },
+        "periods": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/period"
+          }
+        },
+        "current_period_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "year_overlays": {
+          "type": "array",
+          "maxItems": 0
+        }
+      }
+    },
+    "annotation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target_id",
+        "text",
+        "authority_refs",
+        "visibility",
+        "evidence_refs"
+      ],
+      "properties": {
+        "target_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "authority_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "visibility": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classification",
+        "source_refs",
+        "transformation",
+        "confidence"
+      ],
+      "properties": {
+        "classification": {
+          "enum": [
+            "original_chart_fact",
+            "verified_data",
+            "project_derived",
+            "verified_event",
+            "metaphysical_inference",
+            "research_hypothesis",
+            "current_real_world_context"
+          ]
+        },
+        "source_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "transformation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "confidence": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repo",
+        "source_commit",
+        "release_version",
+        "distribution_runtime_version",
+        "manifest_sha256",
+        "source_payload_sha256",
+        "projection_version"
+      ],
+      "properties": {
+        "repo": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_commit": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40,64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "release_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "distribution_runtime_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "manifest_sha256": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_payload_sha256": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "projection_version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "limitation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message",
+        "scope"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
   }
 }

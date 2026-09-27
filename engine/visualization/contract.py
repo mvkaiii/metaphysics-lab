@@ -372,8 +372,11 @@ def _validate_chart(chart: Mapping[str, Any]) -> list[str]:
             current = data.get("current_period_id")
             if current is not None and current not in period_ids:
                 errors.append("data.current_period_id: must reference a period or be null")
-            if not isinstance(data.get("year_overlays"), list):
+            year_overlays = data.get("year_overlays")
+            if not isinstance(year_overlays, list):
                 errors.append("data.year_overlays: expected a list")
+            elif year_overlays:
+                errors.append("data.year_overlays: unsupported in chart schema v1; expected an empty list")
             if any(cap.get("maturity") == "experimental" for cap in source_capabilities if isinstance(cap, Mapping)) and "EXPERIMENTAL_CAPABILITY" not in limitation_codes:
                 errors.append("limitations: Experimental capability requires an Experimental limitation badge")
 
@@ -382,13 +385,8 @@ def _validate_chart(chart: Mapping[str, Any]) -> list[str]:
         errors.append("annotations: expected a list")
     elif context.get("visibility_mode") == "blind" and annotations:
         errors.append("annotations: blind chart cannot contain annotations or contamination")
-    else:
-        for index, annotation in enumerate(annotations):
-            path = f"annotations[{index}]"
-            if not isinstance(annotation, Mapping):
-                errors.append(f"{path}: expected an object")
-                continue
-            _unknown_fields(annotation, _ANNOTATION, path, errors)
+    elif annotations:
+        errors.append("annotations: unsupported in chart schema v1; expected an empty list")
     return sorted(set(errors))
 
 
