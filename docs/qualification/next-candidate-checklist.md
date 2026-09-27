@@ -13,7 +13,7 @@ Merge authority：**NOT GRANTED**
 - Repository：`mvkaiii/metaphysics-lab`
 - Working branch：`local/task0-2-capability-matrix`
 - Base / formal main：`872c60b2e959ea48d25524b74686e488f576ec6f`
-- Last code-bearing candidate before this checklist：`d3201b11c0d6a51834f53f5258f836d3560c51c2`
+- Last code-bearing candidate before this checklist update：`b174bc79e57ac87f9c7750b4bfd7c0d0862cb9b2`
 - PR：#233（Draft）
 - Candidate User Package content SHA256：`cb175e2d482fe9ca8e2d46d6c55c4b0237f1cbb9a631e0d3c50aef75f8e1e0c4`
 - Candidate package 不是正式 v1.7.1 asset，不得覆寫歷史 Release。
@@ -28,6 +28,10 @@ Merge authority：**NOT GRANTED**
 - [x] Version-neutral read-only artifact inventory / lifecycle policy
 - [x] v1.7 historical planning archive
 - [x] Prospective pilot protocol / human review form（design only）
+- [x] Sealed Bazi decadal reference comparison harness（engineering only; no oracle expected values）
+- [x] Independent-oracle handoff boundary and HKO astronomical-source role documented
+- [x] Prospective pilot public decision-receipt template / validator
+- [x] D01–D12 approval gate separated from explicit pilot-start authorization
 - [x] Windows vendor tree digest portability fix
 - [x] Visualization authority coverage and multi-output preflight hardening
 - [x] JSON Schema / semantic validator structural parity
@@ -68,13 +72,13 @@ Merge authority：**NOT GRANTED**
 
 ## Hosted engineering verification
 
-For the last code-bearing candidate `d3201b11c0d6a51834f53f5258f836d3560c51c2`:
+For the last code-bearing candidate `b174bc79e57ac87f9c7750b4bfd7c0d0862cb9b2`:
 
-- [x] v1.5 Validation run `36303194027` — SUCCESS
-- [x] v1.6 Validation run `36303194023` — SUCCESS
-- [x] v1.7 Validation run `36303194022` — SUCCESS
-- [x] v1.7 Plan 3 Focused run `36303194029` — SUCCESS
-- [x] Full repository regression：1,373 tests PASS in all four hosted workflows
+- [x] v1.5 Validation run `36305101236` — SUCCESS
+- [x] v1.6 Validation run `36305101237` — SUCCESS
+- [x] v1.7 Validation run `36305101234` — SUCCESS
+- [x] v1.7 Plan 3 Focused run `36305101232` — SUCCESS
+- [x] Full repository regression：1,389 tests PASS in all four hosted workflows
 - [x] Python 3.9 workflow environment
 - [x] release-surface verification PASS
 - [x] deterministic candidate package verification PASS
@@ -99,6 +103,8 @@ After this checklist is committed, the documentation-only descendant HEAD must r
 
 Status：`NEEDS_EVIDENCE`
 
+- [x] Comparator contract/harness fixed and hosted-tested; it cannot generate expected values or promote qualification
+- [x] Independent-oracle information boundary documented
 - [ ] Independent sealed oracle / reference comparison for the same Project age / endpoint profile
 - [ ] External astronomical source bytes / version / digest sealed
 - [ ] Case set and tolerance rules preregistered before comparison
@@ -124,6 +130,8 @@ Pilot：`NOT_STARTED`
 - [ ] D10 sample / stopping
 - [ ] D11 withdrawal / deviation
 - [ ] D12 publication / privacy
+- [x] Public decision-receipt template committed with all D01–D12 PENDING
+- [x] Validator enforces that ALL_ITEMS_APPROVED alone does not authorize pilot start
 - [ ] Separate explicit human authorization to start the real pilot
 
 No real case, prediction lock, outcome/oracle access or scoring is authorized by this checklist.
