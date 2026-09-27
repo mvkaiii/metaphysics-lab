@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "protocol_decision_status": "ALL_ITEMS_APPROVED",
-  "pilot_status": "READY_FOR_START_AUTHORIZATION",
+  "pilot_status": "AUTHORIZED_NOT_STARTED",
   "decisions": [
     {
       "id": "D01",
@@ -125,12 +125,12 @@
     }
   ],
   "pilot_start_authorization": {
-    "authorized": false,
-    "authorized_by_role": null,
-    "authorized_at": null,
-    "candidate_commit": null,
-    "package_sha256": null,
-    "manifest_sha256": null,
-    "protocol_sha256": null
+    "authorized": true,
+    "authorized_by_role": "human_decision_owner",
+    "authorized_at": "2026-09-27T19:35:00+08:00",
+    "candidate_commit": "79eae136a65aeb14a913a3ecdb2310d22f2ece74",
+    "package_sha256": "cb175e2d482fe9ca8e2d46d6c55c4b0237f1cbb9a631e0d3c50aef75f8e1e0c4",
+    "manifest_sha256": "d11a63ec5194fb49939f4b02583a8bddf7bcfb0e9e7bbd9f547af1047837e7b0",
+    "protocol_sha256": "3c836f6c711b7675960722923f8e8c6199081f1be14ffb4995024b7979762126"
   }
 }

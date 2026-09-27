@@ -116,7 +116,7 @@ Task 3 gap does not invalidate Experimental engineering delivery, but it blocks 
 ### Task 9
 
 Protocol decisions：`ALL_ITEMS_APPROVED`  
-Pilot：`READY_FOR_START_AUTHORIZATION`
+Pilot：`AUTHORIZED_NOT_STARTED`
 
 Pilot-1 concrete proposed values are documented in
 `docs/research/prospective-pilot-proposed-values.md` with status
@@ -150,9 +150,10 @@ contract.
 - [x] Validator enforces that ALL_ITEMS_APPROVED alone does not authorize pilot start
 - [x] D01–D12 explicitly approved by human decision owner at `2026-09-27T17:55:00+08:00`
 - [x] Protocol body synchronized with the approved D01–D12 receipt; stale PENDING language removed
-- [ ] Separate explicit human authorization to start the real pilot
+- [x] Separate explicit human authorization granted at `2026-09-27T19:35:00+08:00`
+- [x] Pilot-1 public start seal committed at `docs/research/pilot1-start-seal.v1.json`; private storage/access record verified outside public Git
 
-D01–D12 approval is complete, but no real case, prediction lock, outcome/oracle access or scoring is authorized by this checklist. A separate pilot-start authorization is still required.
+D01–D12 approval and explicit pilot-start authorization are complete. The frozen start seal binds candidate `79eae136a65aeb14a913a3ecdb2310d22f2ece74`, package SHA256 `cb175e2d482fe9ca8e2d46d6c55c4b0237f1cbb9a631e0d3c50aef75f8e1e0c4`, capability manifest SHA256 `d11a63ec5194fb49939f4b02583a8bddf7bcfb0e9e7bbd9f547af1047837e7b0`, and protocol SHA256 `3c836f6c711b7675960722923f8e8c6199081f1be14ffb4995024b7979762126`. No real case, prediction lock, outcome collection, adjudication, or scoring has yet occurred.
 
 ## Final gate
 
@@ -170,6 +171,6 @@ Not authorized by this status:
 - GitHub Release
 - publish
 - historical Release / asset mutation
-- real prospective pilot start
+- automatic outcome collection/adjudication/scoring without the approved sequence
 
 Any new commit after the currently verified candidate invalidates reuse of its exact-SHA hosted evidence for the new HEAD; rerun and record fresh verification.
