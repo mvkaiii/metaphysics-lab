@@ -156,9 +156,41 @@ contract.
 - [x] Public de-identified execution checkpoint committed at `docs/research/pilot1-execution-checkpoint.v1.json`
 - [x] Prediction lock remained `NOT_CREATED`; no outcome/adjudication/scoring/verified-event calibration occurred
 - [x] D10 enforced: no replacement case under Pilot-1
-- [ ] Any retry must use a new pilot ID/protocol version and freeze schema-valid intake + S1 source manifest before candidate case processing
+- [x] Retry governance implemented as Pilot-2 with a new pilot ID/protocol and mandatory PCG-01 sequencing gate
 
 D01–D12 approval and explicit pilot-start authorization were completed. During actual execution, Pilot-1 failed closed at the S1 source-manifest gate: a private source-file census existed before candidate processing, but the schema-valid S1 source manifest had not been frozen before the case was processed by the candidate. Frozen-contract validation therefore classified the case as previously exposed and excluded it. No prediction lock, outcome collection, adjudication, scoring, verified-event calibration, qualification evidence, or promotion evidence was created. D10 prohibits a replacement case under Pilot-1.
+
+### Pilot-2
+
+Protocol decisions：`PENDING_ITEM_APPROVAL`  
+Pilot：`NOT_STARTED`  
+Pre-candidate gate：`BLOCKED`
+
+Pilot-2 is a new pilot ID/protocol version created from the Pilot-1 process
+failure. It does not inherit Pilot-1 approval, start authorization, eligibility,
+case identity, or exposure status.
+
+- [x] New Pilot-2 protocol committed at `docs/research/pilot2-protocol.md`
+- [x] Fresh D01-D12 proposed values committed at `docs/research/pilot2-proposed-values.md`
+- [x] Fresh all-PENDING decision receipt committed at `docs/research/pilot2-decision-receipt.template.json`
+- [x] PCG-01 pre-candidate gate template committed and defaults BLOCKED
+- [x] Pre-candidate gate validator / tests added
+- [x] Pilot-1 failure shape cannot open Pilot-2 candidate processing
+- [x] Later prerequisite cannot be true while an earlier sequencing prerequisite is false
+- [x] Manual override prohibited
+- [x] Private-material disclosure prohibited in public gate
+- [x] Candidate/public digest bindings required once start authorization is bound
+- [x] Proposed future window is new and non-overlapping: `2027-01-01T00:00:00+08:00` → `2027-02-28T23:59:59+08:00`
+- [ ] Human approval of Pilot-2 D01-D12 + PCG-01
+- [ ] Separate Pilot-2 start authorization / final seal
+- [ ] Private source census for the new case frozen
+- [ ] Private intake registry validated as `ELIGIBLE_FOR_S1_SOURCE`
+- [ ] Schema-valid S1 source manifest frozen before any candidate case processing
+- [ ] Candidate exposure independently validated as `UNEXPOSED`
+- [ ] PCG-01 receipt reaches READY before candidate reads the case
+
+Until all required Pilot-2 gates are satisfied, **do not execute the candidate on
+a real Pilot-2 case**.
 
 ## Final gate
 
