@@ -163,7 +163,7 @@ D01–D12 approval and explicit pilot-start authorization were completed. During
 ### Pilot-2
 
 Protocol decisions：`ALL_ITEMS_APPROVED`  
-Pilot：`READY_FOR_START_AUTHORIZATION`  
+Pilot：`AUTHORIZED_NOT_STARTED`  
 Pre-candidate gate：`BLOCKED`
 
 Pilot-2 is a new pilot ID/protocol version created from the Pilot-1 process
@@ -183,14 +183,15 @@ case identity, or exposure status.
 - [x] Proposed future window is new and non-overlapping: `2027-01-01T00:00:00+08:00` → `2027-02-28T23:59:59+08:00`
 - [x] Human approval of Pilot-2 D01-D12 + PCG-01 at `2026-09-27T23:00:15+08:00`
 - [x] PCG-01 recorded as mandatory/no-bypass in `docs/research/pilot2-pcg01-decision.v1.json`
-- [ ] Separate Pilot-2 start authorization / final seal
+- [x] Separate Pilot-2 start authorization / final seal granted at `2026-09-27T23:23:47+08:00`
+- [x] Pilot-2 public start seal committed at `docs/research/pilot2-start-seal.v1.json`; private storage/access record verified outside public Git
 - [ ] Private source census for the new case frozen
 - [ ] Private intake registry validated as `ELIGIBLE_FOR_S1_SOURCE`
 - [ ] Schema-valid S1 source manifest frozen before any candidate case processing
 - [ ] Candidate exposure independently validated as `UNEXPOSED`
 - [ ] PCG-01 receipt reaches READY before candidate reads the case
 
-D01-D12 and PCG-01 are approved. **Do not execute the candidate on a real Pilot-2 case.** A separate Pilot-2 start authorization must occur first; after that, source census/intake/S1 may be built, while candidate processing remains blocked until PCG-01 is READY.
+D01-D12, PCG-01, and Pilot-2 start authorization are approved. Private source census/intake/S1 may now be built in order. **Do not execute the candidate on a real Pilot-2 case** until PCG-01 is READY.
 
 ## Final gate
 

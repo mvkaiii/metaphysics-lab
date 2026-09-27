@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "pilot_id": "Pilot-2",
+  "seal_status": "SEALED",
+  "authorization_status": "AUTHORIZED_NOT_STARTED",
+  "authorized_by_role": "human_decision_owner",
+  "authorized_at": "2026-09-27T23:23:47+08:00",
+  "frozen_candidate": {
+    "repository": "mvkaiii/metaphysics-lab",
+    "candidate_commit": "4cf324a851204b2d278dc044acf2b0561304d2b0",
+    "hosted_validation_run_id": 36328064715,
+    "hosted_artifact_id": 10934263916,
+    "package_sha256": "cb175e2d482fe9ca8e2d46d6c55c4b0237f1cbb9a631e0d3c50aef75f8e1e0c4",
+    "capability_manifest_sha256": "d11a63ec5194fb49939f4b02583a8bddf7bcfb0e9e7bbd9f547af1047837e7b0",
+    "protocol_path": "docs/research/pilot2-protocol.md",
+    "protocol_sha256": "840b9f8accf4bc1bd3289703ca6179847ac22766cd66f2d71ba3a8f355869352",
+    "window_policy_path": "docs/research/pilot2-window-policy.v1.json",
+    "window_policy_sha256": "fae6cb56e722a7e427d3b21e29c7355e6d39baf5bdac9ecde39766832736c445"
+  },
+  "private_storage_access_record": {
+    "status": "VERIFIED_PRIVATE",
+    "classification": "private_non_git_workspace",
+    "public_details": "WITHHELD_BY_D12",
+    "digest_disclosure": false
+  },
+  "pcg01": {
+    "decision_status": "APPROVED",
+    "mandatory": true,
+    "manual_override_allowed": false,
+    "gate_status_after_start_authorization": "BLOCKED",
+    "candidate_case_processing_allowed": false
+  },
+  "execution_state": {
+    "source_census": "NOT_FROZEN",
+    "intake_registry": "NOT_CREATED",
+    "s1_source_manifest": "NOT_CREATED",
+    "candidate_exposure_status": "NOT_ASSESSED",
+    "candidate_processing": "NOT_STARTED",
+    "claim_universe_lock": "NOT_CREATED",
+    "prediction_lock": "NOT_CREATED",
+    "outcome_collection": "NOT_STARTED",
+    "adjudication": "NOT_STARTED",
+    "scoring": "NOT_STARTED"
+  },
+  "prohibitions": {
+    "merge_authorized": false,
+    "release_authorized": false,
+    "stable_promotion_authorized": false,
+    "candidate_processing_before_pcg01_ready": false
+  }
+}
