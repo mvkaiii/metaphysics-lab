@@ -110,6 +110,29 @@ class VisualizationSvgTests(unittest.TestCase):
             self.assertEqual(allowed.returncode, 0, allowed.stderr)
             self.assertIn("<svg", output_path.read_text(encoding="utf-8"))
 
+    def test_text_output_preflight_prevents_partial_svg_write(self):
+        chart = _chart()
+        with tempfile.TemporaryDirectory() as directory:
+            input_path = Path(directory) / "chart.json"
+            output_path = Path(directory) / "chart.svg"
+            text_output = Path(directory) / "chart.txt"
+            input_path.write_text(json.dumps(chart, ensure_ascii=False), encoding="utf-8")
+            text_output.write_text("sentinel", encoding="utf-8")
+            command = [
+                sys.executable,
+                "tools/render_visualization.py",
+                "--input",
+                str(input_path),
+                "--output",
+                str(output_path),
+                "--text-output",
+                str(text_output),
+            ]
+            refused = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
+            self.assertNotEqual(refused.returncode, 0)
+            self.assertFalse(output_path.exists(), "preflight failure must not leave a partial SVG")
+            self.assertEqual(text_output.read_text(encoding="utf-8"), "sentinel")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -74,6 +74,8 @@ def _ready_chart():
                     },
                     "authority_refs": {
                         "/pillar": ["period-1-derived"],
+                        "/age_start_years": ["period-1-derived"],
+                        "/age_end_years": ["period-1-derived"],
                         "/start_at": ["period-1-derived"],
                         "/end_at": ["period-1-derived"],
                     },
@@ -152,6 +154,26 @@ class VisualizationContractTests(unittest.TestCase):
         chart["authorities"]["period-1-derived"]["classification"] = "verified_event"
         errors = validate_chart(chart)
         self.assertTrue(any("verified_event" in error for error in errors))
+
+    def test_period_semantic_fields_each_require_authority(self):
+        chart = _ready_chart()
+        chart["data"]["periods"][0]["authority_refs"].pop("/age_start_years", None)
+        errors = validate_chart(chart)
+        self.assertTrue(
+            any("age_start_years" in error and "authority" in error for error in errors),
+            errors,
+        )
+
+    def test_non_null_optional_semantic_field_requires_authority(self):
+        chart = _ready_chart()
+        period = chart["data"]["periods"][0]
+        period["ten_god"] = {"label": "正官"}
+        period["optional_reasons"]["ten_god"] = "SOURCE_ENGINE_OUTPUT"
+        errors = validate_chart(chart)
+        self.assertTrue(
+            any("ten_god" in error and "authority" in error for error in errors),
+            errors,
+        )
 
     def test_experimental_badge_cannot_be_dropped(self):
         chart = _ready_chart()
