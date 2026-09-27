@@ -1,0 +1,149 @@
+# v1.8 next candidate verification checklist
+
+狀態：**ENGINEERING CANDIDATE VERIFIED / READY FOR HUMAN REVIEW**  
+Release authority：**NOT GRANTED**  
+Merge authority：**NOT GRANTED**
+
+本文件是 Task 10 的 verification-before-completion 清單。它記錄工程候選的驗證要求與目前證據，不是 Release note、Stable promotion decision、sandbox prediction evidence 或 research qualification PASS。
+
+> Git commit 不能在自身內容中可靠地綁定自己的最終 SHA。本文件因此記錄「建立本清單前最後一個 code-bearing candidate」；本文件提交後的 exact PR HEAD 與 hosted run IDs 以 Draft PR #233 的 current metadata / body 為 authority，並必須 fresh verify。
+
+## Candidate lineage
+
+- Repository：`mvkaiii/metaphysics-lab`
+- Working branch：`local/task0-2-capability-matrix`
+- Base / formal main：`872c60b2e959ea48d25524b74686e488f576ec6f`
+- Last code-bearing candidate before this checklist：`d3201b11c0d6a51834f53f5258f836d3560c51c2`
+- PR：#233（Draft）
+- Candidate User Package content SHA256：`cb175e2d482fe9ca8e2d46d6c55c4b0237f1cbb9a631e0d3c50aef75f8e1e0c4`
+- Candidate package 不是正式 v1.7.1 asset，不得覆寫歷史 Release。
+
+## Scope review
+
+- [x] Capability evidence matrix / source snapshot / evidence index
+- [x] Bazi decadal structural qualification packet
+- [x] Visualization Chart Contract v1
+- [x] Bazi decadal pure projection
+- [x] Deterministic SVG / text renderer and CLI
+- [x] Version-neutral read-only artifact inventory / lifecycle policy
+- [x] v1.7 historical planning archive
+- [x] Prospective pilot protocol / human review form（design only）
+- [x] Windows vendor tree digest portability fix
+- [x] Visualization authority coverage and multi-output preflight hardening
+- [x] JSON Schema / semantic validator structural parity
+- [x] No Case Schema migration
+- [x] No selector / interpretation default promotion
+- [x] No Stable promotion
+- [x] No metaphysics algorithm change
+- [x] No research raw data / real pilot outcomes committed
+
+## Visualization contract review
+
+- [x] Ready / unsupported discriminated status
+- [x] `[start_at,end_at)` visualization interval convention
+- [x] `continuous_years_from_jie_interval` age basis
+- [x] Period semantic fields require `authority_refs`
+- [x] Non-null optional `ten_god / elements` require authority
+- [x] Missing optional source remains `null + machine-readable reason`
+- [x] Blind contamination fails closed
+- [x] Experimental limitation badge cannot be silently removed
+- [x] Renderer does not recalculate Bazi / Ziwei / calendar algorithms
+- [x] SVG rejects script / external href injection
+- [x] CLI refuses existing output without explicit overwrite
+- [x] Multi-output CLI preflights all targets before first write
+- [x] Chart v1 annotations fail closed as empty until a supported producer + renderer exists
+- [x] Chart v1 year overlays fail closed as empty until a supported producer + renderer exists
+- [x] JSON Schema structural definitions cover age basis, time basis, period, authority refs, optional reasons and annotation shape
+- [x] Cross-field / provenance / authority semantics remain Python validator responsibility
+
+## Portability review
+
+- [x] Vendor tree digest ordering uses relative POSIX path strings
+- [x] No casefold
+- [x] Vendor payload bytes are not normalized
+- [x] Existing vendor manifest expected digests unchanged
+- [x] lunar-python and tzdata verified separately
+- [x] Generated distribution carries only the materializer portability delta
+- [x] No vendor / requirements / metaphysics algorithm modification
+
+## Hosted engineering verification
+
+For the last code-bearing candidate `d3201b11c0d6a51834f53f5258f836d3560c51c2`:
+
+- [x] v1.5 Validation run `36303194027` — SUCCESS
+- [x] v1.6 Validation run `36303194023` — SUCCESS
+- [x] v1.7 Validation run `36303194022` — SUCCESS
+- [x] v1.7 Plan 3 Focused run `36303194029` — SUCCESS
+- [x] Full repository regression：1,373 tests PASS in all four hosted workflows
+- [x] Python 3.9 workflow environment
+- [x] release-surface verification PASS
+- [x] deterministic candidate package verification PASS
+- [x] legacy / prospective compatibility PASS
+- [x] private outcome contamination scan PASS where defined by workflow
+- [x] clean tree PASS in hosted workflow
+- [x] hosted artifacts exist and are bound to the exact tested candidate
+
+After this checklist is committed, the documentation-only descendant HEAD must receive its own hosted verification before it can replace the SHA above as the final PR review checkpoint.
+
+## Formal release protection
+
+- [x] Formal `main` remained `872c60b2e959ea48d25524b74686e488f576ec6f` at last fresh check
+- [x] `v1.7.1` tag / Release target remained the same formal SHA
+- [x] Formal v1.7.1 User Package SHA256 remained `771f8493cd07b298c7971f38c601ce17a8acfcce5dab43c72e245f7b282943e8`
+- [x] Historical Release assets were not rebuilt or overwritten
+- [x] Candidate artifact archive digests are not substituted for User Package content digest
+
+## Evidence / research gates still open
+
+### Task 3
+
+Status：`NEEDS_EVIDENCE`
+
+- [ ] Independent sealed oracle / reference comparison for the same Project age / endpoint profile
+- [ ] External astronomical source bytes / version / digest sealed
+- [ ] Case set and tolerance rules preregistered before comparison
+- [ ] Independent implementation role separated from production / expected-output exposure
+- [ ] Human review of resulting reference packet
+
+Task 3 gap does not invalidate Experimental engineering delivery, but it blocks any claim of full independent qualification or maturity promotion.
+
+### Task 9
+
+Protocol：`DRAFT_PENDING_HUMAN_APPROVAL`  
+Pilot：`NOT_STARTED`
+
+- [ ] D01 study owner / roles
+- [ ] D02 lawful data / consent / retention / withdrawal
+- [ ] D03 target population / eligibility / census
+- [ ] D04 claim universe
+- [ ] D05 arms / comparator
+- [ ] D06 time scope
+- [ ] D07 outcome definition
+- [ ] D08 blinding
+- [ ] D09 metrics
+- [ ] D10 sample / stopping
+- [ ] D11 withdrawal / deviation
+- [ ] D12 publication / privacy
+- [ ] Separate explicit human authorization to start the real pilot
+
+No real case, prediction lock, outcome/oracle access or scoring is authorized by this checklist.
+
+## Final gate
+
+Current engineering interpretation:
+
+**READY FOR HUMAN REVIEW**
+
+Not authorized by this status:
+
+- merge to `main`
+- Stable promotion
+- Case migration
+- selector / interpretation default change
+- tag
+- GitHub Release
+- publish
+- historical Release / asset mutation
+- real prospective pilot start
+
+Any new commit after the currently verified candidate invalidates reuse of its exact-SHA hosted evidence for the new HEAD; rerun and record fresh verification.
