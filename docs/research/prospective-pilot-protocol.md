@@ -6,6 +6,8 @@
 **Repository baseline reviewed:** `872c60b2e959ea48d25524b74686e488f576ec6f`
 **No real cases, outcomes, oracle, or scoring were accessed or created for this draft.**
 
+Public decision-receipt validation is available through `tools/validate_prospective_pilot_decision.py` and the committed pending template. This adds no pilot authorization and contains no private case/outcome payload.
+
 This is a governance design, not qualification evidence. It does not authorize data collection, prediction generation, private scoring, branch/PR integration, capability promotion, or a release claim. Keep all real source records, case identifiers, predictions, outcomes, and any re-identifiable digests outside Git.
 
 ## Purpose and unit of analysis

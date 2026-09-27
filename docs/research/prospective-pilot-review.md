@@ -21,6 +21,21 @@
 | D11 Withdrawal/deviation | 不靜默刪除、補答案或重寫失敗 | 退出、遲到、無法判定、缺失、偏離分類、撤回資料與計數可保留範圍 | PENDING |
 | D12 Publication/privacy | 僅核准的去識別化彙總，避免small-cell及hash洩漏 | 公開欄位、抑制規則、披露審查者、審查程序與保存期限 | PENDING |
 
+## Decision receipt工程契約
+
+已新增公開、去識別化 decision receipt template：
+`docs/research/prospective-pilot-decision-receipt.template.json`，以及 validator：
+`tools/validate_prospective_pilot_decision.py`。
+
+此契約只檢查治理完整性，不證明核准人的真實身份或法律權限。D01–D12 即使全部
+`APPROVED`，最多讓 `pilot_status` 進到 `READY_FOR_START_AUTHORIZATION`；仍須另有
+`pilot_start_authorization.authorized=true`，並綁定 exact candidate commit、package、
+manifest、protocol SHA256 與另一次人工授權時間，才會讓 `pilot_start_allowed()`
+回傳 true。現在 committed template 全部維持 `PENDING`，start authorization=false。
+
+公開 receipt 禁止放 case ID、出生資料、prediction lock、outcome、source record 或
+其他 private payload；真實權限／人名／私人資料仍留在核准的私人位置。
+
 ## 待核准的分析界線
 
 主要目的已核准為流程可行性，但表中的具體metric與門檻仍未核准。有效lock須同時滿足時間、source/claim/candidate binding及blindness，不能只以檔案存在算成功。分母須保留所有事前定義的嘗試，並明示失敗、缺失、退出與排除；不同指標可有不同、預先固定的分母，不混用。
