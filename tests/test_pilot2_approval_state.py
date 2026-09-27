@@ -24,13 +24,13 @@ class Pilot2ApprovalStateTests(unittest.TestCase):
         self.pcg = json.loads(PCG_DECISION_PATH.read_text(encoding="utf-8"))
         self.gate = json.loads(GATE_PATH.read_text(encoding="utf-8"))
 
-    def test_d01_to_d12_are_approved_but_start_is_not_authorized(self):
+    def test_d01_to_d12_and_start_are_authorized(self):
         self.assertEqual(validate_decision_receipt(self.receipt), [])
         self.assertEqual(self.receipt["protocol_decision_status"], "ALL_ITEMS_APPROVED")
-        self.assertEqual(self.receipt["pilot_status"], "READY_FOR_START_AUTHORIZATION")
+        self.assertEqual(self.receipt["pilot_status"], "AUTHORIZED_NOT_STARTED")
         self.assertTrue(all(row["status"] == "APPROVED" for row in self.receipt["decisions"]))
-        self.assertFalse(self.receipt["pilot_start_authorization"]["authorized"])
-        self.assertFalse(pilot_start_allowed(self.receipt))
+        self.assertTrue(self.receipt["pilot_start_authorization"]["authorized"])
+        self.assertTrue(pilot_start_allowed(self.receipt))
 
     def test_pcg01_is_mandatory_and_has_no_bypass(self):
         self.assertEqual(self.pcg["pilot_id"], "Pilot-2")
@@ -40,19 +40,37 @@ class Pilot2ApprovalStateTests(unittest.TestCase):
         self.assertFalse(self.pcg["manual_override_allowed"])
         self.assertFalse(self.pcg["start_authorization_effect"])
 
-    def test_public_gate_reflects_approval_but_remains_blocked(self):
+    def test_public_gate_reflects_start_authorization_but_remains_blocked(self):
         self.assertEqual(validate_pilot2_pre_candidate_gate(self.gate), [])
         self.assertTrue(self.gate["prerequisites"]["protocol_decisions_approved"])
-        for key, value in self.gate["prerequisites"].items():
-            if key != "protocol_decisions_approved":
-                self.assertFalse(value, key)
+        self.assertTrue(self.gate["prerequisites"]["start_authorization_bound"])
+        for key in (
+            "source_census_frozen",
+            "intake_registry_valid",
+            "intake_eligible_for_s1",
+            "s1_source_manifest_frozen",
+            "s1_candidate_exposure_unexposed",
+            "s1_manifest_predates_candidate_processing",
+        ):
+            self.assertFalse(self.gate["prerequisites"][key], key)
         self.assertEqual(self.gate["gate_status"], "BLOCKED")
         self.assertFalse(self.gate["candidate_case_processing_allowed"])
         self.assertFalse(candidate_case_processing_allowed(self.gate))
 
-    def test_no_real_start_bindings_exist_yet(self):
-        self.assertFalse(self.gate["prerequisites"]["start_authorization_bound"])
-        self.assertTrue(all(value is None for value in self.gate["public_bindings"].values()))
+    def test_exact_public_start_bindings_exist(self):
+        self.assertTrue(self.gate["prerequisites"]["start_authorization_bound"])
+        bindings = self.gate["public_bindings"]
+        self.assertEqual(
+            bindings["candidate_commit"],
+            "4cf324a851204b2d278dc044acf2b0561304d2b0",
+        )
+        for key in (
+            "package_sha256",
+            "manifest_sha256",
+            "protocol_sha256",
+            "window_policy_digest",
+        ):
+            self.assertRegex(bindings[key], r"^[0-9a-f]{64}$")
 
 
 if __name__ == "__main__":
