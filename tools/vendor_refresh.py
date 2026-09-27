@@ -101,7 +101,11 @@ def _safe_archive_path(name: str) -> PurePosixPath:
 def _tree_sha256(root: Path) -> str:
     root = Path(root)
     digest = hashlib.sha256()
-    files = sorted(path for path in root.rglob("*") if path.is_file() and not path.is_symlink())
+    # Match the runtime's platform-independent relative POSIX string order.
+    files = sorted(
+        (path for path in root.rglob("*") if path.is_file() and not path.is_symlink()),
+        key=lambda path: path.relative_to(root).as_posix(),
+    )
     if not files:
         raise VendorRefreshError("vendored tree is empty: %s" % root)
     for path in files:
