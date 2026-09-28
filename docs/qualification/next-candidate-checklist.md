@@ -220,8 +220,8 @@ Pilot-3 is a new pilot ID/protocol. It exists to resolve the multi-segment yearl
 - [x] Human approval of Pilot-3 D01-D12 at `2026-09-28T13:57:00+08:00`
 - [x] Human approval of AGG-01 at `2026-09-28T13:57:00+08:00`; no start-authorization effect
 - [x] Final seal / separate start authorization at `2026-09-28T14:12:31+08:00`; frozen candidate `4b18d74b3e12ca3a1f0946a708099aaca155fd92`
-- [ ] Private census → intake → S1 source manifest → PCG READY
-- [ ] Fresh Pilot-3 candidate exposure
+- [x] Private census → intake → S1 source manifest → PCG READY at `2026-09-28T16:11:22+08:00`
+- [ ] Fresh Pilot-3 candidate exposure / processing (now permitted by PCG READY, not yet started at checkpoint)
 - [ ] Snapshot manifest → complete EFA census → aggregate claim-universe lock
 - [ ] Segment-aware downstream authority compatibility proven
 - [ ] Prediction lock
