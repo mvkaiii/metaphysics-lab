@@ -203,9 +203,9 @@ Pilot-2 is closed as `HALTED_NON_QUALIFYING`. PCG-01 sequencing succeeded, but t
 
 ### Pilot-3
 
-Protocol decisions：`PENDING_ITEM_APPROVAL`  
-Aggregation decision：`AGG-01 PENDING`  
-Pilot：`NOT_STARTED`
+Protocol decisions：`ALL_ITEMS_APPROVED`  
+Aggregation decision：`AGG-01 APPROVED`  
+Pilot：`READY_FOR_START_AUTHORIZATION`
 
 Pilot-3 is a new pilot ID/protocol. It exists to resolve the multi-segment yearly claim-universe contract before any new candidate case exposure.
 
@@ -217,8 +217,8 @@ Pilot-3 is a new pilot ID/protocol. It exists to resolve the multi-segment yearl
 - [x] Pilot-3 D01-D12 proposed values created
 - [x] Pilot-3 all-PENDING public decision receipt created
 - [x] Proposed new non-overlapping future window recorded
-- [ ] Human approval of Pilot-3 D01-D12
-- [ ] Human approval of AGG-01
+- [x] Human approval of Pilot-3 D01-D12 at `2026-09-28T13:57:00+08:00`
+- [x] Human approval of AGG-01 at `2026-09-28T13:57:00+08:00`; no start-authorization effect
 - [ ] Final seal / separate start authorization
 - [ ] Private census → intake → S1 source manifest → PCG READY
 - [ ] Fresh Pilot-3 candidate exposure
@@ -226,7 +226,7 @@ Pilot-3 is a new pilot ID/protocol. It exists to resolve the multi-segment yearl
 - [ ] Segment-aware downstream authority compatibility proven
 - [ ] Prediction lock
 
-Until D01-D12 and AGG-01 are approved, no real Pilot-3 case processing is authorized.
+D01-D12 and AGG-01 are approved. A separate final seal / start authorization is still required; no real Pilot-3 case processing is authorized yet.
 
 ## Final gate
 

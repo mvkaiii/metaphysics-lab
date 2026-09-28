@@ -1,10 +1,10 @@
 # Pilot-3｜Multi-segment yearly authority / claim-universe preregistration
 
-Status: **PROPOSED_FOR_HUMAN_APPROVAL**  
+Status: **APPROVED_BY_HUMAN_DECISION_OWNER**  
 Pilot ID: **Pilot-3**  
 Aggregation profile: `lin_tianji_multi_segment_yearly_claim_universe_v1`  
 Aggregation rule: `complete_union_of_all_manifested_efa_child_inventories`  
-Candidate case exposure: **PROHIBITED**
+Candidate case exposure: **PROHIBITED UNTIL SEPARATE START AUTHORIZATION + PCG READY**
 
 ## 1. Problem statement
 
@@ -116,4 +116,4 @@ Any unknown or unverifiable prerequisite is a hard stop. There is no manual over
 
 This contract does **not** yet authorize a real Pilot-3 case, a start seal, a prediction lock, single-source arm-freeze reuse, outcome collection, adjudication, scoring, qualification, or Stable promotion.
 
-The next human gate is approval of Pilot-3 D01-D12 plus AGG-01.
+Pilot-3 D01-D12 and AGG-01 were explicitly approved by the human decision owner at `2026-09-28T13:57:00+08:00`. This approval has no start-authorization effect. The next human gate is the separate Pilot-3 final seal / start authorization.
