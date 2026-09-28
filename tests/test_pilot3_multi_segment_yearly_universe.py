@@ -8,7 +8,7 @@ import unittest
 from engine.distribution.event_family_attribution import (
     EVENT_FAMILY_ATTRIBUTION_PROFILE_VERSION,
 )
-from engine.distribution.prospective_yearly_claim_universe import (
+from tools.pilot3_yearly_claim_universe import (
     MULTI_SEGMENT_YEARLY_UNIVERSE_PROFILE,
     MULTI_SEGMENT_YEARLY_UNIVERSE_RULE,
     build_yearly_segment_snapshot_manifest,
