@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0",
   "pilot_id": "Pilot-4",
-  "status": "APPROVED_PENDING_START_AUTHORIZATION",
+  "status": "APPROVED_START_AUTHORIZED",
   "approved_by_role": "human_decision_owner",
   "approved_at": "2026-09-28T21:41:06+08:00",
-  "start_authorized": false,
+  "start_authorized": true,
   "timezone": "Asia/Taipei",
   "outcome_window_start": "2027-05-01T00:00:00+08:00",
   "outcome_window_end": "2027-06-30T23:59:59+08:00",
@@ -22,5 +22,7 @@
   "aggregation_rule": "complete_union_of_all_manifested_efa_child_inventories",
   "window_selection_basis": "NEXT_NON_OVERLAPPING_FUTURE_CALENDAR_WINDOW_ONLY",
   "pilot2_or_pilot3_case_observations_used_for_window_selection": false,
-  "promotion_allowed": false
+  "promotion_allowed": false,
+  "start_authorized_by_role": "human_decision_owner",
+  "start_authorized_at": "2026-09-28T22:02:42+08:00"
 }

@@ -158,3 +158,10 @@ There is no manual override.
 Pilot-4 D01-D12, ENUM-01, AGG-01, and the proposed window were explicitly approved by the human decision owner at `2026-09-28T21:41:06+08:00`.
 
 This approval does **not** authorize Pilot-4 start. The next human gate is the separate final seal / start authorization. No private source census, intake, S1, PCG, real case-specific enumeration, candidate exposure, EFA, claim lock, prediction, or outcome workflow may begin before that separate authorization.
+
+
+## 10. Start authorization checkpoint
+
+A separate Pilot-4 start authorization was explicitly granted by the human decision owner at `2026-09-28T22:02:42+08:00`.
+
+This does not permit candidate case processing by itself. Private source census, intake and S1 preparation may proceed; real case-specific enumeration and candidate processing remain prohibited until the Pilot-4 pre-candidate gate is READY.

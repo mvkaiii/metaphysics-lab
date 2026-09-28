@@ -255,7 +255,7 @@ Any new commit after the currently verified candidate invalidates reuse of its e
 Protocol decisions：`ALL_ITEMS_APPROVED`  
 Enumeration decision：`ENUM-01 APPROVED`  
 Aggregation decision：`AGG-01 APPROVED`  
-Pilot：`READY_FOR_START_AUTHORIZATION`
+Pilot：`AUTHORIZED_NOT_STARTED`
 
 Pilot-4 is a new pilot/protocol version created after Pilot-3 halted at the structural-snapshot-manifest gate. It does not resume or repair Pilot-3.
 
@@ -273,7 +273,7 @@ Pilot-4 is a new pilot/protocol version created after Pilot-3 halted at the stru
 - [x] Human approval of Pilot-4 D01–D12 at `2026-09-28T21:41:06+08:00`
 - [x] Human approval of ENUM-01 at `2026-09-28T21:41:06+08:00`
 - [x] Human approval of AGG-01 at `2026-09-28T21:41:06+08:00`
-- [ ] Separate Pilot-4 final seal / start authorization
+- [x] Separate Pilot-4 final seal / start authorization at `2026-09-28T22:02:42+08:00`; frozen candidate `f94318651d065a3e677993fb6044518e31c7754c`
 - [ ] Private source census → intake → S1 → PCG READY
 - [ ] Fresh Pilot-4 candidate exposure
 - [ ] Deterministic segment enumeration → exact snapshot manifest → complete EFA census
@@ -281,4 +281,4 @@ Pilot-4 is a new pilot/protocol version created after Pilot-3 halted at the stru
 - [ ] Segment-aware downstream authority compatibility
 - [ ] Prediction lock
 
-Pilot-4 D01–D12, ENUM-01 and AGG-01 are approved. No real Pilot-4 case material may be processed until the separate final seal / start authorization is complete; after start, the source-census → intake → S1 → PCG sequence still remains mandatory.
+Pilot-4 D01–D12, ENUM-01, AGG-01 and separate start authorization are complete. Private source-census → intake → S1 preparation may proceed in order. Candidate case exposure/processing remains prohibited until PCG READY.

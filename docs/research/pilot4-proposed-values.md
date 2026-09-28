@@ -1,6 +1,6 @@
 # Pilot-4 proposed values
 
-Status: **APPROVED_BY_HUMAN_DECISION_OWNER / READY_FOR_START_AUTHORIZATION**  
+Status: **START_AUTHORIZED / CANDIDATE PROCESSING GATED**  
 Preregistered at: `2026-09-28T20:07:32+08:00`  
 Approved at: `2026-09-28T21:41:06+08:00`
 
@@ -13,7 +13,7 @@ Pilot-4 is a new protocol. No Pilot-1/2/3 approval or exposure state is inherite
 - AGG-01: mandatory complete-union yearly claim-universe aggregation; `APPROVED`.
 - Manual override: prohibited.
 - Promotion effect: none.
-- Separate start authorization: required after all mandatory decisions are approved.
+- Separate start authorization: **AUTHORIZED at `2026-09-28T22:02:42+08:00`**; candidate processing still requires PCG READY.
 
 ## Proposed window
 
@@ -55,8 +55,8 @@ This is a fresh Pilot-4 approval item. It is not inherited from Pilot-3. It was 
 
 ## Hard boundary
 
-D01-D12, ENUM-01, AGG-01, and the window are approved. This approval moves Pilot-4 only to `READY_FOR_START_AUTHORIZATION`.
+D01-D12, ENUM-01, AGG-01, the window, and the separate start authorization are complete.
 
-A separate final seal/start authorization must bind the exact candidate commit, candidate package SHA256, capability manifest SHA256, final Pilot-4 protocol SHA256, approved window-policy SHA256, ENUM-01 identity, AGG-01 identity, and the approved private storage/access record.
+The start seal binds the exact candidate commit, candidate package SHA256, capability manifest SHA256, final Pilot-4 protocol SHA256, approved/start-bound window-policy SHA256, ENUM-01 identity, AGG-01 identity, and the approved private storage/access record.
 
-Until that separate authorization exists, source census, intake, S1, PCG, case exposure, case-specific enumeration, EFA, claim locking, prediction, outcome collection, adjudication, merge, tag, Release, or publish remain unauthorized.
+Private source census, intake and S1 preparation may now proceed in order. Candidate exposure/processing remains unauthorized until the Pilot-4 PCG validates READY. Merge, tag, Release, Stable promotion and publish remain unauthorized.

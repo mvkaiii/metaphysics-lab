@@ -1,11 +1,11 @@
-# Prospective Pilot-4 protocol — human-approved decisions pending start seal
+# Prospective Pilot-4 protocol — start authorized, candidate processing gated
 
 **Protocol decision status:** `ALL_ITEMS_APPROVED`  
 **Enumeration decision:** `ENUM-01 APPROVED`  
 **Aggregation decision:** `AGG-01 APPROVED`  
-**Pilot status:** `READY_FOR_START_AUTHORIZATION`  
-**Start authorization:** `NOT_AUTHORIZED`  
-**Candidate case exposure:** `PROHIBITED`
+**Pilot status:** `AUTHORIZED_NOT_STARTED`  
+**Start authorization:** `AUTHORIZED`  
+**Candidate case processing:** `PROHIBITED_UNTIL_PCG_READY`
 
 Pilot-4 is a new pilot ID/protocol version. It does not inherit Pilot-1, Pilot-2, or Pilot-3 approval, start authorization, case identity, exposure state, snapshot manifest, EFA census, claim lock, prediction state, or qualification state.
 
@@ -93,8 +93,10 @@ Pilot-1/2/3 may establish process-defect classes. Their exposed case identities,
 
 The enumeration rule was preregistered in public Git before any Pilot-4 case exposure.
 
-The human decision owner explicitly approved Pilot-4 D01-D12, ENUM-01, AGG-01, and the proposed window at `2026-09-28T21:41:06+08:00`. Pilot-4 is now `READY_FOR_START_AUTHORIZATION`.
+The human decision owner explicitly approved Pilot-4 D01-D12, ENUM-01, AGG-01, and the proposed window at `2026-09-28T21:41:06+08:00`. A separate explicit Pilot-4 start authorization was granted at `2026-09-28T22:02:42+08:00`. Pilot-4 is now `AUTHORIZED_NOT_STARTED`.
 
-This approval is not start authorization. Until a separate final seal / start authorization exists, no private Pilot-4 source census, intake, S1 source manifest, PCG receipt, real case-specific enumeration, candidate processing, EFA materialization, claim lock, prediction lock, outcome collection, adjudication, or scoring is authorized.
+The start authorization opens only the private source-census → intake → S1 → PCG preparation chain. Candidate case processing remains prohibited until every Pilot-4 PCG prerequisite is true and the public de-identified gate validates `READY`.
 
-No merge, tag, Release, Stable promotion, or publication authority is created by these approvals.
+Real case-specific structural-snapshot enumeration, EFA materialization, claim-universe locking, downstream compatibility, and prediction locking remain downstream of PCG READY and their declared gates.
+
+No merge, tag, Release, Stable promotion, or publication authority is created by Pilot-4 start authorization.
