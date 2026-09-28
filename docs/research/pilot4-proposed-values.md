@@ -1,15 +1,16 @@
 # Pilot-4 proposed values
 
-Status: **PREREGISTERED / PENDING HUMAN APPROVAL**  
-Preregistered at: `2026-09-28T20:07:32+08:00`
+Status: **APPROVED_BY_HUMAN_DECISION_OWNER / READY_FOR_START_AUTHORIZATION**  
+Preregistered at: `2026-09-28T20:07:32+08:00`  
+Approved at: `2026-09-28T21:41:06+08:00`
 
 Pilot-4 is a new protocol. No Pilot-1/2/3 approval or exposure state is inherited.
 
 ## Proposed governance values
 
-- D01–D12: fresh Pilot-4 decisions, all currently `PENDING`.
-- ENUM-01: mandatory complete window→structural-snapshot enumeration; `PENDING_HUMAN_APPROVAL`.
-- AGG-01: mandatory complete-union yearly claim-universe aggregation; `PENDING_HUMAN_APPROVAL`.
+- D01–D12: fresh Pilot-4 decisions, all `APPROVED`.
+- ENUM-01: mandatory complete window→structural-snapshot enumeration; `APPROVED`.
+- AGG-01: mandatory complete-union yearly claim-universe aggregation; `APPROVED`.
 - Manual override: prohibited.
 - Promotion effect: none.
 - Separate start authorization: required after all mandatory decisions are approved.
@@ -50,8 +51,12 @@ Rule:
 
 `complete_union_of_all_manifested_efa_child_inventories`
 
-This is a fresh Pilot-4 approval item. It is not inherited from Pilot-3.
+This is a fresh Pilot-4 approval item. It is not inherited from Pilot-3. It was approved at `2026-09-28T21:41:06+08:00`.
 
 ## Hard boundary
 
-This preregistration does not authorize source census, intake, S1, PCG, case exposure, snapshot materialization, EFA, claim locking, prediction, outcome collection, adjudication, merge, tag, Release, or publish.
+D01-D12, ENUM-01, AGG-01, and the window are approved. This approval moves Pilot-4 only to `READY_FOR_START_AUTHORIZATION`.
+
+A separate final seal/start authorization must bind the exact candidate commit, candidate package SHA256, capability manifest SHA256, final Pilot-4 protocol SHA256, approved window-policy SHA256, ENUM-01 identity, AGG-01 identity, and the approved private storage/access record.
+
+Until that separate authorization exists, source census, intake, S1, PCG, case exposure, case-specific enumeration, EFA, claim locking, prediction, outcome collection, adjudication, merge, tag, Release, or publish remain unauthorized.

@@ -252,10 +252,10 @@ Any new commit after the currently verified candidate invalidates reuse of its e
 
 ### Pilot-4
 
-Protocol decisions：`PENDING_ITEM_APPROVAL`  
-Enumeration decision：`ENUM-01 PENDING`  
-Aggregation decision：`AGG-01 PENDING`  
-Pilot：`NOT_STARTED`
+Protocol decisions：`ALL_ITEMS_APPROVED`  
+Enumeration decision：`ENUM-01 APPROVED`  
+Aggregation decision：`AGG-01 APPROVED`  
+Pilot：`READY_FOR_START_AUTHORIZATION`
 
 Pilot-4 is a new pilot/protocol version created after Pilot-3 halted at the structural-snapshot-manifest gate. It does not resume or repair Pilot-3.
 
@@ -270,9 +270,9 @@ Pilot-4 is a new pilot/protocol version created after Pilot-3 halted at the stru
 - [x] Fresh Pilot-4 ENUM-01 decision created PENDING human approval
 - [x] Fresh Pilot-4 AGG-01 decision created PENDING human approval; Pilot-3 approval not inherited
 - [x] Proposed non-overlapping window: `2027-05-01T00:00:00+08:00` → `2027-06-30T23:59:59+08:00`
-- [ ] Human approval of Pilot-4 D01–D12
-- [ ] Human approval of ENUM-01
-- [ ] Human approval of AGG-01
+- [x] Human approval of Pilot-4 D01–D12 at `2026-09-28T21:41:06+08:00`
+- [x] Human approval of ENUM-01 at `2026-09-28T21:41:06+08:00`
+- [x] Human approval of AGG-01 at `2026-09-28T21:41:06+08:00`
 - [ ] Separate Pilot-4 final seal / start authorization
 - [ ] Private source census → intake → S1 → PCG READY
 - [ ] Fresh Pilot-4 candidate exposure
@@ -281,4 +281,4 @@ Pilot-4 is a new pilot/protocol version created after Pilot-3 halted at the stru
 - [ ] Segment-aware downstream authority compatibility
 - [ ] Prediction lock
 
-No real Pilot-4 case material may be processed until the fresh human decision gates and separate start authorization are complete.
+Pilot-4 D01–D12, ENUM-01 and AGG-01 are approved. No real Pilot-4 case material may be processed until the separate final seal / start authorization is complete; after start, the source-census → intake → S1 → PCG sequence still remains mandatory.

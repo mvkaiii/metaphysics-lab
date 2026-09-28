@@ -1,9 +1,9 @@
-# Prospective Pilot-4 protocol — enumeration preregistered, human decisions pending
+# Prospective Pilot-4 protocol — human-approved decisions pending start seal
 
-**Protocol decision status:** `PENDING_ITEM_APPROVAL`  
-**Enumeration decision:** `ENUM-01 PENDING`  
-**Aggregation decision:** `AGG-01 PENDING`  
-**Pilot status:** `NOT_STARTED`  
+**Protocol decision status:** `ALL_ITEMS_APPROVED`  
+**Enumeration decision:** `ENUM-01 APPROVED`  
+**Aggregation decision:** `AGG-01 APPROVED`  
+**Pilot status:** `READY_FOR_START_AUTHORIZATION`  
 **Start authorization:** `NOT_AUTHORIZED`  
 **Candidate case exposure:** `PROHIBITED`
 
@@ -43,11 +43,11 @@ Any failed gate halts Pilot-4. No replacement case is allowed under the same pro
 
 ## ENUM-01
 
-Proposed profile:
+Approved profile:
 
 `lin_tianji_complete_structural_snapshot_enumerator_v1`
 
-Proposed rule:
+Approved rule:
 
 `complete_union_of_authoritative_yearly_monthly_time_boundaries_no_post_exposure_merge`
 
@@ -55,11 +55,11 @@ Normative preregistration:
 
 `docs/research/pilot4-structural-snapshot-enumeration-preregistration.md`
 
-ENUM-01 is mandatory, has no manual override, and must be approved before start authorization. Its actual case-specific enumeration is prohibited before PCG READY.
+ENUM-01 was explicitly approved by the human decision owner at `2026-09-28T21:41:06+08:00`. It is mandatory, has no manual override, and has no start-authorization effect. Actual case-specific enumeration remains prohibited before separate start authorization and PCG READY.
 
 ## AGG-01
 
-Pilot-4 separately proposes:
+Pilot-4 separately approves:
 
 `complete_union_of_all_manifested_efa_child_inventories`
 
@@ -67,19 +67,19 @@ Profile:
 
 `lin_tianji_multi_segment_yearly_claim_universe_v1`
 
-This is a fresh Pilot-4 decision. Pilot-3's prior approval is not inherited.
+This is a fresh Pilot-4 decision. Pilot-3's prior approval is not inherited. AGG-01 was explicitly approved by the human decision owner at `2026-09-28T21:41:06+08:00`; it has no start-authorization effect.
 
-## Proposed time scope
+## Approved time scope
 
 Timezone: `Asia/Taipei`.
 
-Proposed new outcome window:
+Approved outcome window:
 
 `2027-05-01T00:00:00+08:00` → `2027-06-30T23:59:59+08:00`
 
 Maturity delay: 72 hours.
 
-The proposal is the next non-overlapping future calendar-aligned same-year multi-month window after the closed Pilot-3 window. It is not selected from metaphysical output, snapshot counts, claim counts, or outcome information.
+The approved window is the next non-overlapping future calendar-aligned same-year multi-month window after the closed Pilot-3 window. It was not selected from metaphysical output, snapshot counts, claim counts, or outcome information.
 
 Window claim scope remains `yearly`; timing scope remains `monthly`.
 
@@ -91,8 +91,10 @@ Pilot-1/2/3 may establish process-defect classes. Their exposed case identities,
 
 ## Current gate
 
-The enumeration rule is preregistered in public Git before any Pilot-4 case exposure.
+The enumeration rule was preregistered in public Git before any Pilot-4 case exposure.
 
-D01-D12, ENUM-01, AGG-01, the proposed window, and a separate start authorization still require explicit human decisions. Until those gates are complete, no private Pilot-4 census/intake/S1 work or real candidate processing is authorized.
+The human decision owner explicitly approved Pilot-4 D01-D12, ENUM-01, AGG-01, and the proposed window at `2026-09-28T21:41:06+08:00`. Pilot-4 is now `READY_FOR_START_AUTHORIZATION`.
 
-No merge, tag, Release, Stable promotion, or publication authority is created by this preregistration.
+This approval is not start authorization. Until a separate final seal / start authorization exists, no private Pilot-4 source census, intake, S1 source manifest, PCG receipt, real case-specific enumeration, candidate processing, EFA materialization, claim lock, prediction lock, outcome collection, adjudication, or scoring is authorized.
+
+No merge, tag, Release, Stable promotion, or publication authority is created by these approvals.

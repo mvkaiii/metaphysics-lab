@@ -1,11 +1,11 @@
 # Pilot-4｜Complete window → structural snapshot enumeration preregistration
 
-Status: **PREREGISTERED_PENDING_HUMAN_APPROVAL**  
+Status: **APPROVED_BY_HUMAN_DECISION_OWNER**  
 Pilot ID: **Pilot-4**  
 Preregistered at: `2026-09-28T20:07:32+08:00`  
 Enumeration profile: `lin_tianji_complete_structural_snapshot_enumerator_v1`  
 Enumeration rule: `complete_union_of_authoritative_yearly_monthly_time_boundaries_no_post_exposure_merge`  
-Candidate case exposure: **PROHIBITED**
+Candidate case exposure: **PROHIBITED UNTIL SEPARATE START AUTHORIZATION + PCG READY**
 
 ## 1. Why Pilot-4 exists
 
@@ -119,7 +119,7 @@ Pilot-4 proposes to reuse the same general complete-census aggregation semantics
 
 `complete_union_of_all_manifested_efa_child_inventories`
 
-This is a **fresh Pilot-4 AGG-01 decision** and is not inherited as approved from Pilot-3.
+This is a **fresh Pilot-4 AGG-01 decision** and is not inherited as approved from Pilot-3. Pilot-4 ENUM-01 and AGG-01 were explicitly approved by the human decision owner at `2026-09-28T21:41:06+08:00`.
 
 Enumeration decides **which segments exist**. AGG-01 decides **how complete EFA membership across those segments is combined**. Neither rule may use EFA child counts/content to modify the other.
 
@@ -151,3 +151,10 @@ Execution stops if:
 - any EFA/claim/outcome observation is used to alter the snapshot census.
 
 There is no manual override.
+
+
+## 9. Human approval checkpoint
+
+Pilot-4 D01-D12, ENUM-01, AGG-01, and the proposed window were explicitly approved by the human decision owner at `2026-09-28T21:41:06+08:00`.
+
+This approval does **not** authorize Pilot-4 start. The next human gate is the separate final seal / start authorization. No private source census, intake, S1, PCG, real case-specific enumeration, candidate exposure, EFA, claim lock, prediction, or outcome workflow may begin before that separate authorization.
