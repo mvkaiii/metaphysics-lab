@@ -1,14 +1,14 @@
-# Prospective Pilot-3 protocol — human-approved decisions pending start seal
+# Prospective Pilot-3 protocol — start authorized, candidate processing gated
 
 **Protocol decision status:** `ALL_ITEMS_APPROVED`  
 **Aggregation decision:** `AGG-01 APPROVED`  
-**Pilot status:** `READY_FOR_START_AUTHORIZATION`  
-**Start authorization:** `NOT_AUTHORIZED`  
-**Candidate case processing:** `PROHIBITED`
+**Pilot status:** `AUTHORIZED_NOT_STARTED`  
+**Start authorization:** `AUTHORIZED`  
+**Candidate case processing:** `PROHIBITED_UNTIL_PCG_READY`
 
 Pilot-3 is a new pilot ID and protocol version. It does not inherit Pilot-1 or Pilot-2 approval, start authorization, case identity, exposure state, claim-universe lock, prediction state, or qualification state.
 
-The human decision owner explicitly approved Pilot-3 D01-D12 and AGG-01 at `2026-09-28T13:57:00+08:00`. This approval does **not** authorize Pilot-3 start.
+The human decision owner explicitly approved Pilot-3 D01-D12 and AGG-01 at `2026-09-28T13:57:00+08:00`. A separate explicit Pilot-3 start authorization was granted at `2026-09-28T14:12:31+08:00`. The start authorization does not authorize candidate case processing before PCG READY.
 
 ## Purpose
 
@@ -87,8 +87,10 @@ Public Git may contain only protocol/governance text, empty/de-identified templa
 
 ## Current gate
 
-Pilot-3 D01-D12 and AGG-01 are approved, but Pilot-3 is **not started**.
+Pilot-3 D01-D12, AGG-01, and the separate start authorization are complete. Pilot-3 is `AUTHORIZED_NOT_STARTED`.
 
-A separate final seal / start authorization is still required. Until that authorization exists, no private Pilot-3 source census, intake, S1 source manifest, PCG receipt, candidate processing, snapshot manifest, claim-universe lock, prediction lock, outcome collection, adjudication, or scoring is authorized.
+The human decision owner confirmed the approved private storage/access record at start authorization. Public details and private digests remain withheld under D12.
 
-The next human gate is the separate Pilot-3 final seal / start authorization.
+The private source census may now be frozen and the intake/S1 chain may be built. Candidate case processing remains prohibited until every PCG prerequisite is true and the public de-identified Pilot-3 pre-candidate gate validates `READY`. Snapshot-manifest creation, EFA materialization, aggregate claim-universe locking, prediction locking, outcome collection, adjudication, and scoring remain downstream of their declared gates.
+
+No merge, tag, Release, Stable promotion, or publication authority is created by Pilot-3 start authorization.

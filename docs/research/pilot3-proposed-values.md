@@ -1,12 +1,12 @@
 # Prospective Pilot-3 approved values
 
-Status: **APPROVED_BY_HUMAN_DECISION_OWNER**  
+Status: **START_AUTHORIZED**  
 Protocol decisions: `ALL_ITEMS_APPROVED`  
 Aggregation decision: `AGG-01 APPROVED`  
-Pilot: `READY_FOR_START_AUTHORIZATION`  
-Start authorization: `NOT_AUTHORIZED`
+Pilot: `AUTHORIZED_NOT_STARTED`  
+Start authorization: `AUTHORIZED`
 
-The human decision owner explicitly approved Pilot-3 D01-D12 and AGG-01 at `2026-09-28T13:57:00+08:00`. Nothing is inherited as an approval from Pilot-1 or Pilot-2, and this approval does not authorize Pilot-3 start.
+The human decision owner explicitly approved Pilot-3 D01-D12 and AGG-01 at `2026-09-28T13:57:00+08:00`, then separately authorized Pilot-3 start at `2026-09-28T14:12:31+08:00`. Nothing is inherited from Pilot-1 or Pilot-2. Start authorization opens only the source-census/intake/S1/PCG preparation sequence; candidate case processing remains blocked until PCG READY.
 
 ## Approved D01-D12
 
@@ -46,8 +46,8 @@ Normative specification:
 
 ## Approval boundary
 
-D01-D12 and AGG-01 approval moves Pilot-3 only to `READY_FOR_START_AUTHORIZATION`.
+D01-D12 and AGG-01 approval first moved Pilot-3 to `READY_FOR_START_AUTHORIZATION`. The separate start authorization is now complete and is recorded by `docs/research/pilot3-start-seal.v1.json`.
 
-A separate final seal/start authorization must later bind exact candidate commit, candidate package SHA256, capability manifest SHA256, final Pilot-3 protocol SHA256, window-policy SHA256, aggregation profile/rule identity, and the approved private storage/access record.
+The start seal binds the exact candidate commit, candidate package SHA256, capability manifest SHA256, final Pilot-3 protocol SHA256, approved window-policy SHA256, AGG-01 decision/profile/rule identity, and a D12-safe public statement that the private storage/access record was verified by the human decision owner.
 
-Until that separate authorization exists, no real Pilot-3 case may enter source census, intake, S1, PCG, candidate processing, claim lock, prediction lock, outcome collection, adjudication, or scoring.
+Source census, intake and S1 preparation may now proceed. Candidate processing remains prohibited until the Pilot-3 pre-candidate gate validates `READY`.

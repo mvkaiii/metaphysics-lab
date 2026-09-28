@@ -205,7 +205,7 @@ Pilot-2 is closed as `HALTED_NON_QUALIFYING`. PCG-01 sequencing succeeded, but t
 
 Protocol decisions：`ALL_ITEMS_APPROVED`  
 Aggregation decision：`AGG-01 APPROVED`  
-Pilot：`READY_FOR_START_AUTHORIZATION`
+Pilot：`AUTHORIZED_NOT_STARTED`
 
 Pilot-3 is a new pilot ID/protocol. It exists to resolve the multi-segment yearly claim-universe contract before any new candidate case exposure.
 
@@ -219,14 +219,14 @@ Pilot-3 is a new pilot ID/protocol. It exists to resolve the multi-segment yearl
 - [x] Proposed new non-overlapping future window recorded
 - [x] Human approval of Pilot-3 D01-D12 at `2026-09-28T13:57:00+08:00`
 - [x] Human approval of AGG-01 at `2026-09-28T13:57:00+08:00`; no start-authorization effect
-- [ ] Final seal / separate start authorization
+- [x] Final seal / separate start authorization at `2026-09-28T14:12:31+08:00`; frozen candidate `4b18d74b3e12ca3a1f0946a708099aaca155fd92`
 - [ ] Private census → intake → S1 source manifest → PCG READY
 - [ ] Fresh Pilot-3 candidate exposure
 - [ ] Snapshot manifest → complete EFA census → aggregate claim-universe lock
 - [ ] Segment-aware downstream authority compatibility proven
 - [ ] Prediction lock
 
-D01-D12 and AGG-01 are approved. A separate final seal / start authorization is still required; no real Pilot-3 case processing is authorized yet.
+D01-D12, AGG-01 and the separate start authorization are complete. Private source-census/intake/S1 preparation may proceed, but candidate case processing remains prohibited until Pilot-3 PCG validates READY.
 
 ## Final gate
 

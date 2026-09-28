@@ -24,13 +24,13 @@ class Pilot3ApprovalStateTests(unittest.TestCase):
         self.agg = json.loads(AGG_PATH.read_text(encoding="utf-8"))
         self.window = json.loads(WINDOW_PATH.read_text(encoding="utf-8"))
 
-    def test_d01_to_d12_are_approved_but_start_is_not_authorized(self):
+    def test_d01_to_d12_and_start_are_authorized(self):
         self.assertEqual(validate_decision_receipt(self.receipt), [])
         self.assertEqual(self.receipt["protocol_decision_status"], "ALL_ITEMS_APPROVED")
-        self.assertEqual(self.receipt["pilot_status"], "READY_FOR_START_AUTHORIZATION")
+        self.assertEqual(self.receipt["pilot_status"], "AUTHORIZED_NOT_STARTED")
         self.assertTrue(all(row["status"] == "APPROVED" for row in self.receipt["decisions"]))
-        self.assertFalse(self.receipt["pilot_start_authorization"]["authorized"])
-        self.assertFalse(pilot_start_allowed(self.receipt))
+        self.assertTrue(self.receipt["pilot_start_authorization"]["authorized"])
+        self.assertTrue(pilot_start_allowed(self.receipt))
 
     def test_agg01_is_approved_mandatory_and_has_no_start_effect(self):
         self.assertEqual(self.agg["pilot_id"], "Pilot-3")
@@ -51,12 +51,10 @@ class Pilot3ApprovalStateTests(unittest.TestCase):
             self.agg["pilot2_claim_set_observations_used_for_rule_selection"]
         )
 
-    def test_window_is_approved_but_not_started(self):
+    def test_window_is_approved_and_start_bound_without_promotion(self):
         self.assertEqual(self.window["pilot_id"], "Pilot-3")
-        self.assertEqual(
-            self.window["status"],
-            "APPROVED_PENDING_START_AUTHORIZATION",
-        )
+        self.assertEqual(self.window["status"], "APPROVED_START_AUTHORIZED")
+        self.assertTrue(self.window["start_authorized"])
         self.assertEqual(self.window["timezone"], "Asia/Taipei")
         self.assertEqual(
             self.window["outcome_window_start"],
@@ -74,17 +72,22 @@ class Pilot3ApprovalStateTests(unittest.TestCase):
             self.window["aggregation_rule"],
             MULTI_SEGMENT_YEARLY_UNIVERSE_RULE,
         )
-        self.assertFalse(self.window["start_authorized"])
         self.assertFalse(self.window["promotion_allowed"])
 
-    def test_approval_timestamp_is_consistent(self):
-        expected = "2026-09-28T13:57:00+08:00"
+    def test_approval_and_start_timestamps_are_separate(self):
+        approval = "2026-09-28T13:57:00+08:00"
+        start = "2026-09-28T14:12:31+08:00"
         self.assertEqual(
             {row["approved_at"] for row in self.receipt["decisions"]},
-            {expected},
+            {approval},
         )
-        self.assertEqual(self.agg["approved_at"], expected)
-        self.assertEqual(self.window["approved_at"], expected)
+        self.assertEqual(self.agg["approved_at"], approval)
+        self.assertEqual(self.window["approved_at"], approval)
+        self.assertEqual(
+            self.receipt["pilot_start_authorization"]["authorized_at"],
+            start,
+        )
+        self.assertEqual(self.window["start_authorized_at"], start)
 
 
 if __name__ == "__main__":
