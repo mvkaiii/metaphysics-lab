@@ -199,7 +199,34 @@ case identity, or exposure status.
 - [x] No outcome/adjudication/scoring evidence created
 - [ ] Any retry requires a new pilot ID/protocol version with claim-universe reference/aggregation semantics preregistered before candidate processing
 
-D01-D12, PCG-01, and Pilot-2 start authorization are approved. Private source census/intake/S1 may now be built in order. **Do not execute the candidate on a real Pilot-2 case** until PCG-01 is READY.
+Pilot-2 is closed as `HALTED_NON_QUALIFYING`. PCG-01 sequencing succeeded, but the pilot stopped at `CLAIM_UNIVERSE_LOCK` because the frozen protocol had no preregistered deterministic rule for a yearly claim universe spanning multiple structural snapshots. Pilot-2 may not resume and may not receive a replacement case.
+
+### Pilot-3
+
+Protocol decisions：`PENDING_ITEM_APPROVAL`  
+Aggregation decision：`AGG-01 PENDING`  
+Pilot：`NOT_STARTED`
+
+Pilot-3 is a new pilot ID/protocol. It exists to resolve the multi-segment yearly claim-universe contract before any new candidate case exposure.
+
+- [x] Current prospective-window / EFA / C2 / S1 exact-match contracts audited
+- [x] Prior single-source window-scope / arm-freeze research boundary audited read-only
+- [x] Deterministic alternatives compared without using Pilot-2 observed claim-set cardinalities or contents for rule selection
+- [x] Proposed AGG-01 preregistered as complete set union across every manifested complete yearly EFA inventory
+- [x] Synthetic TDD contract added for exact snapshot census, digest validation, union determinism and S1 exact match
+- [x] Pilot-3 D01-D12 proposed values created
+- [x] Pilot-3 all-PENDING public decision receipt created
+- [x] Proposed new non-overlapping future window recorded
+- [ ] Human approval of Pilot-3 D01-D12
+- [ ] Human approval of AGG-01
+- [ ] Final seal / separate start authorization
+- [ ] Private census → intake → S1 source manifest → PCG READY
+- [ ] Fresh Pilot-3 candidate exposure
+- [ ] Snapshot manifest → complete EFA census → aggregate claim-universe lock
+- [ ] Segment-aware downstream authority compatibility proven
+- [ ] Prediction lock
+
+Until D01-D12 and AGG-01 are approved, no real Pilot-3 case processing is authorized.
 
 ## Final gate
 
