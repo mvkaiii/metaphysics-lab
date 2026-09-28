@@ -205,7 +205,7 @@ Pilot-2 is closed as `HALTED_NON_QUALIFYING`. PCG-01 sequencing succeeded, but t
 
 Protocol decisions：`ALL_ITEMS_APPROVED`  
 Aggregation decision：`AGG-01 APPROVED`  
-Pilot：`AUTHORIZED_NOT_STARTED`
+Pilot：`HALTED_NON_QUALIFYING`
 
 Pilot-3 is a new pilot ID/protocol. It exists to resolve the multi-segment yearly claim-universe contract before any new candidate case exposure.
 
@@ -221,12 +221,13 @@ Pilot-3 is a new pilot ID/protocol. It exists to resolve the multi-segment yearl
 - [x] Human approval of AGG-01 at `2026-09-28T13:57:00+08:00`; no start-authorization effect
 - [x] Final seal / separate start authorization at `2026-09-28T14:12:31+08:00`; frozen candidate `4b18d74b3e12ca3a1f0946a708099aaca155fd92`
 - [x] Private census → intake → S1 source manifest → PCG READY at `2026-09-28T16:11:22+08:00`
-- [ ] Fresh Pilot-3 candidate exposure / processing (now permitted by PCG READY, not yet started at checkpoint)
-- [ ] Snapshot manifest → complete EFA census → aggregate claim-universe lock
-- [ ] Segment-aware downstream authority compatibility proven
-- [ ] Prediction lock
+- [x] Pilot-3 halted at `STRUCTURAL_SNAPSHOT_MANIFEST` with `STRUCTURAL_SNAPSHOT_SEGMENTATION_RULE_UNRESOLVED`; no retrospective segmentation rule invented after exposure
+- [x] Fresh Pilot-3 candidate processing began only after PCG READY; frozen runtime candidate used
+- [ ] Snapshot manifest → complete EFA census → aggregate claim-universe lock — **HALTED before manifest**: no preregistered deterministic complete window→snapshot enumerator
+- [ ] Segment-aware downstream authority compatibility proven — not reached
+- [ ] Prediction lock — not created
 
-D01-D12, AGG-01 and the separate start authorization are complete. Private source-census/intake/S1 preparation may proceed, but candidate case processing remains prohibited until Pilot-3 PCG validates READY.
+D01-D12, AGG-01, separate start authorization, private census/intake/S1, and PCG READY all completed in sequence. Candidate processing then began with the frozen runtime candidate. Pilot-3 halted fail-closed at `STRUCTURAL_SNAPSHOT_MANIFEST`: the approved contracts define yearly claim authority, monthly timing, and the manifest schema, but do not preregister a deterministic complete window-to-structural-snapshot enumeration rule. No snapshot manifest, EFA census, claim-universe lock, prediction lock, outcome collection, adjudication, or scoring was created.
 
 ## Final gate
 
