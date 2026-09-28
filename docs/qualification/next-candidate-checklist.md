@@ -274,8 +274,8 @@ Pilot-4 is a new pilot/protocol version created after Pilot-3 halted at the stru
 - [x] Human approval of ENUM-01 at `2026-09-28T21:41:06+08:00`
 - [x] Human approval of AGG-01 at `2026-09-28T21:41:06+08:00`
 - [x] Separate Pilot-4 final seal / start authorization at `2026-09-28T22:02:42+08:00`; frozen candidate `f94318651d065a3e677993fb6044518e31c7754c`
-- [ ] Private source census → intake → S1 → PCG READY
-- [ ] Fresh Pilot-4 candidate exposure
+- [x] Private source census → intake → S1 → PCG READY at `2026-09-28T22:20:22+08:00`
+- [ ] Fresh Pilot-4 candidate exposure / processing (now permitted by PCG READY, not yet started at checkpoint)
 - [ ] Deterministic segment enumeration → exact snapshot manifest → complete EFA census
 - [ ] Complete-union claim-universe lock → exact S1 membership
 - [ ] Segment-aware downstream authority compatibility
