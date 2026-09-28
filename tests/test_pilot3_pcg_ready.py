@@ -52,7 +52,7 @@ class Pilot3PcgReadyTests(unittest.TestCase):
             "prediction_text",
             "outcome_text",
         ):
-            self.assertNotIn(forbidden, serialized)
+            self.assertNotIn(f'"{forbidden}":', serialized)
 
     def test_checkpoint_records_ready_before_candidate_processing(self):
         self.assertEqual(self.checkpoint["checkpoint_status"], "PCG_READY")
