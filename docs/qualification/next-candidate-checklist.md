@@ -248,3 +248,37 @@ Not authorized by this status:
 - automatic outcome collection/adjudication/scoring without the approved sequence
 
 Any new commit after the currently verified candidate invalidates reuse of its exact-SHA hosted evidence for the new HEAD; rerun and record fresh verification.
+
+
+### Pilot-4
+
+Protocol decisions：`PENDING_ITEM_APPROVAL`  
+Enumeration decision：`ENUM-01 PENDING`  
+Aggregation decision：`AGG-01 PENDING`  
+Pilot：`NOT_STARTED`
+
+Pilot-4 is a new pilot/protocol version created after Pilot-3 halted at the structural-snapshot-manifest gate. It does not resume or repair Pilot-3.
+
+- [x] Pilot-3 halt retained as `HALTED_NON_QUALIFYING`; no replacement/resume under Pilot-3
+- [x] Complete window→structural-snapshot defect class identified without using exposed snapshot/claim results
+- [x] ENUM-01 rule preregistered before any Pilot-4 case exposure at `2026-09-28T20:07:32+08:00`
+- [x] Research-only deterministic enumerator implemented at `tools/pilot4_structural_snapshot_enumerator.py`
+- [x] Enumerator binds Bazi Jie, ±15-minute qualification transitions, stored Bazi decadal boundaries, and Ziwei local-midnight month/year source changes
+- [x] No post-exposure segment merge/split/substitution permitted
+- [x] Exact one structural-state digest required per enumerated segment before EFA
+- [x] Fresh Pilot-4 D01–D12 receipt created with all decisions PENDING
+- [x] Fresh Pilot-4 ENUM-01 decision created PENDING human approval
+- [x] Fresh Pilot-4 AGG-01 decision created PENDING human approval; Pilot-3 approval not inherited
+- [x] Proposed non-overlapping window: `2027-05-01T00:00:00+08:00` → `2027-06-30T23:59:59+08:00`
+- [ ] Human approval of Pilot-4 D01–D12
+- [ ] Human approval of ENUM-01
+- [ ] Human approval of AGG-01
+- [ ] Separate Pilot-4 final seal / start authorization
+- [ ] Private source census → intake → S1 → PCG READY
+- [ ] Fresh Pilot-4 candidate exposure
+- [ ] Deterministic segment enumeration → exact snapshot manifest → complete EFA census
+- [ ] Complete-union claim-universe lock → exact S1 membership
+- [ ] Segment-aware downstream authority compatibility
+- [ ] Prediction lock
+
+No real Pilot-4 case material may be processed until the fresh human decision gates and separate start authorization are complete.
