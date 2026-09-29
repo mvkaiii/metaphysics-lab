@@ -1,87 +1,158 @@
 # Bazi decadal independent oracle handoff
 
-Status: PREPARED_FOR_INDEPENDENT_EXECUTOR
-Reference packet: NOT_SEALED
-Comparison: NOT_STARTED
-Task 3 qualification: NEEDS_EVIDENCE
+Status: `READY_FOR_INDEPENDENT_ORACLE_EXECUTOR`  
+Pre-oracle seal: `SEALED`  
+Oracle: `NOT_STARTED`  
+Comparison: `NOT_STARTED`  
+Task 3 qualification: `NEEDS_EVIDENCE`
 
-This handoff defines the information boundary for an independent oracle. It does
-not contain oracle expected values and does not authorize a qualification PASS.
+This handoff defines the exact clean-room boundary for the independent oracle.
+It contains no oracle expected values and does not authorize a qualification PASS.
+
+## Exact sealed identities
+
+- approved profile spec:
+  - path: `docs/research/bazi-decadal-independent-profile-spec.v1.md`
+  - SHA256: `0757d1275e55b84e2424d6131e9dbdc73e029e1b619f900147be928cc7e5e01d`
+- case-input bundle:
+  - path: `docs/research/bazi-decadal-oracle-case-inputs.v1.json`
+  - canonical bundle SHA256: `ab7ebd72671c3020d67444f720c6f3645111005348efd56efe91ffd2ee699d3f`
+  - cases: 12
+- pre-oracle seal:
+  - path: `docs/research/bazi-decadal-preoracle-seal.v1.json`
+  - seal SHA256: `db32a95bc41a54531907e7e059655c094b1b1234a533770a88f2e3a52712874e`
+- HKO 2015 raw source:
+  - `Solar_Term_2015.htm`
+  - SHA256: `60a45ab889ef436936571a04a49387c6f9ce8d43243fb21c64e3fcb0331c8320`
+  - byte count: 16070
+- HKO 2016 raw source:
+  - `Solar_Term_2016.htm`
+  - SHA256: `84beb01553646b807a7c15d6efebdd7550af1ac6d7f06e07bfdd124dab9e443b`
+  - byte count: 12079
 
 ## Why a separate oracle role is required
 
-The current implementation/review agent has read production code and existing
-synthetic engine output. It may build the comparison harness, but it cannot
-create expected values and then label those values independent.
+The current implementation/review context has read production code and existing
+synthetic/production outputs. It may validate seals and later run the comparator,
+but it cannot create expected values and label those values independent.
 
 The independent oracle executor must not receive production Bazi implementation
-source, committed synthetic expected values, or comparison results before seal.
-It may receive only the human-approved written Project profile specification,
-the preregistered sealed case inputs, sealed external astronomical source bytes,
-the packet contract, and canonical serialization/hash instructions.
+source, production output for the 12 sealed cases, committed synthetic expected
+values, or comparison results before the oracle bundle is sealed.
 
-## External astronomical source role
+## Inputs the independent executor MAY receive
 
-Candidate provider: Hong Kong Observatory (HKO).
+Only:
 
-Official source pages:
-- https://www.hko.gov.hk/en/gts/astronomy/Solar_Term.htm
-- https://www.hko.gov.hk/en/publica/pubgen.htm
+1. the approved written profile specification;
+2. the 12-case sealed synthetic input bundle;
+3. the exact HKO 2015 and 2016 raw source bytes;
+4. the pre-oracle seal;
+5. canonical serialization/hash instructions;
+6. this handoff document / handoff manifest.
 
-The HKO solar-term page states that its astronomical information is based on
-data provided by the HM Nautical Almanac Office (United Kingdom) and the United
-States Naval Observatory, and that displayed times are Hong Kong Time (UTC+08:00).
-The HKO publication catalogue lists the Hong Kong Observatory Almanac from 1984
-onwards.
+The source pages are astronomical-input evidence only; they are not an independent
+Bazi decadal algorithm by themselves.
 
-HKO is therefore suitable as an external astronomical input source. It is not
-an independent Bazi decadal algorithm reference. For historical cases, the exact
-year-specific HKO source bytes must be acquired and sealed; a current webpage or
-a catalogue entry is not a substitute for the exact bytes used by the oracle.
+## Inputs the independent executor MUST NOT receive
 
-## Before the oracle may run
+- `engine/bazi/` production source;
+- production Bazi results for any sealed case;
+- existing synthetic expected outputs;
+- comparator output;
+- qualification outcome;
+- any post-hoc tolerance adjustment;
+- any replacement case or changed source bytes.
 
-Freeze all of the following before expected values are produced:
-1. Complete written profile specification reviewed by a human/domain reviewer:
-   direction rule; three-days-one-year conversion; continuous-year denominator
-   and precision; jie selection; equality-at-jie rule; timezone/date arithmetic;
-   first pillar and subsequent sexagenary sequence; endpoint generation.
-2. Case census selected without consulting production results.
-3. Exact external source bytes, provenance, precision and SHA256.
-4. Tolerances fixed before results are visible.
-5. Oracle implementation identifier and code SHA256.
-6. Independence attestation with all exposure flags false.
+If any prohibited material is exposed before oracle sealing, the independent
+oracle attempt is contaminated and must fail closed.
 
-If any item is missing, keep the packet NOT_SEALED.
+## Oracle implementation requirements
 
-## Comparator contract
+The independent executor must implement the approved written contract from
+scratch without reading production implementation.
 
-Comparator: tools/compare_bazi_decadal_reference.py
+It must record:
 
-It does not calculate metaphysics values. It consumes a sealed reference packet
-and a separately prepared actual bundle with the same case IDs and input digests.
-Each comparison uses a JSON Pointer with one of: exact, number_abs,
-datetime_abs_seconds, not_comparable, or missing_reference.
+- oracle builder identifier;
+- exact oracle source/code bytes;
+- lowercase SHA256 of those oracle code bytes;
+- exposure flags, all false;
+- attestation;
+- sealed_at and sealed_by;
+- every exact case_id and input_sha256 from the sealed case bundle;
+- every required comparison path.
 
-The comparator rejects invalid source/oracle digests, exposure flags inconsistent
-with independence, missing tolerances, duplicate case/path comparisons, case census
-mismatch, and input digest mismatch.
+For each path the oracle may emit either:
 
-Comparison result is MATCH, MISMATCH, or PARTIAL. Regardless of result it always
-emits qualification_decision=HUMAN_REVIEW_REQUIRED and maturity_promotion=false.
-An all-MATCH report is evidence for human review, not an automatic Task 3 PASS.
+- `status=provided` plus `expected`; or
+- `status=missing_reference` plus an explicit reason.
 
-## Independence caveat
+It may not alter case IDs, input digests, comparison paths, or tolerances.
 
-The comparator validates the shape of the independence attestation but cannot
-prove that role isolation actually occurred. Access control and timing of the seal
-remain governance facts requiring human review.
+## Required comparison census for every case
 
-## Current blockers
+- `/decadal_direction`
+- `/periods/0/pillar`
+- `/periods/0/start_age_years`
+- `/periods/0/start_datetime`
+- `/periods/1/end_datetime`
 
-- Complete written algorithm/profile specification is not yet sealed by a domain reviewer.
-- Historical year-specific HKO source bytes and digest are not selected/sealed.
-- Case census and tolerances are not sealed.
-- No independent oracle implementation or expected values exist.
+The independent executor does not decide the tolerances; those are already sealed.
 
-Task 3 therefore remains NEEDS_EVIDENCE.
+## Oracle output envelope
+
+The output must use schema version `1.0` and contain:
+
+```text
+schema_version
+preoracle_seal_sha256
+oracle_builder_id
+oracle_code_sha256
+production_code_access=false
+production_output_access=false
+comparison_result_access_before_seal=false
+attestation
+sealed_at
+sealed_by
+cases[]
+```
+
+Each case contains:
+
+```text
+case_id
+input_sha256
+comparisons[]
+```
+
+Each comparison contains:
+
+```text
+path
+status = provided | missing_reference
+expected  # only when provided
+reason    # only when missing_reference
+```
+
+The oracle output must bind:
+
+`preoracle_seal_sha256=db32a95bc41a54531907e7e059655c094b1b1234a533770a88f2e3a52712874e`
+
+## What happens after oracle sealing
+
+The oracle bundle is returned to a non-clean-room comparison context.
+
+There:
+
+1. `tools/finalize_bazi_decadal_reference_packet.py` validates exact seal/case/path binding and emits the sealed reference packet.
+2. A separately prepared production actual bundle with the same case IDs/input digests is generated.
+3. `tools/compare_bazi_decadal_reference.py` performs deterministic comparison.
+4. Result remains `HUMAN_REVIEW_REQUIRED`; even all-MATCH does not automatically promote maturity.
+
+## Coverage limitation
+
+D1 equality-at-Jie is normatively frozen as current-Jie-inclusive with interval zero.
+The selected HKO pages display minute precision, so the 12-case packet does not claim
+an exact-equality qualification case. This remains a disclosed coverage gap rather
+than a post-hoc rule change.

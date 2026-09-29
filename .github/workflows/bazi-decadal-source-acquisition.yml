@@ -1,7 +1,6 @@
 name: Bazi decadal external source acquisition
 
 on:
-  pull_request:
   workflow_dispatch:
 
 permissions:
