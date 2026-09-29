@@ -8,14 +8,25 @@ Methodology：`APPROVED WITH CONSTRAINTS`。Comparator contract：`ENGINEERING_R
 
 | 項目 | 目前狀態／下一個動作 |
 | --- | --- |
-| 規格 | bazi-natal-project-v1與G2的age／Visualization端點契約已指定；需由領域reviewer確認不依production反推的完整算法文字規格，包含精度、節氣相等時的規則及日期運算 |
-| 外部來源 | 候選為香港天文台節氣資料；尚未選定年份、版本或下載bytes，digest未取得，不可開始comparison |
-| 案例 | 尚未封存；事前規劃順逆、節氣前後／相等、跨年／閏年及指定時區案例；不得依production結果挑案例 |
-| 比較欄位 | 節氣時刻、方向、首段干支、起運連續年數、首段起點與後續endpoint；逐欄標適用性，未知不猜補 |
-| 容差 | 尚未封存；依來源公布精度、規格數值精度與誤差傳播事前制定，不依觀察到的差異放寬 |
+| 規格 | 已建立`bazi-decadal-independent-profile-spec.candidate.md`作domain-review candidate；仍為`DRAFT_PENDING_DOMAIN_REVIEW`，不得直接當oracle規格 |
+| 外部來源 | 已事前選定HKO 2015＋2016靜態24節氣頁作source proposal，以common/leap-year coverage為選擇理由；exact raw bytes SHA256仍未取得，因此不可seal |
+| 案例 | 已建立12-case proposal，覆蓋男女順逆、節氣前後、跨年、閏年／閏日；未依production結果挑案例；節氣「相等」案例仍因來源精度與規則未決而BLOCKED |
+| 比較欄位 | 已提案方向、首段干支、起運連續年數、首段起點；後續endpoint因生成規則尚未由domain reviewer固定而維持NOT_COMPARABLE |
+| 容差 | 已依HKO分鐘顯示粒度＋既有3日=1年／365.2425公式提出事前誤差傳播值；仍待domain reviewer核准，不可視為final tolerance |
 | 判定規則 | 每欄MATCH／MISMATCH／NOT_COMPARABLE／MISSING_REFERENCE；缺口不能計入通過；整包仍待人工review |
 | Oracle | 尚未建立；須有未接觸production實作／輸出的獨立實作者，先固定程式與expected值，再交比較者 |
-| 封存 | 來源bytes、案例、規格、oracle、expected值、容差與規則均須有版本／SHA256及先後順序紀錄 |
+| 封存 | profile review、equality-at-Jie、endpoint formula、source precision semantics、spec digest、source raw-byte digests尚未全部完成；seal維持禁止 |
+
+Review packet：
+`docs/research/bazi-decadal-preoracle-review-packet.v1.json`
+
+Validator：
+`tools/validate_bazi_decadal_preoracle_review_packet.py`
+
+目前該packet刻意固定：
+`status=DRAFT_PENDING_DOMAIN_REVIEW`、
+`seal_allowed=false`、
+`task3_status=NEEDS_EVIDENCE`。
 
 ## Comparator工程狀態
 
@@ -42,6 +53,10 @@ qualification / promotion 決策。完整 oracle 交接邊界見
 pre-oracle seal明確拒絕任何 `expected` value，並以canonical SHA256偵測封存後修改。
 它不選擇實際年份、不下載或替代外部來源、不產生八字結果，也不構成independent
 oracle或qualification evidence。
+
+另已新增 `tools/finalize_bazi_decadal_reference_packet.py`，用於oracle完成後把expected
+values綁回exact pre-oracle seal，禁止case、input digest、comparison path或tolerance漂移。
+finalizer本身不計算命理值。
 
 因此目前仍是：實際packet `NOT_SEALED`、oracle `NOT_CREATED`、
 comparison `NOT_STARTED`、Task3 `NEEDS_EVIDENCE`。
