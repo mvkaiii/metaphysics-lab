@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0",
   "pilot_id": "Pilot-5",
-  "status": "PROPOSED_NOT_APPROVED",
-  "approved_by_role": null,
-  "approved_at": null,
+  "status": "APPROVED_PENDING_START_AUTHORIZATION",
+  "approved_by_role": "human_decision_owner",
+  "approved_at": "2026-09-29T11:43:28+08:00",
   "start_authorized": false,
   "timezone": "Asia/Taipei",
   "outcome_window_start": "2027-07-01T00:00:00+08:00",

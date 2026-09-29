@@ -1,14 +1,14 @@
 {
   "schema_version": "1.0",
-  "protocol_decision_status": "PENDING_ITEM_APPROVAL",
-  "pilot_status": "NOT_STARTED",
+  "protocol_decision_status": "ALL_ITEMS_APPROVED",
+  "pilot_status": "READY_FOR_START_AUTHORIZATION",
   "decisions": [
     {
       "id": "D01",
-      "status": "PENDING",
-      "public_summary": "",
-      "approver_role": null,
-      "approved_at": null,
+      "status": "APPROVED",
+      "public_summary": "Study owner/data-subject role model and separated prediction/adjudication information contexts approved.",
+      "approver_role": "human_decision_owner",
+      "approved_at": "2026-09-29T11:43:28+08:00",
       "evidence_refs": [
         "docs/research/pilot5-proposed-values.md",
         "docs/research/pilot5-protocol.md"
@@ -16,10 +16,10 @@
     },
     {
       "id": "D02",
-      "status": "PENDING",
-      "public_summary": "",
-      "approver_role": null,
-      "approved_at": null,
+      "status": "APPROVED",
+      "public_summary": "Own-data-only private storage, retention, access and withdrawal boundary approved.",
+      "approver_role": "human_decision_owner",
+      "approved_at": "2026-09-29T11:43:28+08:00",
       "evidence_refs": [
         "docs/research/pilot5-proposed-values.md",
         "docs/research/pilot5-protocol.md"
@@ -27,10 +27,10 @@
     },
     {
       "id": "D03",
-      "status": "PENDING",
-      "public_summary": "",
-      "approver_role": null,
-      "approved_at": null,
+      "status": "APPROVED",
+      "public_summary": "Exactly one fresh future Pilot-5 case/window with no replacement after a failed post-exposure gate approved.",
+      "approver_role": "human_decision_owner",
+      "approved_at": "2026-09-29T11:43:28+08:00",
       "evidence_refs": [
         "docs/research/pilot5-proposed-values.md",
         "docs/research/pilot5-protocol.md"
@@ -38,10 +38,10 @@
     },
     {
       "id": "D04",
-      "status": "PENDING",
-      "public_summary": "",
-      "approver_role": null,
-      "approved_at": null,
+      "status": "APPROVED",
+      "public_summary": "ENUM-01 complete snapshot census, AGG-01 membership union, and AUTH-01 segment-aware downstream authority/prediction bridge approved.",
+      "approver_role": "human_decision_owner",
+      "approved_at": "2026-09-29T11:43:28+08:00",
       "evidence_refs": [
         "docs/research/pilot5-proposed-values.md",
         "docs/research/pilot5-protocol.md"
@@ -49,10 +49,10 @@
     },
     {
       "id": "D05",
-      "status": "PENDING",
-      "public_summary": "",
-      "approver_role": null,
-      "approved_at": null,
+      "status": "APPROVED",
+      "public_summary": "Single frozen candidate arm with later exact start-seal binding and no superiority claim approved.",
+      "approver_role": "human_decision_owner",
+      "approved_at": "2026-09-29T11:43:28+08:00",
       "evidence_refs": [
         "docs/research/pilot5-proposed-values.md",
         "docs/research/pilot5-protocol.md"
@@ -60,10 +60,10 @@
     },
     {
       "id": "D06",
-      "status": "PENDING",
-      "public_summary": "",
-      "approver_role": null,
-      "approved_at": null,
+      "status": "APPROVED",
+      "public_summary": "Asia/Taipei 2027-07-01 through 2027-08-31 outcome window plus 72-hour maturity approved.",
+      "approver_role": "human_decision_owner",
+      "approved_at": "2026-09-29T11:43:28+08:00",
       "evidence_refs": [
         "docs/research/pilot5-proposed-values.md",
         "docs/research/pilot5-protocol.md"
@@ -71,10 +71,10 @@
     },
     {
       "id": "D07",
-      "status": "PENDING",
-      "public_summary": "",
-      "approver_role": null,
-      "approved_at": null,
+      "status": "APPROVED",
+      "public_summary": "Predeclared outcome labels, evidence hierarchy and blind adjudication rules approved.",
+      "approver_role": "human_decision_owner",
+      "approved_at": "2026-09-29T11:43:28+08:00",
       "evidence_refs": [
         "docs/research/pilot5-proposed-values.md",
         "docs/research/pilot5-protocol.md"
@@ -82,10 +82,10 @@
     },
     {
       "id": "D08",
-      "status": "PENDING",
-      "public_summary": "",
-      "approver_role": null,
-      "approved_at": null,
+      "status": "APPROVED",
+      "public_summary": "Outcome-blind prediction execution and prediction-content disclosure boundary approved.",
+      "approver_role": "human_decision_owner",
+      "approved_at": "2026-09-29T11:43:28+08:00",
       "evidence_refs": [
         "docs/research/pilot5-proposed-values.md",
         "docs/research/pilot5-protocol.md"
@@ -93,10 +93,10 @@
     },
     {
       "id": "D09",
-      "status": "PENDING",
-      "public_summary": "",
-      "approver_role": null,
-      "approved_at": null,
+      "status": "APPROVED",
+      "public_summary": "Process-conformance primary success criterion; predictive match rate is not the Pilot-5 success metric.",
+      "approver_role": "human_decision_owner",
+      "approved_at": "2026-09-29T11:43:28+08:00",
       "evidence_refs": [
         "docs/research/pilot5-proposed-values.md",
         "docs/research/pilot5-protocol.md"
@@ -104,10 +104,10 @@
     },
     {
       "id": "D10",
-      "status": "PENDING",
-      "public_summary": "",
-      "approver_role": null,
-      "approved_at": null,
+      "status": "APPROVED",
+      "public_summary": "Exactly one planned real case, fixed stopping, no replacement; retry requires a new pilot/version.",
+      "approver_role": "human_decision_owner",
+      "approved_at": "2026-09-29T11:43:28+08:00",
       "evidence_refs": [
         "docs/research/pilot5-proposed-values.md",
         "docs/research/pilot5-protocol.md"
@@ -115,10 +115,10 @@
     },
     {
       "id": "D11",
-      "status": "PENDING",
-      "public_summary": "",
-      "approver_role": null,
-      "approved_at": null,
+      "status": "APPROVED",
+      "public_summary": "Withdrawal/deviation/missingness records remain append-only and are not silently rewritten.",
+      "approver_role": "human_decision_owner",
+      "approved_at": "2026-09-29T11:43:28+08:00",
       "evidence_refs": [
         "docs/research/pilot5-proposed-values.md",
         "docs/research/pilot5-protocol.md"
@@ -126,10 +126,10 @@
     },
     {
       "id": "D12",
-      "status": "PENDING",
-      "public_summary": "",
-      "approver_role": null,
-      "approved_at": null,
+      "status": "APPROVED",
+      "public_summary": "Public disclosure limited to de-identified governance/process status; private case, snapshot, claim and outcome material stays private.",
+      "approver_role": "human_decision_owner",
+      "approved_at": "2026-09-29T11:43:28+08:00",
       "evidence_refs": [
         "docs/research/pilot5-proposed-values.md",
         "docs/research/pilot5-protocol.md"

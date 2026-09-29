@@ -1,20 +1,20 @@
 # Pilot-5 proposed values
 
-Status: **PENDING HUMAN APPROVAL**  
+Status: **APPROVED_BY_HUMAN_DECISION_OWNER / READY_FOR_START_AUTHORIZATION**  
 Preregistered at: `2026-09-29T11:28:05+08:00`
 
 Pilot-5 is a fresh protocol. No prior pilot approval or exposure state is inherited.
 
 ## Governance
 
-- D01-D12: all PENDING.
-- ENUM-01: PENDING.
-- AGG-01: PENDING.
-- AUTH-01: PENDING.
+- D01-D12: all APPROVED at `2026-09-29T11:43:28+08:00`.
+- ENUM-01: APPROVED at `2026-09-29T11:43:28+08:00`.
+- AGG-01: APPROVED at `2026-09-29T11:43:28+08:00`.
+- AUTH-01: APPROVED at `2026-09-29T11:43:28+08:00`.
 - Manual override: prohibited.
 - Promotion effect: none.
 - Start authorization: NOT_AUTHORIZED.
-- Candidate processing: prohibited until later start authorization + PCG READY.
+- Candidate processing: prohibited until later separate start authorization + PCG READY.
 
 ## Proposed window
 
@@ -56,3 +56,10 @@ Prediction bridge:
 `full_window_single_child_exact_identity_all_eligible_claims_no_confidence_uplift`
 
 The exact normative rule is in `pilot5-segment-aware-downstream-authority-preregistration.md`.
+
+
+## Human approval checkpoint
+
+Pilot-5 D01-D12, ENUM-01, AGG-01, AUTH-01 and the proposed window were explicitly approved by the human decision owner at `2026-09-29T11:43:28+08:00`.
+
+This moves Pilot-5 only to `READY_FOR_START_AUTHORIZATION`. The next human gate is a separate final seal/start authorization. Approval does not authorize private census, intake, S1, PCG, case exposure, candidate processing, prediction lock, merge, tag, Release or publish.

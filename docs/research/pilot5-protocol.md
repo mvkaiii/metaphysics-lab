@@ -1,10 +1,10 @@
-# Prospective Pilot-5 protocol — preregistered, not approved
+# Prospective Pilot-5 protocol — human-approved decisions pending start seal
 
-**Protocol decision status:** `PENDING_ITEM_APPROVAL`  
-**Enumeration decision:** `ENUM-01 PENDING`  
-**Aggregation decision:** `AGG-01 PENDING`  
-**Downstream authority decision:** `AUTH-01 PENDING`  
-**Pilot status:** `NOT_STARTED`  
+**Protocol decision status:** `ALL_ITEMS_APPROVED`  
+**Enumeration decision:** `ENUM-01 APPROVED`  
+**Aggregation decision:** `AGG-01 APPROVED`  
+**Downstream authority decision:** `AUTH-01 APPROVED`  
+**Pilot status:** `READY_FOR_START_AUTHORIZATION`  
 **Start authorization:** `NOT_AUTHORIZED`  
 **Candidate case processing:** `PROHIBITED`
 
@@ -66,6 +66,8 @@ Claim scope remains yearly; timing scope remains monthly; requested dynamic scop
 
 ## Current gate
 
-No Pilot-5 decision is approved. No start authorization exists. No real Pilot-5 source census, intake, S1, candidate case exposure, case-specific enumeration, EFA, downstream authority or prediction work is authorized.
+The human decision owner explicitly approved Pilot-5 D01-D12, ENUM-01, AGG-01, AUTH-01 and the proposed window at `2026-09-29T11:43:28+08:00`. Pilot-5 is now `READY_FOR_START_AUTHORIZATION`.
+
+This approval has no start effect. Until a separate final seal / start authorization exists, no private Pilot-5 source census, intake, S1 source manifest, PCG receipt, real case exposure, case-specific enumeration, EFA, downstream authority or prediction work is authorized.
 
 Merge, tag, Release, Stable promotion and publish remain unauthorized.

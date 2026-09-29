@@ -290,11 +290,11 @@ Pilot-4 halted fail-closed at `DOWNSTREAM_AUTHORITY_COMPATIBILITY` on `2026-09-2
 
 ### Pilot-5
 
-Protocol decisions: `PENDING_ITEM_APPROVAL`  
-Enumeration decision: `ENUM-01 PENDING`  
-Aggregation decision: `AGG-01 PENDING`  
-Downstream authority decision: `AUTH-01 PENDING`  
-Pilot: `NOT_STARTED`
+Protocol decisions: `ALL_ITEMS_APPROVED`  
+Enumeration decision: `ENUM-01 APPROVED`  
+Aggregation decision: `AGG-01 APPROVED`  
+Downstream authority decision: `AUTH-01 APPROVED`  
+Pilot: `READY_FOR_START_AUTHORIZATION`
 
 Pilot-5 is a fresh protocol created after Pilot-4 halted at downstream authority compatibility.
 
@@ -308,13 +308,16 @@ Pilot-5 is a fresh protocol created after Pilot-4 halted at downstream authority
 - [x] Stable multi-member render units are prediction-lock ineligible under the current one-event-family forecast schema
 - [x] Fresh Pilot-5 D01-D12, ENUM-01, AGG-01 and AUTH-01 created PENDING
 - [x] Proposed non-overlapping window: `2027-07-01T00:00:00+08:00` → `2027-08-31T23:59:59+08:00`
-- [ ] Human approval of Pilot-5 D01-D12
-- [ ] Human approval of ENUM-01
-- [ ] Human approval of AGG-01
-- [ ] Human approval of AUTH-01
+- [x] Human approval of Pilot-5 D01-D12 at `2026-09-29T11:43:28+08:00`
+- [x] Human approval of ENUM-01 at `2026-09-29T11:43:28+08:00`
+- [x] Human approval of AGG-01 at `2026-09-29T11:43:28+08:00`
+- [x] Human approval of AUTH-01 at `2026-09-29T11:43:28+08:00`
 - [ ] Separate Pilot-5 final seal / start authorization
 - [ ] Private source census → intake → S1 → PCG READY
 - [ ] Fresh candidate exposure / processing
 - [ ] Snapshot manifest → complete EFA census → AGG-01 claim universe
 - [ ] Per-segment complete downstream chains → AUTH-01 window authority
 - [ ] Exact prediction-lock bridge → prediction lock
+
+
+Pilot-5 D01-D12, ENUM-01, AGG-01, AUTH-01 and the proposed window are approved. No start authorization exists. The next valid gate is a separate Pilot-5 final seal/start authorization; private source census and all candidate processing remain prohibited until that later gate and PCG sequence.

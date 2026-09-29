@@ -2,21 +2,26 @@
   "schema_version": "1.0",
   "pilot_id": "Pilot-5",
   "decision_id": "AGG-01",
-  "status": "PENDING_HUMAN_APPROVAL",
+  "status": "APPROVED",
   "decision_class": "MANDATORY_MULTI_SEGMENT_YEARLY_CLAIM_UNIVERSE_AGGREGATION",
   "preregistered_at": "2026-09-29T11:28:05+08:00",
-  "proposed_profile": "lin_tianji_multi_segment_yearly_claim_universe_v1",
-  "proposed_rule": "complete_union_of_all_manifested_efa_child_inventories",
   "selection_basis": "COMPLETE_CENSUS_MEMBERSHIP_SEMANTICS_ONLY",
   "inherited_approval_from_prior_pilots": false,
   "pilot2_claim_set_observations_used_for_rule_selection": false,
   "pilot3_claim_set_observations_used_for_rule_selection": false,
   "pilot4_claim_set_observations_used_for_rule_selection": false,
-  "approved_by_role": null,
-  "approved_at": null,
+  "approved_by_role": "human_decision_owner",
+  "approved_at": "2026-09-29T11:43:28+08:00",
   "mandatory": true,
   "manual_override_allowed": false,
   "start_authorization_effect": false,
   "candidate_processing_effect": "NONE_UNTIL_SEPARATE_START_AUTHORIZATION_AND_PCG_READY",
-  "promotion_allowed": false
+  "promotion_allowed": false,
+  "approved_profile": "lin_tianji_multi_segment_yearly_claim_universe_v1",
+  "approved_rule": "complete_union_of_all_manifested_efa_child_inventories",
+  "public_summary": "For every ENUM-01 manifested structural segment, use the complete yearly EFA child inventory and define the Pilot-5 yearly claim universe as the deterministic sorted unique union. Aggregation determines membership only and cannot synthesize downstream authority.",
+  "evidence_refs": [
+    "docs/research/pilot5-proposed-values.md",
+    "docs/research/pilot5-protocol.md"
+  ]
 }

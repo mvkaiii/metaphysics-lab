@@ -111,3 +111,10 @@ Real Pilot-5 segment outputs, IDs, counts and digests remain outside public Git.
 AUTH-01 is preregistered but **not approved**.
 
 Pilot-5 D01-D12, ENUM-01, AGG-01, AUTH-01 and the proposed outcome window all require explicit human decision-owner approval. Approval has no start effect. A later separate start authorization is still required before private census/intake/S1, and candidate processing remains blocked until PCG READY.
+
+
+## 9. Human approval checkpoint
+
+Pilot-5 D01-D12, ENUM-01, AGG-01, AUTH-01 and the proposed window were explicitly approved by the human decision owner at `2026-09-29T11:43:28+08:00`.
+
+AUTH-01 remains mandatory, has no manual override and has no start-authorization effect. Real Pilot-5 private processing remains prohibited until a separate final seal/start authorization and later PCG READY.
