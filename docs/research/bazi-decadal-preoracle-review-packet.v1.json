@@ -1,0 +1,153 @@
+{
+  "schema_version": "1.0",
+  "packet_type": "bazi_decadal_preoracle_review_packet",
+  "status": "DRAFT_PENDING_DOMAIN_REVIEW",
+  "task3_status": "NEEDS_EVIDENCE",
+  "seal_allowed": false,
+  "profile_candidate": {
+    "profile_id": "bazi-natal-project-v1",
+    "rule_version": "1.0-exp",
+    "decadal_rule": "three-days-one-year-v1",
+    "age_basis": "continuous_years_from_jie_interval",
+    "review_candidate_path": "docs/research/bazi-decadal-independent-profile-spec.candidate.md",
+    "domain_review_status": "PENDING",
+    "specification_sha256": null
+  },
+  "external_source_plan": {
+    "provider": "Hong Kong Observatory",
+    "provider_role": "astronomical_input_only",
+    "selection_basis": "two_consecutive_archival_years_covering_common_and_leap_year_without_consulting_production_results",
+    "timezone_statement": "Hong Kong Time / UTC+08:00",
+    "sources": [
+      {
+        "year": 2015,
+        "source_url": "https://www.hko.gov.hk/en/gts/astron2015/Solar_Term_2015.htm",
+        "source_bytes_sha256": null,
+        "source_bytes_status": "NOT_YET_CAPTURED"
+      },
+      {
+        "year": 2016,
+        "source_url": "https://www.hko.gov.hk/en/gts/astron2016/Solar_Term_2016.htm",
+        "source_bytes_sha256": null,
+        "source_bytes_status": "NOT_YET_CAPTURED"
+      }
+    ]
+  },
+  "case_selection": {
+    "production_results_consulted_for_selection": false,
+    "selection_rule": "predeclared_boundary_and_calendar_coverage_only",
+    "case_count_proposed": 12,
+    "cases": [
+      {
+        "case_id": "bdref-2015-qingming-before-male",
+        "birth_datetime": "2015-04-05T10:34:00+08:00",
+        "sex": "male",
+        "coverage_tags": ["common_year", "yin_year", "before_jie", "reverse_direction_expected_from_contract"]
+      },
+      {
+        "case_id": "bdref-2015-qingming-before-female",
+        "birth_datetime": "2015-04-05T10:34:00+08:00",
+        "sex": "female",
+        "coverage_tags": ["common_year", "yin_year", "before_jie", "forward_direction_expected_from_contract"]
+      },
+      {
+        "case_id": "bdref-2015-qingming-after-male",
+        "birth_datetime": "2015-04-05T10:44:00+08:00",
+        "sex": "male",
+        "coverage_tags": ["common_year", "yin_year", "after_jie", "reverse_direction_expected_from_contract"]
+      },
+      {
+        "case_id": "bdref-2015-qingming-after-female",
+        "birth_datetime": "2015-04-05T10:44:00+08:00",
+        "sex": "female",
+        "coverage_tags": ["common_year", "yin_year", "after_jie", "forward_direction_expected_from_contract"]
+      },
+      {
+        "case_id": "bdref-2016-cross-year-jan1-male",
+        "birth_datetime": "2016-01-01T12:00:00+08:00",
+        "sex": "male",
+        "coverage_tags": ["leap_year", "yang_year", "cross_year_jie_lookup", "forward_direction_expected_from_contract"]
+      },
+      {
+        "case_id": "bdref-2016-cross-year-jan1-female",
+        "birth_datetime": "2016-01-01T12:00:00+08:00",
+        "sex": "female",
+        "coverage_tags": ["leap_year", "yang_year", "cross_year_jie_lookup", "reverse_direction_expected_from_contract"]
+      },
+      {
+        "case_id": "bdref-2016-leap-day-male",
+        "birth_datetime": "2016-02-29T12:00:00+08:00",
+        "sex": "male",
+        "coverage_tags": ["leap_year", "leap_day", "yang_year", "forward_direction_expected_from_contract"]
+      },
+      {
+        "case_id": "bdref-2016-leap-day-female",
+        "birth_datetime": "2016-02-29T12:00:00+08:00",
+        "sex": "female",
+        "coverage_tags": ["leap_year", "leap_day", "yang_year", "reverse_direction_expected_from_contract"]
+      },
+      {
+        "case_id": "bdref-2016-jingzhe-before-male",
+        "birth_datetime": "2016-03-05T11:39:00+08:00",
+        "sex": "male",
+        "coverage_tags": ["leap_year", "yang_year", "before_jie", "forward_direction_expected_from_contract"]
+      },
+      {
+        "case_id": "bdref-2016-jingzhe-before-female",
+        "birth_datetime": "2016-03-05T11:39:00+08:00",
+        "sex": "female",
+        "coverage_tags": ["leap_year", "yang_year", "before_jie", "reverse_direction_expected_from_contract"]
+      },
+      {
+        "case_id": "bdref-2016-jingzhe-after-male",
+        "birth_datetime": "2016-03-05T11:49:00+08:00",
+        "sex": "male",
+        "coverage_tags": ["leap_year", "yang_year", "after_jie", "forward_direction_expected_from_contract"]
+      },
+      {
+        "case_id": "bdref-2016-jingzhe-after-female",
+        "birth_datetime": "2016-03-05T11:49:00+08:00",
+        "sex": "female",
+        "coverage_tags": ["leap_year", "yang_year", "after_jie", "reverse_direction_expected_from_contract"]
+      }
+    ]
+  },
+  "comparison_plan": {
+    "paths": [
+      {"path": "/decadal_direction", "kind": "exact"},
+      {"path": "/periods/0/pillar", "kind": "exact"},
+      {
+        "path": "/periods/0/start_age_years",
+        "kind": "number_abs",
+        "tolerance_status": "PROPOSED_PENDING_DOMAIN_REVIEW",
+        "proposed_tolerance": 0.0002314814814814815
+      },
+      {
+        "path": "/periods/0/start_datetime",
+        "kind": "datetime_abs_seconds",
+        "tolerance_status": "PROPOSED_PENDING_DOMAIN_REVIEW",
+        "proposed_tolerance": 7304.85
+      },
+      {
+        "path": "/periods/1/end_datetime",
+        "kind": "not_comparable",
+        "reason": "ENDPOINT_GENERATION_RULE_PENDING_DOMAIN_REVIEW"
+      }
+    ]
+  },
+  "blocking_items": [
+    "DOMAIN_REVIEW_OF_WRITTEN_PROFILE",
+    "EQUALITY_AT_JIE_RULE_UNRESOLVED",
+    "ENDPOINT_GENERATION_RULE_UNRESOLVED",
+    "SOURCE_PRECISION_SEMANTICS_UNRESOLVED",
+    "EXACT_SOURCE_BYTES_SHA256_MISSING",
+    "SPECIFICATION_SHA256_MISSING"
+  ],
+  "independence_boundary": {
+    "oracle_expected_values_present": false,
+    "oracle_execution_started": false,
+    "oracle_may_receive_production_code": false,
+    "oracle_may_receive_production_output": false,
+    "oracle_may_receive_comparison_results_before_seal": false
+  }
+}
