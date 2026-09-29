@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0",
   "task_id": "Bazi-decadal-Task3",
-  "state": "DOMAIN_REVIEW_APPROVED_SOURCE_BYTES_PENDING",
+  "state": "PRE_ORACLE_SEALED",
+  "human_domain_decision_status": "APPROVED_D1_D4",
   "approved_at": "2026-09-29T19:39:00+08:00",
-  "approved_by_role": "human_decision_owner",
   "approved_spec": {
     "path": "docs/research/bazi-decadal-independent-profile-spec.v1.md",
     "sha256": "0757d1275e55b84e2424d6131e9dbdc73e029e1b619f900147be928cc7e5e01d"
@@ -14,51 +14,17 @@
     "case_count": 12,
     "bundle_sha256": "ab7ebd72671c3020d67444f720c6f3645111005348efd56efe91ffd2ee699d3f"
   },
-  "source_bindings": [
-    {
-      "year": 2015,
-      "url": "https://www.hko.gov.hk/en/gts/astron2015/Solar_Term_2015.htm",
-      "raw_bytes_status": "PENDING_ACQUISITION",
-      "sha256": null
-    },
-    {
-      "year": 2016,
-      "url": "https://www.hko.gov.hk/en/gts/astron2016/Solar_Term_2016.htm",
-      "raw_bytes_status": "PENDING_ACQUISITION",
-      "sha256": null
-    }
-  ],
-  "comparison_contract": {
-    "direction": {
-      "path": "/decadal_direction",
-      "kind": "exact"
-    },
-    "first_pillar": {
-      "path": "/periods/0/pillar",
-      "kind": "exact"
-    },
-    "start_age": {
-      "path": "/periods/0/start_age_years",
-      "kind": "number_abs",
-      "tolerance": 0.0002314814814814815
-    },
-    "start_datetime": {
-      "path": "/periods/0/start_datetime",
-      "kind": "datetime_abs_seconds",
-      "tolerance": 7304.85
-    },
-    "subsequent_endpoint": {
-      "path": "/periods/1/end_datetime",
-      "kind": "datetime_abs_seconds",
-      "tolerance": 7304.85
-    }
+  "source_acquisition_receipt": "docs/research/bazi-decadal-source-acquisition-receipt.v1.json",
+  "preoracle_seal": {
+    "path": "docs/research/bazi-decadal-preoracle-seal.v1.json",
+    "seal_sha256": "db32a95bc41a54531907e7e059655c094b1b1234a533770a88f2e3a52712874e"
   },
-  "equality_at_jie_rule": "current_jie_inclusive_interval_zero",
   "exact_equality_case_coverage": "NOT_COVERED_BY_SELECTED_MINUTE_RESOLUTION_PACKET",
-  "seal_allowed": false,
+  "oracle_handoff_allowed": true,
   "oracle_execution_started": false,
   "expected_values_present": false,
+  "comparison_started": false,
   "qualification_decision": "NOT_YET_MADE",
   "maturity_promotion": false,
-  "next_gate": "CAPTURE_EXACT_HKO_RAW_BYTES_AND_BIND_SHA256"
+  "next_gate": "INDEPENDENT_ORACLE_EXECUTION_IN_FRESH_ISOLATED_CONTEXT"
 }
