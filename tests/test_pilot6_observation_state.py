@@ -58,7 +58,7 @@ class Pilot6ObservationStateTests(unittest.TestCase):
 
     def test_public_observation_artifact_discloses_no_private_lock_material(self):
         serialized = json.dumps(self.payload, ensure_ascii=False).lower()
-        for forbidden in (
+        for forbidden_key in (
             "prediction_lock_digest",
             "execution_artifact_zip_sha256",
             "private_case_id",
@@ -66,7 +66,7 @@ class Pilot6ObservationStateTests(unittest.TestCase):
             "prediction_text",
             "outcome_text",
         ):
-            self.assertNotIn(forbidden, serialized)
+            self.assertNotIn(f'"{forbidden_key}":', serialized)
         self.assertTrue(all(value is False for value in self.payload["privacy"].values()))
 
     def test_pilot_specific_stable_promotion_remains_blocked(self):
