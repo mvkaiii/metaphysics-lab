@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "pilot_id": "Pilot-5",
+  "decision_id": "ENUM-01",
+  "status": "PENDING_HUMAN_APPROVAL",
+  "decision_class": "MANDATORY_COMPLETE_WINDOW_TO_STRUCTURAL_SNAPSHOT_ENUMERATION",
+  "preregistered_at": "2026-09-29T11:28:05+08:00",
+  "proposed_profile": "lin_tianji_complete_structural_snapshot_enumerator_v1",
+  "proposed_rule": "complete_union_of_authoritative_yearly_monthly_time_boundaries_no_post_exposure_merge",
+  "selection_basis": "GENERAL_FROZEN_RUNTIME_BOUNDARY_SEMANTICS_ONLY",
+  "pilot2_observed_case_results_used_for_rule_selection": false,
+  "pilot3_observed_case_results_used_for_rule_selection": false,
+  "pilot4_observed_case_results_used_for_rule_selection": false,
+  "candidate_case_exposure_used_for_rule_selection": false,
+  "approved_by_role": null,
+  "approved_at": null,
+  "mandatory": true,
+  "manual_override_allowed": false,
+  "start_authorization_effect": false,
+  "candidate_processing_effect": "NONE_UNTIL_SEPARATE_START_AUTHORIZATION_AND_PCG_READY",
+  "promotion_allowed": false
+}

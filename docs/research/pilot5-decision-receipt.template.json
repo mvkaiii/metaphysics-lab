@@ -1,0 +1,148 @@
+{
+  "schema_version": "1.0",
+  "protocol_decision_status": "PENDING_ITEM_APPROVAL",
+  "pilot_status": "NOT_STARTED",
+  "decisions": [
+    {
+      "id": "D01",
+      "status": "PENDING",
+      "public_summary": "",
+      "approver_role": null,
+      "approved_at": null,
+      "evidence_refs": [
+        "docs/research/pilot5-proposed-values.md",
+        "docs/research/pilot5-protocol.md"
+      ]
+    },
+    {
+      "id": "D02",
+      "status": "PENDING",
+      "public_summary": "",
+      "approver_role": null,
+      "approved_at": null,
+      "evidence_refs": [
+        "docs/research/pilot5-proposed-values.md",
+        "docs/research/pilot5-protocol.md"
+      ]
+    },
+    {
+      "id": "D03",
+      "status": "PENDING",
+      "public_summary": "",
+      "approver_role": null,
+      "approved_at": null,
+      "evidence_refs": [
+        "docs/research/pilot5-proposed-values.md",
+        "docs/research/pilot5-protocol.md"
+      ]
+    },
+    {
+      "id": "D04",
+      "status": "PENDING",
+      "public_summary": "",
+      "approver_role": null,
+      "approved_at": null,
+      "evidence_refs": [
+        "docs/research/pilot5-proposed-values.md",
+        "docs/research/pilot5-protocol.md"
+      ]
+    },
+    {
+      "id": "D05",
+      "status": "PENDING",
+      "public_summary": "",
+      "approver_role": null,
+      "approved_at": null,
+      "evidence_refs": [
+        "docs/research/pilot5-proposed-values.md",
+        "docs/research/pilot5-protocol.md"
+      ]
+    },
+    {
+      "id": "D06",
+      "status": "PENDING",
+      "public_summary": "",
+      "approver_role": null,
+      "approved_at": null,
+      "evidence_refs": [
+        "docs/research/pilot5-proposed-values.md",
+        "docs/research/pilot5-protocol.md"
+      ]
+    },
+    {
+      "id": "D07",
+      "status": "PENDING",
+      "public_summary": "",
+      "approver_role": null,
+      "approved_at": null,
+      "evidence_refs": [
+        "docs/research/pilot5-proposed-values.md",
+        "docs/research/pilot5-protocol.md"
+      ]
+    },
+    {
+      "id": "D08",
+      "status": "PENDING",
+      "public_summary": "",
+      "approver_role": null,
+      "approved_at": null,
+      "evidence_refs": [
+        "docs/research/pilot5-proposed-values.md",
+        "docs/research/pilot5-protocol.md"
+      ]
+    },
+    {
+      "id": "D09",
+      "status": "PENDING",
+      "public_summary": "",
+      "approver_role": null,
+      "approved_at": null,
+      "evidence_refs": [
+        "docs/research/pilot5-proposed-values.md",
+        "docs/research/pilot5-protocol.md"
+      ]
+    },
+    {
+      "id": "D10",
+      "status": "PENDING",
+      "public_summary": "",
+      "approver_role": null,
+      "approved_at": null,
+      "evidence_refs": [
+        "docs/research/pilot5-proposed-values.md",
+        "docs/research/pilot5-protocol.md"
+      ]
+    },
+    {
+      "id": "D11",
+      "status": "PENDING",
+      "public_summary": "",
+      "approver_role": null,
+      "approved_at": null,
+      "evidence_refs": [
+        "docs/research/pilot5-proposed-values.md",
+        "docs/research/pilot5-protocol.md"
+      ]
+    },
+    {
+      "id": "D12",
+      "status": "PENDING",
+      "public_summary": "",
+      "approver_role": null,
+      "approved_at": null,
+      "evidence_refs": [
+        "docs/research/pilot5-proposed-values.md",
+        "docs/research/pilot5-protocol.md"
+      ]
+    }
+  ],
+  "pilot_start_authorization": {
+    "authorized": false,
+    "authorized_by_role": null,
+    "authorized_at": null,
+    "candidate_commit": null,
+    "package_sha256": null,
+    "manifest_sha256": null,
+    "protocol_sha256": null
+  }
+}

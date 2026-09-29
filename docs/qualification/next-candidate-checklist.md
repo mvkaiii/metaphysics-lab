@@ -286,3 +286,35 @@ Pilot-4 D01–D12, ENUM-01, AGG-01 and separate start authorization are complete
 
 
 Pilot-4 halted fail-closed at `DOWNSTREAM_AUTHORITY_COMPATIBILITY` on `2026-09-29T08:25:30+08:00`. ENUM-01, complete snapshot manifest, complete yearly EFA census, AGG-01 union, and exact S1 membership all completed before the halt. The aggregate yearly universe is membership-only; the frozen Claim Evidence/C1/C2/HCC/HOC chain requires one ranking/structural/EFA provenance path and contains no preregistered segment-aware adapter. Pilot-4 may not resume and may not receive a replacement case. Any retry requires a new pilot/protocol version with the downstream authority path fixed before case exposure.
+
+
+### Pilot-5
+
+Protocol decisions: `PENDING_ITEM_APPROVAL`  
+Enumeration decision: `ENUM-01 PENDING`  
+Aggregation decision: `AGG-01 PENDING`  
+Downstream authority decision: `AUTH-01 PENDING`  
+Pilot: `NOT_STARTED`
+
+Pilot-5 is a fresh protocol created after Pilot-4 halted at downstream authority compatibility.
+
+- [x] Pilot-4 halt retained as `HALTED_NON_QUALIFYING`; no resume/replacement under Pilot-4
+- [x] Missing segment-aware downstream authority defect class identified without using Pilot-4 private snapshot/claim contents
+- [x] AUTH-01 rule preregistered before any Pilot-5 case exposure at `2026-09-29T11:28:05+08:00`
+- [x] Research-only adapter implemented at `tools/pilot5_segment_aware_downstream_authority.py`
+- [x] Window-level authority requires identical render-unit composition across every manifested segment
+- [x] No best-snapshot selection, vote/majority rule, confidence uplift, specificity uplift, or synthetic single-source authority
+- [x] Prediction bridge preserves existing yearly child claim IDs and requires all-and-only eligible claims
+- [x] Stable multi-member render units are prediction-lock ineligible under the current one-event-family forecast schema
+- [x] Fresh Pilot-5 D01-D12, ENUM-01, AGG-01 and AUTH-01 created PENDING
+- [x] Proposed non-overlapping window: `2027-07-01T00:00:00+08:00` → `2027-08-31T23:59:59+08:00`
+- [ ] Human approval of Pilot-5 D01-D12
+- [ ] Human approval of ENUM-01
+- [ ] Human approval of AGG-01
+- [ ] Human approval of AUTH-01
+- [ ] Separate Pilot-5 final seal / start authorization
+- [ ] Private source census → intake → S1 → PCG READY
+- [ ] Fresh candidate exposure / processing
+- [ ] Snapshot manifest → complete EFA census → AGG-01 claim universe
+- [ ] Per-segment complete downstream chains → AUTH-01 window authority
+- [ ] Exact prediction-lock bridge → prediction lock
