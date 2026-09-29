@@ -294,7 +294,7 @@ Protocol decisions: `ALL_ITEMS_APPROVED`
 Enumeration decision: `ENUM-01 APPROVED`  
 Aggregation decision: `AGG-01 APPROVED`  
 Downstream authority decision: `AUTH-01 APPROVED`  
-Pilot: `READY_FOR_START_AUTHORIZATION`
+Pilot: `AUTHORIZED_NOT_STARTED`
 
 Pilot-5 is a fresh protocol created after Pilot-4 halted at downstream authority compatibility.
 
@@ -312,7 +312,7 @@ Pilot-5 is a fresh protocol created after Pilot-4 halted at downstream authority
 - [x] Human approval of ENUM-01 at `2026-09-29T11:43:28+08:00`
 - [x] Human approval of AGG-01 at `2026-09-29T11:43:28+08:00`
 - [x] Human approval of AUTH-01 at `2026-09-29T11:43:28+08:00`
-- [ ] Separate Pilot-5 final seal / start authorization
+- [x] Separate Pilot-5 final seal / start authorization at `2026-09-29T11:52:02+08:00`; frozen candidate `fe6975f0dc223a27a1e885f50c9f111ee24d68d4`
 - [ ] Private source census → intake → S1 → PCG READY
 - [ ] Fresh candidate exposure / processing
 - [ ] Snapshot manifest → complete EFA census → AGG-01 claim universe

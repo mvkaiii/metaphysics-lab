@@ -118,3 +118,10 @@ Pilot-5 D01-D12, ENUM-01, AGG-01, AUTH-01 and the proposed outcome window all re
 Pilot-5 D01-D12, ENUM-01, AGG-01, AUTH-01 and the proposed window were explicitly approved by the human decision owner at `2026-09-29T11:43:28+08:00`.
 
 AUTH-01 remains mandatory, has no manual override and has no start-authorization effect. Real Pilot-5 private processing remains prohibited until a separate final seal/start authorization and later PCG READY.
+
+
+## 10. Start authorization checkpoint
+
+A separate Pilot-5 start authorization was explicitly granted by the human decision owner at `2026-09-29T11:52:02+08:00`.
+
+AUTH-01 remains unchanged and frozen by the start seal. Private source census, intake and S1 preparation may proceed; real candidate processing and segment-aware authority execution remain prohibited until PCG READY.

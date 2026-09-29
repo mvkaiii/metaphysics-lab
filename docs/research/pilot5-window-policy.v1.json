@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0",
   "pilot_id": "Pilot-5",
-  "status": "APPROVED_PENDING_START_AUTHORIZATION",
+  "status": "APPROVED_START_AUTHORIZED",
   "approved_by_role": "human_decision_owner",
   "approved_at": "2026-09-29T11:43:28+08:00",
-  "start_authorized": false,
+  "start_authorized": true,
   "timezone": "Asia/Taipei",
   "outcome_window_start": "2027-07-01T00:00:00+08:00",
   "outcome_window_end": "2027-08-31T23:59:59+08:00",
@@ -25,5 +25,7 @@
   "prediction_bridge_rule": "full_window_single_child_exact_identity_all_eligible_claims_no_confidence_uplift",
   "window_selection_basis": "NEXT_NON_OVERLAPPING_FUTURE_CALENDAR_WINDOW_ONLY",
   "prior_pilot_private_case_observations_used_for_window_selection": false,
-  "promotion_allowed": false
+  "promotion_allowed": false,
+  "start_authorized_by_role": "human_decision_owner",
+  "start_authorized_at": "2026-09-29T11:52:02+08:00"
 }

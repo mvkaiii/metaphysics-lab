@@ -1,12 +1,12 @@
-# Prospective Pilot-5 protocol — human-approved decisions pending start seal
+# Prospective Pilot-5 protocol — start authorized, candidate processing gated
 
 **Protocol decision status:** `ALL_ITEMS_APPROVED`  
 **Enumeration decision:** `ENUM-01 APPROVED`  
 **Aggregation decision:** `AGG-01 APPROVED`  
 **Downstream authority decision:** `AUTH-01 APPROVED`  
-**Pilot status:** `READY_FOR_START_AUTHORIZATION`  
-**Start authorization:** `NOT_AUTHORIZED`  
-**Candidate case processing:** `PROHIBITED`
+**Pilot status:** `AUTHORIZED_NOT_STARTED`  
+**Start authorization:** `AUTHORIZED`  
+**Candidate case processing:** `PROHIBITED_UNTIL_PCG_READY`
 
 Pilot-5 is a new pilot/protocol version. It inherits no Pilot-1/2/3/4 approval, start authorization, case identity, exposure state, private snapshot observation, EFA census, claim lock, prediction, outcome or qualification state.
 
@@ -66,8 +66,10 @@ Claim scope remains yearly; timing scope remains monthly; requested dynamic scop
 
 ## Current gate
 
-The human decision owner explicitly approved Pilot-5 D01-D12, ENUM-01, AGG-01, AUTH-01 and the proposed window at `2026-09-29T11:43:28+08:00`. Pilot-5 is now `READY_FOR_START_AUTHORIZATION`.
+The human decision owner explicitly approved Pilot-5 D01-D12, ENUM-01, AGG-01, AUTH-01 and the proposed window at `2026-09-29T11:43:28+08:00`. A separate explicit Pilot-5 start authorization was granted at `2026-09-29T11:52:02+08:00`. Pilot-5 is now `AUTHORIZED_NOT_STARTED`.
 
-This approval has no start effect. Until a separate final seal / start authorization exists, no private Pilot-5 source census, intake, S1 source manifest, PCG receipt, real case exposure, case-specific enumeration, EFA, downstream authority or prediction work is authorized.
+The start authorization opens only the private source-census → intake → S1 → PCG preparation chain. Candidate case processing remains prohibited until every Pilot-5 PCG prerequisite is true and the public de-identified gate validates `READY`.
+
+ENUM-01, AGG-01 and AUTH-01 identities are frozen by the start seal. Real case-specific enumeration, EFA, full-window downstream authority and prediction locking remain downstream of PCG READY and their declared gates.
 
 Merge, tag, Release, Stable promotion and publish remain unauthorized.

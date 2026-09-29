@@ -1,6 +1,6 @@
 # Pilot-5 proposed values
 
-Status: **APPROVED_BY_HUMAN_DECISION_OWNER / READY_FOR_START_AUTHORIZATION**  
+Status: **START_AUTHORIZED / CANDIDATE PROCESSING GATED**  
 Preregistered at: `2026-09-29T11:28:05+08:00`
 
 Pilot-5 is a fresh protocol. No prior pilot approval or exposure state is inherited.
@@ -13,7 +13,7 @@ Pilot-5 is a fresh protocol. No prior pilot approval or exposure state is inheri
 - AUTH-01: APPROVED at `2026-09-29T11:43:28+08:00`.
 - Manual override: prohibited.
 - Promotion effect: none.
-- Start authorization: NOT_AUTHORIZED.
+- Start authorization: AUTHORIZED; candidate processing still requires PCG READY.
 - Candidate processing: prohibited until later separate start authorization + PCG READY.
 
 ## Proposed window
@@ -63,3 +63,10 @@ The exact normative rule is in `pilot5-segment-aware-downstream-authority-prereg
 Pilot-5 D01-D12, ENUM-01, AGG-01, AUTH-01 and the proposed window were explicitly approved by the human decision owner at `2026-09-29T11:43:28+08:00`.
 
 This moves Pilot-5 only to `READY_FOR_START_AUTHORIZATION`. The next human gate is a separate final seal/start authorization. Approval does not authorize private census, intake, S1, PCG, case exposure, candidate processing, prediction lock, merge, tag, Release or publish.
+
+
+## Start authorization checkpoint
+
+A separate Pilot-5 start authorization was explicitly granted by the human decision owner at `2026-09-29T11:52:02+08:00`.
+
+The start seal binds the exact candidate, package, capability manifest, final protocol, approved window, ENUM-01, AGG-01 and AUTH-01. Private source census/intake/S1 preparation may now proceed in order. Candidate processing remains prohibited until PCG READY.
