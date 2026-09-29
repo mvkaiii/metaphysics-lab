@@ -42,80 +42,146 @@
         "case_id": "bdref-2015-qingming-before-male",
         "birth_datetime": "2015-04-05T10:34:00+08:00",
         "sex": "male",
-        "coverage_tags": ["common_year", "yin_year", "before_jie", "reverse_direction_expected_from_contract"]
+        "coverage_tags": [
+          "common_year",
+          "yin_year",
+          "before_jie",
+          "reverse_direction_expected_from_contract"
+        ]
       },
       {
         "case_id": "bdref-2015-qingming-before-female",
         "birth_datetime": "2015-04-05T10:34:00+08:00",
         "sex": "female",
-        "coverage_tags": ["common_year", "yin_year", "before_jie", "forward_direction_expected_from_contract"]
+        "coverage_tags": [
+          "common_year",
+          "yin_year",
+          "before_jie",
+          "forward_direction_expected_from_contract"
+        ]
       },
       {
         "case_id": "bdref-2015-qingming-after-male",
         "birth_datetime": "2015-04-05T10:44:00+08:00",
         "sex": "male",
-        "coverage_tags": ["common_year", "yin_year", "after_jie", "reverse_direction_expected_from_contract"]
+        "coverage_tags": [
+          "common_year",
+          "yin_year",
+          "after_jie",
+          "reverse_direction_expected_from_contract"
+        ]
       },
       {
         "case_id": "bdref-2015-qingming-after-female",
         "birth_datetime": "2015-04-05T10:44:00+08:00",
         "sex": "female",
-        "coverage_tags": ["common_year", "yin_year", "after_jie", "forward_direction_expected_from_contract"]
+        "coverage_tags": [
+          "common_year",
+          "yin_year",
+          "after_jie",
+          "forward_direction_expected_from_contract"
+        ]
       },
       {
         "case_id": "bdref-2016-cross-year-jan1-male",
         "birth_datetime": "2016-01-01T12:00:00+08:00",
         "sex": "male",
-        "coverage_tags": ["leap_year", "yang_year", "cross_year_jie_lookup", "forward_direction_expected_from_contract"]
+        "coverage_tags": [
+          "leap_year",
+          "yin_year",
+          "cross_year_jie_lookup",
+          "reverse_direction_expected_from_contract"
+        ]
       },
       {
         "case_id": "bdref-2016-cross-year-jan1-female",
         "birth_datetime": "2016-01-01T12:00:00+08:00",
         "sex": "female",
-        "coverage_tags": ["leap_year", "yang_year", "cross_year_jie_lookup", "reverse_direction_expected_from_contract"]
+        "coverage_tags": [
+          "leap_year",
+          "yin_year",
+          "cross_year_jie_lookup",
+          "forward_direction_expected_from_contract"
+        ]
       },
       {
         "case_id": "bdref-2016-leap-day-male",
         "birth_datetime": "2016-02-29T12:00:00+08:00",
         "sex": "male",
-        "coverage_tags": ["leap_year", "leap_day", "yang_year", "forward_direction_expected_from_contract"]
+        "coverage_tags": [
+          "leap_year",
+          "leap_day",
+          "yang_year",
+          "forward_direction_expected_from_contract"
+        ]
       },
       {
         "case_id": "bdref-2016-leap-day-female",
         "birth_datetime": "2016-02-29T12:00:00+08:00",
         "sex": "female",
-        "coverage_tags": ["leap_year", "leap_day", "yang_year", "reverse_direction_expected_from_contract"]
+        "coverage_tags": [
+          "leap_year",
+          "leap_day",
+          "yang_year",
+          "reverse_direction_expected_from_contract"
+        ]
       },
       {
         "case_id": "bdref-2016-jingzhe-before-male",
         "birth_datetime": "2016-03-05T11:39:00+08:00",
         "sex": "male",
-        "coverage_tags": ["leap_year", "yang_year", "before_jie", "forward_direction_expected_from_contract"]
+        "coverage_tags": [
+          "leap_year",
+          "yang_year",
+          "before_jie",
+          "forward_direction_expected_from_contract"
+        ]
       },
       {
         "case_id": "bdref-2016-jingzhe-before-female",
         "birth_datetime": "2016-03-05T11:39:00+08:00",
         "sex": "female",
-        "coverage_tags": ["leap_year", "yang_year", "before_jie", "reverse_direction_expected_from_contract"]
+        "coverage_tags": [
+          "leap_year",
+          "yang_year",
+          "before_jie",
+          "reverse_direction_expected_from_contract"
+        ]
       },
       {
         "case_id": "bdref-2016-jingzhe-after-male",
         "birth_datetime": "2016-03-05T11:49:00+08:00",
         "sex": "male",
-        "coverage_tags": ["leap_year", "yang_year", "after_jie", "forward_direction_expected_from_contract"]
+        "coverage_tags": [
+          "leap_year",
+          "yang_year",
+          "after_jie",
+          "forward_direction_expected_from_contract"
+        ]
       },
       {
         "case_id": "bdref-2016-jingzhe-after-female",
         "birth_datetime": "2016-03-05T11:49:00+08:00",
         "sex": "female",
-        "coverage_tags": ["leap_year", "yang_year", "after_jie", "reverse_direction_expected_from_contract"]
+        "coverage_tags": [
+          "leap_year",
+          "yang_year",
+          "after_jie",
+          "reverse_direction_expected_from_contract"
+        ]
       }
     ]
   },
   "comparison_plan": {
     "paths": [
-      {"path": "/decadal_direction", "kind": "exact"},
-      {"path": "/periods/0/pillar", "kind": "exact"},
+      {
+        "path": "/decadal_direction",
+        "kind": "exact"
+      },
+      {
+        "path": "/periods/0/pillar",
+        "kind": "exact"
+      },
       {
         "path": "/periods/0/start_age_years",
         "kind": "number_abs",
