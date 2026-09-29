@@ -314,8 +314,9 @@ Pilot-5 is a fresh protocol created after Pilot-4 halted at downstream authority
 - [x] Human approval of AUTH-01 at `2026-09-29T11:43:28+08:00`
 - [x] Separate Pilot-5 final seal / start authorization at `2026-09-29T11:52:02+08:00`; frozen candidate `fe6975f0dc223a27a1e885f50c9f111ee24d68d4`
 - [x] Private source census → intake → S1 → PCG READY at `2026-09-29T12:00:14+08:00`
-- [ ] Fresh candidate exposure / processing (now permitted by PCG READY; not yet started at checkpoint)
-- [ ] Snapshot manifest → complete EFA census → AGG-01 claim universe
+- [x] Fresh candidate exposure / processing began only after PCG READY; frozen candidate used
+- [x] Deterministic segment enumeration → exact ordered snapshot manifest frozen before EFA
+- [ ] Complete per-segment single-source chain + EFA census → AGG-01 claim universe
 - [ ] Per-segment complete downstream chains → AUTH-01 window authority
 - [ ] Exact prediction-lock bridge → prediction lock
 
