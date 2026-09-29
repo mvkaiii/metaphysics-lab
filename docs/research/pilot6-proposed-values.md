@@ -1,6 +1,6 @@
 # Pilot-6 proposed values
 
-Status: **APPROVED_BY_HUMAN_DECISION_OWNER / READY_FOR_START_AUTHORIZATION**  
+Status: **START_AUTHORIZED / AUTHORIZED_NOT_STARTED**  
 Preregistered at: `2026-09-29T12:27:00+08:00`
 
 Pilot-6 is a fresh protocol. No prior pilot approval, case identity or exposure state is inherited.
@@ -14,8 +14,8 @@ Pilot-6 is a fresh protocol. No prior pilot approval, case identity or exposure 
 - AUTH-01: APPROVED at `2026-09-29T12:39:46+08:00`.
 - Manual override: prohibited.
 - Promotion effect: none.
-- Start authorization: NOT_AUTHORIZED.
-- Candidate processing: prohibited until a later separate start authorization + PCG READY.
+- Start authorization: AUTHORIZED at `2026-09-29T14:21:43+08:00`.
+- Candidate processing: prohibited until PCG READY.
 
 ## Proposed window
 
@@ -71,4 +71,4 @@ No best-snapshot selection, voting, repetition uplift or synthetic single-source
 
 Pilot-6 D01-D12, ENUM-01, MANIFEST-01, AGG-01, AUTH-01 and the proposed window were explicitly approved by the human decision owner at `2026-09-29T12:39:46+08:00`.
 
-This moves Pilot-6 only to `READY_FOR_START_AUTHORIZATION`. Approval does not authorize private census, intake, S1, PCG, case exposure, candidate processing, MANIFEST-01 execution, EFA, prediction lock, merge, tag, Release or publish.
+A separate Pilot-6 final seal / start authorization was granted by the human decision owner at `2026-09-29T14:21:43+08:00`. Private census, intake, S1 and PCG preparation may now proceed in sequence. Candidate case exposure/processing remains prohibited until PCG READY; MANIFEST-01, EFA and prediction locking remain later gates. Merge, tag, Release and publish remain unauthorized.
