@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0",
+  "pilot_id": "Pilot-4",
+  "checkpoint_status": "STRUCTURAL_SNAPSHOT_MANIFEST_FROZEN",
+  "process_stage": "STRUCTURAL_SNAPSHOT_MANIFEST",
+  "governance": {
+    "pcg_status": "READY_BEFORE_CANDIDATE_PROCESSING",
+    "frozen_candidate_used": true,
+    "enumeration_decision_status": "ENUM-01_APPROVED_AND_BOUND",
+    "aggregation_decision_status": "AGG-01_APPROVED_AND_BOUND"
+  },
+  "candidate_execution": {
+    "processing_started_only_after_pcg_ready": true,
+    "normalized_natal_basis_materialized": true,
+    "requested_scopes": [
+      "yearly",
+      "monthly"
+    ],
+    "target_scope": "yearly",
+    "blind_side_material_read": false
+  },
+  "enumeration_contract": {
+    "profile": "lin_tianji_complete_structural_snapshot_enumerator_v1",
+    "rule": "complete_union_of_authoritative_yearly_monthly_time_boundaries_no_post_exposure_merge",
+    "deterministic_complete_window_partition_created": true,
+    "canonical_representative_rule": "UTC_MIDPOINT_CONVERTED_TO_ASIA_TAIPEI",
+    "post_exposure_segment_merge_allowed": false,
+    "post_exposure_segment_split_allowed": false,
+    "post_exposure_segment_substitution_allowed": false
+  },
+  "manifest_contract": {
+    "complete_ordered_snapshot_manifest_created": true,
+    "frozen_before_efa_materialization": true,
+    "every_enumerated_segment_materialized": true,
+    "structural_state_digest_authority": "CANONICAL_STRUCTURAL_INTERPRETATION_INTERPRETATION_DIGEST",
+    "structural_state_digest_profile_source": "FROZEN_CANDIDATE_RUNTIME",
+    "efa_content_used_to_define_snapshot_census": false
+  },
+  "privacy": {
+    "private_case_id_disclosed": false,
+    "birth_data_disclosed": false,
+    "snapshot_count_disclosed": false,
+    "snapshot_ids_disclosed": false,
+    "private_enumeration_digest_disclosed": false,
+    "private_snapshot_manifest_digest_disclosed": false,
+    "structural_state_digests_disclosed": false
+  },
+  "execution_state": {
+    "efa_census": "NOT_STARTED_AT_CHECKPOINT",
+    "claim_universe_lock": "NOT_CREATED",
+    "s1_claim_membership_lock": "NOT_CREATED",
+    "downstream_authority_compatibility": "NOT_ASSESSED",
+    "prediction_lock": "NOT_CREATED",
+    "outcome_collection": "NOT_STARTED",
+    "adjudication": "NOT_STARTED",
+    "scoring": "NOT_STARTED"
+  },
+  "interpretation": {
+    "process_conformance_so_far": true,
+    "predictive_validity_evidence_created": false,
+    "qualification_evidence_created": false,
+    "stable_promotion_effect": false
+  },
+  "next_action": "MATERIALIZE_EXACTLY_ONE_COMPLETE_YEARLY_EFA_INVENTORY_PER_FROZEN_SNAPSHOT"
+}
