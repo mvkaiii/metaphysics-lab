@@ -336,7 +336,7 @@ Enumeration decision: `ENUM-01 APPROVED`
 Canonical manifest decision: `MANIFEST-01 APPROVED`  
 Aggregation decision: `AGG-01 APPROVED`  
 Downstream authority decision: `AUTH-01 APPROVED`  
-Pilot: `AUTHORIZED_NOT_STARTED`
+Pilot: `PCG_READY / CANDIDATE_PROCESSING_NOT_STARTED`
 
 Pilot-6 is a fresh protocol version created after Pilot-5 halted on a noncanonical pre-EFA snapshot-manifest serialization. It does not resume or repair Pilot-5.
 
@@ -354,7 +354,7 @@ Pilot-6 is a fresh protocol version created after Pilot-5 halted on a noncanonic
 - [x] Human approval of AGG-01 at `2026-09-29T12:39:46+08:00`
 - [x] Human approval of AUTH-01 at `2026-09-29T12:39:46+08:00`
 - [x] Separate Pilot-6 final seal / start authorization at `2026-09-29T14:21:43+08:00`; frozen candidate `6cb37e8b6f1ef1c9638008e9a7757ec757d20161`
-- [ ] Private census → intake → S1 → PCG READY
+- [x] Private census → intake → S1 → PCG READY at `2026-09-29T14:49:38+08:00`; private case/provenance material remains outside Git
 - [ ] Fresh Pilot-6 candidate exposure / processing
 - [ ] ENUM-01 complete enumeration
 - [ ] MANIFEST-01 canonical pre-EFA READY receipt
@@ -363,4 +363,4 @@ Pilot-6 is a fresh protocol version created after Pilot-5 halted on a noncanonic
 - [ ] Prediction lock
 
 
-Pilot-6 D01-D12, ENUM-01, MANIFEST-01, AGG-01, AUTH-01 and the proposed window are approved, and a separate final seal/start authorization was granted at `2026-09-29T14:21:43+08:00`. Private source census/intake/S1/PCG preparation may proceed in sequence. Candidate exposure/processing remains prohibited until PCG READY.
+Pilot-6 D01-D12, ENUM-01, MANIFEST-01, AGG-01, AUTH-01 and the proposed window are approved, and a separate final seal/start authorization was granted at `2026-09-29T14:21:43+08:00`. Private source census/intake/S1/PCG preparation may proceed in sequence. PCG is now READY. Candidate exposure/processing remains intentionally unstarted in this conversation because a governance search returned a blind-side snippet; frozen-candidate execution must begin only in a fresh isolated prediction context.
