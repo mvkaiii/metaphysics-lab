@@ -255,7 +255,7 @@ Any new commit after the currently verified candidate invalidates reuse of its e
 Protocol decisions：`ALL_ITEMS_APPROVED`  
 Enumeration decision：`ENUM-01 APPROVED`  
 Aggregation decision：`AGG-01 APPROVED`  
-Pilot：`AUTHORIZED_NOT_STARTED`
+Pilot：`HALTED_NON_QUALIFYING`
 
 Pilot-4 is a new pilot/protocol version created after Pilot-3 halted at the structural-snapshot-manifest gate. It does not resume or repair Pilot-3.
 
@@ -277,9 +277,12 @@ Pilot-4 is a new pilot/protocol version created after Pilot-3 halted at the stru
 - [x] Private source census → intake → S1 → PCG READY at `2026-09-28T22:20:22+08:00`
 - [x] Fresh Pilot-4 candidate exposure / processing began only after PCG READY; frozen candidate used
 - [x] Deterministic segment enumeration → exact ordered snapshot manifest frozen before EFA
-- [ ] Complete yearly EFA census across every frozen snapshot
-- [ ] Complete-union claim-universe lock → exact S1 membership
-- [ ] Segment-aware downstream authority compatibility
-- [ ] Prediction lock
+- [x] Complete yearly EFA census across every frozen snapshot
+- [x] Complete-union claim-universe lock → exact S1 membership
+- [x] Segment-aware downstream authority compatibility assessed — **FAILED_CLOSED**: frozen downstream requires single-source ranking/structural/EFA provenance and no preregistered multi-segment adapter exists
+- [ ] Prediction lock — **NOT CREATED; Pilot-4 halted before prediction lock**
 
 Pilot-4 D01–D12, ENUM-01, AGG-01 and separate start authorization are complete. Private source-census → intake → S1 preparation may proceed in order. Candidate case exposure/processing remains prohibited until PCG READY.
+
+
+Pilot-4 halted fail-closed at `DOWNSTREAM_AUTHORITY_COMPATIBILITY` on `2026-09-29T08:25:30+08:00`. ENUM-01, complete snapshot manifest, complete yearly EFA census, AGG-01 union, and exact S1 membership all completed before the halt. The aggregate yearly universe is membership-only; the frozen Claim Evidence/C1/C2/HCC/HOC chain requires one ranking/structural/EFA provenance path and contains no preregistered segment-aware adapter. Pilot-4 may not resume and may not receive a replacement case. Any retry requires a new pilot/protocol version with the downstream authority path fixed before case exposure.

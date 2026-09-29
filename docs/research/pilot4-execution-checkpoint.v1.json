@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.0",
+  "pilot_id": "Pilot-4",
+  "checkpoint_status": "HALTED_NON_QUALIFYING",
+  "process_stage": "DOWNSTREAM_AUTHORITY_COMPATIBILITY",
+  "halted_at": "2026-09-29T08:25:30+08:00",
+  "deviation_code": "MULTI_SEGMENT_DOWNSTREAM_AUTHORITY_PATH_UNAVAILABLE",
+  "governance": {
+    "protocol_decisions_status": "ALL_ITEMS_APPROVED",
+    "enum01_status": "APPROVED_AND_BOUND_BEFORE_CASE_EXPOSURE",
+    "agg01_status": "APPROVED_AND_BOUND_BEFORE_CASE_EXPOSURE",
+    "start_authorization_status": "AUTHORIZED",
+    "pcg_status": "READY_BEFORE_CANDIDATE_PROCESSING"
+  },
+  "execution_state": {
+    "frozen_candidate_used": true,
+    "candidate_processing_started_only_after_pcg_ready": true,
+    "normalized_natal_basis_materialized": true,
+    "structural_snapshot_enumeration": "COMPLETE_PRIVATE",
+    "structural_snapshot_manifest": "FROZEN_BEFORE_EFA",
+    "efa_census": "COMPLETE_PRIVATE",
+    "claim_universe_lock": "CREATED_PRIVATE",
+    "s1_claim_membership_lock": "VALIDATED_EXACT_PRIVATE",
+    "downstream_authority_compatibility": "FAILED_CLOSED",
+    "prediction_lock": "NOT_CREATED",
+    "outcome_collection": "NOT_STARTED",
+    "adjudication": "NOT_STARTED",
+    "scoring": "NOT_STARTED"
+  },
+  "contract_boundary": {
+    "aggregation_scope": "MEMBERSHIP_ONLY",
+    "aggregate_may_not_impersonate_single_snapshot_authority": true,
+    "frozen_claim_evidence_requires_single_ranking_and_structural_provenance": true,
+    "frozen_claim_consumption_requires_matching_single_ranking_and_structural_provenance": true,
+    "frozen_hierarchical_authority_requires_single_efa_bundle": true,
+    "frozen_hybrid_composer_requires_single_efa_bundle": true,
+    "frozen_hybrid_output_contract_consumes_single_hcc_source": true,
+    "segment_aware_downstream_adapter_preregistered": false,
+    "best_snapshot_selection_preregistered": false,
+    "synthetic_multi_source_authority_preregistered": false,
+    "retrospective_adapter_invention_allowed": false
+  },
+  "blindness": {
+    "validation_event_history_read": false,
+    "outcome_material_read": false
+  },
+  "privacy": {
+    "private_case_id_disclosed": false,
+    "birth_data_disclosed": false,
+    "snapshot_count_disclosed": false,
+    "snapshot_ids_disclosed": false,
+    "private_snapshot_digests_disclosed": false,
+    "claim_count_disclosed": false,
+    "claim_ids_disclosed": false,
+    "private_claim_universe_digest_disclosed": false
+  },
+  "interpretation": {
+    "process_conformance_met": false,
+    "predictive_validity_evidence_created": false,
+    "qualification_evidence_created": false,
+    "stable_promotion_effect": false
+  },
+  "next_action": {
+    "pilot4_resume": "PROHIBITED",
+    "replacement_case_under_pilot4": "PROHIBITED",
+    "retry_requires": "NEW_PILOT_ID_OR_PROTOCOL_VERSION",
+    "required_contract_delta": "PREREGISTER_SEGMENT_AWARE_DOWNSTREAM_AUTHORITY_ADAPTER_OR_COMPATIBLE_AUTHORITY_PATH_BEFORE_CASE_EXPOSURE"
+  }
+}
