@@ -47,7 +47,7 @@ _ENGLISH_JIE = {
     "Winter commences": "立冬",
     "Heavy snow": "大雪",
 }
-_LUNAR_KEYS = {"驚蟄": "惊蛰"}
+_LUNAR_KEYS = {"驚蟄": "惊蛰", "芒種": "芒种"}
 _MONTHS = {
     "January": 1, "February": 2, "March": 3, "April": 4,
     "May": 5, "June": 6, "July": 7, "August": 8,
