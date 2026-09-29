@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0",
+  "pilot_id": "Pilot-6",
+  "gate_profile": "pilot6_pre_candidate_gate_v1",
+  "gate_status": "BLOCKED",
+  "prerequisites": {
+    "protocol_decisions_approved": false,
+    "enum01_approved": false,
+    "manifest01_approved": false,
+    "agg01_approved": false,
+    "auth01_approved": false,
+    "start_authorization_bound": false,
+    "source_census_frozen": false,
+    "intake_registry_valid": false,
+    "intake_eligible_for_s1": false,
+    "s1_source_manifest_frozen": false,
+    "s1_candidate_exposure_unexposed": false,
+    "s1_manifest_predates_candidate_processing": false
+  },
+  "public_bindings": {
+    "candidate_commit": null,
+    "package_sha256": null,
+    "manifest_sha256": null,
+    "protocol_sha256": null,
+    "window_policy_digest": null,
+    "enumeration_decision_sha256": null,
+    "enumeration_profile": null,
+    "enumeration_rule": null,
+    "manifest_decision_sha256": null,
+    "manifest_gate_profile": null,
+    "manifest_gate_rule": null,
+    "aggregation_decision_sha256": null,
+    "aggregation_profile": null,
+    "aggregation_rule": null,
+    "downstream_authority_decision_sha256": null,
+    "downstream_authority_profile": null,
+    "downstream_authority_rule": null,
+    "prediction_bridge_rule": null
+  },
+  "candidate_case_processing_allowed": false,
+  "private_material_disclosed": false,
+  "manual_override_allowed": false
+}

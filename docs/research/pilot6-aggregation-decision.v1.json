@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "pilot_id": "Pilot-6",
+  "decision_id": "AGG-01",
+  "status": "PENDING_HUMAN_APPROVAL",
+  "decision_class": "MANDATORY_MULTI_SEGMENT_YEARLY_CLAIM_UNIVERSE_AGGREGATION",
+  "preregistered_at": "2026-09-29T12:27:00+08:00",
+  "selection_basis": "COMPLETE_CENSUS_MEMBERSHIP_SEMANTICS_ONLY",
+  "inherited_approval_from_prior_pilots": false,
+  "pilot2_claim_set_observations_used_for_rule_selection": false,
+  "pilot3_claim_set_observations_used_for_rule_selection": false,
+  "pilot4_claim_set_observations_used_for_rule_selection": false,
+  "pilot5_claim_set_observations_used_for_rule_selection": false,
+  "mandatory": true,
+  "manual_override_allowed": false,
+  "start_authorization_effect": false,
+  "candidate_processing_effect": "NONE_UNTIL_SEPARATE_START_AUTHORIZATION_AND_PCG_READY",
+  "promotion_allowed": false,
+  "proposed_profile": "lin_tianji_multi_segment_yearly_claim_universe_v1",
+  "proposed_rule": "complete_union_of_all_manifested_efa_child_inventories"
+}

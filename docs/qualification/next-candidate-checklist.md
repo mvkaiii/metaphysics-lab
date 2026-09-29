@@ -327,3 +327,37 @@ Pilot-5 D01-D12, ENUM-01, AGG-01, AUTH-01 and the proposed window are approved. 
 
 
 Pilot-5 halted fail-closed at `SNAPSHOT_MANIFEST_CANONICAL_VALIDATION_BEFORE_AGGREGATION` on `2026-09-29T12:15:23+08:00` with `PRE_EFA_SNAPSHOT_MANIFEST_SCHEMA_INVALID`. The structural snapshot rows were frozen before EFA and were not changed afterward, but the pre-EFA private manifest serialization did not conform to the already-approved canonical snapshot-manifest schema. EFA had already begun before this was detected, so a new canonical manifest digest cannot be created retrospectively and treated as pre-EFA authority. AGG-01, S1 claim membership, AUTH-01 and prediction lock were not created. Pilot-5 may not resume and may not receive a replacement case; any retry requires a new pilot/protocol version whose gate validates the canonical manifest before EFA execution.
+
+
+### Pilot-6
+
+Protocol decisions: `PENDING_ITEM_APPROVAL`  
+Enumeration decision: `ENUM-01 PENDING`  
+Canonical manifest decision: `MANIFEST-01 PENDING`  
+Aggregation decision: `AGG-01 PENDING`  
+Downstream authority decision: `AUTH-01 PENDING`  
+Pilot: `NOT_STARTED`
+
+Pilot-6 is a fresh protocol version created after Pilot-5 halted on a noncanonical pre-EFA snapshot-manifest serialization. It does not resume or repair Pilot-5.
+
+- [x] Pilot-5 halt retained as `HALTED_NON_QUALIFYING`; no resume/replacement under Pilot-5
+- [x] Pilot-5 public defect class isolated without using private snapshot/EFA/claim contents
+- [x] MANIFEST-01 preregistered at `2026-09-29T12:27:00+08:00`
+- [x] MANIFEST-01 requires canonical helper materialization + exact schema/digest validation before any EFA
+- [x] EFA-before-MANIFEST-01-READY fails closed
+- [x] Retrospective manifest repair after EFA is prohibited
+- [x] Fresh Pilot-6 D01-D12 / ENUM-01 / MANIFEST-01 / AGG-01 / AUTH-01 created PENDING
+- [x] Proposed new non-overlapping window: `2027-09-01T00:00:00+08:00` → `2027-10-31T23:59:59+08:00`
+- [ ] Human approval of Pilot-6 D01-D12
+- [ ] Human approval of ENUM-01
+- [ ] Human approval of MANIFEST-01
+- [ ] Human approval of AGG-01
+- [ ] Human approval of AUTH-01
+- [ ] Separate Pilot-6 final seal / start authorization
+- [ ] Private census → intake → S1 → PCG READY
+- [ ] Fresh Pilot-6 candidate exposure / processing
+- [ ] ENUM-01 complete enumeration
+- [ ] MANIFEST-01 canonical pre-EFA READY receipt
+- [ ] Complete EFA census → AGG-01 claim universe
+- [ ] Per-segment downstream chains → AUTH-01
+- [ ] Prediction lock
