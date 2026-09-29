@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "pilot_id": "Pilot-6",
-  "status": "APPROVED_PENDING_START_AUTHORIZATION",
+  "status": "APPROVED_START_AUTHORIZED",
   "timezone": "Asia/Taipei",
   "outcome_window_start": "2027-09-01T00:00:00+08:00",
   "outcome_window_end": "2027-10-31T23:59:59+08:00",
@@ -27,5 +27,7 @@
   "promotion_allowed": false,
   "approved_by_role": "human_decision_owner",
   "approved_at": "2026-09-29T12:39:46+08:00",
-  "start_authorized": false
+  "start_authorized": true,
+  "start_authorized_by_role": "human_decision_owner",
+  "start_authorized_at": "2026-09-29T14:21:43+08:00"
 }
