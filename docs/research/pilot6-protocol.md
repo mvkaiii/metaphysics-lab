@@ -1,12 +1,12 @@
-# Prospective Pilot-6 protocol — human-approved decisions pending start seal
+# Prospective Pilot-6 protocol — start authorized, pre-candidate gate blocked
 
 **Protocol decision status:** `ALL_ITEMS_APPROVED`  
 **Enumeration decision:** `ENUM-01 APPROVED`  
 **Canonical manifest decision:** `MANIFEST-01 APPROVED`  
 **Aggregation decision:** `AGG-01 APPROVED`  
 **Downstream authority decision:** `AUTH-01 APPROVED`  
-**Pilot status:** `READY_FOR_START_AUTHORIZATION`  
-**Start authorization:** `NOT_AUTHORIZED`  
+**Pilot status:** `AUTHORIZED_NOT_STARTED`  
+**Start authorization:** `AUTHORIZED`  
 **Candidate case processing:** `PROHIBITED`
 
 Pilot-6 is a new pilot/protocol version. It does not resume or repair Pilot-5 and inherits no prior pilot approval, start authorization, case identity, exposure state, private snapshot observation, EFA census, claim set, prediction, outcome or qualification state.
@@ -91,8 +91,8 @@ Claim scope remains yearly; timing scope remains monthly; requested dynamic scop
 
 ## Current gate
 
-The human decision owner explicitly approved Pilot-6 D01-D12, ENUM-01, MANIFEST-01, AGG-01, AUTH-01 and the proposed window at `2026-09-29T12:39:46+08:00`. Pilot-6 is now `READY_FOR_START_AUTHORIZATION`.
+The human decision owner explicitly approved Pilot-6 D01-D12, ENUM-01, MANIFEST-01, AGG-01, AUTH-01 and the proposed window at `2026-09-29T12:39:46+08:00`. A separate final seal / start authorization was granted at `2026-09-29T14:21:43+08:00`. Pilot-6 is now `AUTHORIZED_NOT_STARTED`.
 
-This approval has no start effect. Until a separate final seal / start authorization exists, no private Pilot-6 source census, intake, S1 source manifest, PCG receipt, real case exposure, case-specific enumeration, MANIFEST-01 execution, EFA, aggregation, downstream authority or prediction work is authorized.
+This start authorization permits the private source census, intake, S1 source-manifest preparation and PCG preparation to proceed in the approved sequence. Real candidate case exposure/processing remains prohibited until PCG is `READY`. Case-specific ENUM-01, MANIFEST-01 execution, EFA, aggregation, downstream authority and prediction work remain later gated steps.
 
 Merge, tag, Release, Stable promotion and publish remain unauthorized.
