@@ -43,6 +43,25 @@ class VendorImportIsolationTests(unittest.TestCase):
                             violations.append((path.relative_to(vendor_root).as_posix(), node.lineno, node.module))
             self.assertEqual(violations, [])
 
+
+    def test_bazi_calendar_uses_private_lunar_vendor_under_python_s(self):
+        script = r'''
+from datetime import datetime
+from zoneinfo import ZoneInfo
+from engine.bazi.calendar import solar_term_time
+
+value = solar_term_time(2015, "清明", "Asia/Taipei")
+assert value.tzinfo is not None
+assert abs((value - datetime(2015, 4, 5, 10, 39, tzinfo=ZoneInfo("Asia/Taipei"))).total_seconds()) <= 60
+'''
+        completed = subprocess.run(
+            [sys.executable, "-S", "-c", script],
+            cwd=str(ROOT),
+            text=True,
+            capture_output=True,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+
     def test_private_namespaces_import_from_materialized_shards_under_python_s(self):
         script = r'''
 import importlib

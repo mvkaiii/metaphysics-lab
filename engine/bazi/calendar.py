@@ -13,7 +13,7 @@ import math
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-from lunar_python import Solar
+from engine.calendar.lunar import LunarProviderFailure, load_private_solar
 
 ENGINE_NAME = "Project Bazi Calendar Engine"
 ENGINE_VERSION = "1.1.0"
@@ -152,7 +152,8 @@ def _legacy_solar_term_time_v1(
 def _reference_jie_table(year: int) -> dict[str, datetime]:
     """Return the pinned lunar-python Jie table on its documented UTC+08 basis."""
     try:
-        table = Solar.fromYmd(year, 7, 1).getLunar().getJieQiTable()
+        solar = load_private_solar()
+        table = solar.fromYmd(year, 7, 1).getLunar().getJieQiTable()
         result = {}
         for term in JIE_MAP:
             key = _LUNAR_JIE_KEYS.get(term, term)
@@ -174,9 +175,13 @@ def _reference_jie_table(year: int) -> dict[str, datetime]:
                 )
             result[term] = value
         return result
+    except (LunarProviderFailure, KeyError, ValueError, IndexError) as exc:
+        raise BaziCalendarError(
+            f"bundled lunar-python 無法提供 {year} 年節氣表"
+        ) from exc
     except Exception as exc:
         raise BaziCalendarError(
-            f"lunar-python 無法提供 {year} 年節氣表"
+            f"bundled lunar-python 節氣provider失敗：{year}"
         ) from exc
 
 
