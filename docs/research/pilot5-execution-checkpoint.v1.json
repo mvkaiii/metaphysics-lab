@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0",
+  "pilot_id": "Pilot-5",
+  "checkpoint_status": "HALTED_NON_QUALIFYING",
+  "process_stage": "SNAPSHOT_MANIFEST_CANONICAL_VALIDATION_BEFORE_AGGREGATION",
+  "halted_at": "2026-09-29T12:15:23+08:00",
+  "deviation_code": "PRE_EFA_SNAPSHOT_MANIFEST_SCHEMA_INVALID",
+  "governance": {
+    "protocol_decisions_status": "ALL_ITEMS_APPROVED",
+    "enum01_status": "APPROVED_AND_START_BOUND",
+    "agg01_status": "APPROVED_AND_START_BOUND",
+    "auth01_status": "APPROVED_AND_START_BOUND",
+    "start_authorization_status": "AUTHORIZED",
+    "pcg_status": "READY_BEFORE_CANDIDATE_PROCESSING"
+  },
+  "execution_state": {
+    "frozen_candidate_used": true,
+    "candidate_processing_started_only_after_pcg_ready": true,
+    "normalized_natal_basis_materialized": true,
+    "structural_snapshot_enumeration": "COMPLETE_PRIVATE",
+    "structural_snapshot_rows": "FROZEN_BEFORE_EFA_PRIVATE",
+    "canonical_snapshot_manifest_validation": "FAILED_CLOSED",
+    "efa_census": "COMPLETE_PRIVATE_AFTER_NONCANONICAL_MANIFEST_SERIALIZATION",
+    "claim_universe_lock": "NOT_CREATED",
+    "s1_claim_membership_lock": "NOT_CREATED",
+    "segment_aware_window_authority": "NOT_CREATED",
+    "prediction_lock": "NOT_CREATED",
+    "outcome_collection": "NOT_STARTED",
+    "adjudication": "NOT_STARTED",
+    "scoring": "NOT_STARTED"
+  },
+  "deviation_boundary": {
+    "snapshot_membership_or_order_changed_after_efa": false,
+    "private_structural_digests_changed_after_efa": false,
+    "invalid_serialization_used_efa_content_for_selection": false,
+    "canonical_manifest_digest_frozen_before_efa": false,
+    "retrospective_manifest_rebuild_allowed": false,
+    "agg01_execution_allowed": false,
+    "auth01_execution_allowed": false,
+    "prediction_lock_allowed": false
+  },
+  "blindness": {
+    "validation_event_history_read": false,
+    "question_tracking_history_read": false,
+    "annual_tracking_history_read": false,
+    "outcome_material_read": false
+  },
+  "privacy": {
+    "private_case_id_disclosed": false,
+    "birth_data_disclosed": false,
+    "snapshot_count_disclosed": false,
+    "snapshot_ids_disclosed": false,
+    "private_snapshot_digests_disclosed": false,
+    "efa_child_count_disclosed": false,
+    "efa_child_ids_disclosed": false,
+    "private_efa_digests_disclosed": false
+  },
+  "interpretation": {
+    "process_conformance_met": false,
+    "predictive_validity_evidence_created": false,
+    "qualification_evidence_created": false,
+    "stable_promotion_effect": false
+  },
+  "next_action": {
+    "pilot5_resume": "PROHIBITED",
+    "replacement_case_under_pilot5": "PROHIBITED",
+    "retry_requires": "NEW_PILOT_ID_OR_PROTOCOL_VERSION",
+    "required_contract_delta": "CANONICAL_SCHEMA_VALID_SNAPSHOT_MANIFEST_MUST_BE_MATERIALIZED_AND_VALIDATED_BEFORE_ANY_EFA_EXECUTION"
+  }
+}

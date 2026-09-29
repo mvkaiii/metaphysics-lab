@@ -294,7 +294,7 @@ Protocol decisions: `ALL_ITEMS_APPROVED`
 Enumeration decision: `ENUM-01 APPROVED`  
 Aggregation decision: `AGG-01 APPROVED`  
 Downstream authority decision: `AUTH-01 APPROVED`  
-Pilot: `AUTHORIZED_NOT_STARTED`
+Pilot: `HALTED_NON_QUALIFYING`
 
 Pilot-5 is a fresh protocol created after Pilot-4 halted at downstream authority compatibility.
 
@@ -315,10 +315,15 @@ Pilot-5 is a fresh protocol created after Pilot-4 halted at downstream authority
 - [x] Separate Pilot-5 final seal / start authorization at `2026-09-29T11:52:02+08:00`; frozen candidate `fe6975f0dc223a27a1e885f50c9f111ee24d68d4`
 - [x] Private source census → intake → S1 → PCG READY at `2026-09-29T12:00:14+08:00`
 - [x] Fresh candidate exposure / processing began only after PCG READY; frozen candidate used
-- [x] Deterministic segment enumeration → exact ordered snapshot manifest frozen before EFA
-- [ ] Complete per-segment single-source chain + EFA census → AGG-01 claim universe
-- [ ] Per-segment complete downstream chains → AUTH-01 window authority
-- [ ] Exact prediction-lock bridge → prediction lock
+- [x] Deterministic segment enumeration and structural snapshot rows frozen before EFA
+- [x] Private yearly EFA census executed after the frozen rows
+- [x] Canonical snapshot-manifest validation — **FAILED_CLOSED** before AGG-01: pre-EFA serialized manifest was not schema-valid under the already-approved canonical manifest contract
+- [ ] AGG-01 claim universe — **NOT CREATED**
+- [ ] Per-segment downstream chains → AUTH-01 window authority — **NOT REACHED**
+- [ ] Exact prediction-lock bridge → prediction lock — **NOT CREATED**
 
 
 Pilot-5 D01-D12, ENUM-01, AGG-01, AUTH-01 and the proposed window are approved. No start authorization exists. The next valid gate is a separate Pilot-5 final seal/start authorization; private source census and all candidate processing remain prohibited until that later gate and PCG sequence.
+
+
+Pilot-5 halted fail-closed at `SNAPSHOT_MANIFEST_CANONICAL_VALIDATION_BEFORE_AGGREGATION` on `2026-09-29T12:15:23+08:00` with `PRE_EFA_SNAPSHOT_MANIFEST_SCHEMA_INVALID`. The structural snapshot rows were frozen before EFA and were not changed afterward, but the pre-EFA private manifest serialization did not conform to the already-approved canonical snapshot-manifest schema. EFA had already begun before this was detected, so a new canonical manifest digest cannot be created retrospectively and treated as pre-EFA authority. AGG-01, S1 claim membership, AUTH-01 and prediction lock were not created. Pilot-5 may not resume and may not receive a replacement case; any retry requires a new pilot/protocol version whose gate validates the canonical manifest before EFA execution.
