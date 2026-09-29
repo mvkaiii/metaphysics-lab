@@ -39,6 +39,20 @@ class BaziDecadalPreOracleReviewPacketTests(unittest.TestCase):
         self.assertTrue(any("before_jie" in case["coverage_tags"] for case in cases))
         self.assertTrue(any("after_jie" in case["coverage_tags"] for case in cases))
 
+    def test_pre_lichun_cross_year_cases_keep_prior_yin_year_polarity(self):
+        by_id = {
+            case["case_id"]: case
+            for case in self.payload["case_selection"]["cases"]
+        }
+        male = by_id["bdref-2016-cross-year-jan1-male"]
+        female = by_id["bdref-2016-cross-year-jan1-female"]
+        self.assertIn("yin_year", male["coverage_tags"])
+        self.assertIn("yin_year", female["coverage_tags"])
+        self.assertNotIn("yang_year", male["coverage_tags"])
+        self.assertNotIn("yang_year", female["coverage_tags"])
+        self.assertIn("reverse_direction_expected_from_contract", male["coverage_tags"])
+        self.assertIn("forward_direction_expected_from_contract", female["coverage_tags"])
+
     def test_source_bytes_and_spec_digest_are_still_missing_by_design(self):
         self.assertIsNone(self.payload["profile_candidate"]["specification_sha256"])
         for source in self.payload["external_source_plan"]["sources"]:
