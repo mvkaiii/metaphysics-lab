@@ -1,0 +1,103 @@
+{
+  "schema_version": "1.0",
+  "task_id": "Bazi-decadal-Task3",
+  "receipt_type": "NON_INDEPENDENT_DRY_RUN",
+  "evidence_class": "SAME_CONTEXT_DIAGNOSTIC_REPRODUCTION",
+  "independent_qualification_usable": false,
+  "qualification_decision": "HUMAN_REVIEW_REQUIRED",
+  "maturity_promotion": false,
+  "task3_independent_status": "NEEDS_EVIDENCE",
+  "executed_head": "fb48a2cfec3c7946cddb05e321ace9cc5d046604",
+  "workflow": {
+    "name": "Bazi decadal non-independent dry-run",
+    "run_id": 36590426371,
+    "conclusion": "SUCCESS",
+    "artifact_id": 11044145236,
+    "artifact_name": "bazi-decadal-nonindependent-dryrun",
+    "artifact_digest": "sha256:6575986c533b6be5701fa2d2fe777a0c8b082513e039cdc5d78ef1381b054fb4"
+  },
+  "bindings": {
+    "approved_spec_sha256": "0757d1275e55b84e2424d6131e9dbdc73e029e1b619f900147be928cc7e5e01d",
+    "preoracle_seal_sha256": "db32a95bc41a54531907e7e059655c094b1b1234a533770a88f2e3a52712874e",
+    "case_bundle_sha256": "ab7ebd72671c3020d67444f720c6f3645111005348efd56efe91ffd2ee699d3f",
+    "hko_2015_sha256": "60a45ab889ef436936571a04a49387c6f9ce8d43243fb21c64e3fcb0331c8320",
+    "hko_2016_sha256": "84beb01553646b807a7c15d6efebdd7550af1ac6d7f06e07bfdd124dab9e443b"
+  },
+  "strict_cleanroom_executability": {
+    "result": "FAIL_UNDER_SPECIFIED",
+    "findings": [
+      {
+        "code": "YEAR_STEM_DERIVATION_NOT_SELF_CONTAINED",
+        "severity": "BLOCKING_FOR_INDEPENDENT_ORACLE",
+        "detail": "Approved spec defines direction from natal-year stem polarity but does not define how the sealed birth_datetime/sex/timezone inputs derive the natal-year stem."
+      },
+      {
+        "code": "MONTH_PILLAR_DERIVATION_NOT_SELF_CONTAINED",
+        "severity": "BLOCKING_FOR_INDEPENDENT_ORACLE",
+        "detail": "Approved spec defines first Da Yun pillar relative to the natal month pillar but does not define how the sealed inputs derive that month pillar."
+      },
+      {
+        "code": "DIRECTION_EXPECTATION_LEAKED_IN_COVERAGE_TAGS",
+        "severity": "INDEPENDENCE_WEAKENING",
+        "detail": "Each sealed case carries forward_direction_expected_from_contract or reverse_direction_expected_from_contract, directly revealing the expected direction."
+      }
+    ]
+  },
+  "diagnostic_comparison": {
+    "result": "MISMATCH",
+    "case_count": 12,
+    "field_count": 60,
+    "counts": {
+      "MATCH": 12,
+      "MISMATCH": 36,
+      "MISSING_REFERENCE": 12
+    },
+    "by_field": {
+      "/decadal_direction": {
+        "MATCH": 12,
+        "note": "Direction expectation came from sealed coverage metadata and is not independent."
+      },
+      "/periods/0/pillar": {
+        "MISSING_REFERENCE": 12,
+        "note": "Natal month-pillar derivation is missing from the approved handoff specification."
+      },
+      "/periods/0/start_age_years": {
+        "MISMATCH": 12
+      },
+      "/periods/0/start_datetime": {
+        "MISMATCH": 12
+      },
+      "/periods/1/end_datetime": {
+        "MISMATCH": 12
+      }
+    }
+  },
+  "critical_boundary_finding": {
+    "case_window": "2015-04-05 Qingming boundary",
+    "hko_qingming": "2015-04-05T10:39:00+08:00",
+    "production_qingming": "2015-04-05T10:33:09+08:00",
+    "production_minus_hko_seconds": -351,
+    "sealed_cases_at": "2015-04-05T10:34:00+08:00",
+    "consequence": "The sealed pre-boundary cases fall before HKO Qingming but after the production Qingming boundary, causing different selected Jie identities and approximately ten-year-scale start-age divergence."
+  },
+  "used_same_identity_boundary_offsets_seconds": {
+    "minimum_absolute": 121,
+    "maximum_absolute": 412,
+    "sealed_source_precision_tolerance_seconds": 60,
+    "conclusion": "All same-identity used boundary offsets exceeded the frozen ±60-second source precision tolerance."
+  },
+  "governance": {
+    "preoracle_seal_v1_mutation_allowed": false,
+    "posthoc_tolerance_widening_allowed": false,
+    "oracle_handoff_v1_status": "HALTED_BEFORE_ORACLE",
+    "independent_oracle_v1_should_not_start": true,
+    "next_cycle": "V2_REQUIRED"
+  },
+  "next_actions": [
+    "Add a self-contained Bazi year-pillar derivation rule to the independent written specification.",
+    "Add a self-contained natal month-pillar derivation rule to the independent written specification.",
+    "Remove expected-direction leakage from clean-room case coverage metadata.",
+    "Improve or replace the production solar-term calculation against broader public astronomical evidence; do not widen the frozen v1 tolerance after seeing results.",
+    "Freeze a new candidate and create a new v2 pre-oracle seal before any future independent oracle run."
+  ]
+}
