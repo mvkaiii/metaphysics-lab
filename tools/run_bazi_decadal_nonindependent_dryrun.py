@@ -403,7 +403,6 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         args.output.write_text(
             json.dumps(report, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
             encoding="utf-8",
-            newline="\n",
         )
         print(json.dumps({
             "run_type": report["run_type"],
