@@ -1,7 +1,7 @@
 # Pilot-6 MANIFEST-01 preregistration
 
 Preregistered at: `2026-09-29T12:27:00+08:00`  
-Status: **PENDING HUMAN APPROVAL**
+Status: **APPROVED / PENDING START AUTHORIZATION**
 
 ## Defect class addressed
 
@@ -52,3 +52,10 @@ Any of the following halts the pilot before EFA:
 - any claim/EFA/outcome material appears in the manifest path.
 
 No manual override. No retrospective repair. No promotion effect.
+
+
+## Human approval checkpoint
+
+MANIFEST-01 was explicitly approved by the human decision owner at `2026-09-29T12:39:46+08:00`.
+
+It remains mandatory, has no manual override and has no start-authorization effect. The canonical helper/schema/digest rule is frozen for a later Pilot-6 start seal, but no real manifest gate execution is authorized yet.

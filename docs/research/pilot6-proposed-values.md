@@ -1,17 +1,17 @@
 # Pilot-6 proposed values
 
-Status: **PENDING HUMAN APPROVAL**  
+Status: **APPROVED_BY_HUMAN_DECISION_OWNER / READY_FOR_START_AUTHORIZATION**  
 Preregistered at: `2026-09-29T12:27:00+08:00`
 
 Pilot-6 is a fresh protocol. No prior pilot approval, case identity or exposure state is inherited.
 
 ## Governance
 
-- D01-D12: all PENDING.
-- ENUM-01: PENDING.
-- MANIFEST-01: PENDING.
-- AGG-01: PENDING.
-- AUTH-01: PENDING.
+- D01-D12: all APPROVED at `2026-09-29T12:39:46+08:00`.
+- ENUM-01: APPROVED at `2026-09-29T12:39:46+08:00`.
+- MANIFEST-01: APPROVED at `2026-09-29T12:39:46+08:00`.
+- AGG-01: APPROVED at `2026-09-29T12:39:46+08:00`.
+- AUTH-01: APPROVED at `2026-09-29T12:39:46+08:00`.
 - Manual override: prohibited.
 - Promotion effect: none.
 - Start authorization: NOT_AUTHORIZED.
@@ -65,3 +65,10 @@ Prediction bridge:
 `full_window_single_child_exact_identity_all_eligible_claims_no_confidence_uplift`
 
 No best-snapshot selection, voting, repetition uplift or synthetic single-source authority.
+
+
+## Human approval checkpoint
+
+Pilot-6 D01-D12, ENUM-01, MANIFEST-01, AGG-01, AUTH-01 and the proposed window were explicitly approved by the human decision owner at `2026-09-29T12:39:46+08:00`.
+
+This moves Pilot-6 only to `READY_FOR_START_AUTHORIZATION`. Approval does not authorize private census, intake, S1, PCG, case exposure, candidate processing, MANIFEST-01 execution, EFA, prediction lock, merge, tag, Release or publish.

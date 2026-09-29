@@ -331,12 +331,12 @@ Pilot-5 halted fail-closed at `SNAPSHOT_MANIFEST_CANONICAL_VALIDATION_BEFORE_AGG
 
 ### Pilot-6
 
-Protocol decisions: `PENDING_ITEM_APPROVAL`  
-Enumeration decision: `ENUM-01 PENDING`  
-Canonical manifest decision: `MANIFEST-01 PENDING`  
-Aggregation decision: `AGG-01 PENDING`  
-Downstream authority decision: `AUTH-01 PENDING`  
-Pilot: `NOT_STARTED`
+Protocol decisions: `ALL_ITEMS_APPROVED`  
+Enumeration decision: `ENUM-01 APPROVED`  
+Canonical manifest decision: `MANIFEST-01 APPROVED`  
+Aggregation decision: `AGG-01 APPROVED`  
+Downstream authority decision: `AUTH-01 APPROVED`  
+Pilot: `READY_FOR_START_AUTHORIZATION`
 
 Pilot-6 is a fresh protocol version created after Pilot-5 halted on a noncanonical pre-EFA snapshot-manifest serialization. It does not resume or repair Pilot-5.
 
@@ -348,11 +348,11 @@ Pilot-6 is a fresh protocol version created after Pilot-5 halted on a noncanonic
 - [x] Retrospective manifest repair after EFA is prohibited
 - [x] Fresh Pilot-6 D01-D12 / ENUM-01 / MANIFEST-01 / AGG-01 / AUTH-01 created PENDING
 - [x] Proposed new non-overlapping window: `2027-09-01T00:00:00+08:00` → `2027-10-31T23:59:59+08:00`
-- [ ] Human approval of Pilot-6 D01-D12
-- [ ] Human approval of ENUM-01
-- [ ] Human approval of MANIFEST-01
-- [ ] Human approval of AGG-01
-- [ ] Human approval of AUTH-01
+- [x] Human approval of Pilot-6 D01-D12 at `2026-09-29T12:39:46+08:00`
+- [x] Human approval of ENUM-01 at `2026-09-29T12:39:46+08:00`
+- [x] Human approval of MANIFEST-01 at `2026-09-29T12:39:46+08:00`
+- [x] Human approval of AGG-01 at `2026-09-29T12:39:46+08:00`
+- [x] Human approval of AUTH-01 at `2026-09-29T12:39:46+08:00`
 - [ ] Separate Pilot-6 final seal / start authorization
 - [ ] Private census → intake → S1 → PCG READY
 - [ ] Fresh Pilot-6 candidate exposure / processing
@@ -361,3 +361,6 @@ Pilot-6 is a fresh protocol version created after Pilot-5 halted on a noncanonic
 - [ ] Complete EFA census → AGG-01 claim universe
 - [ ] Per-segment downstream chains → AUTH-01
 - [ ] Prediction lock
+
+
+Pilot-6 D01-D12, ENUM-01, MANIFEST-01, AGG-01, AUTH-01 and the proposed window are approved. No start authorization exists. The next valid gate is a separate Pilot-6 final seal/start authorization; private source census and all candidate processing remain prohibited until that later gate and PCG sequence.

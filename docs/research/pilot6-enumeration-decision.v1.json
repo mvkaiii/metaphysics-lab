@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "pilot_id": "Pilot-6",
   "decision_id": "ENUM-01",
-  "status": "PENDING_HUMAN_APPROVAL",
+  "status": "APPROVED",
   "decision_class": "MANDATORY_COMPLETE_WINDOW_TO_STRUCTURAL_SNAPSHOT_ENUMERATION",
   "preregistered_at": "2026-09-29T12:27:00+08:00",
   "selection_basis": "GENERAL_FROZEN_RUNTIME_BOUNDARY_SEMANTICS_ONLY",
@@ -16,6 +16,9 @@
   "start_authorization_effect": false,
   "candidate_processing_effect": "NONE_UNTIL_SEPARATE_START_AUTHORIZATION_AND_PCG_READY",
   "promotion_allowed": false,
-  "proposed_profile": "lin_tianji_complete_structural_snapshot_enumerator_v1",
-  "proposed_rule": "complete_union_of_authoritative_yearly_monthly_time_boundaries_no_post_exposure_merge"
+  "approved_profile": "lin_tianji_complete_structural_snapshot_enumerator_v1",
+  "approved_rule": "complete_union_of_authoritative_yearly_monthly_time_boundaries_no_post_exposure_merge",
+  "approved_by_role": "human_decision_owner",
+  "approved_at": "2026-09-29T12:39:46+08:00",
+  "public_summary": "Pilot-6 must enumerate the complete yearly/monthly structural snapshot census from the preregistered authoritative boundary union before structural-state materialization and MANIFEST-01. No post-exposure merge, split, substitution or observation-driven snapshot selection is allowed."
 }

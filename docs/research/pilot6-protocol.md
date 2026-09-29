@@ -1,11 +1,11 @@
-# Prospective Pilot-6 protocol — preregistered, not approved
+# Prospective Pilot-6 protocol — human-approved decisions pending start seal
 
-**Protocol decision status:** `PENDING_ITEM_APPROVAL`  
-**Enumeration decision:** `ENUM-01 PENDING`  
-**Canonical manifest decision:** `MANIFEST-01 PENDING`  
-**Aggregation decision:** `AGG-01 PENDING`  
-**Downstream authority decision:** `AUTH-01 PENDING`  
-**Pilot status:** `NOT_STARTED`  
+**Protocol decision status:** `ALL_ITEMS_APPROVED`  
+**Enumeration decision:** `ENUM-01 APPROVED`  
+**Canonical manifest decision:** `MANIFEST-01 APPROVED`  
+**Aggregation decision:** `AGG-01 APPROVED`  
+**Downstream authority decision:** `AUTH-01 APPROVED`  
+**Pilot status:** `READY_FOR_START_AUTHORIZATION`  
 **Start authorization:** `NOT_AUTHORIZED`  
 **Candidate case processing:** `PROHIBITED`
 
@@ -91,6 +91,8 @@ Claim scope remains yearly; timing scope remains monthly; requested dynamic scop
 
 ## Current gate
 
-No Pilot-6 decision is approved. No start authorization exists. No Pilot-6 private source census, intake, S1, candidate exposure, case-specific enumeration, manifest materialization, EFA, aggregation, downstream authority or prediction work is authorized.
+The human decision owner explicitly approved Pilot-6 D01-D12, ENUM-01, MANIFEST-01, AGG-01, AUTH-01 and the proposed window at `2026-09-29T12:39:46+08:00`. Pilot-6 is now `READY_FOR_START_AUTHORIZATION`.
+
+This approval has no start effect. Until a separate final seal / start authorization exists, no private Pilot-6 source census, intake, S1 source manifest, PCG receipt, real case exposure, case-specific enumeration, MANIFEST-01 execution, EFA, aggregation, downstream authority or prediction work is authorized.
 
 Merge, tag, Release, Stable promotion and publish remain unauthorized.

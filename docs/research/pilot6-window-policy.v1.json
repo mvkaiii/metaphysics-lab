@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "pilot_id": "Pilot-6",
-  "status": "PROPOSED_PENDING_HUMAN_APPROVAL",
+  "status": "APPROVED_PENDING_START_AUTHORIZATION",
   "timezone": "Asia/Taipei",
   "outcome_window_start": "2027-09-01T00:00:00+08:00",
   "outcome_window_end": "2027-10-31T23:59:59+08:00",
@@ -24,5 +24,8 @@
   "prediction_bridge_rule": "full_window_single_child_exact_identity_all_eligible_claims_no_confidence_uplift",
   "window_selection_basis": "NEXT_NON_OVERLAPPING_FUTURE_CALENDAR_WINDOW_ONLY",
   "prior_pilot_private_case_observations_used_for_window_selection": false,
-  "promotion_allowed": false
+  "promotion_allowed": false,
+  "approved_by_role": "human_decision_owner",
+  "approved_at": "2026-09-29T12:39:46+08:00",
+  "start_authorized": false
 }
