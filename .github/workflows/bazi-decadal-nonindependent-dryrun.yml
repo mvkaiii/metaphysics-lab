@@ -1,7 +1,7 @@
 name: Bazi decadal non-independent dry-run
 
 on:
-  workflow_dispatch:
+  pull_request:
 
 permissions:
   contents: read
