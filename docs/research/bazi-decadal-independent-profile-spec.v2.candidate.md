@@ -177,7 +177,7 @@ result being independently computed.
 
 Before this v2 spec may be approved or sealed:
 
-1. complete the preregistered 2013–2026 HKO general solar-term benchmark;
+1. complete the preregistered 2013–2019 HKO static-HTML general solar-term benchmark;
 2. select and document the production astronomical boundary provider;
 3. rerun all calendar regressions after any production timing change;
 4. domain-review Sections 2–10;
