@@ -143,11 +143,11 @@ def _decadal_jie_interval(birth_dt: datetime, direction: str) -> timedelta:
             boundaries.append(solar_term_time(year, term, birth_dt.tzinfo))
     boundaries.sort()
     if direction == "forward":
-        candidates = [boundary for boundary in boundaries if boundary > birth_dt]
+        candidates = [boundary for boundary in boundaries if boundary >= birth_dt]
         if not candidates:
             raise BaziNatalError("jie_boundary_not_found", "next Jie boundary was not found")
         return candidates[0] - birth_dt
-    candidates = [boundary for boundary in boundaries if boundary < birth_dt]
+    candidates = [boundary for boundary in boundaries if boundary <= birth_dt]
     if not candidates:
         raise BaziNatalError("jie_boundary_not_found", "previous Jie boundary was not found")
     return birth_dt - candidates[-1]

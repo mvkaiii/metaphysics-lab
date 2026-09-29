@@ -63,6 +63,12 @@ class BaziDecadalLuckTests(unittest.TestCase):
         actual = decadal_start_delta(birth, "reverse")
         self.assertAlmostEqual(actual.total_seconds(), expected_delta.total_seconds(), places=6)
 
+
+    def test_exact_jie_equality_uses_current_boundary_for_both_directions(self):
+        birth = solar_term_time(2016, "驚蟄", TAIPEI)
+        self.assertEqual(decadal_start_delta(birth, "forward"), timedelta(0))
+        self.assertEqual(decadal_start_delta(birth, "reverse"), timedelta(0))
+
     def test_invalid_direction_is_rejected(self):
         birth = datetime(1984, 3, 13, 19, 20, tzinfo=TAIPEI)
         with self.assertRaises(ValueError):
