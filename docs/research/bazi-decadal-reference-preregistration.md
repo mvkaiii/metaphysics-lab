@@ -27,6 +27,25 @@ qualification / promotion 決策。完整 oracle 交接邊界見
 
 比較器完成只代表後續證據有固定消費契約；不代表 reference packet 已封存。
 
+## Pre-oracle seal工程狀態
+
+已新增 `tools/seal_bazi_decadal_reference_inputs.py` 與
+`tests/test_bazi_decadal_preoracle_seal.py`。這個工具只負責在oracle產生expected values
+之前封存：
+
+- 經領域reviewer核准後的文字規格SHA256；
+- 實際外部來源bytes的SHA256與公布精度；
+- 事前case census及其input digest／coverage tags；
+- 每個case的比較JSON Pointer、comparison kind與容差；
+- oracle不得接觸production code、production output或pre-seal comparison result的隔離旗標。
+
+pre-oracle seal明確拒絕任何 `expected` value，並以canonical SHA256偵測封存後修改。
+它不選擇實際年份、不下載或替代外部來源、不產生八字結果，也不構成independent
+oracle或qualification evidence。
+
+因此目前仍是：實際packet `NOT_SEALED`、oracle `NOT_CREATED`、
+comparison `NOT_STARTED`、Task3 `NEEDS_EVIDENCE`。
+
 ## 獨立性與暴露紀錄
 
 目前Codex執行者已讀過production及既有synthetic輸出，不能以同一上下文直接建立並宣稱獨立oracle。Reference實作者只能接收核准的規格與外部資料，不取得production、synthetic expected output或comparison結果。若未提供可隔離角色，本部分維持BLOCKED；不得偷偷降級為同源而宣稱independent。
