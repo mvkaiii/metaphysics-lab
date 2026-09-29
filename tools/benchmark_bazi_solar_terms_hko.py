@@ -29,7 +29,7 @@ if str(REPO_ROOT) not in sys.path:
 from engine.bazi.calendar import JIE, solar_term_time
 from lunar_python import Solar
 
-START_YEAR = 2010
+START_YEAR = 2013
 END_YEAR = 2026
 HKO_TOLERANCE_SECONDS = 60.0
 
