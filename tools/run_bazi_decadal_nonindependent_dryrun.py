@@ -20,6 +20,10 @@ import sys
 from typing import Any, Mapping, Optional, Sequence
 from zoneinfo import ZoneInfo
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
 from engine.bazi.calendar import JIE, bazi_pillars, solar_term_time
 from engine.bazi.natal import build_decadal_periods, decadal_direction
 from engine.bazi.natal_models import Pillar
