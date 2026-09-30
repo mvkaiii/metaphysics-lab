@@ -1,0 +1,114 @@
+{
+  "schema_version": "2.0",
+  "gate_type": "RC_FREEZE_READINESS",
+  "recorded_at": "2026-09-30T16:48:00+08:00",
+  "timezone": "Asia/Taipei",
+  "repository": "mvkaiii/metaphysics-lab",
+  "pr_number": 233,
+  "governance_parent_head": "4e78dca57846d70ee8acca80733a403c176b8723",
+  "release_identity": "v1.8.0",
+  "software_candidate": {
+    "sha": "4e78dca57846d70ee8acca80733a403c176b8723",
+    "release_version": "1.8.0",
+    "distribution_runtime_version": "1.3-exp",
+    "project_contract_version": "1.2",
+    "runtime_schema_version": "1.1",
+    "case_schema_version": "1.1",
+    "capability_manifest_version": "1.0"
+  },
+  "version_provenance": {
+    "bazi_natal_profile_id": "bazi-natal-project-v1",
+    "bazi_natal_rule_version": "1.0-exp",
+    "bazi_calendar_engine_version": "1.1.0",
+    "solar_term_provider": "lunar-python==1.4.8 JieQi table",
+    "solar_term_reference_offset": "+08:00",
+    "decadal_jie_boundary_rule": "forward >= Jie; reverse <= Jie",
+    "rule_identity_decision": "KEEP_SEALED_TASK3_IDENTITY",
+    "runtime_version_decision": "BUMPED_TO_1.3-exp"
+  },
+  "task3": {
+    "status": "QUALIFIED_FOR_IMPLEMENTATION_CONFORMANCE",
+    "frozen_production_candidate": "6280c29b0a493e4b27379948c8cc82ba94bfa04f",
+    "oracle_or_comparison_rerun": false,
+    "qualification_scope": "sealed Bazi decadal implementation conformance only",
+    "stable_implication": "NONE_AUTOMATIC"
+  },
+  "hosted_validation": {
+    "exact_head": "4e78dca57846d70ee8acca80733a403c176b8723",
+    "all_success": true,
+    "runs": [
+      {
+        "name": "林氏天機 v1.5 Validation",
+        "run_id": 36691664547,
+        "result": "SUCCESS"
+      },
+      {
+        "name": "林氏天機 v1.6 Validation",
+        "run_id": 36691664380,
+        "result": "SUCCESS"
+      },
+      {
+        "name": "林氏天機 v1.7 Validation",
+        "run_id": 36691664423,
+        "result": "SUCCESS"
+      },
+      {
+        "name": "v1.7 Plan 3 Focused",
+        "run_id": 36691664395,
+        "result": "SUCCESS"
+      },
+      {
+        "name": "Metaphysics Lab v1.8 Release Candidate Validation",
+        "run_id": 36691664776,
+        "result": "SUCCESS"
+      }
+    ]
+  },
+  "release_candidate_package": {
+    "workflow_run_id": 36691664776,
+    "artifact_id": 11086216303,
+    "artifact_name": "metaphysics-lab-v1.8.0-release-candidate-4e78dca57846d70ee8acca80733a403c176b8723",
+    "artifact_archive_digest": "sha256:60db0398450761886b1288116c7f24b0422fb0d6d4ce18e529758efb0221a8b4",
+    "package_name": "Metaphysics-Lab-v1.8.0-User-Package.zip",
+    "package_sha256": "339d67ffae7fa569df90c7ee5c409e345688ab9f2e846ad0a6e0dfc6366197d0",
+    "manifest_file_sha256": "7b2acb54287d88adf39f6773edb864432706b66887c671c1e299951dd605c974",
+    "deterministic_double_build_match": true,
+    "members": [
+      "metaphysics_core.md",
+      "metaphysics_lab.py",
+      "project_instructions.txt"
+    ]
+  },
+  "capability_maturity": {
+    "bazi_natal_chart": "experimental",
+    "pilot6_lifecycle": "OBSERVATION_PENDING",
+    "stable_promotion": "NOT_INCLUDED",
+    "default_switch": "NOT_INCLUDED"
+  },
+  "scope_boundaries": {
+    "visualization_repo_surface": "experimental",
+    "visualization_public_ai_distribution_action": false,
+    "predictive_validity_claim": false,
+    "metaphysical_truth_claim": false
+  },
+  "result": "PROVISIONALLY_READY_FOR_RC_FREEZE_PENDING_DOCS_ONLY_DESCENDANT_REVALIDATION",
+  "descendant_rule": {
+    "this_checkpoint_commit_is_docs_only": true,
+    "production_or_distribution_bytes_expected_to_change": false,
+    "required_before_final_ready_status": [
+      "fresh exact-head hosted v1.5/v1.6/v1.7/focused validation SUCCESS",
+      "fresh exact-head v1.8 release-candidate validation SUCCESS",
+      "v1.8 User Package SHA256 remains identical unless distribution bytes changed"
+    ]
+  },
+  "still_not_authorized": [
+    "RC freeze",
+    "merge",
+    "tag",
+    "GitHub Release",
+    "publish",
+    "Stable promotion",
+    "default switch"
+  ],
+  "next_gate": "HUMAN_AUTHORIZE_RC_FREEZE"
+}
