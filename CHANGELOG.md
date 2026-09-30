@@ -16,8 +16,8 @@
 - Windows vendor tree digest排序改採relative POSIX path，避免host path ordering造成跨平台digest漂移。
 - Capability maturity、routing/default、selector/interpretation default、Case Schema都不因v1.8軟體release自動改變。
 - Pilot-6仍等待2027 prospective observation window；相關Stable promotion仍未具備成熟證據。
-- qualified pre-freeze software candidate：`02cde6463280b0d3f4a5443218a955e99b0506cd`；v1.5/v1.6/v1.7/Focused/v1.8 RC五條exact-head hosted gates全部SUCCESS。
-- deterministic User Package SHA256：`f9b22d4b97949b873261793c404d2530a0bc384d77e970e1bba7aec35edc82cf`；Project Instructions為7873字元。這些證據只代表RC freeze readiness，尚未執行RC freeze或正式release。
+- **RC freeze已於2026-09-30人工授權並執行**；Frozen RC SHA為 `a0e0a1ca668e022a7c13f35875803d968f7547df`，五條fresh exact-head hosted gates全部SUCCESS。
+- frozen deterministic User Package SHA256：`f9b22d4b97949b873261793c404d2530a0bc384d77e970e1bba7aec35edc82cf`；Project Instructions為7873字元。RC freeze不等於正式release；merge/tag/GitHub Release/publish仍未授權。
 
 ## v1.7.1｜2026-09-25
 

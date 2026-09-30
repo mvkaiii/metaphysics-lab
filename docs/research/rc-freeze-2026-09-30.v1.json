@@ -1,0 +1,107 @@
+{
+  "schema_version": "1.0",
+  "gate_type": "RC_FREEZE",
+  "repository": "mvkaiii/metaphysics-lab",
+  "pr_number": 233,
+  "release_identity": "v1.8.0",
+  "frozen_on": "2026-09-30",
+  "authorization": {
+    "source": "human owner in active project conversation",
+    "rc_freeze": true,
+    "merge": false,
+    "tag": false,
+    "github_release": false,
+    "publish": false,
+    "stable_promotion": false,
+    "default_switch": false
+  },
+  "frozen_rc": {
+    "sha": "a0e0a1ca668e022a7c13f35875803d968f7547df",
+    "distribution_runtime_version": "1.4-exp",
+    "project_contract_version": "1.2",
+    "runtime_schema_version": "1.1",
+    "case_schema_version": "1.1",
+    "capability_manifest_version": "1.0"
+  },
+  "frozen_user_package": {
+    "name": "Metaphysics-Lab-v1.8.0-User-Package.zip",
+    "sha256": "f9b22d4b97949b873261793c404d2530a0bc384d77e970e1bba7aec35edc82cf",
+    "project_instructions_characters": 7873,
+    "members": [
+      "metaphysics_core.md",
+      "metaphysics_lab.py",
+      "project_instructions.txt"
+    ],
+    "artifact_id": 11088450409,
+    "artifact_archive_digest": "sha256:6a59eea93f0c5b013ca5933903e0ce06d09f55d4d21e321f7805f07934b949c5",
+    "deterministic_double_build_match": true
+  },
+  "exact_head_validation": {
+    "all_success": true,
+    "runs": [
+      {
+        "name": "林氏天機 v1.5 Validation",
+        "run_id": 36697075698,
+        "result": "SUCCESS"
+      },
+      {
+        "name": "林氏天機 v1.6 Validation",
+        "run_id": 36697075663,
+        "result": "SUCCESS"
+      },
+      {
+        "name": "林氏天機 v1.7 Validation",
+        "run_id": 36697075795,
+        "result": "SUCCESS"
+      },
+      {
+        "name": "v1.7 Plan 3 Focused",
+        "run_id": 36697075627,
+        "result": "SUCCESS"
+      },
+      {
+        "name": "Metaphysics Lab v1.8 Release Candidate Validation",
+        "run_id": 36697075632,
+        "result": "SUCCESS"
+      }
+    ]
+  },
+  "ux_scope": {
+    "visualization_public_action": "render_bazi_decadal_timeline",
+    "visualization_surface": "experimental_presentation",
+    "visualization_predictive_evidence": false,
+    "visualization_ranking_authority": false,
+    "default_presentation_profile": "compact",
+    "presentation_authority_effect": "NONE"
+  },
+  "task3": {
+    "status": "QUALIFIED_FOR_IMPLEMENTATION_CONFORMANCE",
+    "frozen_production_candidate": "6280c29b0a493e4b27379948c8cc82ba94bfa04f",
+    "sealed_identity": "bazi-natal-project-v1 / 1.0-exp",
+    "oracle_or_comparison_rerun": false
+  },
+  "capability_maturity": {
+    "bazi_natal_chart": "experimental",
+    "pilot6_lifecycle": "OBSERVATION_PENDING",
+    "stable_promotion": "NOT_INCLUDED",
+    "default_switch": "NOT_INCLUDED"
+  },
+  "post_freeze_rule": {
+    "allowed_without_new_candidate": [
+      "governance/evidence documentation that does not affect production, tests, distributed sources, release assets, package bytes, package membership, or frozen release contract"
+    ],
+    "invalidates_freeze": [
+      "production change",
+      "test change",
+      "distributed source change",
+      "release contract change",
+      "release asset byte change",
+      "User Package byte or membership change"
+    ],
+    "invalidation_action": "create a new candidate SHA and rerun exact-head qualification"
+  },
+  "result": "RC_FROZEN",
+  "release_authorized": false,
+  "pr_state_required": "DRAFT_OPEN_UNMERGED",
+  "next_gate": "HUMAN_AUTHORIZE_RELEASE_EXECUTION"
+}

@@ -6,7 +6,7 @@
 
 ## v1.8.0 Candidate Snapshot｜NOT RELEASED
 
-v1.8.0 的 release identity / scope 已於 **2026-09-30** 由人工核准；目前仍是 **candidate preparation**，尚未 freeze RC、merge、tag、建立 GitHub Release 或 publish。最新正式發布仍是 v1.7.1。
+v1.8.0 的 release identity / scope 已於 **2026-09-30** 由人工核准，並已完成 **RC freeze**。Frozen RC SHA 為 `a0e0a1ca668e022a7c13f35875803d968f7547df`；目前仍未 merge、tag、建立 GitHub Release 或 publish。最新正式發布仍是 v1.7.1。
 
 ```text
 Release Version            1.8.0
@@ -24,8 +24,8 @@ Capability Manifest        1.0
 - 一般命理對話採 `compact` 預設、`explain` 按需展開、`audit` 僅技術稽核；收斂只影響呈現，不改ranking、盲判、claim consumption或confidence。
 - Selector v1 / interpretation v1 default不變；Case Schema 1.1、Project Contract 1.2、Runtime Schema 1.1不變。
 - Pilot-6仍為 `OBSERVATION_PENDING`；v1.8 軟體 release 不會把 prospective evidence waiting period改寫成 Stable evidence。
-- qualified pre-freeze software candidate：`02cde6463280b0d3f4a5443218a955e99b0506cd`；五條 exact-head hosted gates 全部 SUCCESS。
-- deterministic v1.8.0 User Package SHA256：`f9b22d4b97949b873261793c404d2530a0bc384d77e970e1bba7aec35edc82cf`。此為目前合格候選包，**尚未構成 RC freeze 或正式 release**。
+- frozen RC candidate：`a0e0a1ca668e022a7c13f35875803d968f7547df`；五條 fresh exact-head hosted gates 全部 SUCCESS。任何 production、test、distributed source 或 User Package bytes 變更都會使本 freeze 失效，必須重新建立 candidate 並完整重跑。
+- frozen deterministic v1.8.0 User Package SHA256：`f9b22d4b97949b873261793c404d2530a0bc384d77e970e1bba7aec35edc82cf`。RC已凍結，但**仍不是正式 release**。
 - Project Instructions：7873 字元，維持在 ChatGPT Project 8000 字元限制內。
 
 ---
