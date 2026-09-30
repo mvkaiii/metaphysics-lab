@@ -1,0 +1,253 @@
+name: One-shot Task3 v2.1 clean oracle handoff
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Validate v2.1 clean contract and seal
+        run: |
+          python -m unittest tests.test_bazi_decadal_v21_clean_oracle_contract -v
+          echo '900ec6dfc58955fa426c1750709941f572afef490796656869e6942853939531  docs/research/bazi-decadal-independent-oracle-contract.v2.1.md' | sha256sum -c -
+
+      - name: Acquire exact HKO source bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .handoff
+          curl --fail --location --retry 3 --retry-all-errors \
+            --proto '=https' --tlsv1.2 \
+            --user-agent 'Metaphysics-Lab-v2.1-clean-handoff/1.0' \
+            'https://www.hko.gov.hk/en/gts/astron2015/Solar_Term_2015.htm' \
+            --output .handoff/Solar_Term_2015.htm
+          curl --fail --location --retry 3 --retry-all-errors \
+            --proto '=https' --tlsv1.2 \
+            --user-agent 'Metaphysics-Lab-v2.1-clean-handoff/1.0' \
+            'https://www.hko.gov.hk/en/gts/astron2016/Solar_Term_2016.htm' \
+            --output .handoff/Solar_Term_2016.htm
+          echo '60a45ab889ef436936571a04a49387c6f9ce8d43243fb21c64e3fcb0331c8320  .handoff/Solar_Term_2015.htm' | sha256sum -c -
+          echo '84beb01553646b807a7c15d6efebdd7550af1ac6d7f06e07bfdd124dab9e443b  .handoff/Solar_Term_2016.htm' | sha256sum -c -
+
+      - name: Copy only clean oracle inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp docs/research/bazi-decadal-independent-oracle-contract.v2.1.md .handoff/
+          cp docs/research/bazi-decadal-oracle-case-inputs.v2.1.json .handoff/
+          cp docs/research/bazi-decadal-preoracle-seal.v2.1.json .handoff/
+
+      - name: Create clean-room instructions and integrity metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > .handoff/README_FIRST.md <<'EOF'
+          # Task 3 independent oracle clean-room execution
+
+          The files in this directory are the complete allowed task-data boundary.
+
+          Before reading the execution contract or case values, fail closed if the
+          current context already contains any prior expected values for these cases,
+          any implementation or output from the system being evaluated, any prior
+          comparison outcomes, or any prior qualification outcomes.
+
+          General system, safety, coding, and unrelated instructions are not task-data
+          contamination.
+
+          Do not search for, clone, open, or request any external project repository.
+          Do not obtain any implementation or output from the system being evaluated.
+
+          ## Integrity gate
+
+          Verify all SHA256 values in SHA256SUMS and handoff-manifest.v2.1.json.
+
+          Required bindings:
+          - execution contract SHA256:
+            900ec6dfc58955fa426c1750709941f572afef490796656869e6942853939531
+          - case bundle canonical SHA256 field:
+            939f8e29123acabfc16366b05622d1d3598b6aa72c4cc54cf96db3ce6e35128e
+          - pre-oracle seal canonical SHA256 field:
+            15035c41df5e479463c2a39e68b3b1267fdd67623fcee65d5635fb2f2a1c0fa1
+          - HKO 2015 raw-byte SHA256:
+            60a45ab889ef436936571a04a49387c6f9ce8d43243fb21c64e3fcb0331c8320
+          - HKO 2016 raw-byte SHA256:
+            84beb01553646b807a7c15d6efebdd7550af1ac6d7f06e07bfdd124dab9e443b
+
+          Confirm exactly 12 cases with IDs bdv2-001 through bdv2-012 and
+          expected_values_present=false.
+
+          Parse both supplied HKO files from their actual raw bytes. Confirm each page
+          contains 24 solar terms and that all 12 Jie mappings listed in the execution
+          contract are present.
+
+          Any failed integrity, census, schema, or source-parse check requires immediate
+          fail closed. Do not substitute, synthesize, or repair input data.
+
+          ## Oracle execution
+
+          Independently implement only:
+          bazi-decadal-independent-oracle-contract.v2.1.md
+
+          Use only the supplied HKO raw bytes as astronomical Jie input.
+
+          Before producing expected values, freeze the exact oracle source bytes and
+          record their SHA256.
+
+          Execute all 12 sealed cases. For each case, output expected values only for:
+          - /decadal_direction
+          - /periods/0/pillar
+          - /periods/0/start_age_years
+          - /periods/0/start_datetime
+          - /periods/1/end_datetime
+
+          Do not perform comparison against any evaluated-system output.
+
+          Package only:
+          - oracle source code
+          - oracle source SHA256
+          - oracle output bundle
+          - sealing receipt
+
+          Then stop.
+          EOF
+
+          cat > .handoff/source-bindings.json <<'JSON'
+          {
+            "provider": "Hong Kong Observatory",
+            "role": "astronomical_input",
+            "timezone": "UTC+08:00",
+            "published_precision_seconds": 60,
+            "sources": [
+              {
+                "year": 2015,
+                "file": "Solar_Term_2015.htm",
+                "sha256": "60a45ab889ef436936571a04a49387c6f9ce8d43243fb21c64e3fcb0331c8320"
+              },
+              {
+                "year": 2016,
+                "file": "Solar_Term_2016.htm",
+                "sha256": "84beb01553646b807a7c15d6efebdd7550af1ac6d7f06e07bfdd124dab9e443b"
+              }
+            ]
+          }
+          JSON
+
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          root=Path('.handoff')
+          base=[
+            'README_FIRST.md',
+            'bazi-decadal-independent-oracle-contract.v2.1.md',
+            'bazi-decadal-oracle-case-inputs.v2.1.json',
+            'bazi-decadal-preoracle-seal.v2.1.json',
+            'Solar_Term_2015.htm',
+            'Solar_Term_2016.htm',
+            'source-bindings.json',
+          ]
+          rows={}
+          for name in base:
+            data=(root/name).read_bytes()
+            rows[name]={'sha256':hashlib.sha256(data).hexdigest(),'bytes':len(data)}
+          cases=json.loads((root/'bazi-decadal-oracle-case-inputs.v2.1.json').read_text(encoding='utf-8'))
+          seal=json.loads((root/'bazi-decadal-preoracle-seal.v2.1.json').read_text(encoding='utf-8'))
+          assert cases['bundle_sha256']=='939f8e29123acabfc16366b05622d1d3598b6aa72c4cc54cf96db3ce6e35128e'
+          assert seal['seal_sha256']=='15035c41df5e479463c2a39e68b3b1267fdd67623fcee65d5635fb2f2a1c0fa1'
+          assert cases['expected_values_present'] is False
+          assert [c['case_id'] for c in cases['cases']]==[f'bdv2-{i:03d}' for i in range(1,13)]
+          manifest={
+            'schema_version':'2.1',
+            'handoff_type':'bazi_decadal_independent_oracle_cleanroom',
+            'execution_contract_sha256':'900ec6dfc58955fa426c1750709941f572afef490796656869e6942853939531',
+            'case_bundle_sha256':'939f8e29123acabfc16366b05622d1d3598b6aa72c4cc54cf96db3ce6e35128e',
+            'preoracle_seal_sha256':'15035c41df5e479463c2a39e68b3b1267fdd67623fcee65d5635fb2f2a1c0fa1',
+            'expected_values_present':False,
+            'evaluated_system_implementation_included':False,
+            'evaluated_system_output_included':False,
+            'prior_comparison_outcomes_included':False,
+            'prior_qualification_outcomes_included':False,
+            'files':rows,
+          }
+          (root/'handoff-manifest.v2.1.json').write_text(
+            json.dumps(manifest,ensure_ascii=False,sort_keys=True,indent=2)+'\n',
+            encoding='utf-8'
+          )
+          names=base+['handoff-manifest.v2.1.json']
+          with (root/'SHA256SUMS').open('w',encoding='utf-8',newline='\n') as h:
+            for name in sorted(names):
+              h.write(hashlib.sha256((root/name).read_bytes()).hexdigest()+'  '+name+'\n')
+          PY
+
+      - name: Fail closed on prior-result leakage
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          root=Path('.handoff')
+          forbidden=[
+            'benchmark passed',
+            '48/48',
+            '48 match',
+            '36 mismatch',
+            'missing_reference',
+            'repository regressions',
+            'lunar-python',
+            '6280c29b0a493e4b27379948c8cc82ba94bfa04f',
+            'needs_evidence',
+            'domain_review_approved',
+            'completed engineering prerequisites',
+            'production candidate sha',
+          ]
+          for path in root.iterdir():
+            if path.suffix.lower() not in {'.md','.json',''}:
+              continue
+            text=path.read_text(encoding='utf-8',errors='strict').lower()
+            hits=[x for x in forbidden if x in text]
+            if hits:
+              raise SystemExit(f'prior-result leakage in {path.name}: {hits}')
+          print('clean-room leakage scan: PASS')
+          PY
+
+      - name: Build deterministic clean handoff ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import zipfile
+          root=Path('.handoff')
+          output=Path('Bazi-Decadal-Independent-Oracle-Cleanroom-v2.1-20260930.zip')
+          names=sorted(p.name for p in root.iterdir() if p.is_file())
+          assert len(names)==9, names
+          with zipfile.ZipFile(output,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+            for name in names:
+              data=(root/name).read_bytes()
+              info=zipfile.ZipInfo(name,date_time=(2026,9,30,11,5,0))
+              info.compress_type=zipfile.ZIP_DEFLATED
+              info.external_attr=0o100644 << 16
+              z.writestr(info,data,compress_type=zipfile.ZIP_DEFLATED,compresslevel=9)
+          PY
+          sha256sum Bazi-Decadal-Independent-Oracle-Cleanroom-v2.1-20260930.zip
+
+      - name: Upload clean handoff
+        uses: actions/upload-artifact@v4
+        with:
+          name: task3-v2-1-clean-oracle-handoff
+          path: Bazi-Decadal-Independent-Oracle-Cleanroom-v2.1-20260930.zip
+          if-no-files-found: error
+          retention-days: 90
