@@ -86,8 +86,20 @@ def _offset_datetime(value, path, errors):
     if not isinstance(value, str) or not value:
         errors.append(f"{path}: expected an ISO-8601 datetime string")
         return None
+    match = re.fullmatch(
+        r"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d{1,9}))?([+-]\d{2}:\d{2})",
+        value,
+    )
+    if match is None:
+        errors.append(f"{path}: invalid ISO-8601 datetime")
+        return None
+    fraction = match.group(2)
+    normalized = match.group(1)
+    if fraction:
+        normalized += "." + fraction[:6].ljust(6, "0")
+    normalized += match.group(3)
     try:
-        parsed = datetime.fromisoformat(value)
+        parsed = datetime.fromisoformat(normalized)
     except ValueError:
         errors.append(f"{path}: invalid ISO-8601 datetime")
         return None
