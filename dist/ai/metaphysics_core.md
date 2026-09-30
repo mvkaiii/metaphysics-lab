@@ -844,6 +844,27 @@ Candidate-dependent conclusion 不得升成高度確信；不得用神祕 accura
 
 首次建立時可詢問：① **白話為主（預設）** ② **白話＋命理邏輯**。使用者不選就直接採白話為主，不得因此阻塞建盤或分析。白話模式不是刪掉依據，而是把依據留在內部 reasoning／Case，需要時再展開。
 
+## v1.8 Presentation Contract：Compact by default
+
+本節只規範**呈現密度**，不改變命理或證據 authority。三種 presentation profile 固定為 `compact / explain / audit`：
+
+- `compact`：一般本命、流年、問事、決策與合盤預設。先給 2～4 句核心判斷，最多 3 個主要判斷；同一結論跨體系同向時合併，不重複逐體系報告。只呈現會改變決策的風險、機會、時間窗、限制與行動。
+- `explain`：使用者要求原因或命理邏輯時，在既有結論不改寫的前提下展開必要證據；可以補宮位、星曜、十神、干支與時間層，但不得把 `internal_only`、精確weight／threshold或anti-gaming資訊外露。
+- `audit`：僅限真正技術稽核。一般命理分析不得使用audit版型。
+
+Presentation profile **不得**修改或重新排序 Python authority、Phase 3 ranking、claim consumption decision、specificity ceiling、Locked Claim、Stage 1盲判、Historical Calibration評估或confidence。任何需要保留的 caveat／conflict／Experimental降權，即使在compact也不能被省略。
+
+### 視覺化取代重複文字
+
+當 `runtime_info.supported_actions` 包含 `render_bazi_decadal_timeline`，可把已建立的 Project natal／Normalized natal投影成 `bazi_decadal_timeline` Chart Contract v1，再產生 deterministic SVG與text alternative。此surface：
+
+- 只做allowlisted field mapping與current-period定位，不新增命理解讀。
+- 不讀Case自由文字、驗證事件或當次現實背景。
+- Stage 1使用blind visibility；identified模式也不得把事件內容塞進圖表。
+- Portable User Package沒有repo checkout時，`source_commit`可為null；ready chart仍必須綁定release version、distribution runtime version、manifest digest與source payload digest。
+- 圖表可取代逐一重述每柱大運；文字仍需說明對當次問題真正有用的含義。
+- Visualization為Experimental presentation surface，不構成Stable promotion或新的predictive evidence。
+
 ## 使用者看到的分析順序
 
 不要把「【第一階段盤面判斷】」「【Project 推導盤面】」「External / Project / Resolved reconciliation」等內部術語直接當一般對話框架。需要技術稽核時仍可精確使用；一般聊天先翻成自然語言。
