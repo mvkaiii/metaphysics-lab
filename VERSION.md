@@ -13,14 +13,15 @@ Release Version            1.8.0
 Project Contract           1.2
 Runtime Schema             1.1
 Case Schema                1.1
-AI Distribution Runtime    1.3-exp
+AI Distribution Runtime    1.4-exp
 Capability Manifest        1.0
 ```
 
 - Bazi Calendar Engine 已是 **1.1.0**，節氣 authority 採 bundled `lunar-python==1.4.8` JieQi table；這是工程精度修正，HKO benchmark 與 Task3 evidence 另有正式紀錄。
 - Task3 v2.1 sealed qualification identity仍為 `bazi-natal-project-v1 / 1.0-exp`；本 candidate **不重新命名 rule identity**，以 calendar engine/provider/release provenance 區分實作版本。
 - `bazi.natal_chart` 維持 **Experimental / On-demand**；Task3 只支持已封存的大運 implementation-conformance scope，不構成整體 capability Stable promotion。
-- Visualization Chart Contract、Bazi decadal projection、SVG/text renderer與CLI可作 Experimental repository surface；目前**不是**三檔 AI Distribution 的公開 runtime action。
+- Visualization Chart Contract、Bazi decadal projection與SVG/text renderer已接入三檔AI Distribution；public action為 `render_bazi_decadal_timeline`，但仍是Experimental presentation surface，不改 `bazi.natal_chart` maturity。
+- 一般命理對話採 `compact` 預設、`explain` 按需展開、`audit` 僅技術稽核；收斂只影響呈現，不改ranking、盲判、claim consumption或confidence。
 - Selector v1 / interpretation v1 default不變；Case Schema 1.1、Project Contract 1.2、Runtime Schema 1.1不變。
 - Pilot-6仍為 `OBSERVATION_PENDING`；v1.8 軟體 release 不會把 prospective evidence waiting period改寫成 Stable evidence。
 - deterministic v1.8.0 User Package SHA256：**PENDING RC FREEZE**。

@@ -36,7 +36,7 @@ class AIDistributionBuildTests(unittest.TestCase):
 
     @staticmethod
     def _copy_distribution_fixture(target: Path) -> None:
-        for relative in ("engine", "templates", "vendor", "data/birth_places", "core"):
+        for relative in ("engine", "renderers", "templates", "vendor", "data/birth_places", "core"):
             source = ROOT / relative
             destination = target / relative
             shutil.copytree(source, destination)
@@ -114,12 +114,11 @@ class AIDistributionBuildTests(unittest.TestCase):
         self.assertTrue(all(not path.startswith("tests/") for path in paths))
         self.assertTrue(all(not path.startswith("qualification/") for path in paths))
         self.assertTrue(all(not path.startswith("docs/") for path in paths))
-        self.assertTrue(
-            all(not path.startswith("engine/visualization/") for path in paths),
-            "experimental visualization modules must not mutate the frozen v1.7.1 distribution",
-        )
+        self.assertIn("engine/visualization/bazi_decadal.py", paths)
+        self.assertIn("renderers/svg/bazi_decadal.py", paths)
         allowed = (
             "engine/",
+            "renderers/",
             "templates/",
             "_metaphysics_lab_vendor/",
             "vendor/artifacts/",

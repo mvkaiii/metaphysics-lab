@@ -150,7 +150,11 @@ def _validate_provenance(value: Any, errors: list[str], *, ready: bool) -> None:
         if value.get(key) is not None:
             _require_string(value.get(key), f"{path}.{key}", errors)
     if ready:
-        for key in ("source_commit", "release_version", "distribution_runtime_version", "manifest_sha256", "source_payload_sha256"):
+        # Portable User Package execution can bind deterministic release/runtime,
+        # manifest and source-payload digests without having a repository checkout.
+        # source_commit therefore remains optional provenance rather than a fake
+        # required value.
+        for key in ("release_version", "distribution_runtime_version", "manifest_sha256", "source_payload_sha256"):
             if value.get(key) is None:
                 errors.append(f"{path}.{key}: ready chart requires a bound value")
 

@@ -16,7 +16,7 @@ from tools import build_release_package
 class V18ReleaseCandidateContractTests(unittest.TestCase):
     def test_candidate_version_contract(self):
         self.assertEqual(RELEASE_VERSION, "1.8.0")
-        self.assertEqual(DISTRIBUTION_RUNTIME_VERSION, "1.3-exp")
+        self.assertEqual(DISTRIBUTION_RUNTIME_VERSION, "1.4-exp")
         self.assertEqual(PROJECT_CONTRACT_VERSION, "1.2")
         self.assertEqual(RUNTIME_SCHEMA_VERSION, "1.1")
         self.assertEqual(CASE_SCHEMA_VERSION, "1.1")
@@ -47,7 +47,7 @@ class V18ReleaseCandidateContractTests(unittest.TestCase):
             set(build_release_package.USER_ASSETS),
             {"metaphysics_core.md", "metaphysics_lab.py", "project_instructions.txt"},
         )
-        self.assertNotIn("render_visualization", SUPPORTED_ACTIONS)
+        self.assertIn("render_bazi_decadal_timeline", SUPPORTED_ACTIONS)
         self.assertNotIn("visualization", SUPPORTED_ACTIONS)
 
 

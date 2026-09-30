@@ -97,8 +97,9 @@ def _base_provenance(input_view: Mapping[str, Any]) -> dict:
         raise ValueError("provenance fields do not match the allowlist")
     if not isinstance(source.get("repo"), str) or not source["repo"]:
         raise ValueError("provenance.repo must be non-empty")
-    if not isinstance(source.get("source_commit"), str) or not source["source_commit"]:
-        raise ValueError("provenance.source_commit must be non-empty")
+    source_commit = source.get("source_commit")
+    if source_commit is not None and (not isinstance(source_commit, str) or not source_commit):
+        raise ValueError("provenance.source_commit must be non-empty text or null")
     for key in ("release_version", "distribution_runtime_version", "projection_version"):
         if not isinstance(source.get(key), str) or not source[key]:
             raise ValueError(f"provenance.{key} must be non-empty")
@@ -332,7 +333,15 @@ def project_bazi_decadal(
         "limitations": [
             {"code": "EXPERIMENTAL_CAPABILITY", "message": "E：大運視覺化維持Experimental。", "scope": "chart"},
             {"code": "OPTIONAL_FIELDS_UNAVAILABLE", "message": "十神與五行只在engine已提供合格來源時映射。", "scope": "periods"},
-        ],
+        ] + (
+            [{
+                "code": "SOURCE_COMMIT_UNAVAILABLE",
+                "message": "Portable User Package未綁定Git commit；以release/runtime/manifest/source digest追溯。",
+                "scope": "provenance",
+            }]
+            if provenance.get("source_commit") is None
+            else []
+        ),
     }
     errors = validate_chart(chart)
     if errors:
