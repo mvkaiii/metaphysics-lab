@@ -2,6 +2,21 @@
 
 這份文件保存正式版本與尚未發布變更的技術紀錄。第一次使用 Metaphysics Lab 請先看 `README.md`；目前正式版本為 **v1.7.1｜2026-09-25**，一般使用者發布說明見 `docs/發布說明-v1.7.1.md`。
 
+## v1.8.0｜Candidate / NOT RELEASED
+
+### Release identity / provenance preparation
+
+- 人工核准下一個 release identity 為 **v1.8.0**；目前仍未 freeze RC，也未 merge/tag/Release/publish。
+- AI Distribution Runtime candidate version 為 **1.3-exp**；Project Contract / Runtime Schema / Case Schema 維持 **1.2 / 1.1 / 1.1**。
+- Bazi Calendar Engine 1.1.0 改採 bundled `lunar-python==1.4.8` JieQi table，並採 exact-Jie inclusive boundary：forward `>= Jie`、reverse `<= Jie`。
+- Task3 v2.1 已對 frozen candidate完成 12 cases × 5 paths = **60/60 MATCH** 的 implementation-conformance qualification；這不證明命理預測效度，也不自動提升 `bazi.natal_chart` maturity。
+- Task3 sealed profile仍固定 `bazi-natal-project-v1 / 1.0-exp`；v1.8 以 calendar engine/provider與release/runtime provenance描述工程實作差異，不事後改寫 sealed rule identity。
+- 新增 Capability Evidence/Qualification governance，以及 Experimental Visualization Chart Contract、Bazi decadal projection、SVG/text renderer與CLI。Visualization目前仍排除於三檔 AI Distribution runtime surface之外。
+- Windows vendor tree digest排序改採relative POSIX path，避免host path ordering造成跨平台digest漂移。
+- Capability maturity、routing/default、selector/interpretation default、Case Schema都不因v1.8軟體release自動改變。
+- Pilot-6仍等待2027 prospective observation window；相關Stable promotion仍未具備成熟證據。
+- v1.8.0 deterministic User Package digest與exact RC SHA待RC freeze後產生。
+
 ## v1.7.1｜2026-09-25
 
 ### Release identity metadata

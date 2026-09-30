@@ -43,6 +43,17 @@ class BaziNatalBuilderTests(unittest.TestCase):
             self.assertEqual(chart.day_master, chart.pillars[2].stem)
             self.assertEqual(chart.effective_datetime, views.normalized_civil.local_datetime)
             self.assertEqual(chart.provenance["classification"], "Project 原生盤面")
+            self.assertEqual(chart.provenance["bazi_calendar_engine_version"], "1.1.0")
+            self.assertEqual(
+                chart.provenance["solar_term_provider"],
+                "lunar-python==1.4.8 JieQi table",
+            )
+            self.assertEqual(chart.provenance["solar_term_reference_offset"], "+08:00")
+            self.assertEqual(
+                chart.provenance["decadal_jie_boundary_rule"],
+                "forward >= Jie; reverse <= Jie",
+            )
+            self.assertEqual(chart.provenance["bazi_natal_rule_version"], "1.0-exp")
 
     def test_all_twelve_hidden_stem_tables_are_exact_and_ordered(self):
         expected = {

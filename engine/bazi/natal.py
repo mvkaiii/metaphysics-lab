@@ -9,7 +9,18 @@ from engine.birth.models import Sex
 from engine.birth.time_views import BirthTimeViews
 from engine.calendar.models import CalendarContext
 
-from .calendar import GAN, JIE, STEM_INFO, ZHI, bazi_pillars, solar_term_time, ten_god
+from .calendar import (
+    ENGINE_VERSION as BAZI_CALENDAR_ENGINE_VERSION,
+    GAN,
+    JIE,
+    SOLAR_TERM_PROVIDER,
+    SOLAR_TERM_REFERENCE_OFFSET,
+    STEM_INFO,
+    ZHI,
+    bazi_pillars,
+    solar_term_time,
+    ten_god,
+)
 from .natal_models import (
     BaziDecadalPeriod,
     BaziNatalChart,
@@ -317,6 +328,10 @@ def build_bazi_natal(
             "classification": "Project 原生盤面",
             "calendar_resolver_version": calendar.resolver_version,
             "bazi_calendar_engine": "Project Bazi Calendar Engine",
+            "bazi_calendar_engine_version": BAZI_CALENDAR_ENGINE_VERSION,
+            "solar_term_provider": SOLAR_TERM_PROVIDER,
+            "solar_term_reference_offset": SOLAR_TERM_REFERENCE_OFFSET,
+            "decadal_jie_boundary_rule": "forward >= Jie; reverse <= Jie",
             "bazi_natal_profile": profile.profile_id,
             "bazi_natal_rule_version": profile.rule_version,
             "sex": sex.value,

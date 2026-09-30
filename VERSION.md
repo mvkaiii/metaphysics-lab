@@ -4,6 +4,29 @@
 >
 > 歷史 Release snapshot 不因後續 qualification 或文件更新回寫改造。正式發版只固定 release identity；**release 本身不改變 capability maturity**，目前執行能力仍以 `runtime_info` 為技術權威來源。
 
+## v1.8.0 Candidate Snapshot｜NOT RELEASED
+
+v1.8.0 的 release identity / scope 已於 **2026-09-30** 由人工核准；目前仍是 **candidate preparation**，尚未 freeze RC、merge、tag、建立 GitHub Release 或 publish。最新正式發布仍是 v1.7.1。
+
+```text
+Release Version            1.8.0
+Project Contract           1.2
+Runtime Schema             1.1
+Case Schema                1.1
+AI Distribution Runtime    1.3-exp
+Capability Manifest        1.0
+```
+
+- Bazi Calendar Engine 已是 **1.1.0**，節氣 authority 採 bundled `lunar-python==1.4.8` JieQi table；這是工程精度修正，HKO benchmark 與 Task3 evidence 另有正式紀錄。
+- Task3 v2.1 sealed qualification identity仍為 `bazi-natal-project-v1 / 1.0-exp`；本 candidate **不重新命名 rule identity**，以 calendar engine/provider/release provenance 區分實作版本。
+- `bazi.natal_chart` 維持 **Experimental / On-demand**；Task3 只支持已封存的大運 implementation-conformance scope，不構成整體 capability Stable promotion。
+- Visualization Chart Contract、Bazi decadal projection、SVG/text renderer與CLI可作 Experimental repository surface；目前**不是**三檔 AI Distribution 的公開 runtime action。
+- Selector v1 / interpretation v1 default不變；Case Schema 1.1、Project Contract 1.2、Runtime Schema 1.1不變。
+- Pilot-6仍為 `OBSERVATION_PENDING`；v1.8 軟體 release 不會把 prospective evidence waiting period改寫成 Stable evidence。
+- deterministic v1.8.0 User Package SHA256：**PENDING RC FREEZE**。
+
+---
+
 ## v1.7.1 Release Snapshot
 
 v1.7.1 是已正式發布的 **release identity metadata patch**，發布日期為 **2026-09-25**（Asia/Taipei）。它不新增命理算法、不改 capability maturity，也不改 Case Schema；重點是讓 runtime 可以直接區分「整體 Release 版本」與「內部 Runtime component 版本」。
