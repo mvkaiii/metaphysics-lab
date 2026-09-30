@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "handoff_id": "bazi-decadal-independent-oracle-handoff-v2",
+  "state": "HALTED_BEFORE_ORACLE_DUE_TO_HANDOFF_CONTAMINATION",
+  "independent_oracle_execution_started": false,
+  "expected_values_present": false,
+  "comparison_started": false,
+  "finding": "The sealed v2 execution spec included non-normative prior engineering and diagnostic results. A clean-room executor correctly failed closed before hash completion or oracle execution.",
+  "affected_spec_sha256": "24825b1c2c850873f54e117c53c13932a8a730dc3a245a1c5e7e2599259c3305",
+  "affected_preoracle_seal_sha256": "56f63fbe9561a9216e2f6e597d0f76ca4006af0ffd09a775f4da0d980e13ae0c",
+  "repair_in_place_allowed": false,
+  "replacement_cycle": "v2.1",
+  "v1_and_v2_historical_artifacts_preserved": true,
+  "task3_status": "NEEDS_EVIDENCE"
+}
