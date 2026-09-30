@@ -21,10 +21,11 @@ class V17DocsTests(unittest.TestCase):
             text = path.read_text(encoding="utf-8")
             with self.subTest(path=path.name):
                 self.assertIn(CURRENT_VERSION, text)
-                self.assertIn("Case Schema 1.1", text)
+                self.assertIn("個案資料格式", text)
+                self.assertIn("1.1", text)
                 self.assertTrue(
-                    "不需要重建" in text or "不要求重建" in text or "不要重建" in text,
-                    f"{path}: must explicitly preserve existing Case data without destructive rebuild",
+                    "不需要重建" in text or "不要求重建" in text or "不要重建" in text or "不需要重新建立" in text,
+                    f"{path}: must explicitly preserve existing user data without destructive rebuild",
                 )
 
     def test_install_surfaces_point_to_v18_three_file_user_package(self):
@@ -45,11 +46,12 @@ class V17DocsTests(unittest.TestCase):
         self.assertIn("v1.6.0 → v1.7.0", text)
         self.assertIn("三個檔案一起", text)
         self.assertIn("Metaphysics-Lab-v1.7.0-User-Package.zip", text)
-        self.assertIn("替換 Project 中的 `metaphysics_lab.py`", text)
+        self.assertIn("替換 ChatGPT Project／Claude Project 中的 `metaphysics_lab.py`", text)
         self.assertIn("替換 `metaphysics_core.md`", text)
         self.assertIn("`project_instructions.txt`", text)
         self.assertIn("保留", text)
-        self.assertIn("Case Schema 1.1", text)
+        self.assertIn("個案資料格式（Case Schema）", text)
+        self.assertIn("1.1", text)
 
     def test_v171_release_notes_state_metadata_patch_and_historical_v170_boundaries(self):
         self.assertTrue(RELEASE_NOTES.exists())
