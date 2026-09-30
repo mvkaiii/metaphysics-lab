@@ -56,18 +56,16 @@ V17_PUBLIC_ACTIONS = frozenset((
 
 
 class V17ReleaseContractTests(unittest.TestCase):
-    def test_version_contract_is_frozen_for_v170(self):
+    def test_v17_schema_contract_remains_compatible(self):
         self.assertEqual(PROJECT_CONTRACT_VERSION, "1.2")
         self.assertEqual(RUNTIME_SCHEMA_VERSION, "1.1")
         self.assertEqual(CASE_SCHEMA_VERSION, "1.1")
-        self.assertEqual(DISTRIBUTION_RUNTIME_VERSION, "1.2-exp")
-        self.assertEqual(RELEASE_VERSION, "1.7.1")
 
-    def test_current_release_package_builder_is_v171_patch(self):
-        self.assertEqual(build_release_package.RELEASE_VERSION, "1.7.1")
+    def test_current_release_package_builder_uses_release_version_authority(self):
+        self.assertEqual(build_release_package.RELEASE_VERSION, RELEASE_VERSION)
         self.assertEqual(
             build_release_package.USER_PACKAGE_NAME,
-            "Metaphysics-Lab-v1.7.1-User-Package.zip",
+            f"Metaphysics-Lab-v{RELEASE_VERSION}-User-Package.zip",
         )
 
     def test_v16_public_actions_remain_and_v17_actions_are_registered(self):

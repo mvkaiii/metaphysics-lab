@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0",
+  "pilot_id": "Pilot-6",
+  "decision_id": "AUTH-01",
+  "status": "APPROVED",
+  "decision_class": "MANDATORY_SEGMENT_AWARE_DOWNSTREAM_AUTHORITY_AND_PREDICTION_BRIDGE",
+  "preregistered_at": "2026-09-29T12:27:00+08:00",
+  "selection_basis": "GENERAL_FROZEN_DOWNSTREAM_AND_PROSPECTIVE_LOCK_CONTRACTS_ONLY",
+  "pilot4_defect_class_used": true,
+  "pilot5_private_snapshot_or_efa_observations_used_for_rule_selection": false,
+  "candidate_case_exposure_used_for_rule_selection": false,
+  "best_snapshot_selection_allowed": false,
+  "confidence_repetition_uplift_allowed": false,
+  "specificity_repetition_uplift_allowed": false,
+  "synthetic_single_source_authority_allowed": false,
+  "multi_member_render_units_prediction_lock_eligible": false,
+  "mandatory": true,
+  "manual_override_allowed": false,
+  "start_authorization_effect": false,
+  "candidate_processing_effect": "NONE_UNTIL_SEPARATE_START_AUTHORIZATION_AND_PCG_READY",
+  "promotion_allowed": false,
+  "evidence_refs": [
+    "docs/research/pilot5-segment-aware-downstream-authority-preregistration.md",
+    "docs/research/pilot6-proposed-values.md",
+    "docs/research/pilot6-protocol.md"
+  ],
+  "approved_profile": "lin_tianji_segment_aware_window_authority_v1",
+  "approved_rule": "unanimous_stable_render_unit_across_all_manifested_segments_no_authority_synthesis",
+  "approved_prediction_bridge_rule": "full_window_single_child_exact_identity_all_eligible_claims_no_confidence_uplift",
+  "approved_by_role": "human_decision_owner",
+  "approved_at": "2026-09-29T12:39:46+08:00",
+  "public_summary": "Pilot-6 full-window authority requires identical render-unit composition across every manifested segment, preserves every segment's single-source provenance, forbids repetition-based uplift or best-snapshot selection, and permits prediction locking only for all-and-only eligible stable single-child claims."
+}

@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "pilot_id": "Pilot-6",
+  "lifecycle_state": "OBSERVATION_PENDING",
+  "prediction_side_status": "PREDICTION_LOCKED",
+  "prediction_side_evidence_class": "OWNER_REPORTED_EXTERNAL_PRIVATE_EXECUTION",
+  "artifact_integrity_review_status": "NOT_PERFORMED_IN_PUBLIC_GOVERNANCE_CONTEXT",
+  "frozen_candidate_commit": "6cb37e8b6f1ef1c9638008e9a7757ec757d20161",
+  "public_governance_parent_head": "0da9062be73ac035a2ddc2238671ef95b825e92b",
+  "outcome_window": {
+    "timezone": "Asia/Taipei",
+    "start": "2027-09-01T00:00:00+08:00",
+    "end": "2027-10-31T23:59:59+08:00",
+    "maturity_delay_hours": 72,
+    "earliest_post_window_maturity_at": "2027-11-03T23:59:59+08:00"
+  },
+  "execution_state": {
+    "outcome_collection": "NOT_STARTED",
+    "adjudication": "NOT_STARTED",
+    "scoring": "NOT_STARTED"
+  },
+  "permissions": {
+    "engineering_development_continuation_allowed": true,
+    "frozen_candidate_mutation_allowed": false,
+    "replacement_case_allowed": false,
+    "retrospective_prediction_repair_allowed": false,
+    "pilot_capability_stable_promotion_allowed": false
+  },
+  "gates": {
+    "outcome_collection": "ONLY_WHILE_APPROVED_WINDOW_OPEN",
+    "adjudication": "NOT_BEFORE_WINDOW_END_PLUS_MATURITY_DELAY",
+    "scoring": "NOT_BEFORE_WINDOW_END_PLUS_MATURITY_DELAY"
+  },
+  "privacy": {
+    "private_case_identity_disclosed": false,
+    "private_prediction_lock_digest_disclosed": false,
+    "private_execution_artifact_digest_disclosed": false,
+    "private_prediction_content_disclosed": false,
+    "private_outcome_content_disclosed": false
+  },
+  "next_engineering_action": "CONTINUE_V1_8_ENGINEERING_WITH_PILOT6_FROZEN_AND_OBSERVATION_PENDING"
+}

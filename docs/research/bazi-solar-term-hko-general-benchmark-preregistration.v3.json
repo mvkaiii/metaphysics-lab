@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0",
+  "benchmark_id": "BAZI-SOLAR-TERM-HKO-STATIC-HTML-2013-2019-V3",
+  "status": "FINAL_SOURCE_FAMILY_AMENDMENT_BEFORE_COMPARISON_RESULT_EXPOSURE",
+  "supersedes_for_execution": [
+    "docs/research/bazi-solar-term-hko-general-benchmark-preregistration.v1.json",
+    "docs/research/bazi-solar-term-hko-general-benchmark-preregistration.v2.json"
+  ],
+  "prior_attempts": [
+    {
+      "workflow_run_id": 36595079300,
+      "result": "SOURCE_ACQUISITION_FAILED_BEFORE_BENCHMARK",
+      "failure": "2010 static Solar_Term page unavailable",
+      "comparison_started": false
+    },
+    {
+      "workflow_run_id": 36595423967,
+      "result": "SOURCE_ACQUISITION_FAILED_BEFORE_BENCHMARK",
+      "failure": "HKO publication format changes beginning 2020; static Solar_Term_YYYY.htm source family ends at 2019",
+      "comparison_started": false
+    }
+  ],
+  "benchmark_results_exposed_before_amendment": false,
+  "source_family": {
+    "provider": "Hong Kong Observatory",
+    "format": "Solar_Term_YYYY.htm static HTML",
+    "years": {
+      "start": 2013,
+      "end": 2019,
+      "continuous": true,
+      "year_count": 7
+    },
+    "jie_per_year": 12,
+    "expected_point_count": 84
+  },
+  "unchanged_gates": {
+    "hko_published_precision_seconds": 60,
+    "candidate": "lunar-python==1.4.8 JieQi table",
+    "requirements": [
+      "all_84_points_within_60_seconds_of_HKO_published_minute",
+      "candidate_max_absolute_error_not_worse_than_current_project",
+      "candidate_mean_absolute_error_not_worse_than_current_project"
+    ]
+  },
+  "prohibited": [
+    "do_not_remove_years_2013_2019_after_results",
+    "do_not_drop_jie_terms_after_results",
+    "do_not_widen_60_second_gate_after_results"
+  ],
+  "production_change_authorized": false,
+  "v2_preoracle_seal_authorized": false
+}

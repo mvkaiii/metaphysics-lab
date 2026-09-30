@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import re
 
+from engine.distribution.constants import RELEASE_VERSION
 from engine.ziwei.capabilities import get_capability
 
 
@@ -16,7 +17,7 @@ _REQUIRED_STATES = {
     "ziwei.flowing_stars": "implemented/experimental/on_demand",
 }
 
-_EXPECTED_RELEASE_IDENTITY = "v1.7.1"
+_EXPECTED_RELEASE_IDENTITY = "v%s" % RELEASE_VERSION
 
 
 def _state(capability_id: str) -> str:

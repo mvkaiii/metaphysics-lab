@@ -1,6 +1,23 @@
 # 變更紀錄
 
-這份文件保存正式版本與尚未發布變更的技術紀錄。第一次使用 Metaphysics Lab 請先看 `README.md`；目前正式版本為 **v1.7.1｜2026-09-25**，一般使用者發布說明見 `docs/發布說明-v1.7.1.md`。
+這份文件保存正式版本與尚未發布變更的技術紀錄。第一次使用 Metaphysics Lab 請先看 `README.md`；目前正式版本為 **v1.8.0｜2026-09-30**，一般使用者發布說明見 `docs/發布說明-v1.8.0.md`。
+
+## v1.8.0｜2026-09-30
+
+### 正式軟體 Release
+
+- release identity、RC freeze與release execution均已由人工核准；正式publication只允許由 `release-v1.8.yml` 在PR #233 merged SHA完成驗證後建立tag/GitHub Release。
+- AI Distribution Runtime candidate version 為 **1.4-exp**；Project Contract / Runtime Schema / Case Schema 維持 **1.2 / 1.1 / 1.1**。
+- Bazi Calendar Engine 1.1.0 改採 bundled `lunar-python==1.4.8` JieQi table，並採 exact-Jie inclusive boundary：forward `>= Jie`、reverse `<= Jie`。
+- Task3 v2.1 已對 frozen candidate完成 12 cases × 5 paths = **60/60 MATCH** 的 implementation-conformance qualification；這不證明命理預測效度，也不自動提升 `bazi.natal_chart` maturity。
+- Task3 sealed profile仍固定 `bazi-natal-project-v1 / 1.0-exp`；v1.8 以 calendar engine/provider與release/runtime provenance描述工程實作差異，不事後改寫 sealed rule identity。
+- 新增 Capability Evidence/Qualification governance，以及 Experimental Visualization Chart Contract、Bazi decadal projection、SVG/text renderer與CLI；v1.8進一步把 `render_bazi_decadal_timeline` 接入三檔AI Distribution public runtime，輸出deterministic SVG與text alternative。
+- 一般命理回答新增 `compact / explain / audit` presentation profiles；`compact`為預設，只收斂呈現密度，不修改ranking、Locked Claim、盲判、claim consumption、specificity或confidence。
+- Windows vendor tree digest排序改採relative POSIX path，避免host path ordering造成跨平台digest漂移。
+- Capability maturity、routing/default、selector/interpretation default、Case Schema都不因v1.8軟體release自動改變。
+- Pilot-6仍等待2027 prospective observation window；相關Stable promotion仍未具備成熟證據。
+- Frozen product RC SHA為 `a0e0a1ca668e022a7c13f35875803d968f7547df`；release-infrastructure/public-doc candidate不得改User Package bytes，並需重新通過exact-head gates。
+- deterministic User Package SHA256：`f9b22d4b97949b873261793c404d2530a0bc384d77e970e1bba7aec35edc82cf`；Project Instructions為7873字元。正式release workflow會在merged SHA再次重建、核對digest與完整回歸後才publish。
 
 ## v1.7.1｜2026-09-25
 

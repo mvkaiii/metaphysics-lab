@@ -1,0 +1,65 @@
+{
+  "archive_kind": "historical_v1.7_planning_sources",
+  "source_commit": "0d7370eb54fb77c9f4f788ad838a78d06217d24b",
+  "verification": "sha256 computed from raw Git blob bytes returned by git cat-file blob; archived copies compared with Path.read_bytes()",
+  "sources": [
+    {
+      "path": "docs/superpowers/specs/2026-09-08-v1.7-reliability-guided-inquiry-design.md",
+      "blob_id": "ea0724fd5cd89dfee0bf34cfc8211baea4768837",
+      "size_bytes": 20985,
+      "sha256": "66bdc24c5f440025bb91f77ced1f7b2ac7f329837d97e1a14ccd33b5b2e5e2fd",
+      "disposition": "byte_for_byte_archived_copy",
+      "archive_path": "original/docs/superpowers/specs/2026-09-08-v1.7-reliability-guided-inquiry-design.md"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-08-v1.7-planning-index.md",
+      "blob_id": "52461c63a57a6d9b529497bf5c482a4fd9d0dd68",
+      "size_bytes": 5189,
+      "sha256": "72466f963bcc40da34a1d87e4340eaa0339ce706fca4a3547b686a3a8f92caf1",
+      "disposition": "byte_for_byte_archived_copy",
+      "archive_path": "original/docs/superpowers/plans/2026-09-08-v1.7-planning-index.md"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-08-v1.7-capability-manifest-v1.md",
+      "blob_id": "a5795c0d300a201934a1f025137864db7a59fe43",
+      "size_bytes": 12821,
+      "sha256": "5efc9101f022f1e88bea40d63a2008d938974970776f52529b710790f77a1d0a",
+      "disposition": "immutable_source_reference_only"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-08-v1.7-case-doctor-reconciliation.md",
+      "blob_id": "ce111a4ea972009fc23999e78821162752c8718b",
+      "size_bytes": 15410,
+      "sha256": "700dbd3cd8775a3d1b09e2d461f8facc6525d981356277b9ffc6ea7dc04a2ef1",
+      "disposition": "immutable_source_reference_only"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-08-v1.7-prospective-validation-2.md",
+      "blob_id": "b90b1465a955bb0fa74d18898997b8bc6d81e41e",
+      "size_bytes": 16681,
+      "sha256": "ea0a0f2cee7d98ceba0bec1a3da3222a48ff30a92a66a7de1347a97f758e1b63",
+      "disposition": "immutable_source_reference_only"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-08-v1.7-guided-inquiry.md",
+      "blob_id": "9454a51ba234e52fef219f6c01e58611dfae6e17",
+      "size_bytes": 17122,
+      "sha256": "b674f9c81d76297f966f6b9e238fd1d5634cbcefd8c7cc93a900a14035f6f345",
+      "disposition": "immutable_source_reference_only"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-08-v1.7-integration-release.md",
+      "blob_id": "541edf020103a341881d68e6bc8766190aa8b415",
+      "size_bytes": 22236,
+      "sha256": "aaaf670bbc8f28ae6891f4721f34df100f2a916804a177145c4f698155ea3cae",
+      "disposition": "immutable_source_reference_only"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-08-v1.7-direct-implementation-ledger.md",
+      "blob_id": "7f552ab5951391773ede27467ea6ebf442de778b",
+      "size_bytes": 622,
+      "sha256": "08f36e4d7961c894b5b3c6615f08c12128d2b4b98e445c0790c482eac0208ba8",
+      "disposition": "immutable_source_reference_only"
+    }
+  ]
+}

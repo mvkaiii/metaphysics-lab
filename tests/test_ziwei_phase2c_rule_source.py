@@ -1,13 +1,15 @@
 import unittest
 
+from engine.distribution.constants import RELEASE_VERSION
 from tools.check_phase2c_rule_source import check_phase2c_rule_source
 
 
 class Phase2CRuleSourceTests(unittest.TestCase):
     def test_current_approved_phase2c_state_matches_rule_source(self):
         report = check_phase2c_rule_source()
-        self.assertEqual(report["release_identity"], "v1.7.1")
-        self.assertEqual(report["expected_release_identity"], "v1.7.1")
+        expected_release = "v%s" % RELEASE_VERSION
+        self.assertEqual(report["release_identity"], expected_release)
+        self.assertEqual(report["expected_release_identity"], expected_release)
         self.assertEqual(report["status"], "PASS")
         self.assertEqual(report["checks"]["ziwei.transformations"], "implemented/stable/on_demand")
         self.assertEqual(report["checks"]["ziwei.flying"], "implemented/stable/on_demand")

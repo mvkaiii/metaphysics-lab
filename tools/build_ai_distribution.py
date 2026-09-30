@@ -46,7 +46,11 @@ ARTIFACT_NAMES = (
     "metaphysics_lab.py",
     "project_instructions.txt",
 )
-_FIRST_PARTY_TEXT_PREFIXES = ("engine/", "templates/")
+_FIRST_PARTY_TEXT_PREFIXES = ("engine/", "templates/", "renderers/")
+# v1.8 explicitly adopts the Experimental Bazi decadal visualization surface.
+# It remains a presentation/runtime surface derived from bazi.natal_chart and
+# does not change that capability's maturity or routing.
+_EXCLUDED_ENGINE_PREFIXES = ()
 _SINGLE_BUNDLE_INPUTS = (
     "vendor/manifest.json",
     "data/birth_places/registry.v1.json",
@@ -301,8 +305,16 @@ def discover_bundle_inputs(repo_root: Path) -> List[str]:
         if path.is_symlink():
             raise ValueError("bundle input must not be a symlink: %s" % path.relative_to(root).as_posix())
         if path.is_file():
-            paths.append(path.relative_to(root).as_posix())
+            relative = path.relative_to(root).as_posix()
+            if any(relative.startswith(prefix) for prefix in _EXCLUDED_ENGINE_PREFIXES):
+                continue
+            paths.append(relative)
     for path in (root / "templates").rglob("*.tmpl"):
+        if path.is_symlink():
+            raise ValueError("bundle input must not be a symlink: %s" % path.relative_to(root).as_posix())
+        if path.is_file():
+            paths.append(path.relative_to(root).as_posix())
+    for path in (root / "renderers").rglob("*.py"):
         if path.is_symlink():
             raise ValueError("bundle input must not be a symlink: %s" % path.relative_to(root).as_posix())
         if path.is_file():

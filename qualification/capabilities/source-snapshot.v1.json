@@ -1,0 +1,2070 @@
+{
+  "schema_version": "1.0",
+  "classification": "repository_current_state_snapshot",
+  "observed_date": "2026-09-26",
+  "repository": "mvkaiii/metaphysics-lab",
+  "baseline": {
+    "default_branch": "main",
+    "main_sha": "872c60b2e959ea48d25524b74686e488f576ec6f",
+    "v1_7_1_tag_sha": "872c60b2e959ea48d25524b74686e488f576ec6f",
+    "v1_7_0_tag_sha": "24760aa8766eb2691c8878f2cd8b97f0b37f8964",
+    "v1_6_0_tag_sha": "c325d754112df71c6747e17262d2e781d2864441",
+    "release_identity_immutable": true
+  },
+  "branch_inventory": [
+    "ci/v17-artifact-lifecycle-20260915",
+    "docs/next-stage-roadmap-20260926",
+    "feature/bazi-flow-time-qualification",
+    "feature/portable-offline-natal-pipeline",
+    "feature/ziwei-flow-time-qualification",
+    "feature/ziwei-month-boundary-qualification",
+    "impl/v1.6-selector-v2-clean-control-21",
+    "main",
+    "plan/v1.7-reliability-guided-inquiry",
+    "research/v1.6-prospective-arm-freeze-v1",
+    "research/v1.6-prospective-claim-authority-set",
+    "research/v1.6-yearly-ziwei-transformations-y1"
+  ],
+  "pull_requests": [
+    {
+      "number": 219,
+      "state": "open",
+      "merged": false,
+      "title": "research: yearly Ziwei transformations Y1 — pipeline qualified, prospective pending (DO NOT MERGE)",
+      "base_ref": "impl/v1.6-legacy-adapter-paired-evaluation",
+      "base_sha": "eaf03116bf5e02b08b4b51caed2cb2c31f796686",
+      "base_ref_lookup": "404",
+      "head_ref": "research/v1.6-yearly-ziwei-transformations-y1",
+      "head_sha": "3d6bba9efa37b105aee198215f90f00e3ed99229",
+      "disposition": "research/archive evidence; do not retarget, merge, or delete"
+    },
+    {
+      "number": 221,
+      "state": "open",
+      "merged": false,
+      "title": "research: prospective composite claim-authority set",
+      "base_ref": "research/v1.6-prospective-window-scope-v1",
+      "base_sha": "c2d111b3e1b410a7208b8d4ba0585e8000d30a87",
+      "base_ref_lookup": "404",
+      "head_ref": "research/v1.6-prospective-claim-authority-set",
+      "head_sha": "e28a51e9cb60961838300b8a0aea8e25696e9fb4",
+      "disposition": "research/archive evidence; do not retarget, merge, or delete"
+    }
+  ],
+  "compare_audits": [
+    {
+      "name": "research/v1.6-prospective-claim-authority-set",
+      "head": "e28a51e9cb60961838300b8a0aea8e25696e9fb4",
+      "status": "diverged",
+      "ahead_by": 40,
+      "behind_by": 313,
+      "changed_file_count": 19,
+      "changed_paths": [
+        {
+          "path": ".github/workflows/v16-prospective-claim-authority-set-research.yml",
+          "status": "added",
+          "additions": 204,
+          "deletions": 0
+        },
+        {
+          "path": ".github/workflows/v16-prospective-window-scope-research.yml",
+          "status": "added",
+          "additions": 213,
+          "deletions": 0
+        },
+        {
+          "path": "dist/ai/metaphysics_lab.py",
+          "status": "modified",
+          "additions": 3,
+          "deletions": 3
+        },
+        {
+          "path": "docs/research/2026-09-02-v1.6-prospective-window-scope-execution-log.md",
+          "status": "added",
+          "additions": 12,
+          "deletions": 0
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-02-v1.6-prospective-window-scope-governance-implementation.md",
+          "status": "added",
+          "additions": 444,
+          "deletions": 0
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-03-v1.6-prospective-claim-authority-set.md",
+          "status": "added",
+          "additions": 442,
+          "deletions": 0
+        },
+        {
+          "path": "docs/superpowers/specs/2026-09-02-v1.6-prospective-window-scope-governance-design.md",
+          "status": "added",
+          "additions": 263,
+          "deletions": 0
+        },
+        {
+          "path": "docs/superpowers/specs/2026-09-03-v1.6-prospective-claim-authority-set-design.md",
+          "status": "added",
+          "additions": 324,
+          "deletions": 0
+        },
+        {
+          "path": "engine/distribution/claim_authority_manifest.py",
+          "status": "added",
+          "additions": 244,
+          "deletions": 0
+        },
+        {
+          "path": "engine/distribution/prospective_claim_authority_set.py",
+          "status": "added",
+          "additions": 271,
+          "deletions": 0
+        },
+        {
+          "path": "engine/distribution/prospective_claim_universe.py",
+          "status": "added",
+          "additions": 203,
+          "deletions": 0
+        },
+        {
+          "path": "engine/distribution/prospective_window_scope.py",
+          "status": "added",
+          "additions": 132,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_distribution_claim_authority_manifest.py",
+          "status": "added",
+          "additions": 192,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_distribution_prospective_claim_authority_set.py",
+          "status": "added",
+          "additions": 286,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_distribution_prospective_claim_universe.py",
+          "status": "added",
+          "additions": 251,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_distribution_prospective_scope_integration.py",
+          "status": "added",
+          "additions": 237,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_distribution_prospective_window_scope.py",
+          "status": "added",
+          "additions": 173,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_tool_build_v16_prospective_claim_authority_set.py",
+          "status": "added",
+          "additions": 96,
+          "deletions": 0
+        },
+        {
+          "path": "tools/build_v16_prospective_claim_authority_set.py",
+          "status": "added",
+          "additions": 50,
+          "deletions": 0
+        }
+      ]
+    },
+    {
+      "name": "research/v1.6-yearly-ziwei-transformations-y1",
+      "head": "3d6bba9efa37b105aee198215f90f00e3ed99229",
+      "status": "diverged",
+      "ahead_by": 22,
+      "behind_by": 313,
+      "changed_file_count": 14,
+      "changed_paths": [
+        {
+          "path": ".github/workflows/v16-yearly-ziwei-transformations-y1-full-gate.yml",
+          "status": "added",
+          "additions": 180,
+          "deletions": 0
+        },
+        {
+          "path": ".github/workflows/v16-yearly-ziwei-transformations-y1.yml",
+          "status": "added",
+          "additions": 82,
+          "deletions": 0
+        },
+        {
+          "path": "dist/ai/metaphysics_lab.py",
+          "status": "modified",
+          "additions": 3,
+          "deletions": 3
+        },
+        {
+          "path": "docs/research/2026-09-02-v1.6-yearly-transformations-retrospective-benchmark-v2.md",
+          "status": "added",
+          "additions": 120,
+          "deletions": 0
+        },
+        {
+          "path": "docs/research/2026-09-02-v1.6-yearly-ziwei-transformations-y1-validation.md",
+          "status": "added",
+          "additions": 132,
+          "deletions": 0
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-02-v1.6-yearly-ziwei-transformations-y1.md",
+          "status": "added",
+          "additions": 383,
+          "deletions": 0
+        },
+        {
+          "path": "docs/superpowers/specs/2026-09-02-v1.6-yearly-ziwei-transformations-y1-design.md",
+          "status": "added",
+          "additions": 95,
+          "deletions": 0
+        },
+        {
+          "path": "engine/distribution/forecast.py",
+          "status": "modified",
+          "additions": 5,
+          "deletions": 2
+        },
+        {
+          "path": "engine/ziwei/yearly_cycle.py",
+          "status": "added",
+          "additions": 57,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_distribution_forecast.py",
+          "status": "modified",
+          "additions": 24,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_distribution_structural_interpretation.py",
+          "status": "modified",
+          "additions": 56,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_yearly_ziwei_transformations_y1.py",
+          "status": "added",
+          "additions": 95,
+          "deletions": 0
+        },
+        {
+          "path": "tools/v16_yearly_transformations_benchmark_adjudicate.py",
+          "status": "added",
+          "additions": 286,
+          "deletions": 0
+        },
+        {
+          "path": "tools/v16_yearly_transformations_benchmark_predictions.py",
+          "status": "added",
+          "additions": 208,
+          "deletions": 0
+        }
+      ]
+    },
+    {
+      "name": "impl/v1.6-selector-v2-clean-control-21",
+      "head": "842bb3b75eb9b8f03ae90180f1b98cfa3bd19a13",
+      "status": "diverged",
+      "ahead_by": 11,
+      "behind_by": 423,
+      "changed_file_count": 9,
+      "changed_paths": [
+        {
+          "path": ".github/workflows/lin-tianji-v1.5-validation.yml",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "dist/ai/metaphysics_lab.py",
+          "status": "modified",
+          "additions": 3,
+          "deletions": 3
+        },
+        {
+          "path": "engine/distribution/coordination_policy_v2.py",
+          "status": "added",
+          "additions": 293,
+          "deletions": 0
+        },
+        {
+          "path": "engine/distribution/interpretation_contract_v2.py",
+          "status": "modified",
+          "additions": 19,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_v16_coordination_policy_v2.py",
+          "status": "added",
+          "additions": 143,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_v16_coordination_wrapper_integration.py",
+          "status": "added",
+          "additions": 114,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_v16_hybrid_ai_coordination_contract.py",
+          "status": "added",
+          "additions": 34,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_ziwei_phase2c_rule_source.py",
+          "status": "modified",
+          "additions": 2,
+          "deletions": 2
+        },
+        {
+          "path": "tools/check_phase2c_rule_source.py",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        }
+      ]
+    },
+    {
+      "name": "research/v1.6-prospective-arm-freeze-v1",
+      "head": "dc95050640addf31e57ec637fdcf8e1483c42fb5",
+      "status": "diverged",
+      "ahead_by": 51,
+      "behind_by": 313,
+      "changed_file_count": 25,
+      "changed_paths": [
+        {
+          "path": ".github/workflows/v16-prospective-arm-freeze-v1.yml",
+          "status": "added",
+          "additions": 261,
+          "deletions": 0
+        },
+        {
+          "path": ".github/workflows/v16-prospective-claim-authority-set-research.yml",
+          "status": "added",
+          "additions": 204,
+          "deletions": 0
+        },
+        {
+          "path": ".github/workflows/v16-prospective-window-scope-research.yml",
+          "status": "added",
+          "additions": 213,
+          "deletions": 0
+        },
+        {
+          "path": "dist/ai/metaphysics_lab.py",
+          "status": "modified",
+          "additions": 3,
+          "deletions": 3
+        },
+        {
+          "path": "docs/research/2026-09-02-v1.6-prospective-window-scope-execution-log.md",
+          "status": "added",
+          "additions": 12,
+          "deletions": 0
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-02-v1.6-prospective-window-scope-governance-implementation.md",
+          "status": "added",
+          "additions": 444,
+          "deletions": 0
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-03-v1.6-prospective-claim-authority-set.md",
+          "status": "added",
+          "additions": 442,
+          "deletions": 0
+        },
+        {
+          "path": "docs/superpowers/specs/2026-09-02-v1.6-prospective-window-scope-governance-design.md",
+          "status": "added",
+          "additions": 263,
+          "deletions": 0
+        },
+        {
+          "path": "docs/superpowers/specs/2026-09-03-v1.6-prospective-claim-authority-set-design.md",
+          "status": "added",
+          "additions": 324,
+          "deletions": 0
+        },
+        {
+          "path": "engine/distribution/claim_authority_manifest.py",
+          "status": "added",
+          "additions": 244,
+          "deletions": 0
+        },
+        {
+          "path": "engine/distribution/forecast.py",
+          "status": "modified",
+          "additions": 5,
+          "deletions": 2
+        },
+        {
+          "path": "engine/distribution/prospective_arm_freeze.py",
+          "status": "added",
+          "additions": 479,
+          "deletions": 0
+        },
+        {
+          "path": "engine/distribution/prospective_claim_authority_set.py",
+          "status": "added",
+          "additions": 271,
+          "deletions": 0
+        },
+        {
+          "path": "engine/distribution/prospective_claim_universe.py",
+          "status": "added",
+          "additions": 203,
+          "deletions": 0
+        },
+        {
+          "path": "engine/distribution/prospective_window_scope.py",
+          "status": "added",
+          "additions": 132,
+          "deletions": 0
+        },
+        {
+          "path": "engine/ziwei/yearly_cycle.py",
+          "status": "added",
+          "additions": 57,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_distribution_claim_authority_manifest.py",
+          "status": "added",
+          "additions": 192,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_distribution_prospective_claim_authority_set.py",
+          "status": "added",
+          "additions": 286,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_distribution_prospective_claim_universe.py",
+          "status": "added",
+          "additions": 251,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_distribution_prospective_scope_integration.py",
+          "status": "added",
+          "additions": 237,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_distribution_prospective_window_scope.py",
+          "status": "added",
+          "additions": 173,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_tool_build_v16_prospective_claim_authority_set.py",
+          "status": "added",
+          "additions": 96,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_v16_prospective_arm_freeze.py",
+          "status": "added",
+          "additions": 203,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_yearly_ziwei_transformations_y1.py",
+          "status": "added",
+          "additions": 95,
+          "deletions": 0
+        },
+        {
+          "path": "tools/build_v16_prospective_claim_authority_set.py",
+          "status": "added",
+          "additions": 50,
+          "deletions": 0
+        }
+      ]
+    },
+    {
+      "name": "feature/bazi-flow-time-qualification",
+      "head": "4319964291f2acd6f535042c70a2b2e3e9da076e",
+      "status": "diverged",
+      "ahead_by": 9,
+      "behind_by": 705,
+      "changed_file_count": 6,
+      "changed_paths": [
+        {
+          "path": ".github/workflows/feature-historical-calibration-validation.yml",
+          "status": "modified",
+          "additions": 4,
+          "deletions": 0
+        },
+        {
+          "path": "docs/superpowers/plans/2026-08-26-Bazi-Flow-Day-Hour-Qualification.md",
+          "status": "added",
+          "additions": 91,
+          "deletions": 0
+        },
+        {
+          "path": "qualification/bazi/flow_time/README.md",
+          "status": "added",
+          "additions": 133,
+          "deletions": 0
+        },
+        {
+          "path": "qualification/bazi/flow_time/public-lunar-python-1.4.8.json",
+          "status": "added",
+          "additions": 62,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_bazi_flow_time_qualification.py",
+          "status": "added",
+          "additions": 171,
+          "deletions": 0
+        },
+        {
+          "path": "tools/build_bazi_flow_time_qualification.py",
+          "status": "added",
+          "additions": 269,
+          "deletions": 0
+        }
+      ]
+    },
+    {
+      "name": "feature/ziwei-flow-time-qualification",
+      "head": "df26e7eaf8718deef380b3e04194c2f625cba62b",
+      "status": "diverged",
+      "ahead_by": 8,
+      "behind_by": 704,
+      "changed_file_count": 5,
+      "changed_paths": [
+        {
+          "path": ".github/workflows/feature-historical-calibration-validation.yml",
+          "status": "modified",
+          "additions": 4,
+          "deletions": 0
+        },
+        {
+          "path": "qualification/ziwei/flow_time/README.md",
+          "status": "added",
+          "additions": 69,
+          "deletions": 0
+        },
+        {
+          "path": "qualification/ziwei/flow_time/public-lunar-python-1.4.8.json",
+          "status": "added",
+          "additions": 77,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_ziwei_flow_time_qualification.py",
+          "status": "added",
+          "additions": 191,
+          "deletions": 0
+        },
+        {
+          "path": "tools/build_ziwei_flow_time_qualification.py",
+          "status": "added",
+          "additions": 353,
+          "deletions": 0
+        }
+      ]
+    },
+    {
+      "name": "feature/ziwei-month-boundary-qualification",
+      "head": "38d8509f46a2c1121e147c563d571a7ce85d1967",
+      "status": "diverged",
+      "ahead_by": 13,
+      "behind_by": 703,
+      "changed_file_count": 9,
+      "changed_paths": [
+        {
+          "path": ".github/workflows/feature-historical-calibration-validation.yml",
+          "status": "modified",
+          "additions": 4,
+          "deletions": 0
+        },
+        {
+          "path": "core/核心提示詞.md",
+          "status": "modified",
+          "additions": 3,
+          "deletions": 1
+        },
+        {
+          "path": "dist/ai/project_instructions.md",
+          "status": "modified",
+          "additions": 2,
+          "deletions": 0
+        },
+        {
+          "path": "docs/superpowers/plans/2026-08-26-Ziwei-Month-Boundary-Qualification.md",
+          "status": "added",
+          "additions": 104,
+          "deletions": 0
+        },
+        {
+          "path": "qualification/ziwei/month_boundary/README.md",
+          "status": "added",
+          "additions": 69,
+          "deletions": 0
+        },
+        {
+          "path": "qualification/ziwei/month_boundary/public-lunar-python-1.4.8.json",
+          "status": "added",
+          "additions": 109,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_project_ux_contract.py",
+          "status": "modified",
+          "additions": 19,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_ziwei_month_boundary_qualification.py",
+          "status": "added",
+          "additions": 283,
+          "deletions": 0
+        },
+        {
+          "path": "tools/build_ziwei_month_boundary_qualification.py",
+          "status": "added",
+          "additions": 375,
+          "deletions": 0
+        }
+      ]
+    },
+    {
+      "name": "feature/portable-offline-natal-pipeline",
+      "head": "c6771cde49b0a8936841d98a6ae7b7c4a3f4eca9",
+      "status": "diverged",
+      "ahead_by": 200,
+      "behind_by": 707,
+      "changed_file_count": 125,
+      "changed_paths": [
+        {
+          "path": ".github/workflows/feature-historical-calibration-validation.yml",
+          "status": "modified",
+          "additions": 2,
+          "deletions": 4
+        },
+        {
+          "path": "CHANGELOG.md",
+          "status": "modified",
+          "additions": 19,
+          "deletions": 4
+        },
+        {
+          "path": "README.md",
+          "status": "modified",
+          "additions": 19,
+          "deletions": 16
+        },
+        {
+          "path": "core/AI工作流程.md",
+          "status": "modified",
+          "additions": 75,
+          "deletions": 32
+        },
+        {
+          "path": "core/命理分析作業規範.md",
+          "status": "modified",
+          "additions": 76,
+          "deletions": 116
+        },
+        {
+          "path": "core/核心提示詞.md",
+          "status": "modified",
+          "additions": 62,
+          "deletions": 422
+        },
+        {
+          "path": "data/birth_places/SOURCES.md",
+          "status": "added",
+          "additions": 71,
+          "deletions": 0
+        },
+        {
+          "path": "data/birth_places/registry.v1.json",
+          "status": "added",
+          "additions": 526,
+          "deletions": 0
+        },
+        {
+          "path": "data/birth_places/schema.v1.json",
+          "status": "added",
+          "additions": 49,
+          "deletions": 0
+        },
+        {
+          "path": "dist/ai/metaphysics_core.md",
+          "status": "modified",
+          "additions": 151,
+          "deletions": 148
+        },
+        {
+          "path": "dist/ai/metaphysics_lab.py",
+          "status": "modified",
+          "additions": 60,
+          "deletions": 68
+        },
+        {
+          "path": "dist/ai/project_instructions.md",
+          "status": "modified",
+          "additions": 62,
+          "deletions": 422
+        },
+        {
+          "path": "docs/Astralium資料取得指南.md",
+          "status": "modified",
+          "additions": 18,
+          "deletions": 6
+        },
+        {
+          "path": "docs/superpowers/plans/2026-08-24-Portable-Offline-Natal-Pipeline.md",
+          "status": "added",
+          "additions": 782,
+          "deletions": 0
+        },
+        {
+          "path": "docs/superpowers/specs/2026-08-24-Portable-Offline-Natal-Pipeline-設計.md",
+          "status": "added",
+          "additions": 1509,
+          "deletions": 0
+        },
+        {
+          "path": "docs/命盤資料準備指南.md",
+          "status": "modified",
+          "additions": 32,
+          "deletions": 2
+        },
+        {
+          "path": "docs/發布說明-v1.3.0.md",
+          "status": "modified",
+          "additions": 28,
+          "deletions": 25
+        },
+        {
+          "path": "engine/birth/offline_registry.py",
+          "status": "added",
+          "additions": 230,
+          "deletions": 0
+        },
+        {
+          "path": "engine/calendar/lunar.py",
+          "status": "modified",
+          "additions": 30,
+          "deletions": 10
+        },
+        {
+          "path": "engine/calendar/timezone.py",
+          "status": "modified",
+          "additions": 63,
+          "deletions": 31
+        },
+        {
+          "path": "engine/distribution/case_pack.py",
+          "status": "modified",
+          "additions": 63,
+          "deletions": 1
+        },
+        {
+          "path": "engine/distribution/constants.py",
+          "status": "modified",
+          "additions": 4,
+          "deletions": 2
+        },
+        {
+          "path": "engine/distribution/delivery.py",
+          "status": "added",
+          "additions": 207,
+          "deletions": 0
+        },
+        {
+          "path": "engine/distribution/dependencies.py",
+          "status": "modified",
+          "additions": 77,
+          "deletions": 5
+        },
+        {
+          "path": "engine/distribution/natal.py",
+          "status": "modified",
+          "additions": 27,
+          "deletions": 16
+        },
+        {
+          "path": "engine/distribution/runtime.py",
+          "status": "modified",
+          "additions": 43,
+          "deletions": 4
+        },
+        {
+          "path": "engine/distribution/subjects.py",
+          "status": "modified",
+          "additions": 60,
+          "deletions": 0
+        },
+        {
+          "path": "engine/historical/selector.py",
+          "status": "modified",
+          "additions": 7,
+          "deletions": 6
+        },
+        {
+          "path": "engine/vendor/__init__.py",
+          "status": "added",
+          "additions": 5,
+          "deletions": 0
+        },
+        {
+          "path": "engine/vendor/manifest.py",
+          "status": "added",
+          "additions": 91,
+          "deletions": 0
+        },
+        {
+          "path": "engine/vendor/materialize.py",
+          "status": "added",
+          "additions": 278,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_ai_distribution_acceptance.py",
+          "status": "modified",
+          "additions": 2,
+          "deletions": 2
+        },
+        {
+          "path": "tests/test_ai_distribution_build.py",
+          "status": "modified",
+          "additions": 187,
+          "deletions": 4
+        },
+        {
+          "path": "tests/test_ai_distribution_bundle.py",
+          "status": "modified",
+          "additions": 89,
+          "deletions": 4
+        },
+        {
+          "path": "tests/test_ai_distribution_docs.py",
+          "status": "modified",
+          "additions": 20,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_ai_distribution_portability.py",
+          "status": "added",
+          "additions": 194,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_calendar_lunar.py",
+          "status": "modified",
+          "additions": 119,
+          "deletions": 18
+        },
+        {
+          "path": "tests/test_calendar_timezone.py",
+          "status": "modified",
+          "additions": 103,
+          "deletions": 14
+        },
+        {
+          "path": "tests/test_distribution_delivery_bundle.py",
+          "status": "added",
+          "additions": 78,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_distribution_natal.py",
+          "status": "modified",
+          "additions": 119,
+          "deletions": 10
+        },
+        {
+          "path": "tests/test_distribution_runtime_info.py",
+          "status": "modified",
+          "additions": 81,
+          "deletions": 6
+        },
+        {
+          "path": "tests/test_distribution_subject_registry.py",
+          "status": "modified",
+          "additions": 42,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_document_contract_consistency.py",
+          "status": "modified",
+          "additions": 6,
+          "deletions": 4
+        },
+        {
+          "path": "tests/test_historical_activation_selector.py",
+          "status": "modified",
+          "additions": 3,
+          "deletions": 3
+        },
+        {
+          "path": "tests/test_offline_birth_place_registry.py",
+          "status": "added",
+          "additions": 238,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_optional_astralium_supplements.py",
+          "status": "added",
+          "additions": 110,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_optional_historical_calibration_contract.py",
+          "status": "added",
+          "additions": 52,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_project_ux_contract.py",
+          "status": "added",
+          "additions": 212,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_vendor_import_isolation.py",
+          "status": "added",
+          "additions": 74,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_vendor_manifest.py",
+          "status": "added",
+          "additions": 138,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_vendor_refresh.py",
+          "status": "added",
+          "additions": 184,
+          "deletions": 0
+        },
+        {
+          "path": "tools/build_ai_distribution.py",
+          "status": "modified",
+          "additions": 191,
+          "deletions": 95
+        },
+        {
+          "path": "tools/vendor_refresh.py",
+          "status": "added",
+          "additions": 530,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/lunar_python-1.4.8.tar.gz.xz.b64part01",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/lunar_python-1.4.8.tar.gz.xz.b64part02",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/lunar_python-1.4.8.tar.gz.xz.b64part03",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/lunar_python-1.4.8.tar.gz.xz.b64part04",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/lunar_python-1.4.8.tar.gz.xz.b64part05",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/lunar_python-1.4.8.tar.gz.xz.b64part06",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/lunar_python-1.4.8.tar.gz.xz.b64part07",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/lunar_python-1.4.8.tar.gz.xz.b64part08",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/lunar_python-1.4.8.tar.gz.xz.b64part09",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/lunar_python-1.4.8.tar.gz.xz.b64part10",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/lunar_python-1.4.8.tar.gz.xz.b64part11",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/lunar_python-1.4.8.tar.gz.xz.b64part12",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/lunar_python-1.4.8.tar.gz.xz.b64part13",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/lunar_python-1.4.8.tar.gz.xz.b64part14",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/lunar_python-1.4.8.tar.gz.xz.b64part15",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part01",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part02",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part03",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part04",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part05",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part06",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part07",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part08",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part09",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part10",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part11",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part12",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part13",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part14",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part15",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part16",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part17",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part18",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part19",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part20",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part21",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part22",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part23",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part24",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part25",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part26",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part27",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part28",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part29",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part30",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part31",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part32",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part33",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part34",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part35",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part36",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part37",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part38",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part39",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part40",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part41",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part42",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part43",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part44",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part45",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part46",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part47",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part48",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part49",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part50",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part51",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part52",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/artifacts/tzdata-2026.3-py2.py3-none-any.whl.xz.b64part53",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/licenses/THIRD_PARTY_NOTICES.md",
+          "status": "added",
+          "additions": 21,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/licenses/lunar-python-LICENSE.txt",
+          "status": "added",
+          "additions": 21,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/licenses/tzdata-LICENSE.txt",
+          "status": "added",
+          "additions": 16,
+          "deletions": 0
+        },
+        {
+          "path": "vendor/manifest.json",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0
+        }
+      ]
+    },
+    {
+      "name": "plan/v1.7-reliability-guided-inquiry",
+      "head": "0d7370eb54fb77c9f4f788ad838a78d06217d24b",
+      "status": "diverged",
+      "ahead_by": 11,
+      "behind_by": 257,
+      "changed_file_count": 8,
+      "changed_paths": [
+        {
+          "path": "docs/superpowers/plans/2026-09-08-v1.7-capability-manifest-v1.md",
+          "status": "added",
+          "additions": 373,
+          "deletions": 0
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-08-v1.7-case-doctor-reconciliation.md",
+          "status": "added",
+          "additions": 512,
+          "deletions": 0
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-08-v1.7-direct-implementation-ledger.md",
+          "status": "added",
+          "additions": 15,
+          "deletions": 0
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-08-v1.7-guided-inquiry.md",
+          "status": "added",
+          "additions": 570,
+          "deletions": 0
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-08-v1.7-integration-release.md",
+          "status": "added",
+          "additions": 754,
+          "deletions": 0
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-08-v1.7-planning-index.md",
+          "status": "added",
+          "additions": 152,
+          "deletions": 0
+        },
+        {
+          "path": "docs/superpowers/plans/2026-09-08-v1.7-prospective-validation-2.md",
+          "status": "added",
+          "additions": 532,
+          "deletions": 0
+        },
+        {
+          "path": "docs/superpowers/specs/2026-09-08-v1.7-reliability-guided-inquiry-design.md",
+          "status": "added",
+          "additions": 703,
+          "deletions": 0
+        }
+      ]
+    },
+    {
+      "name": "ci/v17-artifact-lifecycle-20260915",
+      "head": "9872223aac6d2bc2d607d716c4490c5cd47651d0",
+      "status": "diverged",
+      "ahead_by": 45,
+      "behind_by": 81,
+      "changed_file_count": 53,
+      "changed_paths": [
+        {
+          "path": ".github/workflows/v17-artifact-inventory.yml",
+          "status": "added",
+          "additions": 32,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_v17_artifact_inventory.py",
+          "status": "added",
+          "additions": 121,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_v17_artifact_inventory_workflow.py",
+          "status": "added",
+          "additions": 20,
+          "deletions": 0
+        },
+        {
+          "path": "tests/test_v17_artifact_lifecycle_policy.py",
+          "status": "added",
+          "additions": 212,
+          "deletions": 0
+        },
+        {
+          "path": "tools/v17_artifact_inventory.py",
+          "status": "added",
+          "additions": 292,
+          "deletions": 0
+        },
+        {
+          "path": "tools/v17_artifact_lifecycle_policy.py",
+          "status": "added",
+          "additions": 242,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/meta.json",
+          "status": "added",
+          "additions": 40,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-00.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-01.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-02.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-03.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-04.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-05.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-06.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-07.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-08.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-09.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-10.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-11.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-12.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-13.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-14.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-15.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-16.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-17.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-18.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-19.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-20.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-21.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-22.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-23.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-24.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-25.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-26.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-27.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-28.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-29.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-30.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-31.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-32.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-33.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-34.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-35.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-36.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-37.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-38.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-39.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-40.b64",
+          "status": "added",
+          "additions": 200,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-41.b64",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-42.b64",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-43.b64",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-44.b64",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        },
+        {
+          "path": "transport/v17-xdelta/part-45.b64",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0
+        }
+      ]
+    }
+  ],
+  "target_blob_audit": [
+    {
+      "name": "research/v1.6-prospective-claim-authority-set",
+      "head": "e28a51e9cb60961838300b8a0aea8e25696e9fb4",
+      "tree_files": 607,
+      "same_target_blobs": [
+        "qualification/bazi/flow_time/README.md",
+        "qualification/bazi/flow_time/public-lunar-python-1.4.8.json",
+        "tests/test_bazi_flow_time_qualification.py",
+        "tools/build_bazi_flow_time_qualification.py",
+        "qualification/ziwei/flow_time/README.md",
+        "qualification/ziwei/flow_time/public-lunar-python-1.4.8.json",
+        "tests/test_ziwei_flow_time_qualification.py",
+        "tools/build_ziwei_flow_time_qualification.py",
+        "qualification/ziwei/month_boundary/README.md",
+        "qualification/ziwei/month_boundary/public-lunar-python-1.4.8.json",
+        "tests/test_ziwei_month_boundary_qualification.py",
+        "tools/build_ziwei_month_boundary_qualification.py",
+        "engine/birth/offline_registry.py",
+        "data/birth_places/registry.v1.json",
+        "engine/vendor/manifest.py"
+      ],
+      "different_target_blobs": [
+        "engine/distribution/forecast.py",
+        "tests/test_distribution_forecast.py",
+        "tests/test_distribution_structural_interpretation.py",
+        "engine/distribution/claim_authority_manifest.py",
+        "engine/distribution/prospective_claim_authority_set.py"
+      ],
+      "branch_only_target_blobs": [
+        "engine/distribution/claim_authority_manifest.py",
+        "engine/distribution/prospective_claim_authority_set.py"
+      ]
+    },
+    {
+      "name": "research/v1.6-yearly-ziwei-transformations-y1",
+      "head": "3d6bba9efa37b105aee198215f90f00e3ed99229",
+      "tree_files": 599,
+      "same_target_blobs": [
+        "engine/distribution/forecast.py",
+        "engine/ziwei/yearly_cycle.py",
+        "tests/test_distribution_forecast.py",
+        "tests/test_distribution_structural_interpretation.py",
+        "qualification/bazi/flow_time/README.md",
+        "qualification/bazi/flow_time/public-lunar-python-1.4.8.json",
+        "tests/test_bazi_flow_time_qualification.py",
+        "tools/build_bazi_flow_time_qualification.py",
+        "qualification/ziwei/flow_time/README.md",
+        "qualification/ziwei/flow_time/public-lunar-python-1.4.8.json",
+        "tests/test_ziwei_flow_time_qualification.py",
+        "tools/build_ziwei_flow_time_qualification.py",
+        "qualification/ziwei/month_boundary/README.md",
+        "qualification/ziwei/month_boundary/public-lunar-python-1.4.8.json",
+        "tests/test_ziwei_month_boundary_qualification.py",
+        "tools/build_ziwei_month_boundary_qualification.py",
+        "engine/birth/offline_registry.py",
+        "data/birth_places/registry.v1.json",
+        "engine/vendor/manifest.py"
+      ],
+      "different_target_blobs": [],
+      "branch_only_target_blobs": []
+    },
+    {
+      "name": "impl/v1.6-selector-v2-clean-control-21",
+      "head": "842bb3b75eb9b8f03ae90180f1b98cfa3bd19a13",
+      "tree_files": 514,
+      "same_target_blobs": [
+        "qualification/bazi/flow_time/README.md",
+        "qualification/bazi/flow_time/public-lunar-python-1.4.8.json",
+        "tests/test_bazi_flow_time_qualification.py",
+        "tools/build_bazi_flow_time_qualification.py",
+        "qualification/ziwei/flow_time/README.md",
+        "qualification/ziwei/flow_time/public-lunar-python-1.4.8.json",
+        "tests/test_ziwei_flow_time_qualification.py",
+        "tools/build_ziwei_flow_time_qualification.py",
+        "qualification/ziwei/month_boundary/README.md",
+        "qualification/ziwei/month_boundary/public-lunar-python-1.4.8.json",
+        "tests/test_ziwei_month_boundary_qualification.py",
+        "tools/build_ziwei_month_boundary_qualification.py",
+        "engine/birth/offline_registry.py",
+        "data/birth_places/registry.v1.json",
+        "engine/vendor/manifest.py"
+      ],
+      "different_target_blobs": [
+        "engine/distribution/forecast.py",
+        "tests/test_distribution_forecast.py",
+        "tests/test_distribution_structural_interpretation.py"
+      ],
+      "branch_only_target_blobs": []
+    },
+    {
+      "name": "research/v1.6-prospective-arm-freeze-v1",
+      "head": "dc95050640addf31e57ec637fdcf8e1483c42fb5",
+      "tree_files": 612,
+      "same_target_blobs": [
+        "engine/distribution/forecast.py",
+        "engine/ziwei/yearly_cycle.py",
+        "qualification/bazi/flow_time/README.md",
+        "qualification/bazi/flow_time/public-lunar-python-1.4.8.json",
+        "tests/test_bazi_flow_time_qualification.py",
+        "tools/build_bazi_flow_time_qualification.py",
+        "qualification/ziwei/flow_time/README.md",
+        "qualification/ziwei/flow_time/public-lunar-python-1.4.8.json",
+        "tests/test_ziwei_flow_time_qualification.py",
+        "tools/build_ziwei_flow_time_qualification.py",
+        "qualification/ziwei/month_boundary/README.md",
+        "qualification/ziwei/month_boundary/public-lunar-python-1.4.8.json",
+        "tests/test_ziwei_month_boundary_qualification.py",
+        "tools/build_ziwei_month_boundary_qualification.py",
+        "engine/birth/offline_registry.py",
+        "data/birth_places/registry.v1.json",
+        "engine/vendor/manifest.py"
+      ],
+      "different_target_blobs": [
+        "tests/test_distribution_forecast.py",
+        "tests/test_distribution_structural_interpretation.py",
+        "engine/distribution/claim_authority_manifest.py",
+        "engine/distribution/prospective_claim_authority_set.py"
+      ],
+      "branch_only_target_blobs": [
+        "engine/distribution/claim_authority_manifest.py",
+        "engine/distribution/prospective_claim_authority_set.py"
+      ]
+    },
+    {
+      "name": "feature/bazi-flow-time-qualification",
+      "head": "4319964291f2acd6f535042c70a2b2e3e9da076e",
+      "tree_files": 398,
+      "same_target_blobs": [
+        "qualification/bazi/flow_time/README.md",
+        "qualification/bazi/flow_time/public-lunar-python-1.4.8.json",
+        "tests/test_bazi_flow_time_qualification.py",
+        "tools/build_bazi_flow_time_qualification.py",
+        "engine/birth/offline_registry.py",
+        "data/birth_places/registry.v1.json",
+        "engine/vendor/manifest.py"
+      ],
+      "different_target_blobs": [
+        "engine/distribution/forecast.py",
+        "tests/test_distribution_forecast.py"
+      ],
+      "branch_only_target_blobs": []
+    },
+    {
+      "name": "feature/ziwei-flow-time-qualification",
+      "head": "df26e7eaf8718deef380b3e04194c2f625cba62b",
+      "tree_files": 402,
+      "same_target_blobs": [
+        "qualification/bazi/flow_time/README.md",
+        "qualification/bazi/flow_time/public-lunar-python-1.4.8.json",
+        "tests/test_bazi_flow_time_qualification.py",
+        "tools/build_bazi_flow_time_qualification.py",
+        "qualification/ziwei/flow_time/README.md",
+        "qualification/ziwei/flow_time/public-lunar-python-1.4.8.json",
+        "tests/test_ziwei_flow_time_qualification.py",
+        "tools/build_ziwei_flow_time_qualification.py",
+        "engine/birth/offline_registry.py",
+        "data/birth_places/registry.v1.json",
+        "engine/vendor/manifest.py"
+      ],
+      "different_target_blobs": [
+        "engine/distribution/forecast.py",
+        "tests/test_distribution_forecast.py"
+      ],
+      "branch_only_target_blobs": []
+    },
+    {
+      "name": "feature/ziwei-month-boundary-qualification",
+      "head": "38d8509f46a2c1121e147c563d571a7ce85d1967",
+      "tree_files": 407,
+      "same_target_blobs": [
+        "qualification/bazi/flow_time/README.md",
+        "qualification/bazi/flow_time/public-lunar-python-1.4.8.json",
+        "tests/test_bazi_flow_time_qualification.py",
+        "tools/build_bazi_flow_time_qualification.py",
+        "qualification/ziwei/flow_time/README.md",
+        "qualification/ziwei/flow_time/public-lunar-python-1.4.8.json",
+        "tests/test_ziwei_flow_time_qualification.py",
+        "tools/build_ziwei_flow_time_qualification.py",
+        "qualification/ziwei/month_boundary/README.md",
+        "qualification/ziwei/month_boundary/public-lunar-python-1.4.8.json",
+        "tests/test_ziwei_month_boundary_qualification.py",
+        "tools/build_ziwei_month_boundary_qualification.py",
+        "engine/birth/offline_registry.py",
+        "data/birth_places/registry.v1.json",
+        "engine/vendor/manifest.py"
+      ],
+      "different_target_blobs": [
+        "engine/distribution/forecast.py",
+        "tests/test_distribution_forecast.py"
+      ],
+      "branch_only_target_blobs": []
+    },
+    {
+      "name": "feature/portable-offline-natal-pipeline",
+      "head": "c6771cde49b0a8936841d98a6ae7b7c4a3f4eca9",
+      "tree_files": 393,
+      "same_target_blobs": [
+        "engine/birth/offline_registry.py",
+        "data/birth_places/registry.v1.json",
+        "engine/vendor/manifest.py"
+      ],
+      "different_target_blobs": [
+        "engine/distribution/forecast.py",
+        "tests/test_distribution_forecast.py"
+      ],
+      "branch_only_target_blobs": []
+    },
+    {
+      "name": "plan/v1.7-reliability-guided-inquiry",
+      "head": "0d7370eb54fb77c9f4f788ad838a78d06217d24b",
+      "tree_files": 619,
+      "same_target_blobs": [
+        "engine/distribution/forecast.py",
+        "engine/ziwei/yearly_cycle.py",
+        "tests/test_distribution_forecast.py",
+        "tests/test_distribution_structural_interpretation.py",
+        "qualification/bazi/flow_time/README.md",
+        "qualification/bazi/flow_time/public-lunar-python-1.4.8.json",
+        "tests/test_bazi_flow_time_qualification.py",
+        "tools/build_bazi_flow_time_qualification.py",
+        "qualification/ziwei/flow_time/README.md",
+        "qualification/ziwei/flow_time/public-lunar-python-1.4.8.json",
+        "tests/test_ziwei_flow_time_qualification.py",
+        "tools/build_ziwei_flow_time_qualification.py",
+        "qualification/ziwei/month_boundary/README.md",
+        "qualification/ziwei/month_boundary/public-lunar-python-1.4.8.json",
+        "tests/test_ziwei_month_boundary_qualification.py",
+        "tools/build_ziwei_month_boundary_qualification.py",
+        "engine/birth/offline_registry.py",
+        "data/birth_places/registry.v1.json",
+        "engine/vendor/manifest.py"
+      ],
+      "different_target_blobs": [],
+      "branch_only_target_blobs": []
+    },
+    {
+      "name": "ci/v17-artifact-lifecycle-20260915",
+      "head": "9872223aac6d2bc2d607d716c4490c5cd47651d0",
+      "tree_files": 707,
+      "same_target_blobs": [
+        "engine/distribution/forecast.py",
+        "engine/ziwei/yearly_cycle.py",
+        "tests/test_distribution_forecast.py",
+        "tests/test_distribution_structural_interpretation.py",
+        "qualification/bazi/flow_time/README.md",
+        "qualification/bazi/flow_time/public-lunar-python-1.4.8.json",
+        "tests/test_bazi_flow_time_qualification.py",
+        "tools/build_bazi_flow_time_qualification.py",
+        "qualification/ziwei/flow_time/README.md",
+        "qualification/ziwei/flow_time/public-lunar-python-1.4.8.json",
+        "tests/test_ziwei_flow_time_qualification.py",
+        "tools/build_ziwei_flow_time_qualification.py",
+        "qualification/ziwei/month_boundary/README.md",
+        "qualification/ziwei/month_boundary/public-lunar-python-1.4.8.json",
+        "tests/test_ziwei_month_boundary_qualification.py",
+        "tools/build_ziwei_month_boundary_qualification.py",
+        "engine/birth/offline_registry.py",
+        "data/birth_places/registry.v1.json",
+        "engine/vendor/manifest.py"
+      ],
+      "different_target_blobs": [
+        "tools/v17_artifact_inventory.py"
+      ],
+      "branch_only_target_blobs": [
+        "tools/v17_artifact_inventory.py"
+      ]
+    }
+  ],
+  "limitations": [
+    "This is a fresh branch/tree audit against the current main baseline, not a semantic approval or merge decision.",
+    "Three-dot compare and selected blob checks do not prove that every historical branch change is safe to inherit.",
+    "Residual/full semantic audits are incomplete for branches with large or divergent histories.",
+    "Unknown-provenance branch content remains preserved and is not auto-deleted.",
+    "No branch, PR, tag, release, or historical release asset was modified by Task 0-2."
+  ]
+}

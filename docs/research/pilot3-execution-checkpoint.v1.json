@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.0",
+  "pilot_id": "Pilot-3",
+  "checkpoint_status": "HALTED_NON_QUALIFYING",
+  "process_stage": "STRUCTURAL_SNAPSHOT_MANIFEST",
+  "deviation_code": "STRUCTURAL_SNAPSHOT_SEGMENTATION_RULE_UNRESOLVED",
+  "governance": {
+    "pcg_status": "READY_BEFORE_CANDIDATE_PROCESSING",
+    "intake_status": "ELIGIBLE_FOR_S1_SOURCE",
+    "source_manifest_status": "FROZEN_BEFORE_CANDIDATE_PROCESSING",
+    "exposure_status": "UNEXPOSED_BEFORE_CANDIDATE_PROCESSING",
+    "start_authorization_status": "AUTHORIZED"
+  },
+  "candidate_execution": {
+    "frozen_candidate_used": true,
+    "processing_started_only_after_pcg_ready": true,
+    "natal_basis_materialized": true,
+    "future_claim_output_created": false
+  },
+  "contract_boundary": {
+    "window_claim_scope": "yearly",
+    "timing_scope": "monthly",
+    "snapshot_manifest_requirement": "COMPLETE_ORDERED_PRE_EFA_STRUCTURAL_SNAPSHOT_CENSUS",
+    "deterministic_window_to_snapshot_enumerator_preregistered": false,
+    "retrospective_segmentation_rule_invention_allowed": false,
+    "pilot2_observed_snapshot_or_claim_set_results_used_for_resolution": false
+  },
+  "execution_state": {
+    "structural_snapshot_manifest": "NOT_CREATED",
+    "efa_census": "NOT_STARTED",
+    "claim_universe_lock": "NOT_CREATED",
+    "s1_claim_membership_lock": "NOT_CREATED",
+    "downstream_authority_compatibility": "NOT_ASSESSED",
+    "prediction_lock": "NOT_CREATED",
+    "outcome_collection": "NOT_STARTED",
+    "adjudication": "NOT_STARTED",
+    "scoring": "NOT_STARTED"
+  },
+  "blindness": {
+    "validation_event_history_read": false,
+    "outcome_material_read": false
+  },
+  "interpretation": {
+    "process_conformance_met": false,
+    "predictive_validity_evidence_created": false,
+    "qualification_evidence_created": false,
+    "stable_promotion_effect": false
+  },
+  "next_action": {
+    "pilot3_resume": "PROHIBITED",
+    "replacement_case_under_pilot3": "PROHIBITED",
+    "retry_requires": "NEW_PILOT_ID_OR_PROTOCOL_VERSION",
+    "required_contract_delta": "PREREGISTER_DETERMINISTIC_COMPLETE_WINDOW_TO_STRUCTURAL_SNAPSHOT_ENUMERATION_BEFORE_CASE_EXPOSURE"
+  }
+}

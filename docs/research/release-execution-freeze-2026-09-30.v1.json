@@ -1,0 +1,82 @@
+{
+  "schema_version": "1.0",
+  "gate_type": "RELEASE_EXECUTION_FREEZE",
+  "recorded_on": "2026-09-30",
+  "repository": "mvkaiii/metaphysics-lab",
+  "pr_number": 233,
+  "release_identity": "v1.8.0",
+  "human_authorization": {
+    "merge": true,
+    "tag": true,
+    "github_release": true,
+    "publish": true,
+    "stable_promotion": false,
+    "default_switch": false
+  },
+  "frozen_release_execution_candidate": "5751515bfaa9ed462c53a7dbc37dfd705d9a9938",
+  "product_rc_ancestor": "a0e0a1ca668e022a7c13f35875803d968f7547df",
+  "version_contract": {
+    "release_version": "1.8.0",
+    "distribution_runtime_version": "1.4-exp",
+    "project_contract_version": "1.2",
+    "runtime_schema_version": "1.1",
+    "case_schema_version": "1.1"
+  },
+  "validation": {
+    "all_success": true,
+    "runs": [
+      {
+        "name": "林氏天機 v1.5 Validation",
+        "run_id": 36706360849,
+        "result": "SUCCESS"
+      },
+      {
+        "name": "林氏天機 v1.6 Validation",
+        "run_id": 36706360911,
+        "result": "SUCCESS"
+      },
+      {
+        "name": "林氏天機 v1.7 Validation",
+        "run_id": 36706360966,
+        "result": "SUCCESS"
+      },
+      {
+        "name": "v1.7 Plan 3 Focused",
+        "run_id": 36706360546,
+        "result": "SUCCESS"
+      },
+      {
+        "name": "Metaphysics Lab v1.8 Release Candidate Validation",
+        "run_id": 36706360616,
+        "result": "SUCCESS"
+      }
+    ]
+  },
+  "user_package": {
+    "name": "Metaphysics-Lab-v1.8.0-User-Package.zip",
+    "sha256": "f9b22d4b97949b873261793c404d2530a0bc384d77e970e1bba7aec35edc82cf",
+    "artifact_id": 11091868812,
+    "artifact_archive_digest": "sha256:46b268557db75c2ae615c378864dc992c740624596a3711b1b98ef8851185e84",
+    "deterministic_double_build_match": true,
+    "members": [
+      "metaphysics_core.md",
+      "metaphysics_lab.py",
+      "project_instructions.txt"
+    ]
+  },
+  "release_workflow": ".github/workflows/release-v1.8.yml",
+  "invariants": {
+    "bazi_natal_chart_maturity": "experimental",
+    "bazi_natal_chart_routing": "on_demand",
+    "task3_rule_identity": "bazi-natal-project-v1 / 1.0-exp",
+    "pilot6_state": "OBSERVATION_PENDING",
+    "stable_promotion": false,
+    "default_switch": false
+  },
+  "merge_rule": {
+    "final_branch_head_must_receive_fresh_exact_head_validation": true,
+    "merged_main_release_workflow_must_rebuild_and_verify_frozen_package_digest": true,
+    "tag_and_release_must_target_exact_merged_sha": true
+  },
+  "result": "FROZEN_FOR_RELEASE_EXECUTION_PENDING_DOCS_ONLY_DESCENDANT_REVALIDATION"
+}

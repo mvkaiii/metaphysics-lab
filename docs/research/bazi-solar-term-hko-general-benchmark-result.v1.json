@@ -1,0 +1,64 @@
+{
+  "schema_version": "1.0",
+  "benchmark_id": "BAZI-SOLAR-TERM-HKO-EMBEDDED-STATIC-HTML-2013-2016-V4",
+  "result": "PASS",
+  "evidence_scope": "engineering_calendar_accuracy",
+  "workflow": {
+    "run_id": 36596086945,
+    "head_sha": "6cff829da619fa38b8a3196dd7c34ccd6cca2640",
+    "artifact_id": 11045588257,
+    "artifact_digest": "sha256:dcb59130fea25dbc2e3830448f4598c6da31e60ea55f9fa311afef6bdd4aca4d"
+  },
+  "source_family": {
+    "provider": "Hong Kong Observatory",
+    "format": "Solar_Term_YYYY.htm with rows embedded in raw HTML",
+    "years": {
+      "start": 2013,
+      "end": 2016,
+      "continuous": true,
+      "year_count": 4
+    },
+    "jie_per_year": 12,
+    "point_count": 48,
+    "published_precision_seconds": 60
+  },
+  "current_project_before_change": {
+    "within_60_seconds": 3,
+    "point_count": 48,
+    "within_60_rate": 0.0625,
+    "mean_abs_seconds": 279.4583333333333,
+    "median_abs_seconds": 248,
+    "p95_abs_seconds": 630,
+    "max_abs_seconds": 767
+  },
+  "candidate": {
+    "id": "lunar-python==1.4.8 JieQi table",
+    "within_60_seconds": 48,
+    "point_count": 48,
+    "within_60_rate": 1,
+    "mean_abs_seconds": 18.395833333333332,
+    "median_abs_seconds": 20.5,
+    "p95_abs_seconds": 30,
+    "max_abs_seconds": 30
+  },
+  "preregistered_gate": {
+    "all_points_within_hko_60_seconds": true,
+    "candidate_max_not_worse_than_current": true,
+    "candidate_mean_not_worse_than_current": true,
+    "pass": true
+  },
+  "decision": {
+    "production_provider_change_engineering_authorized": true,
+    "exact_provider": "lunar-python==1.4.8",
+    "task3_independent_qualification": "NEEDS_EVIDENCE",
+    "stable_promotion": false,
+    "v2_preoracle_seal_authorized": false
+  },
+  "constraints": [
+    "preserve v1 pre-oracle seal unchanged",
+    "do not reinterpret dry-run as independent evidence",
+    "rerun full repository regressions after provider change",
+    "rerun non-independent Task3 diagnostic after provider change",
+    "freeze a new candidate before any v2 pre-oracle seal"
+  ]
+}

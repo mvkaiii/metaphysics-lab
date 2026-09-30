@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0",
+  "benchmark_id": "BAZI-SOLAR-TERM-HKO-GENERAL-2010-2026-V1",
+  "status": "PREREGISTERED_BEFORE_RESULT_EXPOSURE",
+  "task3_status": "NEEDS_EVIDENCE",
+  "purpose": "General engineering qualification of solar-term timing; not metaphysical prediction evidence.",
+  "year_range": {
+    "start": 2010,
+    "end": 2026,
+    "continuous": true,
+    "year_count": 17
+  },
+  "jie_per_year": 12,
+  "expected_point_count": 204,
+  "reference": {
+    "provider": "Hong Kong Observatory",
+    "published_precision_seconds": 60,
+    "acquisition": "exact archival HTML bytes at run time",
+    "source_pattern": "https://www.hko.gov.hk/en/gts/astron{year}/Solar_Term_{year}.htm"
+  },
+  "compared_engines": [
+    {
+      "id": "current_project",
+      "implementation": "engine.bazi.calendar.solar_term_time"
+    },
+    {
+      "id": "lunar_python_1_4_8",
+      "implementation": "pinned lunar-python==1.4.8 JieQi table"
+    }
+  ],
+  "candidate_gate": {
+    "candidate": "lunar-python==1.4.8 JieQi table",
+    "requirements": [
+      "all_204_points_within_60_seconds_of_HKO_published_minute",
+      "candidate_max_absolute_error_not_worse_than_current_project",
+      "candidate_mean_absolute_error_not_worse_than_current_project"
+    ]
+  },
+  "no_post_result_changes": [
+    "do_not_shrink_year_range_after_results",
+    "do_not_drop_jie_terms_after_results",
+    "do_not_widen_60_second_HKO_precision_gate_after_results"
+  ],
+  "production_change_authorized": false,
+  "v2_preoracle_seal_authorized": false
+}

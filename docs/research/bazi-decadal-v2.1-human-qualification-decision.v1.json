@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0",
+  "task_id": "Bazi-decadal-Task3",
+  "decision_type": "HUMAN_QUALIFICATION_DECISION",
+  "decided_at": "2026-09-30T13:15:00+08:00",
+  "decided_by_role": "project_owner_human_reviewer",
+  "source_checkpoint": "docs/research/bazi-decadal-v2.1-human-review-checkpoint.v1.json",
+  "comparison_receipt": "docs/research/bazi-decadal-v2.1-independent-comparison-receipt.v1.json",
+  "production_candidate_sha": "6280c29b0a493e4b27379948c8cc82ba94bfa04f",
+  "evidence_review": {
+    "cleanroom_executor_independence_evidence": "ACCEPTED_WITH_LIMITATION",
+    "independence_limitation": "Executor isolation is supported by the clean-room pre-execution gate, exact artifact bindings, executor attestation, and static source inspection, but is not cryptographically provable by the comparator.",
+    "presealed_paths_and_tolerances": "ACCEPTED",
+    "post_result_changes_to_cases_paths_tolerances_oracle_or_candidate": false,
+    "comparison_result": "MATCH",
+    "comparison_counts": {
+      "MATCH": 60,
+      "MISMATCH": 0,
+      "MISSING_REFERENCE": 0,
+      "NOT_COMPARABLE": 0
+    }
+  },
+  "decision": "QUALIFIED",
+  "qualification_scope": "Bazi decadal implementation conformance for the frozen production candidate against the approved v2.1 clean execution contract and presealed comparison contract.",
+  "qualification_claims_allowed": [
+    "The frozen production candidate conforms to the approved Task3 Bazi decadal contract for the sealed 12-case, 60-field qualification set under the presealed tolerances.",
+    "Task3 implementation-conformance evidence requirement is satisfied for the frozen production candidate."
+  ],
+  "qualification_claims_not_allowed": [
+    "This decision does not establish metaphysical predictive truth or empirical real-world predictive validity.",
+    "This decision does not prove universal Bazi industry-standard conformity beyond the approved contract.",
+    "This decision does not cryptographically prove clean-room independence.",
+    "This decision does not authorize Stable status, default switch, merge, tag, release, or publish."
+  ],
+  "maturity_promotion": false,
+  "merge_authorized": false,
+  "tag_authorized": false,
+  "release_authorized": false,
+  "stable_claim_authorized": false,
+  "next_gate": "SEPARATE_MATURITY_AND_RELEASE_AUTHORIZATION_IF_DESIRED"
+}

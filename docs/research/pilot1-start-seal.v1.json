@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "pilot_id": "Pilot-1",
+  "seal_status": "SEALED",
+  "authorization_status": "AUTHORIZED_NOT_STARTED",
+  "authorized_by_role": "human_decision_owner",
+  "authorized_at": "2026-09-27T19:35:00+08:00",
+  "frozen_candidate": {
+    "repository": "mvkaiii/metaphysics-lab",
+    "candidate_commit": "79eae136a65aeb14a913a3ecdb2310d22f2ece74",
+    "package_sha256": "cb175e2d482fe9ca8e2d46d6c55c4b0237f1cbb9a631e0d3c50aef75f8e1e0c4",
+    "capability_manifest_sha256": "d11a63ec5194fb49939f4b02583a8bddf7bcfb0e9e7bbd9f547af1047837e7b0",
+    "protocol_path": "docs/research/prospective-pilot-protocol.md",
+    "protocol_sha256": "3c836f6c711b7675960722923f8e8c6199081f1be14ffb4995024b7979762126"
+  },
+  "approved_scope": {
+    "timezone": "Asia/Taipei",
+    "outcome_window_start": "2026-11-01T00:00:00+08:00",
+    "outcome_window_end": "2026-12-31T23:59:59+08:00",
+    "maturity_delay_hours": 72,
+    "planned_real_case_count": 1,
+    "arm_count": 1,
+    "success_target": "process_conformance_not_predictive_validity"
+  },
+  "private_storage_access_record": {
+    "status": "VERIFIED_PRIVATE",
+    "classification": "private_non_git_workspace",
+    "public_details": "WITHHELD_BY_D12",
+    "public_digest_published": false
+  },
+  "execution_state": {
+    "source_census": "NOT_FROZEN",
+    "real_case": "NOT_ENROLLED",
+    "prediction_lock": "NOT_CREATED",
+    "outcome_collection": "NOT_STARTED",
+    "adjudication": "NOT_STARTED",
+    "scoring": "NOT_STARTED"
+  },
+  "prohibitions": {
+    "public_private_data": false,
+    "merge_authorized": false,
+    "release_authorized": false,
+    "stable_promotion_authorized": false
+  }
+}

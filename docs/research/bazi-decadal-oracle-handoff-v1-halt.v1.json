@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "handoff_id": "bazi-decadal-independent-oracle-handoff-v1",
+  "status": "HALTED_BEFORE_ORACLE",
+  "halted_at_head": "fb48a2cfec3c7946cddb05e321ace9cc5d046604",
+  "reason_receipt": "docs/research/bazi-decadal-nonindependent-dryrun-receipt.v1.json",
+  "oracle_execution_started": false,
+  "expected_values_from_independent_oracle_present": false,
+  "existing_preoracle_seal_preserved": true,
+  "preoracle_seal_sha256": "db32a95bc41a54531907e7e059655c094b1b1234a533770a88f2e3a52712874e",
+  "v1_repair_in_place_allowed": false,
+  "v2_required": true,
+  "qualification_status": "NEEDS_EVIDENCE",
+  "maturity_promotion": false
+}

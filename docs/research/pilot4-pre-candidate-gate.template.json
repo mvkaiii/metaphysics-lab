@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "pilot_id": "Pilot-4",
+  "gate_profile": "pilot4_pre_candidate_gate_v1",
+  "gate_status": "BLOCKED",
+  "prerequisites": {
+    "protocol_decisions_approved": true,
+    "enum01_approved": true,
+    "agg01_approved": true,
+    "start_authorization_bound": true,
+    "source_census_frozen": false,
+    "intake_registry_valid": false,
+    "intake_eligible_for_s1": false,
+    "s1_source_manifest_frozen": false,
+    "s1_candidate_exposure_unexposed": false,
+    "s1_manifest_predates_candidate_processing": false
+  },
+  "public_bindings": {
+    "candidate_commit": "f94318651d065a3e677993fb6044518e31c7754c",
+    "package_sha256": "cb175e2d482fe9ca8e2d46d6c55c4b0237f1cbb9a631e0d3c50aef75f8e1e0c4",
+    "manifest_sha256": "d11a63ec5194fb49939f4b02583a8bddf7bcfb0e9e7bbd9f547af1047837e7b0",
+    "protocol_sha256": "9b2b5aba437a5f0d707f91194acc9a495e14b287698453cc7b74b2dff910ca02",
+    "window_policy_digest": "175bb93452a662df969f890a38d732e7eafb5722aa35914e7d780f38c9623212",
+    "enumeration_decision_sha256": "f178c1babd723c26cadbee5eaebb14005592d99847a8d24b208acdb3a0ab9096",
+    "enumeration_profile": "lin_tianji_complete_structural_snapshot_enumerator_v1",
+    "enumeration_rule": "complete_union_of_authoritative_yearly_monthly_time_boundaries_no_post_exposure_merge",
+    "aggregation_decision_sha256": "68a79e4074f737f8e2546d9ee4b3e7fe850f296e729fb98eac9dd5b0eec7512f",
+    "aggregation_profile": "lin_tianji_multi_segment_yearly_claim_universe_v1",
+    "aggregation_rule": "complete_union_of_all_manifested_efa_child_inventories"
+  },
+  "candidate_case_processing_allowed": false,
+  "private_material_disclosed": false,
+  "manual_override_allowed": false
+}

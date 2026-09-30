@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "task_id": "Bazi-decadal-Task3",
+  "state": "PRE_ORACLE_SEALED",
+  "human_domain_decision_status": "APPROVED_D1_D4",
+  "approved_at": "2026-09-29T19:39:00+08:00",
+  "approved_spec": {
+    "path": "docs/research/bazi-decadal-independent-profile-spec.v1.md",
+    "sha256": "0757d1275e55b84e2424d6131e9dbdc73e029e1b619f900147be928cc7e5e01d"
+  },
+  "decision_receipt": "docs/research/bazi-decadal-domain-review-decision.v1.json",
+  "case_inputs": {
+    "path": "docs/research/bazi-decadal-oracle-case-inputs.v1.json",
+    "case_count": 12,
+    "bundle_sha256": "ab7ebd72671c3020d67444f720c6f3645111005348efd56efe91ffd2ee699d3f"
+  },
+  "source_acquisition_receipt": "docs/research/bazi-decadal-source-acquisition-receipt.v1.json",
+  "preoracle_seal": {
+    "path": "docs/research/bazi-decadal-preoracle-seal.v1.json",
+    "seal_sha256": "db32a95bc41a54531907e7e059655c094b1b1234a533770a88f2e3a52712874e"
+  },
+  "exact_equality_case_coverage": "NOT_COVERED_BY_SELECTED_MINUTE_RESOLUTION_PACKET",
+  "oracle_handoff_allowed": true,
+  "oracle_execution_started": false,
+  "expected_values_present": false,
+  "comparison_started": false,
+  "qualification_decision": "NOT_YET_MADE",
+  "maturity_promotion": false,
+  "next_gate": "INDEPENDENT_ORACLE_EXECUTION_IN_FRESH_ISOLATED_CONTEXT"
+}

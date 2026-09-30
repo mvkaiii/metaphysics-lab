@@ -1,10 +1,10 @@
 """Version constants for the portable AI distribution contract."""
 
-RELEASE_VERSION = "1.7.1"
+RELEASE_VERSION = "1.8.0"
 PROJECT_CONTRACT_VERSION = "1.2"
 RUNTIME_SCHEMA_VERSION = "1.1"
 CASE_SCHEMA_VERSION = "1.1"
-DISTRIBUTION_RUNTIME_VERSION = "1.2-exp"
+DISTRIBUTION_RUNTIME_VERSION = "1.4-exp"
 
 SUPPORTED_ACTIONS = (
     "runtime_info",
@@ -15,6 +15,7 @@ SUPPORTED_ACTIONS = (
     "build_natal",
     "natal.candidate_envelope",
     "reconcile_natal",
+    "render_bazi_decadal_timeline",
     "resolve_forecast_context",
     "resolve_query_anchor",
     "lock_prospective_forecast",

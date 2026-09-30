@@ -1,0 +1,51 @@
+name: Bazi solar-term HKO general benchmark
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout validation ref
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Install pinned dependencies
+        run: pip install -r requirements.txt
+
+      - name: Acquire preregistered continuous HKO embedded-static-HTML archive 2013-2016
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .hko-general .benchmark-output
+          for year in $(seq 2013 2016); do
+            curl --fail --location --retry 3 --retry-all-errors \
+              --proto '=https' --tlsv1.2 \
+              --user-agent 'Metaphysics-Lab-general-qualification/1.0' \
+              "https://www.hko.gov.hk/en/gts/astron${year}/Solar_Term_${year}.htm" \
+              --output ".hko-general/Solar_Term_${year}.htm"
+            test -s ".hko-general/Solar_Term_${year}.htm"
+          done
+          test "$(find .hko-general -type f | wc -l)" -eq 4
+
+      - name: Benchmark current engine and pinned reference library
+        run: |
+          python tools/benchmark_bazi_solar_terms_hko.py \
+            --input-dir .hko-general \
+            --output .benchmark-output/bazi-solar-term-hko-general-benchmark.v1.json
+
+      - name: Upload benchmark report
+        uses: actions/upload-artifact@v4
+        with:
+          name: bazi-solar-term-hko-general-benchmark
+          path: .benchmark-output/bazi-solar-term-hko-general-benchmark.v1.json
+          if-no-files-found: error
+          retention-days: 90

@@ -43,7 +43,10 @@ def _load_manifest():
 
 def _tree_sha256(root: Path) -> str:
     digest = hashlib.sha256()
-    files = sorted(path for path in root.rglob("*") if path.is_file() and not path.is_symlink())
+    files = sorted(
+        (path for path in root.rglob("*") if path.is_file() and not path.is_symlink()),
+        key=lambda path: path.relative_to(root).as_posix(),
+    )
     for path in files:
         relative = path.relative_to(root).as_posix().encode("utf-8")
         payload = path.read_bytes()

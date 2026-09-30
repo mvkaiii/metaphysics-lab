@@ -1,0 +1,151 @@
+{
+  "schema_version": "1.0",
+  "bundle_type": "bazi_decadal_independent_oracle_output",
+  "execution_contract_sha256": "b47de7809cadb82159c272b2d2d7fb3bbc7ffc99d9e8ed6c1fa60a1bf3c900e4",
+  "case_bundle_sha256": "939f8e29123acabfc16366b05622d1d3598b6aa72c4cc54cf96db3ce6e35128e",
+  "preoracle_seal_sha256": "53f4e249f4f6e13fd26e9859101cceeaac31a1f186c155653a24e79f02dd4a27",
+  "oracle_source_sha256": "d4a4fdff95abb64e700ae9ebe966332546b373096aac6af56af8e2933fa815ac",
+  "comparison_paths": [
+    "/decadal_direction",
+    "/periods/0/pillar",
+    "/periods/0/start_age_years",
+    "/periods/0/start_datetime",
+    "/periods/1/end_datetime"
+  ],
+  "source_precision_seconds": 60,
+  "source_precision_policy": "conservative +/-60 seconds",
+  "cases": [
+    {
+      "case_id": "bdv2-001",
+      "input_sha256": "8056370b0e1803295242e14cc11f5be947909c466a5fe3f22eb6a8363d959697",
+      "expected_values": {
+        "/decadal_direction": "reverse",
+        "/periods/0/pillar": "戊寅",
+        "/periods/0/start_age_years": 10.064351851851852,
+        "/periods/0/start_datetime": "2025-04-28T08:51:48.3+08:00",
+        "/periods/1/end_datetime": "2045-04-28T05:15:48.3+08:00"
+      }
+    },
+    {
+      "case_id": "bdv2-002",
+      "input_sha256": "cec5abeceac5382a235581f2fa9cba82046af22decdd70aaf1c48d17968ae352",
+      "expected_values": {
+        "/decadal_direction": "forward",
+        "/periods/0/pillar": "庚辰",
+        "/periods/0/start_age_years": 0.0011574074074074073,
+        "/periods/0/start_datetime": "2015-04-05T20:42:44.25+08:00",
+        "/periods/1/end_datetime": "2035-04-05T17:06:44.25+08:00"
+      }
+    },
+    {
+      "case_id": "bdv2-003",
+      "input_sha256": "8eed8d502f9d173ee0d767e039c00a4a6c84a7f09d649b50695ab82824984c93",
+      "expected_values": {
+        "/decadal_direction": "reverse",
+        "/periods/0/pillar": "己卯",
+        "/periods/0/start_age_years": 0.0011574074074074073,
+        "/periods/0/start_datetime": "2015-04-05T20:52:44.25+08:00",
+        "/periods/1/end_datetime": "2035-04-05T17:16:44.25+08:00"
+      }
+    },
+    {
+      "case_id": "bdv2-004",
+      "input_sha256": "c80cac78d3852c215c5c3536573b0f2082b36fdee79989bcc4b36cda959b5b9a",
+      "expected_values": {
+        "/decadal_direction": "forward",
+        "/periods/0/pillar": "辛巳",
+        "/periods/0/start_age_years": 10.238194444444444,
+        "/periods/0/start_datetime": "2025-06-30T20:54:10.65+08:00",
+        "/periods/1/end_datetime": "2045-06-30T17:18:10.65+08:00"
+      }
+    },
+    {
+      "case_id": "bdv2-005",
+      "input_sha256": "b42b428a3b46e6875291a15355220f3c7889693a8179865f5978543f319c27a6",
+      "expected_values": {
+        "/decadal_direction": "reverse",
+        "/periods/0/pillar": "丁亥",
+        "/periods/0/start_age_years": 8.23773148148148,
+        "/periods/0/start_datetime": "2024-03-28T06:28:16.95+08:00",
+        "/periods/1/end_datetime": "2044-03-28T02:52:16.95+08:00"
+      }
+    },
+    {
+      "case_id": "bdv2-006",
+      "input_sha256": "1f78c1e9a4b911db843b3aa9383a5b7fcf0e3f88ef3a96eb85403bf342fe0809",
+      "expected_values": {
+        "/decadal_direction": "forward",
+        "/periods/0/pillar": "己丑",
+        "/periods/0/start_age_years": 1.5851851851851853,
+        "/periods/0/start_datetime": "2017-08-02T11:26:52.8+08:00",
+        "/periods/1/end_datetime": "2037-08-02T07:50:52.8+08:00"
+      }
+    },
+    {
+      "case_id": "bdv2-007",
+      "input_sha256": "76a97ac3e441976c306181f0c9ed90f0a3bd779f0598e52e26f33a84c95818b6",
+      "expected_values": {
+        "/decadal_direction": "forward",
+        "/periods/0/pillar": "辛卯",
+        "/periods/0/start_age_years": 1.662962962962963,
+        "/periods/0/start_datetime": "2017-10-28T21:14:02.4+08:00",
+        "/periods/1/end_datetime": "2037-10-28T17:38:02.4+08:00"
+      }
+    },
+    {
+      "case_id": "bdv2-008",
+      "input_sha256": "4bcb1a367d3cfa6f420c9dd786cf8081e7ed6023eead4d3f73edefe1c773e86e",
+      "expected_values": {
+        "/decadal_direction": "reverse",
+        "/periods/0/pillar": "己丑",
+        "/periods/0/start_age_years": 8.253240740740742,
+        "/periods/0/start_datetime": "2024-05-31T22:25:21.9+08:00",
+        "/periods/1/end_datetime": "2044-05-31T18:49:21.9+08:00"
+      }
+    },
+    {
+      "case_id": "bdv2-009",
+      "input_sha256": "e606a5d526b3c06dc1ba8af4163bcb3526e50ce58faf75cad42684f15745101c",
+      "expected_values": {
+        "/decadal_direction": "forward",
+        "/periods/0/pillar": "辛卯",
+        "/periods/0/start_age_years": 0.0011574074074074073,
+        "/periods/0/start_datetime": "2016-03-05T21:47:44.25+08:00",
+        "/periods/1/end_datetime": "2036-03-05T18:11:44.25+08:00"
+      }
+    },
+    {
+      "case_id": "bdv2-010",
+      "input_sha256": "b592bbb71e4fa17b960ca5690c7ebb91699f61bba831cecb29abf5f52c1be7e1",
+      "expected_values": {
+        "/decadal_direction": "reverse",
+        "/periods/0/pillar": "己丑",
+        "/periods/0/start_age_years": 9.915046296296296,
+        "/periods/0/start_datetime": "2026-02-02T21:09:40.05+08:00",
+        "/periods/1/end_datetime": "2046-02-02T17:33:40.05+08:00"
+      }
+    },
+    {
+      "case_id": "bdv2-011",
+      "input_sha256": "b3260790b2f5fc695f57ca665fb7f6e835fb7a98b11bce400cf14c4aa01fa3d2",
+      "expected_values": {
+        "/decadal_direction": "forward",
+        "/periods/0/pillar": "壬辰",
+        "/periods/0/start_age_years": 10.064583333333333,
+        "/periods/0/start_datetime": "2026-03-29T12:08:33.15+08:00",
+        "/periods/1/end_datetime": "2046-03-29T08:32:33.15+08:00"
+      }
+    },
+    {
+      "case_id": "bdv2-012",
+      "input_sha256": "c36c154da2b3b2f6f2d98fe23b59217eb5dc5ed4a249e8487aea8b97c1a6435a",
+      "expected_values": {
+        "/decadal_direction": "reverse",
+        "/periods/0/pillar": "庚寅",
+        "/periods/0/start_age_years": 0.0011574074074074073,
+        "/periods/0/start_datetime": "2016-03-05T21:57:44.25+08:00",
+        "/periods/1/end_datetime": "2036-03-05T18:21:44.25+08:00"
+      }
+    }
+  ]
+}

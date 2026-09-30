@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "decision_type": "SOFTWARE_RELEASE_IDENTITY_AND_SCOPE",
+  "decision_date": "2026-09-30",
+  "timezone": "Asia/Taipei",
+  "repository": "mvkaiii/metaphysics-lab",
+  "pr_number": 233,
+  "decision_parent_head": "53b846eea167d224c731deb2d9721c96140beefa",
+  "current_formal_release": "v1.7.1",
+  "approved_release_identity": "v1.8.0",
+  "approved_scope": {
+    "include": [
+      "Task3-qualified Bazi decadal implementation as Experimental capability evidence",
+      "Bazi solar-term provider engineering correction using bundled lunar-python==1.4.8 JieQi table",
+      "inclusive exact-Jie boundary semantics: forward >= Jie, reverse <= Jie",
+      "Capability Evidence Index and Qualification Matrix",
+      "Visualization Chart Contract v1",
+      "Experimental Bazi decadal projection",
+      "Experimental deterministic SVG/text renderer and repository CLI",
+      "Windows vendor tree digest portability fix",
+      "read-only artifact inventory/lifecycle governance tooling",
+      "Pilot governance and Task3 qualification evidence as research/governance records"
+    ],
+    "exclude": [
+      "Stable promotion of bazi.natal_chart",
+      "Pilot-6-related Stable promotion",
+      "selector or interpretation default switch",
+      "routing/default changes",
+      "Case Schema migration",
+      "metaphysical predictive-truth claim",
+      "empirical predictive-validity claim",
+      "claim that repository visualization is exposed as a public AI Distribution runtime action"
+    ]
+  },
+  "version_contract": {
+    "project_contract_version": "1.2",
+    "runtime_schema_version": "1.1",
+    "case_schema_version": "1.1",
+    "capability_manifest_version": "1.0"
+  },
+  "authorization": {
+    "release_identity_and_scope": "APPROVED_BY_HUMAN",
+    "merge": false,
+    "tag": false,
+    "github_release": false,
+    "publish": false,
+    "stable_promotion": false,
+    "default_switch": false
+  },
+  "next_gate": "VERSION_PROVENANCE_REVIEW_AND_RC_FREEZE_READINESS"
+}

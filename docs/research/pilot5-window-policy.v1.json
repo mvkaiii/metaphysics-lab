@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0",
+  "pilot_id": "Pilot-5",
+  "status": "APPROVED_START_AUTHORIZED",
+  "approved_by_role": "human_decision_owner",
+  "approved_at": "2026-09-29T11:43:28+08:00",
+  "start_authorized": true,
+  "timezone": "Asia/Taipei",
+  "outcome_window_start": "2027-07-01T00:00:00+08:00",
+  "outcome_window_end": "2027-08-31T23:59:59+08:00",
+  "maturity_delay_hours": 72,
+  "resolver_contract": "calendar-aligned_same-civil-year_multi-month",
+  "authority_scope": "yearly_claim_authority",
+  "timing_scope": "monthly",
+  "requested_scopes": [
+    "yearly",
+    "monthly"
+  ],
+  "enumeration_profile": "lin_tianji_complete_structural_snapshot_enumerator_v1",
+  "enumeration_rule": "complete_union_of_authoritative_yearly_monthly_time_boundaries_no_post_exposure_merge",
+  "aggregation_profile": "lin_tianji_multi_segment_yearly_claim_universe_v1",
+  "aggregation_rule": "complete_union_of_all_manifested_efa_child_inventories",
+  "downstream_authority_profile": "lin_tianji_segment_aware_window_authority_v1",
+  "downstream_authority_rule": "unanimous_stable_render_unit_across_all_manifested_segments_no_authority_synthesis",
+  "prediction_bridge_rule": "full_window_single_child_exact_identity_all_eligible_claims_no_confidence_uplift",
+  "window_selection_basis": "NEXT_NON_OVERLAPPING_FUTURE_CALENDAR_WINDOW_ONLY",
+  "prior_pilot_private_case_observations_used_for_window_selection": false,
+  "promotion_allowed": false,
+  "start_authorized_by_role": "human_decision_owner",
+  "start_authorized_at": "2026-09-29T11:52:02+08:00"
+}

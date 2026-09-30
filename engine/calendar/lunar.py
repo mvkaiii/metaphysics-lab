@@ -45,7 +45,7 @@ class LunarCalendarProvider(Protocol):
         ...
 
 
-def _load_private_solar():
+def load_private_solar():
     """Load Solar only from the Project-private vendor namespace."""
     try:
         ensure_private_vendor_root()
@@ -72,7 +72,7 @@ class LunarPythonProvider:
             )
         if metadata.get("runtime_authority") != "bundled" or metadata.get("bundled") is not True:
             raise LunarProviderFailure("lunar-python runtime authority is not bundled")
-        self._solar = _load_private_solar()
+        self._solar = load_private_solar()
         self.metadata = LunarProviderMetadata(
             name="lunar-python",
             version=actual_version,

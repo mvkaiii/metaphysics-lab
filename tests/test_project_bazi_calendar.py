@@ -1,5 +1,5 @@
 import unittest
-from datetime import datetime
+from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 from engine.project_bazi_calendar import (
@@ -39,6 +39,33 @@ class ProjectBaziCalendarTests(unittest.TestCase):
     def test_2026_after_bailu_is_dingyou_month(self):
         dt = datetime(2026, 9, 8, 12, 0, tzinfo=TZ)
         self.assertEqual(flow_month_pillar(dt), '丁酉')
+
+
+    def test_2015_qingming_matches_hko_published_minute(self):
+        got = solar_term_time(2015, '清明', 'Asia/Taipei')
+        ref = datetime(2015, 4, 5, 10, 39, tzinfo=TZ)
+        self.assertLessEqual(abs((got - ref).total_seconds()), 60)
+
+    def test_2016_jingzhe_matches_hko_published_minute(self):
+        got = solar_term_time(2016, '驚蟄', 'Asia/Taipei')
+        ref = datetime(2016, 3, 5, 11, 44, tzinfo=TZ)
+        self.assertLessEqual(abs((got - ref).total_seconds()), 60)
+
+    def test_2025_mangzhong_matches_pinned_upstream_fixture(self):
+        got = solar_term_time(2025, '芒種', 'Asia/Taipei')
+        self.assertEqual(got, datetime(2025, 6, 5, 17, 56, 32, tzinfo=TZ))
+
+    def test_solar_term_timezone_conversion_preserves_instant(self):
+        local = solar_term_time(2015, '清明', 'Asia/Taipei')
+        utc = solar_term_time(2015, '清明', timezone.utc)
+        self.assertEqual(local.timestamp(), utc.timestamp())
+        self.assertEqual(utc.utcoffset().total_seconds(), 0)
+
+    def test_2015_qingming_boundary_keeps_1034_in_mao_month(self):
+        before = datetime(2015, 4, 5, 10, 34, tzinfo=TZ)
+        after = datetime(2015, 4, 5, 10, 40, tzinfo=TZ)
+        self.assertEqual(flow_month_pillar(before), '己卯')
+        self.assertEqual(flow_month_pillar(after), '庚辰')
 
     def test_ten_god_for_bing_day_master(self):
         expected = {

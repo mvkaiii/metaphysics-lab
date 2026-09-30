@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.0",
+  "pilot_id": "Pilot-4",
+  "seal_status": "SEALED",
+  "authorization_status": "AUTHORIZED_NOT_STARTED",
+  "authorized_by_role": "human_decision_owner",
+  "authorized_at": "2026-09-28T22:02:42+08:00",
+  "frozen_candidate": {
+    "repository": "mvkaiii/metaphysics-lab",
+    "candidate_commit": "f94318651d065a3e677993fb6044518e31c7754c",
+    "hosted_validation_run_id": 36430731730,
+    "hosted_artifact_id": 10973427099,
+    "package_sha256": "cb175e2d482fe9ca8e2d46d6c55c4b0237f1cbb9a631e0d3c50aef75f8e1e0c4",
+    "capability_manifest_sha256": "d11a63ec5194fb49939f4b02583a8bddf7bcfb0e9e7bbd9f547af1047837e7b0",
+    "protocol_path": "docs/research/pilot4-protocol.md",
+    "protocol_sha256": "9b2b5aba437a5f0d707f91194acc9a495e14b287698453cc7b74b2dff910ca02",
+    "window_policy_path": "docs/research/pilot4-window-policy.v1.json",
+    "window_policy_sha256": "175bb93452a662df969f890a38d732e7eafb5722aa35914e7d780f38c9623212",
+    "enumeration_decision_path": "docs/research/pilot4-enumeration-decision.v1.json",
+    "enumeration_decision_sha256": "f178c1babd723c26cadbee5eaebb14005592d99847a8d24b208acdb3a0ab9096",
+    "enumeration_profile": "lin_tianji_complete_structural_snapshot_enumerator_v1",
+    "enumeration_rule": "complete_union_of_authoritative_yearly_monthly_time_boundaries_no_post_exposure_merge",
+    "aggregation_decision_path": "docs/research/pilot4-aggregation-decision.v1.json",
+    "aggregation_decision_sha256": "68a79e4074f737f8e2546d9ee4b3e7fe850f296e729fb98eac9dd5b0eec7512f",
+    "aggregation_profile": "lin_tianji_multi_segment_yearly_claim_universe_v1",
+    "aggregation_rule": "complete_union_of_all_manifested_efa_child_inventories"
+  },
+  "private_storage_access_record": {
+    "status": "VERIFIED_PRIVATE",
+    "verified_by_role": "human_decision_owner",
+    "verified_at": "2026-09-28T22:02:42+08:00",
+    "verification_basis": "explicit_start_authorization_after_public_binding_review",
+    "classification": "private_non_git_workspace",
+    "public_details": "WITHHELD_BY_D12",
+    "digest_disclosure": false
+  },
+  "pcg01": {
+    "gate_profile": "pilot4_pre_candidate_gate_v1",
+    "gate_template_path": "docs/research/pilot4-pre-candidate-gate.template.json",
+    "mandatory": true,
+    "manual_override_allowed": false,
+    "gate_status_after_start_authorization": "BLOCKED",
+    "candidate_case_processing_allowed": false
+  },
+  "execution_state": {
+    "source_census": "NOT_FROZEN",
+    "intake_registry": "NOT_CREATED",
+    "s1_source_manifest": "NOT_CREATED",
+    "candidate_exposure_status": "NOT_ASSESSED",
+    "candidate_processing": "NOT_STARTED",
+    "structural_snapshot_enumeration": "NOT_CREATED",
+    "structural_snapshot_manifest": "NOT_CREATED",
+    "efa_census": "NOT_CREATED",
+    "claim_universe_lock": "NOT_CREATED",
+    "downstream_authority_compatibility": "NOT_ASSESSED",
+    "prediction_lock": "NOT_CREATED",
+    "outcome_collection": "NOT_STARTED",
+    "adjudication": "NOT_STARTED",
+    "scoring": "NOT_STARTED"
+  },
+  "prohibitions": {
+    "merge_authorized": false,
+    "release_authorized": false,
+    "stable_promotion_authorized": false,
+    "candidate_processing_before_pcg_ready": false,
+    "enumeration_rule_change_after_case_exposure": false,
+    "aggregation_rule_change_after_case_exposure": false
+  }
+}

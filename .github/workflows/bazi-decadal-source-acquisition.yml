@@ -1,0 +1,60 @@
+name: Bazi decadal external source acquisition
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  acquire:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Acquire exact HKO source bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p source-bytes
+          curl --fail --location --retry 3 --retry-all-errors \
+            --proto '=https' --tlsv1.2 \
+            --user-agent 'Metaphysics-Lab-qualification/1.0' \
+            'https://www.hko.gov.hk/en/gts/astron2015/Solar_Term_2015.htm' \
+            --output source-bytes/Solar_Term_2015.htm
+          curl --fail --location --retry 3 --retry-all-errors \
+            --proto '=https' --tlsv1.2 \
+            --user-agent 'Metaphysics-Lab-qualification/1.0' \
+            'https://www.hko.gov.hk/en/gts/astron2016/Solar_Term_2016.htm' \
+            --output source-bytes/Solar_Term_2016.htm
+          test -s source-bytes/Solar_Term_2015.htm
+          test -s source-bytes/Solar_Term_2016.htm
+          sha256sum source-bytes/Solar_Term_2015.htm source-bytes/Solar_Term_2016.htm > source-bytes/SHA256SUMS
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          rows=[]
+          for year in (2015,2016):
+              path=Path(f"source-bytes/Solar_Term_{year}.htm")
+              rows.append({
+                  "year":year,
+                  "provider":"Hong Kong Observatory",
+                  "role":"astronomical_input",
+                  "source_url":f"https://www.hko.gov.hk/en/gts/astron{year}/Solar_Term_{year}.htm",
+                  "source_file_label":path.name,
+                  "source_sha256":hashlib.sha256(path.read_bytes()).hexdigest(),
+                  "timezone":"UTC+08:00",
+                  "published_precision_seconds":60,
+                  "byte_count":path.stat().st_size,
+              })
+          Path("source-bytes/source-bindings.json").write_text(
+              json.dumps({"schema_version":"1.0","sources":rows},sort_keys=True,indent=2)+"\n",
+              encoding="utf-8",
+          )
+          PY
+
+      - name: Upload exact source-byte artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bazi-decadal-hko-source-bytes
+          path: source-bytes/
+          if-no-files-found: error
+          retention-days: 90

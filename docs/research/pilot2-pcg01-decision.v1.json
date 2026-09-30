@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "pilot_id": "Pilot-2",
+  "decision_id": "PCG-01",
+  "status": "APPROVED",
+  "decision_class": "MANDATORY_NO_BYPASS_PRE_CANDIDATE_GATE",
+  "approved_by_role": "human_decision_owner",
+  "approved_at": "2026-09-27T23:00:15+08:00",
+  "mandatory": true,
+  "manual_override_allowed": false,
+  "public_summary": "Candidate case processing may begin only after Pilot-2 protocol approval, separate start authorization, frozen private source census, validated intake, schema-valid S1 source manifest, explicit UNEXPOSED status, and proof that the S1 manifest predates candidate processing. Any false, unknown, late, or unverifiable prerequisite keeps the gate BLOCKED.",
+  "evidence_refs": [
+    "docs/research/pilot2-proposed-values.md",
+    "docs/research/pilot2-protocol.md"
+  ],
+  "start_authorization_effect": false,
+  "candidate_processing_effect": "NONE_UNTIL_GATE_READY"
+}

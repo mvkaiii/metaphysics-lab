@@ -1,0 +1,131 @@
+name: Metaphysics Lab v1.8 Release Candidate Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CANDIDATE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+
+jobs:
+  release-candidate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.CANDIDATE_SHA }}
+          fetch-depth: 0
+
+      - name: Confirm candidate SHA
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          echo "candidate_sha=$CANDIDATE_SHA"
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install pytest==8.4.2
+
+      - name: Verify v1.8 identity and provenance contract
+        run: |
+          python -m unittest \
+            tests.test_v18_release_candidate_contract \
+            tests.test_v18_visualization_runtime \
+            tests.test_v18_compact_presentation_policy \
+            tests.test_v18_release_workflow \
+            tests.test_visualization_contract \
+            tests.test_visualization_bazi_decadal \
+            tests.test_visualization_svg \
+            tests.test_bazi_natal \
+            tests.test_ai_distribution_acceptance -v
+          python tools/build_ai_distribution.py --check
+
+      - name: Build deterministic v1.8.0 User Package twice
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/v18-release-candidate"
+          python tools/build_release_package.py --verify \
+            --output "$RUNNER_TEMP/v18-release-candidate/Metaphysics-Lab-v1.8.0-User-Package.zip" \
+            > "$RUNNER_TEMP/v18-release-candidate/package-report.json"
+          python tools/build_release_package.py --verify \
+            --output "$RUNNER_TEMP/v18-release-candidate/Metaphysics-Lab-v1.8.0-User-Package.second.zip" \
+            > /dev/null
+          cmp \
+            "$RUNNER_TEMP/v18-release-candidate/Metaphysics-Lab-v1.8.0-User-Package.zip" \
+            "$RUNNER_TEMP/v18-release-candidate/Metaphysics-Lab-v1.8.0-User-Package.second.zip"
+          rm "$RUNNER_TEMP/v18-release-candidate/Metaphysics-Lab-v1.8.0-User-Package.second.zip"
+
+      - name: Record exact candidate package manifest
+        shell: bash
+        run: |
+          export PACKAGE_PATH="$RUNNER_TEMP/v18-release-candidate/Metaphysics-Lab-v1.8.0-User-Package.zip"
+          export MANIFEST_PATH="$RUNNER_TEMP/v18-release-candidate/v1.8.0-release-candidate-manifest.json"
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          import zipfile
+          from pathlib import Path
+          from engine.distribution.constants import (
+              CASE_SCHEMA_VERSION,
+              DISTRIBUTION_RUNTIME_VERSION,
+              PROJECT_CONTRACT_VERSION,
+              RELEASE_VERSION,
+              RUNTIME_SCHEMA_VERSION,
+          )
+
+          package = Path(os.environ["PACKAGE_PATH"])
+          manifest_path = Path(os.environ["MANIFEST_PATH"])
+          with zipfile.ZipFile(package, "r") as archive:
+              members = sorted(archive.namelist())
+          manifest = {
+              "schema_version": "1.0",
+              "candidate_sha": os.environ["CANDIDATE_SHA"],
+              "release_version": RELEASE_VERSION,
+              "distribution_runtime_version": DISTRIBUTION_RUNTIME_VERSION,
+              "project_contract_version": PROJECT_CONTRACT_VERSION,
+              "runtime_schema_version": RUNTIME_SCHEMA_VERSION,
+              "case_schema_version": CASE_SCHEMA_VERSION,
+              "package_name": package.name,
+              "package_sha256": hashlib.sha256(package.read_bytes()).hexdigest(),
+              "members": members,
+              "stable_promotion": False,
+              "default_switch": False,
+              "release_authorized": False,
+          }
+          manifest_path.write_text(
+              json.dumps(manifest, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          print(manifest_path.read_text(encoding="utf-8"))
+          PY
+
+      - name: Verify clean repository
+        run: |
+          git diff --exit-code
+          test -z "$(git status --porcelain)"
+
+      - name: Upload v1.8.0 release-candidate package
+        uses: actions/upload-artifact@v4
+        with:
+          name: metaphysics-lab-v1.8.0-release-candidate-${{ env.CANDIDATE_SHA }}
+          path: |
+            ${{ runner.temp }}/v18-release-candidate/Metaphysics-Lab-v1.8.0-User-Package.zip
+            ${{ runner.temp }}/v18-release-candidate/v1.8.0-release-candidate-manifest.json
+            ${{ runner.temp }}/v18-release-candidate/package-report.json
+          if-no-files-found: error
+          retention-days: 90

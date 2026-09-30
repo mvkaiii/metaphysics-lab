@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "gate_type": "RELEASE_EXECUTION_CANDIDATE",
+  "recorded_on": "2026-09-30",
+  "repository": "mvkaiii/metaphysics-lab",
+  "pr_number": 233,
+  "authorization": {
+    "release_execution": true,
+    "merge": true,
+    "tag": true,
+    "github_release": true,
+    "publish": true,
+    "stable_promotion": false,
+    "default_switch": false
+  },
+  "prior_rc": {
+    "frozen_sha": "a0e0a1ca668e022a7c13f35875803d968f7547df",
+    "status": "INVALIDATED_BY_RELEASE_INFRASTRUCTURE_AND_PUBLIC_DOC_CANDIDATE",
+    "product_package_sha256": "f9b22d4b97949b873261793c404d2530a0bc384d77e970e1bba7aec35edc82cf"
+  },
+  "change_scope": [
+    "Add release-v1.8.yml publication workflow following established release pattern.",
+    "Update public latest-version documentation to v1.8.0.",
+    "Update release workflow/document contract tests.",
+    "No production engine or distributed User Package source change."
+  ],
+  "expected_invariants": {
+    "user_package_sha256": "f9b22d4b97949b873261793c404d2530a0bc384d77e970e1bba7aec35edc82cf",
+    "bazi_natal_chart_maturity": "experimental",
+    "bazi_natal_chart_routing": "on_demand",
+    "task3_rule_identity": "bazi-natal-project-v1 / 1.0-exp",
+    "pilot6_state": "OBSERVATION_PENDING",
+    "stable_promotion": false,
+    "default_switch": false
+  },
+  "required_before_merge": [
+    "fresh exact-head v1.5 validation SUCCESS",
+    "fresh exact-head v1.6 validation SUCCESS",
+    "fresh exact-head v1.7 validation SUCCESS",
+    "fresh exact-head focused validation SUCCESS",
+    "fresh exact-head v1.8 release-candidate validation SUCCESS",
+    "deterministic User Package SHA256 remains frozen digest"
+  ],
+  "release_execution_after_merge": [
+    "release-v1.8.yml runs on exact merged main SHA",
+    "full repository regression PASS",
+    "package digest equals frozen digest",
+    "tag v1.8.0 created at exact merged SHA",
+    "GitHub Release published with exactly four assets"
+  ]
+}

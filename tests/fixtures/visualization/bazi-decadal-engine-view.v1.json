@@ -1,0 +1,62 @@
+{
+  "schema_version": "1.0",
+  "input_status": "resolved_unique",
+  "resolved_candidate_count": 1,
+  "project_natal": {
+    "bazi": {
+      "profile": {
+        "profile_id": "bazi-natal-project-v1",
+        "rule_version": "1.0-exp",
+        "age_basis": "continuous_years_from_jie_interval",
+        "interval_semantics": "[start_at,end_at)"
+      },
+      "timezone": "Asia/Taipei",
+      "decadal_direction": "forward",
+      "decadal_periods": [
+        {
+          "index": 1,
+          "pillar": "戊辰",
+          "start_age_years": 7.376851851851852,
+          "end_age_years": 17.376851851851853,
+          "start_datetime": "1991-07-30T03:29:19.800000+08:00",
+          "end_datetime": "2001-07-29T13:41:19.800000+08:00"
+        },
+        {
+          "index": 2,
+          "pillar": "己巳",
+          "start_age_years": 17.376851851851853,
+          "end_age_years": 27.376851851851853,
+          "start_datetime": "2001-07-29T13:41:19.800000+08:00",
+          "end_datetime": "2011-07-29T23:53:19.800000+08:00"
+        },
+        {
+          "index": 3,
+          "pillar": "庚午",
+          "start_age_years": 27.376851851851853,
+          "end_age_years": 37.37685185185185,
+          "start_datetime": "2011-07-29T23:53:19.800000+08:00",
+          "end_datetime": "2021-07-29T10:05:19.800000+08:00"
+        }
+      ]
+    }
+  },
+  "source_capabilities": [
+    {
+      "capability_id": "bazi.natal_chart",
+      "scope": "decadal_periods",
+      "profile_id": "bazi-natal-project-v1",
+      "rule_version": "1.0-exp",
+      "maturity": "experimental",
+      "routing": "on_demand"
+    }
+  ],
+  "provenance": {
+    "repo": "mvkaiii/metaphysics-lab",
+    "source_commit": "872c60b2e959ea48d25524b74686e488f576ec6f",
+    "release_version": "1.7.1",
+    "distribution_runtime_version": "1.2-exp",
+    "manifest_sha256": "d11a63ec5194fb49939f4b02583a8bddf7bcfb0e9e7bbd9f547af1047837e7b0",
+    "source_payload_sha256": "08b1b1b62a05bc5bcef882c9325656b3ffb100bb5a0f0193b0b6261f0c9c06c4",
+    "projection_version": "source-1.0"
+  }
+}

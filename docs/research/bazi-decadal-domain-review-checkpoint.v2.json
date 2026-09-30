@@ -1,0 +1,44 @@
+{
+  "schema_version": "1.0",
+  "task_id": "Bazi-decadal-Task3",
+  "state": "V2_PRE_ORACLE_SEALED",
+  "human_domain_decision_status": "APPROVED_V2_D1_D5",
+  "approved_at": "2026-09-30T09:51:00+08:00",
+  "production_candidate": {
+    "sha": "6280c29b0a493e4b27379948c8cc82ba94bfa04f",
+    "hosted_validation": "ALL_SUCCESS",
+    "note": "Production candidate was frozen at the fully green pre-approval HEAD; subsequent commits add governance artifacts only."
+  },
+  "approved_spec": {
+    "path": "docs/research/bazi-decadal-independent-profile-spec.v2.md",
+    "sha256": "24825b1c2c850873f54e117c53c13932a8a730dc3a245a1c5e7e2599259c3305"
+  },
+  "decision_receipt": "docs/research/bazi-decadal-domain-review-decision.v2.json",
+  "case_inputs": {
+    "path": "docs/research/bazi-decadal-oracle-case-inputs.v2.json",
+    "case_count": 12,
+    "bundle_sha256": "939f8e29123acabfc16366b05622d1d3598b6aa72c4cc54cf96db3ce6e35128e",
+    "additions_after_result_exposure": 0,
+    "removals_after_result_exposure": 0,
+    "replacements_after_result_exposure": 0,
+    "answer_leakage_removed": true
+  },
+  "source_bindings": {
+    "hko_2015_sha256": "60a45ab889ef436936571a04a49387c6f9ce8d43243fb21c64e3fcb0331c8320",
+    "hko_2016_sha256": "84beb01553646b807a7c15d6efebdd7550af1ac6d7f06e07bfdd124dab9e443b",
+    "classification": "official_public_astronomical_reference_for_this_cycle_not_unique_bazi_industry_standard",
+    "relationship_to_production": "partially_shared_external_reference"
+  },
+  "preoracle_seal": {
+    "path": "docs/research/bazi-decadal-preoracle-seal.v2.json",
+    "seal_sha256": "56f63fbe9561a9216e2f6e597d0f76ca4006af0ffd09a775f4da0d980e13ae0c"
+  },
+  "exact_equality_case_coverage": "DISCLOSED_GAP_HKO_MINUTE_PRECISION_ONLY",
+  "oracle_handoff_allowed": true,
+  "oracle_execution_started": false,
+  "expected_values_present": false,
+  "comparison_started": false,
+  "qualification_decision": "NOT_YET_MADE",
+  "maturity_promotion": false,
+  "next_gate": "BUILD_V2_INDEPENDENT_ORACLE_HANDOFF_THEN_EXECUTE_IN_FRESH_ISOLATED_CONTEXT"
+}

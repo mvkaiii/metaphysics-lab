@@ -7,14 +7,19 @@
 from __future__ import annotations
 
 import argparse
+from functools import lru_cache
 import json
 import math
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
+from engine.calendar.lunar import LunarProviderFailure, load_private_solar
+
 ENGINE_NAME = "Project Bazi Calendar Engine"
-ENGINE_VERSION = "1.0.0"
+ENGINE_VERSION = "1.1.0"
 REFERENCE_ENGINE = "6tail/lunar-python v1.4.8 (commit 000c8a3)"
+SOLAR_TERM_PROVIDER = "lunar-python==1.4.8 JieQi table"
+SOLAR_TERM_REFERENCE_OFFSET = "+08:00"
 DAY_ROLLOVER = "23:00"
 SOLAR_TERM_BOUNDARY_CAUTION_MINUTES = 15
 
@@ -27,6 +32,8 @@ JIE = (
     ("寒露", 195.0, 10, 8), ("立冬", 225.0, 11, 7), ("大雪", 255.0, 12, 7),
 )
 JIE_MAP = {name: (lon, month, day) for name, lon, month, day in JIE}
+_LUNAR_JIE_KEYS = {"驚蟄": "惊蛰", "芒種": "芒种"}
+_SOLAR_TERM_REFERENCE_TZ = timezone(timedelta(hours=8))
 STEM_INFO = {
     "甲": ("木", True), "乙": ("木", False), "丙": ("火", True), "丁": ("火", False),
     "戊": ("土", True), "己": ("土", False), "庚": ("金", True), "辛": ("金", False),
@@ -104,7 +111,12 @@ def _angle_diff(angle: float, target: float) -> float:
     return ((angle - target + 180.0) % 360.0) - 180.0
 
 
-def solar_term_time(year: int, term: str, tz: str | ZoneInfo = "Asia/Taipei") -> datetime:
+def _legacy_solar_term_time_v1(
+    year: int,
+    term: str,
+    tz: str | ZoneInfo = "Asia/Taipei",
+) -> datetime:
+    """Legacy approximate apparent-longitude solver retained for diagnostics."""
     if term not in JIE_MAP:
         raise BaziCalendarError(f"不支援的節：{term}；可用：{', '.join(JIE_MAP)}")
     zone = ZoneInfo(tz) if isinstance(tz, str) else tz
@@ -134,6 +146,55 @@ def solar_term_time(year: int, term: str, tz: str | ZoneInfo = "Asia/Taipei") ->
         else:
             a = mid
     return _datetime_from_jd((a + b) / 2.0).astimezone(zone)
+
+
+@lru_cache(maxsize=256)
+def _reference_jie_table(year: int) -> dict[str, datetime]:
+    """Return the pinned lunar-python Jie table on its documented UTC+08 basis."""
+    try:
+        solar = load_private_solar()
+        table = solar.fromYmd(year, 7, 1).getLunar().getJieQiTable()
+        result = {}
+        for term in JIE_MAP:
+            key = _LUNAR_JIE_KEYS.get(term, term)
+            if key not in table:
+                raise KeyError(key)
+            solar = table[key]
+            value = datetime(
+                solar.getYear(),
+                solar.getMonth(),
+                solar.getDay(),
+                solar.getHour(),
+                solar.getMinute(),
+                solar.getSecond(),
+                tzinfo=_SOLAR_TERM_REFERENCE_TZ,
+            )
+            if value.year != year:
+                raise ValueError(
+                    f"{term} returned year {value.year}, expected {year}"
+                )
+            result[term] = value
+        return result
+    except (LunarProviderFailure, KeyError, ValueError, IndexError) as exc:
+        raise BaziCalendarError(
+            f"bundled lunar-python 無法提供 {year} 年節氣表"
+        ) from exc
+    except Exception as exc:
+        raise BaziCalendarError(
+            f"bundled lunar-python 節氣provider失敗：{year}"
+        ) from exc
+
+
+def solar_term_time(year: int, term: str, tz: str | ZoneInfo = "Asia/Taipei") -> datetime:
+    """Resolve an exact Jie instant from the pinned qualified provider.
+
+    lunar-python's JieQi table is expressed on UTC+08:00.  The returned instant
+    is converted to the caller's timezone without changing the absolute time.
+    """
+    if term not in JIE_MAP:
+        raise BaziCalendarError(f"不支援的節：{term}；可用：{', '.join(JIE_MAP)}")
+    zone = ZoneInfo(tz) if isinstance(tz, str) else tz
+    return _reference_jie_table(year)[term].astimezone(zone)
 
 
 def _lichun(dt: datetime) -> datetime:

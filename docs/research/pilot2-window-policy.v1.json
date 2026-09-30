@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "pilot_id": "Pilot-2",
+  "timezone": "Asia/Taipei",
+  "outcome_window_start": "2027-01-01T00:00:00+08:00",
+  "outcome_window_end": "2027-02-28T23:59:59+08:00",
+  "maturity_delay_hours": 72,
+  "resolver_contract": "calendar-aligned_same-civil-year_multi-month",
+  "authority_scope": "yearly_claim_authority",
+  "timing_scope": "monthly",
+  "endpoint_representation": "existing_research_contract_as_is",
+  "visualization_half_open_semantics_reused": false
+}

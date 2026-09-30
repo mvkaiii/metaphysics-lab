@@ -80,18 +80,17 @@ class AIDistributionAcceptanceTests(unittest.TestCase):
         self.assertEqual(caps["historical.activation_selector"]["maturity"], "experimental")
         self.assertEqual(caps["historical.activation_selector"]["routing"], "on_demand")
 
-    def test_formal_release_is_v1_7_1_without_capability_promotion(self):
+    def test_formal_release_is_v1_8_0_without_capability_promotion(self):
         text = (ROOT / "VERSION.md").read_text(encoding="utf-8")
         formal = text.split("## 歷史版本", 1)[0]
-        self.assertIn("Metaphysics Lab Core：**v1.7.1**", formal)
-        self.assertIn("發布日期：**2026-09-25**", formal)
-        self.assertIn("Metadata implementation base：`3d4380a0b78ba61d3545bc67642cfe67cfc26545`", formal)
-        self.assertNotIn("PENDING_FINAL_QUALIFICATION", formal)
-        self.assertIn("AI Distribution Pack", text)
-        self.assertIn("AI Distribution Runtime：v1.2-exp", text)
-        self.assertIn("Release Version            1.7.1", text)
+        self.assertIn("Metaphysics Lab Core：**v1.8.0**", formal)
+        self.assertIn("發布日期：**2026-09-30**", formal)
+        self.assertIn("AI Distribution Runtime：`1.4-exp`", formal)
+        self.assertIn("Release Version            1.8.0", text)
         self.assertIn("release 本身不改變 capability maturity", text)
-        self.assertNotRegex(formal, r"最新正式發布[\s\S]{0,100}v1\.4\.0")
+        self.assertIn("bazi.natal_chart` 維持 **Experimental / On-demand**", text)
+        self.assertIn("Pilot-6仍為 `OBSERVATION_PENDING`", text)
+        self.assertNotIn("PENDING_FINAL_QUALIFICATION", formal)
 
     def test_distribution_contains_no_private_case_payload_files(self):
         self.assertEqual({path.name for path in DIST.iterdir()}, EXPECTED_ARTIFACTS)

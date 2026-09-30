@@ -8,11 +8,10 @@ from tools import build_release_package
 
 
 class V17ReleasePackageTests(unittest.TestCase):
-    def test_release_package_identity_and_members_are_v171_patch(self):
-        self.assertEqual(build_release_package.RELEASE_VERSION, "1.7.1")
+    def test_release_package_identity_uses_current_release_authority(self):
         self.assertEqual(
             build_release_package.USER_PACKAGE_NAME,
-            "Metaphysics-Lab-v1.7.1-User-Package.zip",
+            f"Metaphysics-Lab-v{build_release_package.RELEASE_VERSION}-User-Package.zip",
         )
         self.assertEqual(
             set(build_release_package.USER_ASSETS),

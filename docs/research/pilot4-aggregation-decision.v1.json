@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "pilot_id": "Pilot-4",
+  "decision_id": "AGG-01",
+  "status": "APPROVED",
+  "decision_class": "MANDATORY_MULTI_SEGMENT_YEARLY_CLAIM_UNIVERSE_AGGREGATION",
+  "preregistered_at": "2026-09-28T20:07:32+08:00",
+  "approved_profile": "lin_tianji_multi_segment_yearly_claim_universe_v1",
+  "approved_rule": "complete_union_of_all_manifested_efa_child_inventories",
+  "selection_basis": "COMPLETE_CENSUS_MEMBERSHIP_SEMANTICS_ONLY",
+  "inherited_approval_from_pilot3": false,
+  "pilot2_claim_set_observations_used_for_rule_selection": false,
+  "pilot3_claim_set_observations_used_for_rule_selection": false,
+  "approved_by_role": "human_decision_owner",
+  "approved_at": "2026-09-28T21:41:06+08:00",
+  "mandatory": true,
+  "manual_override_allowed": false,
+  "start_authorization_effect": false,
+  "candidate_processing_effect": "NONE_UNTIL_SEPARATE_START_AUTHORIZATION_AND_PCG_READY",
+  "public_summary": "For every ENUM-01 manifested structural segment, use the complete yearly EFA child inventory and define the Pilot-4 yearly claim universe as the deterministic sorted unique union across all manifested inventories. Aggregation determines membership only and cannot reweight evidence, raise specificity, select a best snapshot, or authorize pilot start.",
+  "evidence_refs": [
+    "docs/research/pilot4-structural-snapshot-enumeration-preregistration.md",
+    "docs/research/pilot4-proposed-values.md",
+    "docs/research/pilot4-protocol.md"
+  ],
+  "promotion_allowed": false
+}

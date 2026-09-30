@@ -53,22 +53,24 @@ class V17CaseContractCompatibilityTests(unittest.TestCase):
                 "project_contract_version: 1.1",
                 1,
             ).replace(
-                "runtime_version_if_applicable: 1.2-exp",
+                f"runtime_version_if_applicable: {DISTRIBUTION_RUNTIME_VERSION}",
                 "runtime_version_if_applicable: 1.1-exp",
                 1,
             )
             for name, text in self._export().items()
         }
 
-    def test_new_case_uses_v17_contract_without_case_schema_bump(self):
+    def test_new_case_uses_current_runtime_without_case_schema_bump(self):
         self.assertEqual(PROJECT_CONTRACT_VERSION, "1.2")
         self.assertEqual(CASE_SCHEMA_VERSION, "1.1")
-        self.assertEqual(DISTRIBUTION_RUNTIME_VERSION, "1.2-exp")
         files = self._export()
         for text in files.values():
             self.assertIn("case_schema_version: 1.1", text)
             self.assertIn("project_contract_version: 1.2", text)
-            self.assertIn("runtime_version_if_applicable: 1.2-exp", text)
+            self.assertIn(
+                f"runtime_version_if_applicable: {DISTRIBUTION_RUNTIME_VERSION}",
+                text,
+            )
 
     def test_v16_case_schema_1_1_contract_1_1_remains_readable(self):
         validated = dispatch("validate_case", {"case_files": self._v16_case()})
@@ -101,7 +103,10 @@ class V17CaseContractCompatibilityTests(unittest.TestCase):
         self.assertEqual(validated["data"]["project_contract_version"], "1.1")
         tracking = next(text for name, text in merged.items() if name.endswith("05_驗證事件紀錄.md"))
         self.assertIn("project_contract_version: 1.1", tracking)
-        self.assertIn("runtime_version_if_applicable: 1.2-exp", tracking)
+        self.assertIn(
+            f"runtime_version_if_applicable: {DISTRIBUTION_RUNTIME_VERSION}",
+            tracking,
+        )
 
 
 if __name__ == "__main__":

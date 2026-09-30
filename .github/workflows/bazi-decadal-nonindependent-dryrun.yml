@@ -1,0 +1,72 @@
+name: Bazi decadal non-independent dry-run
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dryrun:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout validation ref
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Install pinned dependencies
+        run: pip install -r requirements.txt
+
+      - name: Acquire exact sealed HKO bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .dryrun-inputs .dryrun-output
+          curl --fail --location --retry 3 --retry-all-errors \
+            --proto '=https' --tlsv1.2 \
+            --user-agent 'Metaphysics-Lab-dryrun/1.0' \
+            'https://www.hko.gov.hk/en/gts/astron2015/Solar_Term_2015.htm' \
+            --output .dryrun-inputs/Solar_Term_2015.htm
+          curl --fail --location --retry 3 --retry-all-errors \
+            --proto '=https' --tlsv1.2 \
+            --user-agent 'Metaphysics-Lab-dryrun/1.0' \
+            'https://www.hko.gov.hk/en/gts/astron2016/Solar_Term_2016.htm' \
+            --output .dryrun-inputs/Solar_Term_2016.htm
+          echo '60a45ab889ef436936571a04a49387c6f9ce8d43243fb21c64e3fcb0331c8320  .dryrun-inputs/Solar_Term_2015.htm' | sha256sum -c -
+          echo '84beb01553646b807a7c15d6efebdd7550af1ac6d7f06e07bfdd124dab9e443b  .dryrun-inputs/Solar_Term_2016.htm' | sha256sum -c -
+
+      - name: Run explicit non-independent diagnostic
+        run: |
+          python tools/run_bazi_decadal_nonindependent_dryrun.py \
+            --spec docs/research/bazi-decadal-independent-profile-spec.v1.md \
+            --seal docs/research/bazi-decadal-preoracle-seal.v1.json \
+            --case-inputs docs/research/bazi-decadal-oracle-case-inputs.v1.json \
+            --hko-2015 .dryrun-inputs/Solar_Term_2015.htm \
+            --hko-2016 .dryrun-inputs/Solar_Term_2016.htm \
+            --output .dryrun-output/bazi-decadal-nonindependent-dryrun.v1.json
+
+      - name: Assert evidence boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path('.dryrun-output/bazi-decadal-nonindependent-dryrun.v1.json').read_text(encoding='utf-8'))
+          assert report['run_type'] == 'NON_INDEPENDENT_DRY_RUN'
+          assert report['independent_qualification_usable'] is False
+          assert report['maturity_promotion'] is False
+          assert report['task3_independent_status'] == 'NEEDS_EVIDENCE'
+          assert report['strict_cleanroom_executability']['result'] == 'FAIL_UNDER_SPECIFIED'
+          print(report['comparison_result'], report['counts'])
+          PY
+
+      - name: Upload dry-run report
+        uses: actions/upload-artifact@v4
+        with:
+          name: bazi-decadal-nonindependent-dryrun
+          path: .dryrun-output/bazi-decadal-nonindependent-dryrun.v1.json
+          if-no-files-found: error
+          retention-days: 90

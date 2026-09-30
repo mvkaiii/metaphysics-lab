@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "decision_id": "BAZI-DECADAL-TASK3-DOMAIN-REVIEW-20260929",
+  "decision_status": "APPROVED",
+  "approved_at": "2026-09-29T19:39:00+08:00",
+  "approved_by_role": "human_decision_owner",
+  "repository": "mvkaiii/metaphysics-lab",
+  "parent_head": "8c0382878185f6c2eb98de0474e01be80293d589",
+  "profile": {
+    "profile_id": "bazi-natal-project-v1",
+    "rule_version": "1.0-exp",
+    "decadal_rule": "three-days-one-year-v1",
+    "approved_spec_path": "docs/research/bazi-decadal-independent-profile-spec.v1.md",
+    "approved_spec_sha256": "0757d1275e55b84e2424d6131e9dbdc73e029e1b619f900147be928cc7e5e01d"
+  },
+  "decisions": {
+    "D1": {
+      "status": "APPROVED",
+      "rule": "current_jie_inclusive_interval_zero",
+      "detail": "forward uses first Jie >= birth; reverse uses last Jie <= birth; exact equality yields interval_seconds=0"
+    },
+    "D2": {
+      "status": "APPROVED",
+      "rule": "absolute_age_endpoint_from_birth",
+      "detail": "period endpoints derive directly from birth_datetime + absolute_age_years * 365.2425 civil days; intervals are [start,end)"
+    },
+    "D3": {
+      "status": "APPROVED",
+      "rule": "hko_minute_precision_conservative_60_seconds",
+      "start_age_years_tolerance": 0.0002314814814814815,
+      "datetime_tolerance_seconds": 7304.85
+    },
+    "D4": {
+      "status": "APPROVED",
+      "sources": [
+        "https://www.hko.gov.hk/en/gts/astron2015/Solar_Term_2015.htm",
+        "https://www.hko.gov.hk/en/gts/astron2016/Solar_Term_2016.htm"
+      ],
+      "case_census_count": 12,
+      "case_census_binding": "docs/research/bazi-decadal-preoracle-review-packet.v1.json"
+    }
+  },
+  "oracle_authorized_in_current_context": false,
+  "qualification_decision": "NOT_YET_MADE",
+  "maturity_promotion": false,
+  "next_gate": "CAPTURE_EXACT_SOURCE_BYTES_AND_BUILD_PRE_ORACLE_SEAL"
+}

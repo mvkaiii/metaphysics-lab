@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0",
+  "decision_type": "V1_8_UX_SCOPE_EXPANSION",
+  "decided_at": "2026-09-30T17:06:00+08:00",
+  "timezone": "Asia/Taipei",
+  "repository": "mvkaiii/metaphysics-lab",
+  "pr_number": 233,
+  "superseded_rc_readiness_head": "6e32f530d7d296c292bc670c3b89ba83fe524935",
+  "prior_status": "READY_FOR_RC_FREEZE",
+  "new_status": "DEVELOPMENT_RESUMED_BEFORE_RC_FREEZE",
+  "approved_changes": [
+    "Expose deterministic Bazi decadal timeline as public AI Distribution action.",
+    "Adopt compact-by-default progressive disclosure presentation policy.",
+    "Preserve explain-on-demand and audit-only-for-technical-review modes."
+  ],
+  "version_decision": {
+    "release_version": "1.8.0",
+    "distribution_runtime_version_from": "1.3-exp",
+    "distribution_runtime_version_to": "1.4-exp",
+    "project_contract_version": "1.2",
+    "runtime_schema_version": "1.1",
+    "case_schema_version": "1.1"
+  },
+  "invariant_boundaries": [
+    "No Stable promotion.",
+    "No default routing switch for bazi.natal_chart.",
+    "No Task3 oracle/comparison rewrite or rerun.",
+    "Visualization is presentation only and adds no predictive evidence.",
+    "Compact presentation cannot change ranking, claim consumption, specificity, confidence, Stage 1 blind judgement, or calibration outcomes."
+  ],
+  "authorization": {
+    "merge": false,
+    "tag": false,
+    "github_release": false,
+    "publish": false,
+    "stable_promotion": false,
+    "default_switch": false,
+    "rc_freeze": false
+  },
+  "next_gate": "IMPLEMENT_AND_REQUALIFY_V1_8_UX_DELTA"
+}

@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "pilot_id": "Pilot-3",
+  "status": "APPROVED_START_AUTHORIZED",
+  "approved_by_role": "human_decision_owner",
+  "approved_at": "2026-09-28T13:57:00+08:00",
+  "start_authorized": true,
+  "start_authorized_by_role": "human_decision_owner",
+  "start_authorized_at": "2026-09-28T14:12:31+08:00",
+  "timezone": "Asia/Taipei",
+  "outcome_window_start": "2027-03-01T00:00:00+08:00",
+  "outcome_window_end": "2027-04-30T23:59:59+08:00",
+  "maturity_delay_hours": 72,
+  "resolver_contract": "calendar-aligned_same-civil-year_multi-month",
+  "authority_scope": "yearly_claim_authority",
+  "timing_scope": "monthly",
+  "aggregation_profile": "lin_tianji_multi_segment_yearly_claim_universe_v1",
+  "aggregation_rule": "complete_union_of_all_manifested_efa_child_inventories",
+  "window_selection_basis": "NEXT_NON_OVERLAPPING_FUTURE_CALENDAR_WINDOW_ONLY",
+  "promotion_allowed": false
+}

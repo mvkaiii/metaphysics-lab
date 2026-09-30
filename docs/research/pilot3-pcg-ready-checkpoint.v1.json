@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0",
+  "pilot_id": "Pilot-3",
+  "checkpoint_status": "PCG_READY",
+  "process_stage": "PRE_CANDIDATE_GATE",
+  "ready_at": "2026-09-28T16:11:22+08:00",
+  "governance": {
+    "protocol_decisions_status": "ALL_ITEMS_APPROVED",
+    "aggregation_decision_status": "AGG-01_APPROVED",
+    "start_authorization_status": "AUTHORIZED",
+    "source_census_status": "FROZEN_PRIVATE",
+    "intake_status": "ELIGIBLE_FOR_S1_SOURCE",
+    "s1_source_manifest_status": "FROZEN_BEFORE_CANDIDATE_PROCESSING",
+    "exposure_status": "UNEXPOSED_BEFORE_CANDIDATE_PROCESSING",
+    "pcg_status": "READY"
+  },
+  "privacy": {
+    "private_case_id_disclosed": false,
+    "birth_data_disclosed": false,
+    "private_provenance_digests_disclosed": false,
+    "s1_private_source_manifest_digest_disclosed": false
+  },
+  "execution_state": {
+    "candidate_processing": "NOT_STARTED_AT_CHECKPOINT",
+    "structural_snapshot_manifest": "NOT_CREATED",
+    "efa_census": "NOT_CREATED",
+    "claim_universe_lock": "NOT_CREATED",
+    "downstream_authority_compatibility": "NOT_ASSESSED",
+    "prediction_lock": "NOT_CREATED",
+    "outcome_collection": "NOT_STARTED",
+    "adjudication": "NOT_STARTED",
+    "scoring": "NOT_STARTED"
+  },
+  "next_action": "FROZEN_CANDIDATE_MAY_BEGIN_CASE_PROCESSING"
+}

@@ -1,4 +1,6 @@
 import unittest
+from pathlib import Path
+
 
 from engine.distribution.constants import (
     CASE_SCHEMA_VERSION,
@@ -13,21 +15,23 @@ from engine.historical.capabilities import get_capability as get_historical_capa
 
 
 class V171PatchContractTests(unittest.TestCase):
-    def test_release_identity_is_distinct_from_component_versions(self):
-        self.assertEqual(RELEASE_VERSION, "1.7.1")
-        self.assertEqual(DISTRIBUTION_RUNTIME_VERSION, "1.2-exp")
-        self.assertEqual(PROJECT_CONTRACT_VERSION, "1.2")
-        self.assertEqual(RUNTIME_SCHEMA_VERSION, "1.1")
-        self.assertEqual(CASE_SCHEMA_VERSION, "1.1")
+    def test_v171_release_snapshot_remains_immutable_in_docs(self):
+        root = Path(__file__).resolve().parents[1]
+        version = (root / "VERSION.md").read_text(encoding="utf-8")
+        notes = (root / "docs" / "發布說明-v1.7.1.md").read_text(encoding="utf-8")
+        self.assertIn("Release Version            1.7.1", version)
+        self.assertIn("AI Distribution Runtime    1.2-exp", version)
+        self.assertIn("Metaphysics Lab v1.7.1", notes)
+        self.assertIn("771f8493cd07b298c7971f38c601ce17a8acfcce5dab43c72e245f7b282943e8", notes)
 
         result = dispatch("runtime_info", {})
         self.assertTrue(result["ok"], result)
         data = result["data"]
-        self.assertEqual(data["release_version"], "1.7.1")
-        self.assertEqual(data["distribution_runtime_version"], "1.2-exp")
-        self.assertEqual(data["project_contract_version"], "1.2")
-        self.assertEqual(data["runtime_schema_version"], "1.1")
-        self.assertEqual(data["case_schema_version"], "1.1")
+        self.assertEqual(data["release_version"], RELEASE_VERSION)
+        self.assertEqual(data["distribution_runtime_version"], DISTRIBUTION_RUNTIME_VERSION)
+        self.assertEqual(data["project_contract_version"], PROJECT_CONTRACT_VERSION)
+        self.assertEqual(data["runtime_schema_version"], RUNTIME_SCHEMA_VERSION)
+        self.assertEqual(data["case_schema_version"], CASE_SCHEMA_VERSION)
 
     def test_patch_does_not_promote_research_capabilities(self):
         selector = get_historical_capability("historical.activation_selector")
