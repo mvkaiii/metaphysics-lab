@@ -6,7 +6,7 @@ Metaphysics Lab 是一套把**命盤計算**和**AI 命理解讀**分開的命�
 
 目前最新正式版本為 **v1.8.0｜2026-09-30**。v1.8.0 維持 **Case Schema 1.1 / Project Contract 1.2**，既有 Case 不需要重建；AI Distribution Runtime 為 `1.4-exp`。本版新增公開的八字大運時間軸，並採用預設精簡呈現；仍在實驗階段的功能不會因此自動升級為穩定狀態。
 
-正式下載頁：[Metaphysics Lab v1.8.0](https://github.com/mvkaiii/metaphysics-lab/releases/tag/v1.8.0)。到 GitHub 正式發布頁的**下載區（Assets）**，優先下載 `Metaphysics-Lab-v1.8.0-User-Package.zip`。**不要把 GitHub 自動產生的原始碼壓縮檔（Source code ZIP）當成使用者安裝包。**
+正式下載頁：[Metaphysics Lab v1.8.0](https://github.com/mvkaiii/metaphysics-lab/releases/tag/v1.8.0)。到 GitHub 正式發布頁的**下載區（GitHub 顯示為 Assets）**，優先下載 `Metaphysics-Lab-v1.8.0-User-Package.zip`。**不要把 GitHub 自動產生的原始碼壓縮檔（Source code ZIP）當成使用者安裝包。**
 
 ## 最新版安裝／升級操作
 
@@ -42,7 +42,7 @@ AI 先確認建立完整本命所需的出生資料，只追問缺少欄位：
 - 出生時間
 - 出生地
 
-目前單一檔案版的執行程式已內建固定版本的核心曆法元件，以及一份有限但有版本管理的**離線地點資料庫**。出生地若能在這份資料庫中找到，就可以直接建立 Project 原生命盤，**不需要網路**，也**不需要額外 Python 套件**。
+目前單一檔案版的執行程式已內建固定版本的核心曆法元件，以及一份有限但有版本管理的**離線地點資料庫（offline registry）**。出生地若能在這份資料庫中找到，就可以直接建立 Project 原生命盤，**不需要網路**，也**不需要額外 Python 套件**。
 
 出生地解析順序固定：
 
@@ -123,4 +123,4 @@ python metaphysics_lab.py request --input request.json --pretty
 - [架構說明](docs/架構說明.md)
 - [資料治理](docs/資料治理.md)
 
-目前實際可執行的能力仍以程式回傳的 `runtime_info` 為技術依據；正式發版不會自動把仍在實驗中的能力升級為穩定狀態（Stable）。這項規則主要供開發與稽核使用，一般使用者不需要自行判讀。
+目前實際可執行的能力仍以程式回傳的 `runtime_info` 為技術權威來源；正式發版不會自動把仍在實驗中的能力升級為穩定狀態（Stable）。這項規則主要供開發與稽核使用，一般使用者不需要自行判讀。
