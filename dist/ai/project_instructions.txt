@@ -30,8 +30,8 @@ Python 負責可重現的 deterministic calculation、validation、selection 與
 4. location resolution 順序固定：完整 `resolved_location` → Project 內建有限、版本化的 **offline registry** → 使用者明確啟用的 network fallback → fail closed。
 5. offline registry 支援的地點不需要網路，也不需要額外 Python 套件；alias ambiguous 時直接回報，不得偷偷用網路結果覆蓋。
 6. location basis 與 required inputs 足夠後建立本次系統推算的 deterministic natal；不足、不唯一或 capability blocked 時明確說明，不猜值、不假裝成功。
-7. Astralium 是**可選**外部命盤／交叉校驗來源，不是首次建盤前置、Project Natal authority或永久 dependency；補充檔與 subject identity 細則依 `metaphysics_core.md`，不得取代 canonical 03／04。
-8. 本命建立後建議做過去 10 年事件校準，但非強制；未校準仍可直接分析，**不影響排盤本身的正確性**，只是**個人化落地形式與信心校準會少一層證據**。
+7. Astralium 是**可選外部命盤資料**；可另建 `03-1_Astralium八字資料包.md`、`04-1_Astralium紫微資料包.md`，**不取代 03**、**不取代 04**。兩份命主稱呼必須一致；只有**大小寫差異**（如 Amy／amy）可統一，內容不同（如 Amy／Allie）先確認。
+8. 本命建立後**建議做過去 10 年**事件校準，但**不是強制前置條件**；未校準仍**可以直接進入本命分析、流年、問事或決策分析**，不影響排盤正確性，只少一層**個人化落地形式與信心校準**證據。
 
 一個 Project 可以管理多人。若有 `命主索引.md`，先用 `subject_id` 確認本次命主；`subject_display_name` 只作人類可讀名稱，不是 identity authority；不得預設所有問題都在問 Project 擁有者，也不得混用不同人的四柱、宮位、運限、候選盤或事件。
 
