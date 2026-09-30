@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0",
+  "handoff_id": "bazi-decadal-independent-oracle-cleanroom-v2.1",
+  "status": "READY_FOR_INDEPENDENT_ORACLE_EXECUTOR",
+  "supersedes_execution_handoff": "bazi-decadal-independent-oracle-handoff-v2",
+  "superseded_handoff_state": "HALTED_BEFORE_ORACLE_DUE_TO_HANDOFF_CONTAMINATION",
+  "sanitization_only_no_domain_rule_change": true,
+  "task3_status": "NEEDS_EVIDENCE",
+  "execution_contract_sha256": "b47de7809cadb82159c272b2d2d7fb3bbc7ffc99d9e8ed6c1fa60a1bf3c900e4",
+  "case_bundle_sha256": "939f8e29123acabfc16366b05622d1d3598b6aa72c4cc54cf96db3ce6e35128e",
+  "preoracle_seal_sha256": "53f4e249f4f6e13fd26e9859101cceeaac31a1f186c155653a24e79f02dd4a27",
+  "hko_source_sha256": {
+    "2015": "60a45ab889ef436936571a04a49387c6f9ce8d43243fb21c64e3fcb0331c8320",
+    "2016": "84beb01553646b807a7c15d6efebdd7550af1ac6d7f06e07bfdd124dab9e443b"
+  },
+  "handoff_zip": {
+    "file_name": "Bazi-Decadal-Independent-Oracle-Cleanroom-v2.1-20260930.zip",
+    "sha256": "5674a7d943e14e841d17d3ae9d0bab650912524ac93a9b1b334c92381d135304",
+    "file_count": 9
+  },
+  "packaging_evidence": {
+    "workflow_run_id": 36665923915,
+    "packaging_head_sha": "c20fafb818e5ee31d0f95d13c5e17019651ab1b9",
+    "artifact_id": 11076158110,
+    "artifact_name": "task3-v2-1-clean-oracle-handoff",
+    "outer_artifact_digest": "sha256:5383e599cf16d2cea9d10fa7a575b9030629047471e97f467876707476589b26"
+  },
+  "checks": {
+    "execution_contract_exact_sha": "PASS",
+    "preoracle_seal_validator": "PASS",
+    "hko_source_byte_sha": "PASS",
+    "case_census": "PASS",
+    "expected_values_absent": "PASS",
+    "prior_result_leakage_scan": "PASS",
+    "post_download_sha256sums": "PASS",
+    "post_download_file_count": "PASS"
+  },
+  "oracle_execution_started": false,
+  "expected_values_present": false,
+  "comparison_started": false,
+  "maturity_promotion": false,
+  "next_gate": "FRESH_ISOLATED_EXECUTOR_PRE_EXECUTION_GATE"
+}

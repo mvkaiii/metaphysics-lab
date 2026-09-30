@@ -1,6 +1,6 @@
 # 大運reference預註冊準備紀錄
 
-Methodology：`APPROVED WITH CONSTRAINTS`。Comparator contract：`ENGINEERING_READY`。Pre-oracle v1：`SEALED_AND_PRESERVED`。Oracle v1：`HALTED_BEFORE_ORACLE`。Pre-oracle v2：`SEALED`。v2 handoff：`READY_FOR_INDEPENDENT_ORACLE_EXECUTOR`。Independent comparison：`NOT_STARTED`。Task3：`NEEDS_EVIDENCE`。
+Methodology：`APPROVED WITH CONSTRAINTS`。Comparator contract：`ENGINEERING_READY`。Pre-oracle v1：`SEALED_AND_PRESERVED`。Oracle v1：`HALTED_BEFORE_ORACLE`。v2 handoff：`HALTED_BEFORE_ORACLE_DUE_TO_HANDOFF_CONTAMINATION`。Pre-oracle v2.1：`SEALED`。v2.1 clean handoff：`READY_FOR_INDEPENDENT_ORACLE_EXECUTOR`。Independent comparison：`NOT_STARTED`。Task3：`NEEDS_EVIDENCE`。
 
 依據：[人工決策](../superpowers/phase-gates/2026-09-27-review-decisions.md)、
 `bazi-decadal-domain-review-decision.v1.json`及
@@ -183,3 +183,52 @@ receives only the sealed v2 handoff boundary.
 
 Task3 remains `NEEDS_EVIDENCE`. No qualification decision or maturity
 promotion is implied by the v2 seal.
+
+
+## 2026-09-30 v2 handoff contamination and v2.1 clean replacement
+
+A fresh isolated executor correctly failed closed on the v2 handoff before
+oracle execution because the v2 written specification included non-normative
+prior engineering and diagnostic results.
+
+No oracle source, expected values or production comparison were produced in
+that attempt.
+
+The v2 historical seal and handoff are preserved and must not be repaired in
+place.
+
+A sanitization-only v2.1 execution contract was created. It preserves the
+approved domain rules and exact same 12-case census, removes prior-result
+history, and explicitly maps the HKO English labels to the 12 Jie.
+
+v2.1 bindings:
+
+- clean execution contract SHA256:
+  `b47de7809cadb82159c272b2d2d7fb3bbc7ffc99d9e8ed6c1fa60a1bf3c900e4`
+- unchanged case-bundle canonical SHA256:
+  `939f8e29123acabfc16366b05622d1d3598b6aa72c4cc54cf96db3ce6e35128e`
+- v2.1 pre-oracle seal canonical SHA256:
+  `53f4e249f4f6e13fd26e9859101cceeaac31a1f186c155653a24e79f02dd4a27`
+
+Clean handoff:
+
+- file:
+  `Bazi-Decadal-Independent-Oracle-Cleanroom-v2.1-20260930.zip`
+- inner ZIP SHA256:
+  `5674a7d943e14e841d17d3ae9d0bab650912524ac93a9b1b334c92381d135304`
+- workflow run:
+  `36665923915`
+- artifact id:
+  `11076158110`
+- outer artifact digest:
+  `sha256:5383e599cf16d2cea9d10fa7a575b9030629047471e97f467876707476589b26`
+
+The packaging workflow passed exact-SHA validation, the existing pre-oracle
+seal validator, exact HKO source-byte checks, case census checks, and an
+explicit prior-result leakage scan.
+
+After download, the inner ZIP was reopened and all 9 files plus SHA256SUMS were
+verified again. The leakage scan returned zero hits.
+
+v2.1 oracle execution remains `NOT_STARTED`. The next gate is a new fresh
+isolated executor context receiving only the v2.1 clean handoff.
