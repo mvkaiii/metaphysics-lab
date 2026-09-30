@@ -90,7 +90,7 @@ class DocumentationContractConsistencyTests(unittest.TestCase):
 
     def test_update_contract_keeps_legacy_readable_without_forced_destructive_rename(self):
         text = (ROOT / "docs" / "更新與版本同步.md").read_text(encoding="utf-8")
-        self.assertIn("舊版 Case 1.0", text)
+        self.assertIn("舊版個案資料 1.0", text)
         self.assertIn("不帶命主前綴檔名", text)
         self.assertIn("不強制", text)
         self.assertIn("破壞性改名", text)
