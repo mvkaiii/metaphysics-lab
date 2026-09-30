@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "handoff_id": "bazi-decadal-independent-oracle-handoff-v2",
+  "status": "READY_FOR_INDEPENDENT_ORACLE_EXECUTOR",
+  "task3_status": "NEEDS_EVIDENCE",
+  "production_candidate_sha": "6280c29b0a493e4b27379948c8cc82ba94bfa04f",
+  "approved_spec_sha256": "24825b1c2c850873f54e117c53c13932a8a730dc3a245a1c5e7e2599259c3305",
+  "case_bundle_sha256": "939f8e29123acabfc16366b05622d1d3598b6aa72c4cc54cf96db3ce6e35128e",
+  "preoracle_seal_sha256": "56f63fbe9561a9216e2f6e597d0f76ca4006af0ffd09a775f4da0d980e13ae0c",
+  "source_sha256": {
+    "hko_2015": "60a45ab889ef436936571a04a49387c6f9ce8d43243fb21c64e3fcb0331c8320",
+    "hko_2016": "84beb01553646b807a7c15d6efebdd7550af1ac6d7f06e07bfdd124dab9e443b"
+  },
+  "source_classification": "official_public_astronomical_reference_for_this_cycle_not_unique_bazi_industry_standard",
+  "handoff_zip": {
+    "file_name": "Bazi-Decadal-Independent-Oracle-Handoff-v2-20260930.zip",
+    "sha256": "6a1a92e79b1fa26c5527874c86feecc0436ac7cdd825e51b6b5d3e696a5c0be7",
+    "file_count": 9
+  },
+  "packaging_evidence": {
+    "workflow_run_id": 36659028255,
+    "head_sha": "6aeda66bef0dc7698c3879c600d5cfcfef4b26a4",
+    "artifact_id": 11073676130,
+    "artifact_name": "task3-v2-independent-oracle-handoff",
+    "outer_artifact_digest": "sha256:3a154796e9cf2239c9d6b1423bf8bc90c2c24984692bb6c11de85fa61946d664"
+  },
+  "production_code_included": false,
+  "production_output_included": false,
+  "prior_dryrun_output_included": false,
+  "comparison_output_included": false,
+  "expected_values_present": false,
+  "oracle_execution_started": false,
+  "current_project_executor_eligible": false,
+  "maturity_promotion": false,
+  "next_gate": "INDEPENDENT_ORACLE_EXECUTION_IN_FRESH_ISOLATED_CONTEXT"
+}
