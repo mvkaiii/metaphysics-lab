@@ -14,7 +14,12 @@ import json
 import math
 from pathlib import Path
 import re
+import sys
 from typing import Any, Mapping, Optional, Sequence
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 from tools.finalize_bazi_decadal_reference_packet import _validate_oracle_bundle
 from tools.materialize_bazi_decadal_case_inputs import validate_case_input_bundle
