@@ -387,7 +387,7 @@ def _write_output(path, payload, overwrite):
         raise FileNotFoundError("output directory does not exist: %s" % path.parent)
     path.write_text(
         json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
-        encoding="utf-8", newline="\n",
+        encoding="utf-8",
     )
 
 
