@@ -1,0 +1,238 @@
+{
+  "schema_version": "2.0",
+  "packet_type": "bazi_decadal_preoracle_review_packet",
+  "status": "DRAFT_PENDING_DOMAIN_REVIEW",
+  "task3_status": "NEEDS_EVIDENCE",
+  "seal_allowed": false,
+  "profile_candidate": {
+    "profile_id": "bazi-natal-project-v1",
+    "rule_version": "1.0-exp",
+    "decadal_rule": "three-days-one-year-v1",
+    "age_basis": "continuous_years_from_jie_interval",
+    "review_candidate_path": "docs/research/bazi-decadal-independent-profile-spec.v2.candidate.md",
+    "domain_review_status": "PENDING",
+    "specification_sha256": null
+  },
+  "production_timing_evidence": {
+    "provider": "bundled lunar-python==1.4.8",
+    "source_revision": "000c8a3d74eed098d6256a28fdd51b869324c559",
+    "runtime_authority": "bundled",
+    "benchmark_result_path": "docs/research/bazi-solar-term-hko-general-benchmark-result.v1.json",
+    "benchmark_id": "BAZI-SOLAR-TERM-HKO-EMBEDDED-STATIC-HTML-2013-2016-V4",
+    "benchmark_result": "PASS",
+    "hko_points": 48,
+    "within_60_seconds": 48,
+    "mean_abs_seconds": 18.395833333333332,
+    "max_abs_seconds": 30
+  },
+  "independent_oracle_source_plan": {
+    "provider": "Hong Kong Observatory",
+    "provider_role": "independent_astronomical_input_only",
+    "timezone_statement": "Hong Kong Time / UTC+08:00",
+    "published_precision_seconds": 60,
+    "sources": [
+      {
+        "year": 2015,
+        "source_url": "https://www.hko.gov.hk/en/gts/astron2015/Solar_Term_2015.htm",
+        "source_bytes_sha256": "60a45ab889ef436936571a04a49387c6f9ce8d43243fb21c64e3fcb0331c8320",
+        "source_bytes_status": "CAPTURED_AND_VERIFIED"
+      },
+      {
+        "year": 2016,
+        "source_url": "https://www.hko.gov.hk/en/gts/astron2016/Solar_Term_2016.htm",
+        "source_bytes_sha256": "84beb01553646b807a7c15d6efebdd7550af1ac6d7f06e07bfdd124dab9e443b",
+        "source_bytes_status": "CAPTURED_AND_VERIFIED"
+      }
+    ]
+  },
+  "case_selection": {
+    "selection_provenance": "same_12_birth_and_sex_inputs_as_v1_pre_result_census_no_additions_removals_or_replacements",
+    "original_selection_production_results_consulted": false,
+    "post_result_case_additions": 0,
+    "post_result_case_removals": 0,
+    "post_result_case_replacements": 0,
+    "case_count_proposed": 12,
+    "cases": [
+      {
+        "case_id": "bdv2-001",
+        "birth_datetime": "2015-04-05T10:34:00+08:00",
+        "sex": "male",
+        "coverage_tags": [
+          "common_year",
+          "before_published_jie_minute",
+          "paired_sex_input"
+        ]
+      },
+      {
+        "case_id": "bdv2-002",
+        "birth_datetime": "2015-04-05T10:34:00+08:00",
+        "sex": "female",
+        "coverage_tags": [
+          "common_year",
+          "before_published_jie_minute",
+          "paired_sex_input"
+        ]
+      },
+      {
+        "case_id": "bdv2-003",
+        "birth_datetime": "2015-04-05T10:44:00+08:00",
+        "sex": "male",
+        "coverage_tags": [
+          "common_year",
+          "after_published_jie_minute",
+          "paired_sex_input"
+        ]
+      },
+      {
+        "case_id": "bdv2-004",
+        "birth_datetime": "2015-04-05T10:44:00+08:00",
+        "sex": "female",
+        "coverage_tags": [
+          "common_year",
+          "after_published_jie_minute",
+          "paired_sex_input"
+        ]
+      },
+      {
+        "case_id": "bdv2-005",
+        "birth_datetime": "2016-01-01T12:00:00+08:00",
+        "sex": "male",
+        "coverage_tags": [
+          "leap_year",
+          "cross_gregorian_year_lookup",
+          "paired_sex_input"
+        ]
+      },
+      {
+        "case_id": "bdv2-006",
+        "birth_datetime": "2016-01-01T12:00:00+08:00",
+        "sex": "female",
+        "coverage_tags": [
+          "leap_year",
+          "cross_gregorian_year_lookup",
+          "paired_sex_input"
+        ]
+      },
+      {
+        "case_id": "bdv2-007",
+        "birth_datetime": "2016-02-29T12:00:00+08:00",
+        "sex": "male",
+        "coverage_tags": [
+          "leap_year",
+          "leap_day",
+          "paired_sex_input"
+        ]
+      },
+      {
+        "case_id": "bdv2-008",
+        "birth_datetime": "2016-02-29T12:00:00+08:00",
+        "sex": "female",
+        "coverage_tags": [
+          "leap_year",
+          "leap_day",
+          "paired_sex_input"
+        ]
+      },
+      {
+        "case_id": "bdv2-009",
+        "birth_datetime": "2016-03-05T11:39:00+08:00",
+        "sex": "male",
+        "coverage_tags": [
+          "leap_year",
+          "before_published_jie_minute",
+          "paired_sex_input"
+        ]
+      },
+      {
+        "case_id": "bdv2-010",
+        "birth_datetime": "2016-03-05T11:39:00+08:00",
+        "sex": "female",
+        "coverage_tags": [
+          "leap_year",
+          "before_published_jie_minute",
+          "paired_sex_input"
+        ]
+      },
+      {
+        "case_id": "bdv2-011",
+        "birth_datetime": "2016-03-05T11:49:00+08:00",
+        "sex": "male",
+        "coverage_tags": [
+          "leap_year",
+          "after_published_jie_minute",
+          "paired_sex_input"
+        ]
+      },
+      {
+        "case_id": "bdv2-012",
+        "birth_datetime": "2016-03-05T11:49:00+08:00",
+        "sex": "female",
+        "coverage_tags": [
+          "leap_year",
+          "after_published_jie_minute",
+          "paired_sex_input"
+        ]
+      }
+    ]
+  },
+  "comparison_plan": {
+    "paths": [
+      {
+        "path": "/decadal_direction",
+        "kind": "exact"
+      },
+      {
+        "path": "/periods/0/pillar",
+        "kind": "exact"
+      },
+      {
+        "path": "/periods/0/start_age_years",
+        "kind": "number_abs",
+        "proposed_tolerance": 0.0002314814814814815
+      },
+      {
+        "path": "/periods/0/start_datetime",
+        "kind": "datetime_abs_seconds",
+        "proposed_tolerance": 7304.85
+      },
+      {
+        "path": "/periods/1/end_datetime",
+        "kind": "datetime_abs_seconds",
+        "proposed_tolerance": 7304.85
+      }
+    ]
+  },
+  "equality_coverage": {
+    "exact_subminute_hko_equality_case_present": false,
+    "reason": "HKO source publishes minute precision only; exact astronomical equality cannot be asserted from the sealed public source bytes.",
+    "project_unit_test_present": true,
+    "domain_acceptance_required": true
+  },
+  "independence_classification": {
+    "oracle_vs_production_implementation": "independent_if_executor_has_no_production_access",
+    "astronomical_reference_relationship": "partially_shared_external_reference",
+    "note": "HKO is both the public engineering benchmark reference and the oracle astronomical input; the production algorithm itself is bundled lunar-python and is unavailable to the oracle."
+  },
+  "review_decisions_required": [
+    "V2-D1_ACCEPT_HKO_2015_2016_AS_ORACLE_ASTRONOMICAL_SOURCE_WITH_60_SECOND_PUBLISHED_PRECISION",
+    "V2-D2_ACCEPT_SELF_CONTAINED_YEAR_AND_MONTH_PILLAR_RULES",
+    "V2-D3_ACCEPT_SAME_12_PRE_RESULT_INPUTS_WITH_OPAQUE_IDS_AND_NEUTRAL_METADATA",
+    "V2-D4_ACCEPT_EXISTING_COMPARISON_PATHS_AND_FROZEN_TOLERANCES",
+    "V2-D5_ACCEPT_EXACT_EQUALITY_AS_WRITTEN_RULE_WITH_DISCLOSED_INDEPENDENT_COVERAGE_GAP"
+  ],
+  "blocking_items": [
+    "DOMAIN_REVIEW_OF_V2_WRITTEN_PROFILE",
+    "DOMAIN_REVIEW_OF_ORACLE_SOURCE_AND_TOLERANCES",
+    "DOMAIN_REVIEW_OF_EQUALITY_COVERAGE_GAP",
+    "PRODUCTION_CANDIDATE_FREEZE_PENDING",
+    "SPECIFICATION_SHA256_NOT_FROZEN",
+    "V2_CASE_BUNDLE_NOT_SEALED"
+  ],
+  "independence_boundary": {
+    "oracle_expected_values_present": false,
+    "oracle_execution_started": false,
+    "oracle_may_receive_production_code": false,
+    "oracle_may_receive_production_output": false,
+    "oracle_may_receive_comparison_results_before_seal": false
+  }
+}

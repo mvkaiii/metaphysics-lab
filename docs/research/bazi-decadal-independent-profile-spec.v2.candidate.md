@@ -1,6 +1,6 @@
 # Bazi decadal independent reference profile v2 — candidate
 
-Status: `DRAFT_PENDING_BENCHMARK_AND_DOMAIN_REVIEW`  
+Status: `DRAFT_PENDING_DOMAIN_REVIEW`  
 Task 3 qualification: `NEEDS_EVIDENCE`  
 v1 seal: immutable historical evidence; no in-place repair.
 
@@ -28,9 +28,31 @@ The 12 Jie are:
 
 小寒、立春、驚蟄、清明、立夏、芒種、小暑、立秋、白露、寒露、立冬、大雪.
 
-The exact astronomical boundary provider/version is not frozen in v2 until the
-general HKO benchmark is complete. The eventual provider must be fixed before
-case sealing.
+### 2.1 Independent oracle source
+
+For the v2 clean-room oracle, astronomical Jie inputs come only from the exact
+raw HKO archival bytes already captured for 2015 and 2016:
+
+- 2015 source SHA256:
+  `60a45ab889ef436936571a04a49387c6f9ce8d43243fb21c64e3fcb0331c8320`
+- 2016 source SHA256:
+  `84beb01553646b807a7c15d6efebdd7550af1ac6d7f06e07bfdd124dab9e443b`
+
+The pages publish Hong Kong Time / UTC+08:00 to minute precision. The oracle
+must use the displayed minute and must not invent sub-minute precision.
+
+Published-source precision is conservatively treated as ±60 seconds.
+
+### 2.2 Production engineering provider
+
+The production engine separately uses the Project-private bundled
+`lunar-python==1.4.8` JieQi table, source revision
+`000c8a3d74eed098d6256a28fdd51b869324c559`.
+
+That provider was selected only after the preregistered HKO embedded-static
+benchmark passed 48/48 Jie points within ±60 seconds. This production provider
+is not an allowed oracle input. The oracle therefore does not reproduce
+production code or read production output.
 
 Boundary comparison is inclusive:
 
@@ -173,14 +195,33 @@ Neutral tags such as `common_year`, `leap_year`, `leap_day`,
 `cross_gregorian_year_lookup` are allowed only when they do not reveal the
 result being independently computed.
 
+### 10.1 Equality coverage limitation
+
+The HKO archival pages used by the oracle publish minute precision only.
+Therefore the v2 independent case census does not claim to test an exact
+sub-minute astronomical equality instant. Exact-equality semantics remain a
+written-contract rule and are covered by deterministic Project unit tests.
+This coverage limitation must be explicitly accepted during domain review; it
+must not be hidden by widening tolerances or fabricating a sub-minute HKO time.
+
 ## 11. Gate before approval
 
-Before this v2 spec may be approved or sealed:
+Already completed engineering prerequisites:
 
-1. complete the preregistered 2013–2016 HKO embedded-static-HTML general solar-term benchmark;
-2. select and document the production astronomical boundary provider;
-3. rerun all calendar regressions after any production timing change;
-4. domain-review Sections 2–10;
-5. freeze a new production candidate;
-6. generate a fresh v2 case bundle with no answer leakage;
-7. only then create a v2 pre-oracle seal.
+1. the preregistered 2013–2016 HKO embedded-static benchmark passed;
+2. the production astronomical provider is fixed to the bundled
+   `lunar-python==1.4.8` authority;
+3. post-change calendar and repository regressions have been rerun;
+4. the non-independent 12-case diagnostic improved from
+   `12 MATCH / 36 MISMATCH / 12 MISSING_REFERENCE` to
+   `48 MATCH / 0 MISMATCH / 12 MISSING_REFERENCE`.
+
+Remaining gates before a v2 pre-oracle seal:
+
+1. human/domain-review Sections 2–10, including the equality coverage limitation;
+2. approve the no-answer-leakage case-census candidate;
+3. freeze the exact written specification SHA256;
+4. freeze a new production candidate commit;
+5. materialize and digest the v2 case bundle;
+6. create a fresh v2 pre-oracle seal;
+7. only then hand the sealed packet to an independent oracle executor.
