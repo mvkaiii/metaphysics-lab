@@ -1,6 +1,6 @@
 # 大運reference預註冊準備紀錄
 
-Methodology：`APPROVED WITH CONSTRAINTS`。Comparator contract：`ENGINEERING_READY`。Pre-oracle v1：`SEALED_AND_PRESERVED`。Oracle v1：`HALTED_BEFORE_ORACLE`。v2 engineering：`READY_FOR_DOMAIN_REVIEW`。Independent comparison：`NOT_STARTED`。Task3：`NEEDS_EVIDENCE`。
+Methodology：`APPROVED WITH CONSTRAINTS`。Comparator contract：`ENGINEERING_READY`。Pre-oracle v1：`SEALED_AND_PRESERVED`。Oracle v1：`HALTED_BEFORE_ORACLE`。Pre-oracle v2：`SEALED`。v2 handoff：`READY_FOR_INDEPENDENT_ORACLE_EXECUTOR`。Independent comparison：`NOT_STARTED`。Task3：`NEEDS_EVIDENCE`。
 
 依據：[人工決策](../superpowers/phase-gates/2026-09-27-review-decisions.md)、
 `bazi-decadal-domain-review-decision.v1.json`及
@@ -123,23 +123,63 @@ Hosted verification at `e7940882a0f04eed9afe12af9c9f271f6b1a9f57`:
 - v1.7 run `36650906966`: SUCCESS
 - v1.7 Plan 3 Focused run `36650907013`: SUCCESS
 
-## v2 domain-review gate
+## v2 approved seal and handoff gate
 
-The following files are ready for review:
+Human/domain decisions V2-D1 through V2-D5 were approved on
+`2026-09-30T09:51:00+08:00`.
 
-- `bazi-decadal-independent-profile-spec.v2.candidate.md`
-- `bazi-decadal-preoracle-review-packet.v2.json`
+V2-D1 wording is intentionally precise: HKO is accepted as an
+**official public astronomical reference source for this qualification cycle**.
+This does not claim HKO is the unique or universal Bazi industry standard.
 
-The v2 proposal preserves the exact same 12 birth/sex inputs selected before
-v1 result exposure. No case was added, removed or replaced. Case IDs are opaque
-and coverage metadata no longer contains Yin/Yang-year or expected
-forward/reverse answers.
+Frozen production candidate:
 
-v2 independent oracle astronomical input remains exact HKO 2015/2016 raw bytes.
-Production timing uses bundled lunar-python 1.4.8. This is explicitly classified
-as a partially shared external astronomical reference rather than fully
-independent source provenance.
+`6280c29b0a493e4b27379948c8cc82ba94bfa04f`
 
-No v2 seal exists yet. Human/domain approval of V2-D1 through V2-D5 is required
-before specification hashing, candidate freezing, case-bundle materialization
-or pre-oracle sealing.
+Approved v2 written specification:
+
+- path: `bazi-decadal-independent-profile-spec.v2.md`
+- SHA256:
+  `24825b1c2c850873f54e117c53c13932a8a730dc3a245a1c5e7e2599259c3305`
+
+V2 case bundle:
+
+- exactly the same 12 birth/sex inputs selected before v1 result exposure;
+- post-result additions: 0;
+- removals: 0;
+- replacements: 0;
+- opaque IDs `bdv2-001..012`;
+- no Yin/Yang-year or expected forward/reverse metadata;
+- canonical SHA256:
+  `939f8e29123acabfc16366b05622d1d3598b6aa72c4cc54cf96db3ce6e35128e`.
+
+V2 pre-oracle seal:
+
+- status: `PRE_ORACLE_SEALED`;
+- canonical SHA256:
+  `56f63fbe9561a9216e2f6e597d0f76ca4006af0ffd09a775f4da0d980e13ae0c`;
+- expected values present: false;
+- oracle execution started: false;
+- comparison started: false.
+
+Independent-oracle handoff:
+
+- status: `READY_FOR_INDEPENDENT_ORACLE_EXECUTOR`;
+- inner ZIP:
+  `Bazi-Decadal-Independent-Oracle-Handoff-v2-20260930.zip`;
+- inner ZIP SHA256:
+  `6a1a92e79b1fa26c5527874c86feecc0436ac7cdd825e51b6b5d3e696a5c0be7`;
+- packaging workflow run: `36659028255`;
+- artifact id: `11073676130`;
+- outer artifact digest:
+  `sha256:3a154796e9cf2239c9d6b1423bf8bc90c2c24984692bb6c11de85fa61946d664`.
+
+The handoff contains no production implementation, production output,
+non-independent dry-run output, comparison output or expected values.
+
+The current Project context remains ineligible to execute the independent
+oracle. The next gate is execution in a genuinely isolated environment that
+receives only the sealed v2 handoff boundary.
+
+Task3 remains `NEEDS_EVIDENCE`. No qualification decision or maturity
+promotion is implied by the v2 seal.
