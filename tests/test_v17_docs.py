@@ -46,7 +46,7 @@ class V17DocsTests(unittest.TestCase):
         self.assertIn("v1.6.0 → v1.7.0", text)
         self.assertIn("三個檔案一起", text)
         self.assertIn("Metaphysics-Lab-v1.7.0-User-Package.zip", text)
-        self.assertIn("替換 Project 中的 `metaphysics_lab.py`", text)
+        self.assertIn("替換 ChatGPT Project／Claude Project 中的 `metaphysics_lab.py`", text)
         self.assertIn("替換 `metaphysics_core.md`", text)
         self.assertIn("`project_instructions.txt`", text)
         self.assertIn("保留", text)
