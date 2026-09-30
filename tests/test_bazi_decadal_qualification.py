@@ -5,7 +5,9 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
+from engine.bazi.calendar import _legacy_solar_term_time_v1
 from engine.bazi.natal import build_bazi_natal
 from engine.birth.models import ResolvedBirthPlace, Sex
 from engine.birth.time_views import build_birth_time_views
@@ -309,7 +311,11 @@ class BaziDecadalQualificationTests(unittest.TestCase):
         )
         time_views = build_birth_time_views(resolution.context, location)
         sex = Sex.MALE if birth_vector["sex"] == "male" else Sex.FEMALE
-        chart = build_bazi_natal(resolution.context, time_views, sex)
+        # This v1 fixture is historical synthetic engine output bound to BASELINE_SHA.
+        # Reproduce it with the preserved v1 solar-term solver rather than forcing
+        # the current qualified production provider to equal historical timing.
+        with patch("engine.bazi.natal.solar_term_time", _legacy_solar_term_time_v1):
+            chart = build_bazi_natal(resolution.context, time_views, sex)
         serialized = _serialize_bazi(chart)
 
         self.assertEqual(chart.effective_datetime.isoformat(), fixture["effective_datetime"])
