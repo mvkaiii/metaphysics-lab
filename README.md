@@ -24,7 +24,7 @@ Metaphysics Lab 是一套把**命盤計算**和**AI 命理解讀**分開的命�
 | 用途 | 實際檔名 | 你要做什麼 |
 |---|---|---|
 | **命理計算程式** | `metaphysics_lab.py` | 上傳到 ChatGPT Project 或 Claude Project |
-| **命理分析核心規則** | `metaphysics_core.md` | 上傳到同一個 Project |
+| **命理分析核心規則** | `metaphysics_core.md` | 上傳到同一個 ChatGPT Project／Claude Project |
 | **Project 設定指令** | `project_instructions.txt` | 打開後，把全文貼到 Project Instructions |
 
 如果你已經是 **v1.7.1**，升到 **v1.8.0** 請同步三檔：`metaphysics_lab.py`、`metaphysics_core.md` 與 `project_instructions.txt`。既有命主資料與個案紀錄可以直接沿用，不需要重建。
