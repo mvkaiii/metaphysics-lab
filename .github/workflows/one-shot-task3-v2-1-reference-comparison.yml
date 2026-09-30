@@ -167,5 +167,6 @@ jobs:
         with:
           name: task3-v2-1-independent-reference-comparison
           path: .qualification/
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 90
