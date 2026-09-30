@@ -1,0 +1,161 @@
+name: One-shot Task3 v2.1 reference comparison
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout qualification branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Install pinned dependencies
+        run: pip install -r requirements.txt
+
+      - name: Validate and normalize independent oracle artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .qualification
+          python tools/ingest_bazi_decadal_oracle_v21.py \
+            --oracle-source docs/research/evidence/bazi-decadal-v2.1-independent-oracle/oracle.cjs \
+            --source-record docs/research/evidence/bazi-decadal-v2.1-independent-oracle/oracle-source.sha256 \
+            --oracle-output docs/research/evidence/bazi-decadal-v2.1-independent-oracle/oracle-output.json \
+            --sealing-receipt docs/research/evidence/bazi-decadal-v2.1-independent-oracle/sealing-receipt.json \
+            --case-bundle docs/research/bazi-decadal-oracle-case-inputs.v2.1.json \
+            --preoracle-seal docs/research/bazi-decadal-preoracle-seal.v2.1.json \
+            --normalized-output .qualification/oracle-finalizer-input.v2.1.json \
+            --intake-receipt .qualification/oracle-intake-receipt.v2.1.json
+
+      - name: Finalize sealed independent reference packet
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from tools.finalize_bazi_decadal_reference_packet import finalize_reference_packet
+
+          root=Path('.')
+          pre=json.loads((root/'docs/research/bazi-decadal-preoracle-seal.v2.1.json').read_text(encoding='utf-8'))
+          oracle=json.loads((root/'.qualification/oracle-finalizer-input.v2.1.json').read_text(encoding='utf-8'))
+          reference=finalize_reference_packet(pre,oracle)
+          (root/'.qualification/bazi-decadal-reference.v2.1.json').write_text(
+              json.dumps(reference,ensure_ascii=False,sort_keys=True,indent=2)+'\n',
+              encoding='utf-8'
+          )
+          print('reference cases',len(reference['cases']))
+          PY
+
+      - name: Materialize frozen production candidate worktree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git cat-file -e 6280c29b0a493e4b27379948c8cc82ba94bfa04f^{commit}
+          git worktree add --detach .production 6280c29b0a493e4b27379948c8cc82ba94bfa04f
+          test "$(git -C .production rev-parse HEAD)" = "6280c29b0a493e4b27379948c8cc82ba94bfa04f"
+
+      - name: Generate production actual bundle from frozen candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          QUAL_DIR="$PWD/.qualification"
+          CASES="$PWD/docs/research/bazi-decadal-oracle-case-inputs.v2.1.json"
+          cd .production
+          QUAL_DIR="$QUAL_DIR" CASES="$CASES" python - <<'PY'
+          import json
+          import os
+          from datetime import datetime
+          from pathlib import Path
+
+          from engine.bazi.calendar import bazi_pillars
+          from engine.bazi.natal import build_decadal_periods, decadal_direction
+          from engine.bazi.natal_models import Pillar
+          from engine.birth.models import Sex
+
+          cases=json.loads(Path(os.environ['CASES']).read_text(encoding='utf-8'))
+          rows=[]
+          for case in cases['cases']:
+              birth=datetime.fromisoformat(case['input']['birth_datetime'])
+              sex=Sex(case['input']['sex'])
+              pillars=bazi_pillars(birth)
+              direction=decadal_direction(pillars[0][0],sex)
+              periods=build_decadal_periods(
+                  Pillar(pillars[1][0],pillars[1][1]),
+                  birth,
+                  direction,
+                  count=10,
+              )
+              rows.append({
+                  'case_id':case['case_id'],
+                  'input_sha256':case['input_sha256'],
+                  'engine_view':{
+                      'decadal_direction':direction,
+                      'periods':[
+                          {
+                              'pillar':p.pillar.text,
+                              'start_age_years':p.start_age_years,
+                              'start_datetime':p.start_datetime.isoformat(),
+                              'end_datetime':p.end_datetime.isoformat(),
+                          }
+                          for p in periods
+                      ],
+                  },
+              })
+          actual={'schema_version':'1.0','cases':rows}
+          Path(os.environ['QUAL_DIR'],'bazi-decadal-actual.v2.1.json').write_text(
+              json.dumps(actual,ensure_ascii=False,sort_keys=True,indent=2)+'\n',
+              encoding='utf-8'
+          )
+          print('actual cases',len(rows))
+          PY
+
+      - name: Deterministic comparison
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/compare_bazi_decadal_reference.py \
+            --reference .qualification/bazi-decadal-reference.v2.1.json \
+            --actual .qualification/bazi-decadal-actual.v2.1.json \
+            --output .qualification/bazi-decadal-comparison.v2.1.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('.qualification/bazi-decadal-comparison.v2.1.json').read_text(encoding='utf-8'))
+          assert p['case_count']==12
+          assert sum(p['counts'].values())==60
+          assert p['qualification_decision']=='HUMAN_REVIEW_REQUIRED'
+          assert p['maturity_promotion'] is False
+          print(json.dumps({
+              'comparison_result':p['comparison_result'],
+              'counts':p['counts'],
+              'qualification_decision':p['qualification_decision'],
+              'independence_assessment':p['independence_assessment'],
+          },ensure_ascii=False,sort_keys=True))
+          PY
+
+      - name: Record exact artifact hashes
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha256sum .qualification/*.json | tee .qualification/SHA256SUMS
+
+      - name: Upload comparison evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: task3-v2-1-independent-reference-comparison
+          path: .qualification/
+          if-no-files-found: error
+          retention-days: 90
