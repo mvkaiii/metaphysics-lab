@@ -1,0 +1,130 @@
+{
+  "schema_version": "3.0",
+  "gate_type": "RC_FREEZE_READINESS",
+  "recorded_at": "2026-09-30T17:34:00+08:00",
+  "timezone": "Asia/Taipei",
+  "repository": "mvkaiii/metaphysics-lab",
+  "pr_number": 233,
+  "release_identity": "v1.8.0",
+  "assessed_software_candidate": "02cde6463280b0d3f4a5443218a955e99b0506cd",
+  "ux_scope": {
+    "visualization": {
+      "public_action": "render_bazi_decadal_timeline",
+      "output": [
+        "deterministic SVG",
+        "text fallback",
+        "Chart Contract v1"
+      ],
+      "input_authority": "existing Project natal or Normalized natal only",
+      "maturity_effect": "NONE",
+      "presentation_surface": "experimental",
+      "predictive_evidence": false,
+      "ranking_authority": false
+    },
+    "progressive_disclosure": {
+      "default_profile": "compact",
+      "optional_profile": "explain",
+      "technical_profile": "audit",
+      "project_instructions_characters": 7873,
+      "project_limit": 8000,
+      "authority_effect": "PRESENTATION_ONLY",
+      "invariants": [
+        "does not change ranking",
+        "does not change claim consumption",
+        "does not change specificity ceiling",
+        "does not change confidence",
+        "does not rewrite Stage 1 blind judgement",
+        "does not change historical calibration outcomes"
+      ]
+    }
+  },
+  "version_contract": {
+    "release_version": "1.8.0",
+    "distribution_runtime_version": "1.4-exp",
+    "project_contract_version": "1.2",
+    "runtime_schema_version": "1.1",
+    "case_schema_version": "1.1",
+    "capability_manifest_version": "1.0"
+  },
+  "task3": {
+    "status": "QUALIFIED_FOR_IMPLEMENTATION_CONFORMANCE",
+    "frozen_production_candidate": "6280c29b0a493e4b27379948c8cc82ba94bfa04f",
+    "oracle_or_comparison_rerun": false,
+    "sealed_identity": "bazi-natal-project-v1 / 1.0-exp",
+    "stable_implication": "NONE_AUTOMATIC"
+  },
+  "hosted_validation": {
+    "exact_head": "02cde6463280b0d3f4a5443218a955e99b0506cd",
+    "all_success": true,
+    "runs": [
+      {
+        "name": "林氏天機 v1.5 Validation",
+        "run_id": 36696633806,
+        "result": "SUCCESS"
+      },
+      {
+        "name": "林氏天機 v1.6 Validation",
+        "run_id": 36696633757,
+        "result": "SUCCESS"
+      },
+      {
+        "name": "林氏天機 v1.7 Validation",
+        "run_id": 36696633706,
+        "result": "SUCCESS"
+      },
+      {
+        "name": "v1.7 Plan 3 Focused",
+        "run_id": 36696633670,
+        "result": "SUCCESS"
+      },
+      {
+        "name": "Metaphysics Lab v1.8 Release Candidate Validation",
+        "run_id": 36696633798,
+        "result": "SUCCESS"
+      }
+    ]
+  },
+  "release_candidate_package": {
+    "artifact_id": 11087784443,
+    "artifact_name": "metaphysics-lab-v1.8.0-release-candidate-02cde6463280b0d3f4a5443218a955e99b0506cd",
+    "artifact_archive_digest": "sha256:00a722d876e452e913c2b073d99e86cb44ad9bf91cb726e7f0a5a5831a949072",
+    "package_name": "Metaphysics-Lab-v1.8.0-User-Package.zip",
+    "package_sha256": "f9b22d4b97949b873261793c404d2530a0bc384d77e970e1bba7aec35edc82cf",
+    "deterministic_double_build_match": true,
+    "members": [
+      "metaphysics_core.md",
+      "metaphysics_lab.py",
+      "project_instructions.txt"
+    ]
+  },
+  "capability_maturity": {
+    "bazi_natal_chart": "experimental",
+    "pilot6_lifecycle": "OBSERVATION_PENDING",
+    "stable_promotion": "NOT_INCLUDED",
+    "default_switch": "NOT_INCLUDED"
+  },
+  "result": "PROVISIONALLY_READY_FOR_RC_FREEZE_PENDING_DOCS_ONLY_DESCENDANT_REVALIDATION",
+  "descendant_rule": {
+    "this_receipt_and_candidate_doc_update_are_docs_only": true,
+    "user_package_bytes_expected_to_change": false,
+    "package_sha256_expected_to_remain": "f9b22d4b97949b873261793c404d2530a0bc384d77e970e1bba7aec35edc82cf",
+    "required_before_final_ready_status": [
+      "fresh exact-head v1.5 validation SUCCESS",
+      "fresh exact-head v1.6 validation SUCCESS",
+      "fresh exact-head v1.7 validation SUCCESS",
+      "fresh exact-head focused validation SUCCESS",
+      "fresh exact-head v1.8 release-candidate validation SUCCESS",
+      "User Package SHA256 remains identical"
+    ]
+  },
+  "still_not_authorized": [
+    "RC freeze",
+    "merge",
+    "tag",
+    "GitHub Release",
+    "publish",
+    "Stable promotion",
+    "default switch"
+  ],
+  "next_gate": "HUMAN_AUTHORIZE_RC_FREEZE"
+}

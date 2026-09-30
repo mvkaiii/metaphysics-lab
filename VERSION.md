@@ -24,7 +24,9 @@ Capability Manifest        1.0
 - 一般命理對話採 `compact` 預設、`explain` 按需展開、`audit` 僅技術稽核；收斂只影響呈現，不改ranking、盲判、claim consumption或confidence。
 - Selector v1 / interpretation v1 default不變；Case Schema 1.1、Project Contract 1.2、Runtime Schema 1.1不變。
 - Pilot-6仍為 `OBSERVATION_PENDING`；v1.8 軟體 release 不會把 prospective evidence waiting period改寫成 Stable evidence。
-- deterministic v1.8.0 User Package SHA256：**PENDING RC FREEZE**。
+- qualified pre-freeze software candidate：`02cde6463280b0d3f4a5443218a955e99b0506cd`；五條 exact-head hosted gates 全部 SUCCESS。
+- deterministic v1.8.0 User Package SHA256：`f9b22d4b97949b873261793c404d2530a0bc384d77e970e1bba7aec35edc82cf`。此為目前合格候選包，**尚未構成 RC freeze 或正式 release**。
+- Project Instructions：7873 字元，維持在 ChatGPT Project 8000 字元限制內。
 
 ---
 
