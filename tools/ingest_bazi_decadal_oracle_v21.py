@@ -342,7 +342,6 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             path.write_text(
                 json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
                 encoding="utf-8",
-                newline="\n",
             )
         print(json.dumps({
             "status": receipt["status"],
