@@ -73,7 +73,7 @@ class ZiweiPhase2CDocsTests(unittest.TestCase):
             "runtime_info",
             "Project 推導盤面",
             "CHANGELOG.md",
-            "私人 Astralium raw chart",
+            "私人 Astralium 原始命盤資料",
         ):
             self.assertIn(needle, text)
         self.assertNotIn("Phase 2C Ziwei Flowing Stars", text)

@@ -13,7 +13,7 @@ class CapabilityDocumentationDriftTests(unittest.TestCase):
     def test_readme_points_current_capability_truth_to_runtime_info(self):
         readme = self._read("README.md")
         self.assertIn("`runtime_info`", readme)
-        self.assertIn("技術權威來源", readme)
+        self.assertIn("技術權威來源", readme)  # user-facing Chinese wording
 
     def test_ai_workflow_declares_runtime_manifest_execution_truth(self):
         workflow = self._read("core/AI工作流程.md")

@@ -67,7 +67,7 @@ class AIDistributionDocsTests(unittest.TestCase):
         self.assertIn("GitHub 顯示為 Assets", head)
         self.assertIn("Metaphysics-Lab-v1.8.0-User-Package.zip", head)
         self.assertIn("解壓縮", head)
-        self.assertIn("不要下載 GitHub 自動產生的 Source code", head)
+        self.assertIn("原始碼壓縮檔（Source code ZIP）", head)
         self.assertIn(STARTUP, head)
         self.assertIn("較高推理", head)
         self.assertNotIn("Draft PR #160", head)
@@ -105,13 +105,19 @@ class AIDistributionDocsTests(unittest.TestCase):
     def test_portable_onboarding_is_birth_data_first_not_astralium_first(self):
         readme = self.readme
         project_instructions = PROJECT_INSTRUCTIONS.read_text(encoding="utf-8")
-        for text in (readme, project_instructions):
-            self.assertIn("出生資料", text)
-            self.assertIn("offline registry", text)
-            self.assertIn("不需要網路", text)
-            self.assertIn("不需要額外 Python 套件", text)
-            self.assertIn("Astralium", text)
-            self.assertIn("可選", text)
+        self.assertIn("出生資料", readme)
+        self.assertIn("離線地點資料庫（offline registry）", readme)
+        self.assertIn("不需要網路", readme)
+        self.assertIn("不需要額外 Python 套件", readme)
+        self.assertIn("Astralium", readme)
+        self.assertIn("可選", readme)
+
+        self.assertIn("出生資料", project_instructions)
+        self.assertIn("offline registry", project_instructions)
+        self.assertIn("不需要網路", project_instructions)
+        self.assertIn("不需要額外 Python 套件", project_instructions)
+        self.assertIn("Astralium", project_instructions)
+        self.assertIn("可選", project_instructions)
         for forbidden in (
             "AI 應先請你開啟 Astralium",
             "先請使用者開啟 Astralium",

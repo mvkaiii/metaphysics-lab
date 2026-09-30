@@ -83,14 +83,17 @@ class DocumentationContractConsistencyTests(unittest.TestCase):
         ):
             text = (ROOT / relative).read_text(encoding="utf-8")
             self.assertIn("<filename_label>_<SUBJECT_SHORT_ID>_<slot>_<canonical_title>.md", text, relative)
-            self.assertIn("canonical slot", text, relative)
+            if relative in ("docs/更新與版本同步.md", "docs/命盤資料準備指南.md"):
+                self.assertIn("正式檔位", text, relative)
+            else:
+                self.assertIn("canonical slot", text, relative)
 
     def test_update_contract_keeps_legacy_readable_without_forced_destructive_rename(self):
         text = (ROOT / "docs" / "更新與版本同步.md").read_text(encoding="utf-8")
-        self.assertIn("Legacy Case 1.0", text)
-        self.assertIn("bare filename", text)
+        self.assertIn("舊版 Case 1.0", text)
+        self.assertIn("不帶命主前綴檔名", text)
         self.assertIn("不強制", text)
-        self.assertIn("destructive rename", text)
+        self.assertIn("破壞性改名", text)
         self.assertIn("Base5", text)
         self.assertIn("Progressive4", text)
 
