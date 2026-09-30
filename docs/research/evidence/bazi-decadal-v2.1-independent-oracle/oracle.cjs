@@ -201,7 +201,7 @@ assert.equal(sha(fs.readFileSync(SOURCE)), frozenHash);
 const generationStartedAt = now();
 const results = bundle.cases.map(execute);
 assert.equal(results.length, 12);
-for (const result of result of results) assert.deepEqual(Object.keys(result.expected_values), paths);
+for (const result of results) assert.deepEqual(Object.keys(result.expected_values), paths);
 const output = {
   schema_version: '1.0', bundle_type: 'bazi_decadal_independent_oracle_output',
   execution_contract_sha256: manifest.execution_contract_sha256,
@@ -215,7 +215,7 @@ const afterHash = sha(fs.readFileSync(SOURCE));
 assert.equal(afterHash, frozenHash, 'Source changed after expected-value generation');
 // Check every supplied file again after generation; no inputs are written.
 for (const line of read('SHA256SUMS').toString('utf8').trim().split(/\r?\n/)) {
-  const [, h, name] = /^([a-f0-9]{64})\s+([^/\\]+)$/.exec(kline);
+  const [, h, name] = /^([a-f0-9]{64})\s+([^/\\]+)$/.exec(line);
   assert.equal(sha(read(name)), h);
 }
 const receipt = {

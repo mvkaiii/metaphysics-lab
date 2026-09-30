@@ -54,7 +54,7 @@ def _aware_datetime(value: Any) -> datetime:
     if not isinstance(value, str):
         raise ValueError("expected ISO-8601 datetime string")
     match = re.fullmatch(
-        r"(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})(?:\\.(\\d{1,9}))?([+-]\\d{2}:\\d{2})",
+        r"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d{1,9}))?([+-]\d{2}:\d{2})",
         value,
     )
     if match is None:
