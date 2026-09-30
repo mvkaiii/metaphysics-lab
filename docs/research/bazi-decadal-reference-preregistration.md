@@ -1,6 +1,6 @@
 # 大運reference預註冊準備紀錄
 
-Methodology：`APPROVED WITH CONSTRAINTS`。Comparator contract：`ENGINEERING_READY`。Pre-oracle v1：`SEALED_AND_PRESERVED`。Oracle v1：`HALTED_BEFORE_ORACLE`。v2 handoff：`HALTED_BEFORE_ORACLE_DUE_TO_HANDOFF_CONTAMINATION`。Pre-oracle v2.1：`SEALED`。v2.1 clean handoff：`READY_FOR_INDEPENDENT_ORACLE_EXECUTOR`。Independent comparison：`NOT_STARTED`。Task3：`NEEDS_EVIDENCE`。
+Methodology：`APPROVED WITH CONSTRAINTS`。Comparator contract：`ENGINEERING_READY`。Pre-oracle v1：`SEALED_AND_PRESERVED`。Oracle v1：`HALTED_BEFORE_ORACLE`。v2 handoff：`HALTED_BEFORE_ORACLE_DUE_TO_HANDOFF_CONTAMINATION`。Pre-oracle v2.1：`SEALED`。v2.1 clean handoff：`EXECUTED_AND_SEALED`。Independent comparison：`60/60 MATCH`。Task3：`QUALIFIED_FOR_IMPLEMENTATION_CONFORMANCE`。Maturity promotion：`NOT_AUTHORIZED`。
 
 依據：[人工決策](../superpowers/phase-gates/2026-09-27-review-decisions.md)、
 `bazi-decadal-domain-review-decision.v1.json`及
@@ -295,3 +295,41 @@ candidate was changed after result exposure.
 Task3 is now `READY_FOR_HUMAN_QUALIFICATION_REVIEW`. The 60/60 MATCH result
 does not auto-authorize qualification, maturity promotion, merge, tag, release
 or a Stable claim.
+
+
+## 2026-09-30 Task3 human qualification decision
+
+Human review completed after the sealed v2.1 independent-oracle comparison.
+
+Decision:
+
+`QUALIFIED_FOR_IMPLEMENTATION_CONFORMANCE`
+
+The human reviewer accepted the clean-room executor independence evidence with
+an explicit limitation: the separation is supported by the pre-execution gate,
+executor attestation, exact artifact bindings and static source inspection, but
+is not cryptographically provable by the comparator.
+
+The human reviewer also confirmed:
+
+- the comparison paths and tolerances were presealed and were not changed after
+  result exposure;
+- the frozen production candidate remained
+  `6280c29b0a493e4b27379948c8cc82ba94bfa04f`;
+- the final deterministic comparison remained
+  `60 MATCH / 0 MISMATCH / 0 MISSING_REFERENCE / 0 NOT_COMPARABLE`;
+- no case, path, tolerance, oracle expected value or candidate was modified in
+  response to the comparison result.
+
+Qualification scope is deliberately narrow:
+
+> Bazi decadal implementation conformance for the frozen production candidate
+> against the approved v2.1 clean execution contract and presealed comparison
+> contract.
+
+This decision does **not** establish metaphysical predictive truth, universal
+Bazi industry-standard conformity, or cryptographic proof of clean-room
+independence.
+
+It also does not authorize maturity promotion, merge, default switch, tag,
+release, publish or a Stable claim. Those require a separate decision.

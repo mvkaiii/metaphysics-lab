@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
   "task_id": "Bazi-decadal-Task3",
-  "state": "READY_FOR_HUMAN_QUALIFICATION_REVIEW",
-  "task3_status": "NEEDS_HUMAN_REVIEW",
+  "state": "HUMAN_QUALIFICATION_DECIDED",
+  "task3_status": "QUALIFIED",
   "independent_oracle_execution": "COMPLETED_AND_SEALED",
   "independent_oracle_artifact_intake": "VALIDATED",
   "production_comparison": "COMPLETED",
@@ -15,11 +15,14 @@
   },
   "comparator_qualification_decision": "HUMAN_REVIEW_REQUIRED",
   "comparator_independence_assessment": "DECLARED_NOT_VERIFIED",
+  "human_independence_evidence_assessment": "ACCEPTED_WITH_LIMITATION",
+  "human_qualification_decision": "QUALIFIED",
+  "qualification_scope": "IMPLEMENTATION_CONFORMANCE_ONLY",
   "production_candidate_sha": "6280c29b0a493e4b27379948c8cc82ba94bfa04f",
   "oracle_source_sha256": "d4a4fdff95abb64e700ae9ebe966332546b373096aac6af56af8e2933fa815ac",
   "preoracle_seal_sha256": "53f4e249f4f6e13fd26e9859101cceeaac31a1f186c155653a24e79f02dd4a27",
   "comparison_receipt_path": "docs/research/bazi-decadal-v2.1-independent-comparison-receipt.v1.json",
-  "qualification_decision": "NOT_YET_MADE",
+  "human_decision_path": "docs/research/bazi-decadal-v2.1-human-qualification-decision.v1.json",
   "maturity_promotion": false,
-  "next_gate": "HUMAN_REVIEW_OF_INDEPENDENCE_AND_60_OF_60_COMPARISON"
+  "next_gate": "SEPARATE_MATURITY_AND_RELEASE_AUTHORIZATION_IF_DESIRED"
 }
