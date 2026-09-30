@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.0",
+  "decision_id": "BAZI-DECADAL-TASK3-V2-DOMAIN-REVIEW-20260930",
+  "decision_status": "APPROVED",
+  "approved_at": "2026-09-30T09:51:00+08:00",
+  "approved_by_role": "human_decision_owner",
+  "repository": "mvkaiii/metaphysics-lab",
+  "approval_parent_head": "6280c29b0a493e4b27379948c8cc82ba94bfa04f",
+  "production_candidate_sha": "6280c29b0a493e4b27379948c8cc82ba94bfa04f",
+  "profile": {
+    "profile_id": "bazi-natal-project-v1",
+    "rule_version": "1.0-exp",
+    "decadal_rule": "three-days-one-year-v1",
+    "approved_spec_path": "docs/research/bazi-decadal-independent-profile-spec.v2.md",
+    "approved_spec_sha256": "24825b1c2c850873f54e117c53c13932a8a730dc3a245a1c5e7e2599259c3305"
+  },
+  "decisions": {
+    "V2-D1": {
+      "status": "APPROVED",
+      "rule": "hko_official_public_astronomical_reference_not_claimed_as_unique_bazi_industry_standard",
+      "detail": "Use exact HKO 2015/2016 raw bytes as the independent-oracle astronomical reference for this qualification cycle; treat published minute precision conservatively as ±60 seconds.",
+      "source_relationship": "partially_shared_external_reference"
+    },
+    "V2-D2": {
+      "status": "APPROVED",
+      "rule": "self_contained_natal_year_and_month_pillar_derivation",
+      "detail": "Independent executor derives natal year pillar from Lichun boundary and derives natal month pillar from the latest Jie <= birth using the approved Gan/Zhi formulas."
+    },
+    "V2-D3": {
+      "status": "APPROVED",
+      "rule": "same_12_pre_result_inputs_opaque_ids_neutral_metadata",
+      "detail": "Preserve all and only the same 12 pre-result birth/sex inputs; no additions, removals or replacements; remove year-polarity and expected-direction answer leakage."
+    },
+    "V2-D4": {
+      "status": "APPROVED",
+      "rule": "frozen_comparison_paths_and_tolerances",
+      "comparisons": {
+        "/decadal_direction": {
+          "kind": "exact"
+        },
+        "/periods/0/pillar": {
+          "kind": "exact"
+        },
+        "/periods/0/start_age_years": {
+          "kind": "number_abs",
+          "tolerance": 0.0002314814814814815
+        },
+        "/periods/0/start_datetime": {
+          "kind": "datetime_abs_seconds",
+          "tolerance": 7304.85
+        },
+        "/periods/1/end_datetime": {
+          "kind": "datetime_abs_seconds",
+          "tolerance": 7304.85
+        }
+      }
+    },
+    "V2-D5": {
+      "status": "APPROVED",
+      "rule": "current_jie_inclusive_with_disclosed_independent_equality_coverage_gap",
+      "detail": "Forward uses first Jie >= birth; reverse uses last Jie <= birth; equality yields interval_seconds=0. HKO minute-resolution source bytes do not independently test a sub-minute exact-equality instant."
+    }
+  },
+  "oracle_authorized_in_current_context": false,
+  "expected_values_present": false,
+  "qualification_decision": "NOT_YET_MADE",
+  "maturity_promotion": false,
+  "next_gate": "FREEZE_V2_SPEC_CASE_BUNDLE_AND_PREORACLE_SEAL"
+}
