@@ -12,9 +12,9 @@ CASES = ROOT / "docs/research/bazi-decadal-oracle-case-inputs.v2.1.json"
 SEAL = ROOT / "docs/research/bazi-decadal-preoracle-seal.v2.1.json"
 V2_CASES = ROOT / "docs/research/bazi-decadal-oracle-case-inputs.v2.json"
 
-SPEC_SHA = "900ec6dfc58955fa426c1750709941f572afef490796656869e6942853939531"
+SPEC_SHA = "b47de7809cadb82159c272b2d2d7fb3bbc7ffc99d9e8ed6c1fa60a1bf3c900e4"
 CASE_SHA = "939f8e29123acabfc16366b05622d1d3598b6aa72c4cc54cf96db3ce6e35128e"
-SEAL_SHA = "15035c41df5e479463c2a39e68b3b1267fdd67623fcee65d5635fb2f2a1c0fa1"
+SEAL_SHA = "53f4e249f4f6e13fd26e9859101cceeaac31a1f186c155653a24e79f02dd4a27"
 
 
 class BaziDecadalV21CleanOracleContractTests(unittest.TestCase):
