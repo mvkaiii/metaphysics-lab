@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0",
+  "review_type": "MATURITY_STABLE_RELEASE_GATE_REVIEW",
+  "reviewed_at": "2026-09-30T13:15:00+08:00",
+  "governance_head": "5283b932b4f3618e1408fba80ba9d2367d43786a",
+  "current_formal_release": "v1.7.1",
+  "task3": {
+    "status": "QUALIFIED_FOR_IMPLEMENTATION_CONFORMANCE",
+    "scope": "Bazi decadal implementation conformance only",
+    "stable_promotion_implication": "NONE_AUTOMATIC"
+  },
+  "capability_review": {
+    "bazi.natal_chart": {
+      "canonical_state": {
+        "implementation": "implemented",
+        "maturity": "experimental",
+        "routing": "on_demand",
+        "evidence": "partial",
+        "promotion": "not_decided"
+      },
+      "review_result": "NOT_READY_FOR_STABLE_PROMOTION",
+      "reason": "Task3 qualifies the decadal core only; the canonical bazi.natal_chart capability is broader and its aggregate evidence remains partial."
+    },
+    "pilot6_related_prospective_capability": {
+      "lifecycle_state": "OBSERVATION_PENDING",
+      "stable_promotion_allowed": false,
+      "outcome_window_start": "2027-09-01T00:00:00+08:00",
+      "outcome_window_end": "2027-10-31T23:59:59+08:00",
+      "maturity_delay_hours": 72,
+      "earliest_post_window_maturity_at": "2027-11-03T23:59:59+08:00",
+      "review_result": "BLOCKED_BY_PROSPECTIVE_MATURITY_WINDOW"
+    }
+  },
+  "stable_gate": {
+    "result": "NOT_READY",
+    "stable_claim_authorized": false,
+    "reason": [
+      "Task3 implementation-conformance qualification does not cover the full bazi.natal_chart capability.",
+      "Pilot-6 stable-promotion evidence has not matured and public governance explicitly prohibits Pilot-6 capability Stable promotion."
+    ]
+  },
+  "software_release_gate": {
+    "release_and_maturity_are_separate": true,
+    "experimental_capabilities_may_ship_without_promotion": true,
+    "result": "ELIGIBLE_FOR_RELEASE_PREPARATION_ONLY",
+    "release_authorized": false,
+    "merge_authorized": false,
+    "tag_authorized": false,
+    "publish_authorized": false,
+    "prerequisites_before_release_authorization": [
+      "Define the intended release identity/version and exact scope.",
+      "Freeze a release candidate commit distinct from research-governance-only commits if required.",
+      "Build and hash the deterministic user package.",
+      "Run release-specific isolated/hosted qualification at the exact frozen release candidate.",
+      "Review release notes and ensure experimental capability maturity remains unchanged unless separately qualified."
+    ]
+  },
+  "pr233": {
+    "state": "DRAFT",
+    "merge_authorized": false
+  },
+  "next_gate": "PREPARE_SOFTWARE_RELEASE_WITHOUT_STABLE_PROMOTION_OR_WAIT_FOR_FUTURE_STABLE_EVIDENCE"
+}
