@@ -25,7 +25,7 @@ class V18ReleaseCandidateContractTests(unittest.TestCase):
         self.assertTrue(info["ok"], info)
         data = info["data"]
         self.assertEqual(data["release_version"], "1.8.0")
-        self.assertEqual(data["distribution_runtime_version"], "1.3-exp")
+        self.assertEqual(data["distribution_runtime_version"], "1.4-exp")
         self.assertEqual(data["project_contract_version"], "1.2")
         self.assertEqual(data["runtime_schema_version"], "1.1")
         self.assertEqual(data["case_schema_version"], "1.1")
