@@ -13,13 +13,13 @@
 | 用途 | 實際檔名 | 安裝方式 |
 |---|---|---|
 | **命理計算程式** | `metaphysics_lab.py` | 上傳到 ChatGPT Project 或 Claude Project |
-| **命理分析核心規則** | `metaphysics_core.md` | 上傳到同一個 Project |
+| **命理分析核心規則** | `metaphysics_core.md` | 上傳到同一個 ChatGPT Project／Claude Project |
 | **Project 設定指令** | `project_instructions.txt` | 全文貼到 Project Instructions |
 
 實際操作：
 
 1. 上傳 `metaphysics_lab.py` 到 ChatGPT Project 或 Claude Project。
-2. 上傳 `metaphysics_core.md` 到同一個 Project。
+2. 上傳 `metaphysics_core.md` 到同一個 ChatGPT Project／Claude Project。
 3. 開啟 Project Instructions，把 `project_instructions.txt` 的全文複製進去。
 
 也就是**兩個上傳檔＋一份貼進 Project Instructions 的文字**。不需要下載 GitHub 自動產生的原始碼壓縮檔（Source code），也不需要解壓縮專案原始碼。
