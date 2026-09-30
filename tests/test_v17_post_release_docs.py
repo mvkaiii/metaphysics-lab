@@ -39,7 +39,7 @@ class V17PostReleaseDocsTests(unittest.TestCase):
         self.assertIn("## v1.7.1 Release Snapshot", version)
         self.assertIn("Release Version            1.7.1", version)
         self.assertIn("AI Distribution Runtime    1.2-exp", version)
-        self.assertIn("Git tag / GitHub Release：`v1.7.1`", version)
+        self.assertIn("正式 release target 以 Git tag `v1.7.1` 指向的 commit 為 authority", version)
         self.assertIn(f"## v1.7.1｜{V171_RELEASE_DATE}", changelog)
         self.assertIn(V171_USER_PACKAGE, changelog)
         self.assertIn(V171_USER_PACKAGE_SHA256, changelog)
