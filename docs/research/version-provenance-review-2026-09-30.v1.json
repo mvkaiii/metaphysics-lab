@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0",
+  "review_type": "VERSION_PROVENANCE_REVIEW",
+  "review_date": "2026-09-30",
+  "timezone": "Asia/Taipei",
+  "repository": "mvkaiii/metaphysics-lab",
+  "pr_number": 233,
+  "review_parent_head": "53b846eea167d224c731deb2d9721c96140beefa",
+  "release_identity": "v1.8.0",
+  "findings": {
+    "bazi_rule_identity": {
+      "profile_id": "bazi-natal-project-v1",
+      "rule_version": "1.0-exp",
+      "decision": "KEEP",
+      "rationale": [
+        "Task3 v2.1 pre-oracle seal explicitly binds profile_id=bazi-natal-project-v1 and rule_version=1.0-exp.",
+        "The sealed independent specification already includes the bundled lunar-python==1.4.8 JieQi production provider and inclusive exact-Jie boundary semantics.",
+        "Changing to a new rule_version after qualification would create a new unsealed rule identity; do not relabel the qualified Task3 contract."
+      ],
+      "implementation_provenance_required": [
+        "Project Bazi Calendar Engine version 1.1.0",
+        "solar-term provider lunar-python==1.4.8 JieQi table",
+        "provider/source revision binding where available",
+        "release/source commit identity"
+      ]
+    },
+    "distribution_runtime": {
+      "current": "1.2-exp",
+      "target_for_v1_8_candidate": "1.3-exp",
+      "decision": "BUMP_REQUIRED_BEFORE_RC_FREEZE",
+      "rationale": [
+        "The portable AI runtime build_natal path has materially changed deterministic output because the Bazi solar-term authority changed.",
+        "Runtime version is part of Case/output provenance and should distinguish the v1.8 behavior from the released v1.7.1 runtime."
+      ]
+    },
+    "release_version": {
+      "current_repository_constant": "1.7.1",
+      "target": "1.8.0",
+      "decision": "BUMP_REQUIRED_BEFORE_RC_FREEZE"
+    },
+    "unchanged_versions": {
+      "project_contract_version": "1.2",
+      "runtime_schema_version": "1.1",
+      "case_schema_version": "1.1",
+      "capability_manifest_version": "1.0"
+    },
+    "visualization_surface": {
+      "maturity": "experimental",
+      "repository_surface": true,
+      "ai_distribution_public_action": false,
+      "decision": "DO_NOT_CLAIM_PUBLIC_RUNTIME_ACTION"
+    }
+  },
+  "implementation_constraint": {
+    "deterministic_distribution_rebuild_required": true,
+    "connector_only_version_edit_allowed": false,
+    "reason": "Changing release/runtime constants without rebuilding dist/ai/metaphysics_lab.py would intentionally violate deterministic distribution parity."
+  },
+  "task3_requalification": {
+    "rerun_oracle_required": false,
+    "note": "Do not redo Task3 oracle/comparison. Any post-qualification release-version/provenance-only delta must be checked at the exact release candidate without rewriting sealed Task3 evidence."
+  },
+  "authorization": {
+    "merge": false,
+    "tag": false,
+    "github_release": false,
+    "publish": false,
+    "stable_promotion": false,
+    "default_switch": false
+  }
+}
