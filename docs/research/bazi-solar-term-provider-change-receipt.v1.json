@@ -1,0 +1,106 @@
+{
+  "schema_version": "1.0",
+  "task_id": "Bazi-decadal-Task3",
+  "receipt_type": "SOLAR_TERM_PROVIDER_ENGINEERING_CORRECTION",
+  "status": "ENGINEERING_VERIFIED_READY_FOR_V2_DOMAIN_REVIEW",
+  "qualification_status": "NEEDS_EVIDENCE",
+  "maturity_promotion": false,
+  "v1_preoracle_seal_mutated": false,
+  "v1_oracle_execution_started": false,
+  "benchmark_selection": {
+    "preregistered_result_path": "docs/research/bazi-solar-term-hko-general-benchmark-result.v1.json",
+    "workflow_run_id": 36596086945,
+    "artifact_id": 11045588257,
+    "artifact_digest": "sha256:dcb59130fea25dbc2e3830448f4598c6da31e60ea55f9fa311afef6bdd4aca4d",
+    "prechange_current_project": {
+      "point_count": 48,
+      "within_60_seconds": 3,
+      "mean_abs_seconds": 279.4583333333333,
+      "max_abs_seconds": 767
+    },
+    "selected_candidate": {
+      "provider": "lunar-python==1.4.8 JieQi table",
+      "point_count": 48,
+      "within_60_seconds": 48,
+      "mean_abs_seconds": 18.395833333333332,
+      "max_abs_seconds": 30,
+      "gate_pass": true
+    }
+  },
+  "production_change": {
+    "provider_change_commit": "7ef0252a947579c50532c26e11a55ae85fc871bc",
+    "bundled_authority_fix_commit": "049c84a97b274f19be8d58fd06d3c715c4153905",
+    "distribution_regeneration_commit": "a1e9f1b179d2aa1430a5f2668ae4ded8666afebc",
+    "historical_fixture_reproduction_commit": "35f07688bd947951a953ca44615319a0b1392b18",
+    "provider": "Project-private bundled lunar-python==1.4.8",
+    "source_revision": "000c8a3d74eed098d6256a28fdd51b869324c559",
+    "runtime_authority": "bundled",
+    "exact_equality_rule": "forward >= Jie; reverse <= Jie"
+  },
+  "postchange_benchmark": {
+    "workflow_run_id": 36598012960,
+    "artifact_id": 11047175478,
+    "artifact_digest": "sha256:f95a21f074b588987fc80c1cfe5e0ed0ae71398744cb8d4f49a957823cc640e2",
+    "point_count": 48,
+    "current_project_within_60_seconds": 48,
+    "current_project_mean_abs_seconds": 18.395833333333332,
+    "current_project_max_abs_seconds": 30,
+    "candidate_gate_pass": true
+  },
+  "postchange_nonindependent_dryrun": {
+    "workflow_run_id": 36598012718,
+    "artifact_id": 11047686037,
+    "artifact_digest": "sha256:a248360ef4ebdaf01e88340537a8dbf6a9e706d8848a27b9b30242a192903131",
+    "result": "PARTIAL",
+    "case_count": 12,
+    "field_count": 60,
+    "counts": {
+      "MATCH": 48,
+      "MISMATCH": 0,
+      "MISSING_REFERENCE": 12
+    },
+    "interpretation": "All 36 timing mismatches disappeared. The remaining 12 MISSING_REFERENCE rows are the v1 month-pillar specification gap, not timing mismatches.",
+    "independent_qualification_usable": false
+  },
+  "hosted_verification": {
+    "head_sha": "e7940882a0f04eed9afe12af9c9f271f6b1a9f57",
+    "workflows": [
+      {
+        "name": "林氏天機 v1.5 Validation",
+        "run_id": 36650906997,
+        "conclusion": "success"
+      },
+      {
+        "name": "林氏天機 v1.6 Validation",
+        "run_id": 36650907033,
+        "conclusion": "success"
+      },
+      {
+        "name": "林氏天機 v1.7 Validation",
+        "run_id": 36650906966,
+        "conclusion": "success"
+      },
+      {
+        "name": "v1.7 Plan 3 Focused",
+        "run_id": 36650907013,
+        "conclusion": "success"
+      }
+    ],
+    "all_success": true
+  },
+  "v2_review": {
+    "spec_path": "docs/research/bazi-decadal-independent-profile-spec.v2.candidate.md",
+    "review_packet_path": "docs/research/bazi-decadal-preoracle-review-packet.v2.json",
+    "state": "READY_FOR_HUMAN_DOMAIN_REVIEW",
+    "seal_allowed": false,
+    "expected_values_present": false,
+    "oracle_execution_started": false,
+    "required_decisions": [
+      "V2-D1",
+      "V2-D2",
+      "V2-D3",
+      "V2-D4",
+      "V2-D5"
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0",
+  "task_id": "Bazi-decadal-Task3",
+  "state": "READY_FOR_V2_DOMAIN_REVIEW",
+  "qualification_status": "NEEDS_EVIDENCE",
+  "maturity_promotion": false,
+  "current_engineering_head": "e7940882a0f04eed9afe12af9c9f271f6b1a9f57",
+  "v1": {
+    "preoracle_seal_status": "SEALED_AND_PRESERVED",
+    "oracle_handoff_status": "HALTED_BEFORE_ORACLE",
+    "oracle_execution_started": false,
+    "expected_values_present": false,
+    "in_place_repair_allowed": false
+  },
+  "v2": {
+    "written_spec_status": "DRAFT_PENDING_DOMAIN_REVIEW",
+    "review_packet_status": "VALIDATED_PENDING_HUMAN_DECISIONS",
+    "case_inputs": "same_12_pre_result_birth_and_sex_inputs; opaque IDs; no direction/year-polarity answer leakage",
+    "independent_oracle_source": "exact HKO 2015/2016 raw bytes",
+    "production_timing_provider": "Project-private bundled lunar-python==1.4.8",
+    "preoracle_seal_created": false,
+    "oracle_execution_started": false
+  },
+  "required_human_decisions": {
+    "V2-D1": "Accept HKO 2015/2016 exact raw bytes as oracle astronomical source with conservative ±60-second published precision.",
+    "V2-D2": "Accept the self-contained natal year-pillar and month-pillar derivation rules in the v2 written spec.",
+    "V2-D3": "Accept the same 12 pre-result inputs with opaque IDs and neutral metadata only; no additions/removals/replacements.",
+    "V2-D4": "Accept comparison paths and tolerances: direction exact; first pillar exact; start-age 0.0002314814814814815; datetime endpoints 7304.85 seconds.",
+    "V2-D5": "Accept exact-Jie equality as a written inclusive rule while explicitly disclosing that HKO minute precision cannot independently test a sub-minute equality case."
+  },
+  "seal_gate": "BLOCKED_PENDING_V2_D1_D5_APPROVAL"
+}

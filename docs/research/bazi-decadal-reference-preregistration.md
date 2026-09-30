@@ -1,6 +1,6 @@
 # 大運reference預註冊準備紀錄
 
-Methodology：`APPROVED WITH CONSTRAINTS`。Comparator contract：`ENGINEERING_READY`。Pre-oracle v1：`SEALED_AND_PRESERVED`。Oracle v1：`HALTED_BEFORE_ORACLE`。Independent comparison：`NOT_STARTED`。Task3：`NEEDS_EVIDENCE`。
+Methodology：`APPROVED WITH CONSTRAINTS`。Comparator contract：`ENGINEERING_READY`。Pre-oracle v1：`SEALED_AND_PRESERVED`。Oracle v1：`HALTED_BEFORE_ORACLE`。v2 engineering：`READY_FOR_DOMAIN_REVIEW`。Independent comparison：`NOT_STARTED`。Task3：`NEEDS_EVIDENCE`。
 
 依據：[人工決策](../superpowers/phase-gates/2026-09-27-review-decisions.md)、
 `bazi-decadal-domain-review-decision.v1.json`及
@@ -84,3 +84,62 @@ v1 independent oracle handoff：`HALTED_BEFORE_ORACLE`。
 6. 再交給真正未接觸production/output的獨立oracle executor。
 
 Task3持續為`NEEDS_EVIDENCE`，不做maturity promotion。
+
+
+## 2026-09-30 v2 engineering correction checkpoint
+
+Solar-term provider engineering correction is complete and separately recorded in
+`bazi-solar-term-provider-change-receipt.v1.json`.
+
+General benchmark evidence:
+
+- pre-change current engine: 3/48 within ±60 seconds;
+- pre-change mean absolute error: 279.458333 seconds;
+- pre-change max absolute error: 767 seconds;
+- qualified candidate `lunar-python==1.4.8`: 48/48 within ±60 seconds;
+- candidate mean absolute error: 18.395833 seconds;
+- candidate max absolute error: 30 seconds.
+
+After production switched to the Project-private bundled lunar-python authority:
+
+- post-change general benchmark: 48/48 within ±60 seconds;
+- post-change current engine mean absolute error: 18.395833 seconds;
+- post-change max absolute error: 30 seconds;
+- post-change non-independent Task3 diagnostic:
+  `48 MATCH / 0 MISMATCH / 12 MISSING_REFERENCE`.
+
+The 36 timing mismatches observed in v1 disappeared. The remaining 12
+`MISSING_REFERENCE` rows are the already-identified v1 written-spec omission
+for natal month-pillar derivation.
+
+Historical `synthetic-engine-view.v1.json` remains unchanged and continues to
+reproduce through the preserved legacy solar-term solver. Current production is
+not required to equal that historical baseline timing.
+
+Hosted verification at `e7940882a0f04eed9afe12af9c9f271f6b1a9f57`:
+
+- v1.5 run `36650906997`: SUCCESS
+- v1.6 run `36650907033`: SUCCESS
+- v1.7 run `36650906966`: SUCCESS
+- v1.7 Plan 3 Focused run `36650907013`: SUCCESS
+
+## v2 domain-review gate
+
+The following files are ready for review:
+
+- `bazi-decadal-independent-profile-spec.v2.candidate.md`
+- `bazi-decadal-preoracle-review-packet.v2.json`
+
+The v2 proposal preserves the exact same 12 birth/sex inputs selected before
+v1 result exposure. No case was added, removed or replaced. Case IDs are opaque
+and coverage metadata no longer contains Yin/Yang-year or expected
+forward/reverse answers.
+
+v2 independent oracle astronomical input remains exact HKO 2015/2016 raw bytes.
+Production timing uses bundled lunar-python 1.4.8. This is explicitly classified
+as a partially shared external astronomical reference rather than fully
+independent source provenance.
+
+No v2 seal exists yet. Human/domain approval of V2-D1 through V2-D5 is required
+before specification hashing, candidate freezing, case-bundle materialization
+or pre-oracle sealing.
