@@ -1,0 +1,49 @@
+name: v1.8 Sync Project Instructions
+
+on:
+  push:
+    branches:
+      - local/task0-2-capability-matrix
+    paths:
+      - .github/workflows/v18-sync-project-instructions.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact branch head
+        uses: actions/checkout@v4
+        with:
+          ref: local/task0-2-capability-matrix
+          fetch-depth: 0
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Rebuild deterministic AI distribution
+        run: |
+          python tools/build_ai_distribution.py
+          python tools/build_ai_distribution.py --check
+
+      - name: Require instructions-only delta
+        shell: bash
+        run: |
+          actual="$(git status --porcelain)"
+          printf 'actual:\n%s\n' "$actual"
+          test "$actual" = " M dist/ai/project_instructions.txt"
+
+      - name: Commit generated instructions
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist/ai/project_instructions.txt
+          git commit -m "build(ai): sync compact project instructions"
+          git push origin HEAD:local/task0-2-capability-matrix
