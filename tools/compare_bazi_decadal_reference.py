@@ -323,7 +323,10 @@ def _compare_row(row, actual_value):
             result["status"] = "MISMATCH"
             result["reason"] = "ACTUAL_NOT_OFFSET_DATETIME"
             return result
-        expected_dt = datetime.fromisoformat(row["expected"])
+        expected_errors = []
+        expected_dt = _offset_datetime(row["expected"], "expected_value", expected_errors)
+        if expected_dt is None:
+            raise ValueError("validated reference datetime could not be parsed")
         difference = abs((actual_dt - expected_dt).total_seconds())
         result["difference"] = difference
         result["status"] = "MATCH" if difference <= float(row["tolerance"]) else "MISMATCH"
