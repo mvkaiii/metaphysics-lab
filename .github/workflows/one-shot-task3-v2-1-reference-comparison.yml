@@ -24,6 +24,16 @@ jobs:
       - name: Install pinned dependencies
         run: pip install -r requirements.txt
 
+      - name: Print exact independent-oracle artifact hashes
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha256sum \
+            docs/research/evidence/bazi-decadal-v2.1-independent-oracle/oracle.cjs \
+            docs/research/evidence/bazi-decadal-v2.1-independent-oracle/oracle-source.sha256 \
+            docs/research/evidence/bazi-decadal-v2.1-independent-oracle/oracle-output.json \
+            docs/research/evidence/bazi-decadal-v2.1-independent-oracle/sealing-receipt.json
+
       - name: Validate and normalize independent oracle artifacts
         shell: bash
         run: |
