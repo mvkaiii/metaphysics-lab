@@ -23,7 +23,7 @@ jobs:
       - name: Validate v2.1 clean contract and seal
         run: |
           python -m unittest tests.test_bazi_decadal_v21_clean_oracle_contract -v
-          echo '900ec6dfc58955fa426c1750709941f572afef490796656869e6942853939531  docs/research/bazi-decadal-independent-oracle-contract.v2.1.md' | sha256sum -c -
+          echo 'b47de7809cadb82159c272b2d2d7fb3bbc7ffc99d9e8ed6c1fa60a1bf3c900e4  docs/research/bazi-decadal-independent-oracle-contract.v2.1.md' | sha256sum -c -
 
       - name: Acquire exact HKO source bytes
         shell: bash
@@ -77,11 +77,11 @@ jobs:
 
           Required bindings:
           - execution contract SHA256:
-            900ec6dfc58955fa426c1750709941f572afef490796656869e6942853939531
+            b47de7809cadb82159c272b2d2d7fb3bbc7ffc99d9e8ed6c1fa60a1bf3c900e4
           - case bundle canonical SHA256 field:
             939f8e29123acabfc16366b05622d1d3598b6aa72c4cc54cf96db3ce6e35128e
           - pre-oracle seal canonical SHA256 field:
-            15035c41df5e479463c2a39e68b3b1267fdd67623fcee65d5635fb2f2a1c0fa1
+            53f4e249f4f6e13fd26e9859101cceeaac31a1f186c155653a24e79f02dd4a27
           - HKO 2015 raw-byte SHA256:
             60a45ab889ef436936571a04a49387c6f9ce8d43243fb21c64e3fcb0331c8320
           - HKO 2016 raw-byte SHA256:
@@ -166,15 +166,15 @@ jobs:
           cases=json.loads((root/'bazi-decadal-oracle-case-inputs.v2.1.json').read_text(encoding='utf-8'))
           seal=json.loads((root/'bazi-decadal-preoracle-seal.v2.1.json').read_text(encoding='utf-8'))
           assert cases['bundle_sha256']=='939f8e29123acabfc16366b05622d1d3598b6aa72c4cc54cf96db3ce6e35128e'
-          assert seal['seal_sha256']=='15035c41df5e479463c2a39e68b3b1267fdd67623fcee65d5635fb2f2a1c0fa1'
+          assert seal['seal_sha256']=='53f4e249f4f6e13fd26e9859101cceeaac31a1f186c155653a24e79f02dd4a27'
           assert cases['expected_values_present'] is False
           assert [c['case_id'] for c in cases['cases']]==[f'bdv2-{i:03d}' for i in range(1,13)]
           manifest={
             'schema_version':'2.1',
             'handoff_type':'bazi_decadal_independent_oracle_cleanroom',
-            'execution_contract_sha256':'900ec6dfc58955fa426c1750709941f572afef490796656869e6942853939531',
+            'execution_contract_sha256':'b47de7809cadb82159c272b2d2d7fb3bbc7ffc99d9e8ed6c1fa60a1bf3c900e4',
             'case_bundle_sha256':'939f8e29123acabfc16366b05622d1d3598b6aa72c4cc54cf96db3ce6e35128e',
-            'preoracle_seal_sha256':'15035c41df5e479463c2a39e68b3b1267fdd67623fcee65d5635fb2f2a1c0fa1',
+            'preoracle_seal_sha256':'53f4e249f4f6e13fd26e9859101cceeaac31a1f186c155653a24e79f02dd4a27',
             'expected_values_present':False,
             'evaluated_system_implementation_included':False,
             'evaluated_system_output_included':False,
