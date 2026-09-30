@@ -1,0 +1,101 @@
+{
+  "schema_version": "1.0",
+  "task_id": "Bazi-decadal-Task3",
+  "receipt_type": "V2_1_INDEPENDENT_ORACLE_REFERENCE_COMPARISON",
+  "status": "READY_FOR_HUMAN_REVIEW",
+  "task3_status": "NEEDS_HUMAN_REVIEW",
+  "production_candidate_sha": "6280c29b0a493e4b27379948c8cc82ba94bfa04f",
+  "cleanroom_bindings": {
+    "execution_contract_sha256": "b47de7809cadb82159c272b2d2d7fb3bbc7ffc99d9e8ed6c1fa60a1bf3c900e4",
+    "case_bundle_sha256": "939f8e29123acabfc16366b05622d1d3598b6aa72c4cc54cf96db3ce6e35128e",
+    "preoracle_seal_sha256": "53f4e249f4f6e13fd26e9859101cceeaac31a1f186c155653a24e79f02dd4a27",
+    "oracle_source_sha256": "d4a4fdff95abb64e700ae9ebe966332546b373096aac6af56af8e2933fa815ac",
+    "oracle_output_file_sha256": "1743703e63183a5a76e710578d8548e26b03849c917de2fb7f107f3f25906362",
+    "sealing_receipt_file_sha256": "40edf01200096a16d47221efe2458fec8e7a52ad39b86fa146d54be0e02b6dc3",
+    "source_record_file_sha256": "bc56d8d54c3e1ea78c844bbe68d21bc6de7fc70146e6e0d729ec887b696135a5"
+  },
+  "oracle_intake": {
+    "status": "ORACLE_ARTIFACTS_VALIDATED",
+    "case_count": 12,
+    "comparison_path_count_per_case": 5,
+    "expected_value_count": 60,
+    "production_code_access": false,
+    "production_output_access": false,
+    "production_comparison_performed_by_executor": false,
+    "source_frozen_before_expected_values": true,
+    "source_unmodified_after_expected_values": true,
+    "independence_assessment": "DECLARED_NOT_VERIFIED",
+    "note": "Executor isolation is supported by the clean-room pre-execution gate, receipt attestation, exact artifact bindings, and static source scan. It is not cryptographically provable by the comparator."
+  },
+  "comparison": {
+    "workflow_run_id": 36670232563,
+    "workflow_head_sha": "5d8dc17ac3046fe0c5fe28a182d0fd32a7b41b49",
+    "result": "MATCH",
+    "case_count": 12,
+    "field_count": 60,
+    "counts": {
+      "MATCH": 60,
+      "MISMATCH": 0,
+      "MISSING_REFERENCE": 0,
+      "NOT_COMPARABLE": 0
+    },
+    "qualification_decision": "HUMAN_REVIEW_REQUIRED",
+    "maturity_promotion": false,
+    "independence_assessment": "DECLARED_NOT_VERIFIED",
+    "reference_packet_canonical_sha256": "150aa5e09402383f28b982dea7db588122e9ed3a3f82451f96fbcec1c1535448",
+    "actual_bundle_canonical_sha256": "a7e3a8a0694199f5d4679ea8b5093f573617b4f98928c8779342c5bad689ab34",
+    "files": {
+      "production_actual_file_sha256": "c1aff25af0cda9e98bd26ee835893a3551c51f2f266ffcf21bdfeee384448e81",
+      "comparison_report_file_sha256": "eebed68f089bc78f698c2cc6839596c27d4503dd6ab4df3b880dfcbc5cf00435",
+      "reference_packet_file_sha256": "7c0895bd8fe77dd1a369fbeb77d164f10ba1224a2c6de45e77710b9e3525d629",
+      "oracle_finalizer_input_file_sha256": "1afac0600b3c573717fe06c00dab3dc62779dd34cc02c453733ae55418956f89",
+      "oracle_intake_receipt_file_sha256": "ebe4853bcd7b57dbf656bca872787f340c56338e35e9f44cfe51ea92609b93fd"
+    },
+    "artifact": {
+      "id": 11077378744,
+      "name": "task3-v2-1-independent-reference-comparison",
+      "archive_digest": "sha256:19d1a1c564a919f8583fd33c865607a60d6f5ba270ce1308f7f150494f08d8eb",
+      "expires_at": "2026-12-29T04:44:57Z"
+    }
+  },
+  "path_review": {
+    "exact_paths": {
+      "/decadal_direction": {
+        "match_count": 12,
+        "mismatch_count": 0
+      },
+      "/periods/0/pillar": {
+        "match_count": 12,
+        "mismatch_count": 0
+      }
+    },
+    "numeric_paths": {
+      "/periods/0/start_age_years": {
+        "match_count": 12,
+        "tolerance": 0.0002314814814814815,
+        "max_abs_difference": 0.0001118827160482283
+      }
+    },
+    "datetime_paths": {
+      "/periods/0/start_datetime": {
+        "match_count": 12,
+        "tolerance_seconds": 7304.85,
+        "max_abs_difference_seconds": 3530.6775
+      },
+      "/periods/1/end_datetime": {
+        "match_count": 12,
+        "tolerance_seconds": 7304.85,
+        "max_abs_difference_seconds": 3530.6775
+      }
+    }
+  },
+  "human_review_required": [
+    "Accept or reject the clean-room executor independence evidence.",
+    "Confirm that the pre-sealed comparison paths and tolerances remain acceptable without post-result modification.",
+    "Confirm that 60/60 MATCH supports Task3 implementation-conformance qualification for the frozen production candidate.",
+    "Keep the qualification scope limited to implementation conformance; it does not validate metaphysical predictive truth.",
+    "A separate human decision is required before any maturity promotion, merge, tag, release, or Stable claim."
+  ],
+  "qualification_decision": "NOT_YET_MADE",
+  "maturity_promotion": false
+}

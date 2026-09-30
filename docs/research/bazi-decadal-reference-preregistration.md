@@ -232,3 +232,66 @@ verified again. The leakage scan returned zero hits.
 
 v2.1 oracle execution remains `NOT_STARTED`. The next gate is a new fresh
 isolated executor context receiving only the v2.1 clean handoff.
+
+
+## 2026-09-30 v2.1 independent oracle execution and comparison
+
+A fresh isolated Codex executor passed the v2.1 clean-room PRE-EXECUTION GATE
+before expected-value generation. It then froze the exact oracle source before
+execution and returned only the oracle source, source SHA record, oracle output,
+and sealing receipt.
+
+Exact oracle source SHA256:
+
+`d4a4fdff95abb64e700ae9ebe966332546b373096aac6af56af8e2933fa815ac`
+
+The four returned artifacts were ingested without changing expected values.
+Exact file hashes and v2.1 contract/case/seal bindings were verified. The
+executor receipt states production code/output access was false and production
+comparison was not performed. Static source review found only Node built-in
+filesystem/path/crypto/assert imports and no network/process execution
+primitives.
+
+The independent output was finalized against the exact v2.1 pre-oracle seal and
+then compared against the frozen production candidate:
+
+`6280c29b0a493e4b27379948c8cc82ba94bfa04f`
+
+Hosted comparison workflow:
+
+- run: `36670232563`
+- result: `SUCCESS`
+- artifact id: `11077378744`
+- artifact archive digest:
+  `sha256:19d1a1c564a919f8583fd33c865607a60d6f5ba270ce1308f7f150494f08d8eb`
+
+Deterministic comparison:
+
+- cases: 12
+- planned fields: 60
+- MATCH: 60
+- MISMATCH: 0
+- MISSING_REFERENCE: 0
+- NOT_COMPARABLE: 0
+- comparison result: `MATCH`
+- comparator qualification decision: `HUMAN_REVIEW_REQUIRED`
+- comparator independence assessment: `DECLARED_NOT_VERIFIED`
+- maturity promotion: false
+
+Exact direction and first-Da-Yun-pillar paths matched in all 12 cases.
+
+For the pre-sealed timing tolerances:
+
+- maximum start-age absolute difference:
+  `0.0001118827160482283`
+  versus tolerance `0.0002314814814814815`;
+- maximum start/end datetime absolute difference:
+  `3530.6775 seconds`
+  versus tolerance `7304.85 seconds`.
+
+No tolerance, case, path, source binding, oracle value, or frozen production
+candidate was changed after result exposure.
+
+Task3 is now `READY_FOR_HUMAN_QUALIFICATION_REVIEW`. The 60/60 MATCH result
+does not auto-authorize qualification, maturity promotion, merge, tag, release
+or a Stable claim.
