@@ -46,6 +46,7 @@ jobs:
             tests.test_v18_release_candidate_contract \
             tests.test_v18_visualization_runtime \
             tests.test_v18_compact_presentation_policy \
+            tests.test_v18_release_workflow \
             tests.test_visualization_contract \
             tests.test_visualization_bazi_decadal \
             tests.test_visualization_svg \

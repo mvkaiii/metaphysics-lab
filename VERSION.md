@@ -1,12 +1,12 @@
 # Metaphysics Lab 版本
 
-> `VERSION.md` 是給開發、驗證與版本治理看的**技術版本表**。第一次使用請先看 `README.md` 或 `docs/快速開始.md`；一般使用者版 v1.7.1 發布說明見 `docs/發布說明-v1.7.1.md`。
+> `VERSION.md` 是給開發、驗證與版本治理看的**技術版本表**。第一次使用請先看 `README.md` 或 `docs/快速開始.md`；一般使用者版 v1.8.0 發布說明見 `docs/發布說明-v1.8.0.md`。
 >
 > 歷史 Release snapshot 不因後續 qualification 或文件更新回寫改造。正式發版只固定 release identity；**release 本身不改變 capability maturity**，目前執行能力仍以 `runtime_info` 為技術權威來源。
 
-## v1.8.0 Candidate Snapshot｜NOT RELEASED
+## v1.8.0 Release Snapshot
 
-v1.8.0 的 release identity / scope 已於 **2026-09-30** 由人工核准，並已完成 **RC freeze**。Frozen RC SHA 為 `a0e0a1ca668e022a7c13f35875803d968f7547df`；目前仍未 merge、tag、建立 GitHub Release 或 publish。最新正式發布仍是 v1.7.1。
+v1.8.0 的 release identity / scope、RC freeze 與 release execution 已於 **2026-09-30** 由人工核准。Frozen product RC 為 `a0e0a1ca668e022a7c13f35875803d968f7547df`；正式 tag / GitHub Release 只允許在 PR #233 merged SHA 通過 `release-v1.8.yml` 的完整驗證後建立。
 
 ```text
 Release Version            1.8.0
@@ -24,8 +24,8 @@ Capability Manifest        1.0
 - 一般命理對話採 `compact` 預設、`explain` 按需展開、`audit` 僅技術稽核；收斂只影響呈現，不改ranking、盲判、claim consumption或confidence。
 - Selector v1 / interpretation v1 default不變；Case Schema 1.1、Project Contract 1.2、Runtime Schema 1.1不變。
 - Pilot-6仍為 `OBSERVATION_PENDING`；v1.8 軟體 release 不會把 prospective evidence waiting period改寫成 Stable evidence。
-- frozen RC candidate：`a0e0a1ca668e022a7c13f35875803d968f7547df`；五條 fresh exact-head hosted gates 全部 SUCCESS。任何 production、test、distributed source 或 User Package bytes 變更都會使本 freeze 失效，必須重新建立 candidate 並完整重跑。
-- frozen deterministic v1.8.0 User Package SHA256：`f9b22d4b97949b873261793c404d2530a0bc384d77e970e1bba7aec35edc82cf`。RC已凍結，但**仍不是正式 release**。
+- frozen product RC：`a0e0a1ca668e022a7c13f35875803d968f7547df`；後續release-infrastructure/public-doc candidate不得改User Package bytes，且必須重新通過exact-head hosted gates。
+- deterministic v1.8.0 User Package SHA256：`f9b22d4b97949b873261793c404d2530a0bc384d77e970e1bba7aec35edc82cf`；正式release workflow會在merged SHA再次重建並核對此digest後才publish。
 - Project Instructions：7873 字元，維持在 ChatGPT Project 8000 字元限制內。
 
 ---
@@ -73,18 +73,21 @@ Capability Manifest       1.0
 
 ## 最新正式發布
 
-- Metaphysics Lab Core：**v1.7.1**
-- 發布日期：**2026-09-25**
-- Git tag / GitHub Release：`v1.7.1` 已正式發布；tag target 是正式 release identity authority。
-- Metadata implementation base：`3d4380a0b78ba61d3545bc67642cfe67cfc26545`。
-- Release baseline：v1.7.0 正式 baseline + `runtime_info.release_version` + release/package SSOT；AI Distribution Runtime 仍為 1.2-exp。
-- Case Schema / Project Contract：`1.1 / 1.2`，沒有 migration。
-- Selector v1 / interpretation v1 保持 default；Experimental capability 不因 patch promotion。
-- deterministic v1.7.1 User Package SHA256：`771f8493cd07b298c7971f38c601ce17a8acfcce5dab43c72e245f7b282943e8`。
+- Metaphysics Lab Core：**v1.8.0**
+- 發布日期：**2026-09-30**
+- Git tag / GitHub Release：`v1.8.0` 由 `release-v1.8.yml` 在 PR #233 merged SHA 完整驗證後建立；tag target 是正式 release identity authority。
+- Frozen product RC：`a0e0a1ca668e022a7c13f35875803d968f7547df`；release-infrastructure/public-doc descendant不得改User Package bytes。
+- Project Contract / Runtime Schema / Case Schema：`1.2 / 1.1 / 1.1`，沒有 migration。
+- AI Distribution Runtime：`1.4-exp`。
+- `render_bazi_decadal_timeline` 已進 User Package public runtime；Visualization仍是 Experimental presentation surface。
+- 一般命理回答預設 `compact`，`explain` 按需展開、`audit` 僅技術稽核；呈現收斂不改ranking、claim consumption、specificity、confidence或盲判。
+- Selector v1 / interpretation v1 保持 default；`bazi.natal_chart` 維持 Experimental / On-demand；Pilot-6仍為 `OBSERVATION_PENDING`。
+- deterministic v1.8.0 User Package SHA256：`f9b22d4b97949b873261793c404d2530a0bc384d77e970e1bba7aec35edc82cf`。
 
 主要元件：
 
 - 命理推導計算規則：v1.4
+- Bazi Calendar Engine：v1.1.0
 - 八字時間推導引擎：v1.0.0
 - 紫微流月定位引擎：v1.0.0
 - 紫微流日定位引擎：v1.0.0-exp
@@ -96,7 +99,7 @@ Capability Manifest       1.0
 - Ziwei Fine Cycle：v1.0-exp
 - Ziwei Flowing Stars：v1.0-exp
 - Historical Activation Selector：v1.0-exp
-- AI Distribution Runtime：v1.2-exp
+- AI Distribution Runtime：v1.4-exp
 - Runtime Schema：v1.1
 - Build Format：v1.1
 - Project Contract：v1.2
