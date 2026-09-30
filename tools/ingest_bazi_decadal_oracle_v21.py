@@ -53,7 +53,18 @@ def _load(path: Path) -> Any:
 def _aware_datetime(value: Any) -> datetime:
     if not isinstance(value, str):
         raise ValueError("expected ISO-8601 datetime string")
-    parsed = datetime.fromisoformat(value)
+    match = re.fullmatch(
+        r"(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})(?:\\.(\\d{1,9}))?([+-]\\d{2}:\\d{2})",
+        value,
+    )
+    if match is None:
+        raise ValueError("invalid offset ISO-8601 datetime")
+    fraction = match.group(2)
+    normalized = match.group(1)
+    if fraction:
+        normalized += "." + fraction[:6].ljust(6, "0")
+    normalized += match.group(3)
+    parsed = datetime.fromisoformat(normalized)
     if parsed.tzinfo is None or parsed.utcoffset() is None:
         raise ValueError("datetime must contain explicit offset")
     return parsed
