@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0",
+  "review_type": "SOFTWARE_RELEASE_PREPARATION_CHECKPOINT",
+  "prepared_at": "2026-09-30T13:15:00+08:00",
+  "governance_head": "11b310c9375242707562e4211bd669a4ed216639",
+  "current_formal_release": "v1.7.1",
+  "current_release_constant": "1.7.1",
+  "proposed_next_release_family": "v1.8.x",
+  "exact_release_identity": "PENDING_HUMAN_CONFIRMATION",
+  "pr_number": 233,
+  "pr_state": "DRAFT",
+  "exact_head_validation": {
+    "v1_5": {
+      "run_id": 36675021679,
+      "result": "SUCCESS"
+    },
+    "v1_6": {
+      "run_id": 36675021728,
+      "result": "SUCCESS"
+    },
+    "v1_7": {
+      "run_id": 36675021683,
+      "result": "SUCCESS"
+    },
+    "v1_7_plan3_focused": {
+      "run_id": 36675021708,
+      "result": "SUCCESS"
+    }
+  },
+  "task3_status": "QUALIFIED_FOR_IMPLEMENTATION_CONFORMANCE",
+  "stable_promotion_status": "NOT_READY",
+  "pilot6_state": "OBSERVATION_PENDING",
+  "release_policy": {
+    "release_does_not_promote_capability_maturity": true,
+    "experimental_capabilities_may_remain_experimental_in_release": true
+  },
+  "release_preparation_status": "READY_FOR_RELEASE_IDENTITY_DECISION",
+  "blockers_before_candidate_freeze": [
+    "Exact release identity/version must be chosen by the human owner.",
+    "Release scope and user-facing release note boundary must be frozen.",
+    "RELEASE_VERSION and release-specific docs/workflow must be updated only after identity approval."
+  ],
+  "prohibited_until_separate_authorization": [
+    "merge",
+    "tag",
+    "GitHub Release",
+    "publish",
+    "Stable claim",
+    "default switch"
+  ],
+  "next_gate": "HUMAN_CONFIRM_EXACT_RELEASE_IDENTITY_AND_SCOPE"
+}
