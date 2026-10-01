@@ -129,10 +129,20 @@ def resolve_birth_input(
     if target in ("bazi_natal", "ziwei_natal"):
         required.insert(0, "sex")
     missing = tuple(field for field in required if payload.get(field) in (None, ""))
-    if missing:
-        return _failure(missing_fields=missing, error_code="missing_required_birth_field")
-
     precision_state, precision_failure = _time_precision_state(payload)
+    if missing:
+        precision_missing = ()
+        if (
+            precision_failure is not None
+            and precision_failure.error_code == "missing_required_birth_field"
+        ):
+            precision_missing = precision_failure.missing_fields
+        return _failure(
+            missing_fields=missing + tuple(
+                field for field in precision_missing if field not in missing
+            ),
+            error_code="missing_required_birth_field",
+        )
     if precision_failure is not None:
         return precision_failure
 
