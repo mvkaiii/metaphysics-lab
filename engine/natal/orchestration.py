@@ -33,8 +33,16 @@ def resolve_mode_a_input(payload: Mapping[str, object]) -> BirthInputResolution:
     return resolve_birth_input(payload, target="ziwei_natal")
 
 
-def _calendar_context(birth_input: BirthInput, location):
-    resolution = resolve_birth_calendar(birth_input, location)
+def _calendar_context(
+    birth_input: BirthInput,
+    location,
+    utc_offset_hint: Optional[str] = None,
+):
+    resolution = resolve_birth_calendar(
+        birth_input,
+        location,
+        utc_offset_hint=utc_offset_hint,
+    )
     if not resolution.ok or resolution.context is None:
         if resolution.error is None:
             raise NatalFoundationError(
@@ -144,6 +152,7 @@ def build_project_natal(
     location_provider: Optional["LocationProvider"] = None,
     *,
     resolved_location: Optional[ResolvedBirthPlace] = None,
+    utc_offset_hint: Optional[str] = None,
 ) -> ProjectNatalView:
     if not isinstance(birth_input, BirthInput):
         raise NatalFoundationError("invalid_natal_input", "birth_input must be BirthInput")
@@ -176,7 +185,11 @@ def build_project_natal(
 
         location = resolve_birth_place(birth_input.birth_place, location_provider)
 
-    calendar = _calendar_context(birth_input, location)
+    calendar = _calendar_context(
+        birth_input,
+        location,
+        utc_offset_hint=utc_offset_hint,
+    )
     time_views = build_birth_time_views(calendar, location)
 
     bazi_chart = build_bazi_natal(calendar, time_views, birth_input.sex)
