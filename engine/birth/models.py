@@ -44,12 +44,12 @@ class BirthTimeInput:
         if self.start.second or self.start.microsecond:
             raise BirthFoundationError(
                 "unsupported_birth_time_precision",
-                "Phase 2C0 v1 accepts minute precision, not reported seconds",
+                "birth-time input accepts minute precision, not reported seconds",
             )
         if self.end is not None and (self.end.second or self.end.microsecond):
             raise BirthFoundationError(
                 "unsupported_birth_time_precision",
-                "Phase 2C0 v1 accepts minute precision, not reported seconds",
+                "birth-time input accepts minute precision, not reported seconds",
             )
 
     @property
@@ -86,7 +86,7 @@ class BirthPlaceInput:
 class BirthInput:
     sex: Optional[Sex]
     birth_date: BirthDateInput
-    birth_time: BirthTimeInput
+    birth_time: Optional[BirthTimeInput]
     birth_place: BirthPlaceInput
     calendar_kind: str = "gregorian"
 
@@ -94,15 +94,24 @@ class BirthInput:
         if self.calendar_kind != "gregorian":
             raise BirthFoundationError(
                 "unsupported_birth_calendar",
-                "Phase 2C0 Mode A v1 accepts Gregorian birth dates only",
+                "birth input accepts Gregorian birth dates only",
                 {"calendar_kind": self.calendar_kind},
             )
+
+    @property
+    def birth_time_precision(self) -> str:
+        if self.birth_time is None:
+            return "unknown_time"
+        if self.birth_time.end is None:
+            return "exact"
+        return "bounded"
 
     def to_dict(self) -> dict:
         return {
             "sex": self.sex.value if self.sex is not None else None,
             "birth_date": self.birth_date.to_dict(),
-            "birth_time": self.birth_time.to_dict(),
+            "birth_time_precision": self.birth_time_precision,
+            "birth_time": self.birth_time.to_dict() if self.birth_time is not None else None,
             "birth_place": self.birth_place.to_dict(),
             "calendar_kind": self.calendar_kind,
         }
@@ -126,10 +135,15 @@ class BirthInputResolution:
     error_code: Optional[str] = None
     allowed_actions: Tuple[str, ...] = ()
 
+    @property
+    def birth_time_precision(self) -> Optional[str]:
+        return None if self.input is None else self.input.birth_time_precision
+
     def to_dict(self) -> dict:
         return {
             "ok": self.ok,
             "input": self.input.to_dict() if self.input is not None else None,
+            "birth_time_precision": self.birth_time_precision,
             "candidates": [candidate.to_dict() for candidate in self.candidates],
             "missing_fields": list(self.missing_fields),
             "error_code": self.error_code,
