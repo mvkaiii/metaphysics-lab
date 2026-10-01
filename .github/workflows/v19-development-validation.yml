@@ -38,12 +38,37 @@ jobs:
           python -m pip install -r requirements.txt
 
       - name: Run v1.9 birth-time foundation tests
+        run: >
+          python -m unittest
+          tests.test_v19_birth_time_domain_foundation
+          tests.test_birth_input_resolution
+          tests.test_birth_location
+          tests.test_birth_time_views
+          tests.test_calendar_timezone
+          tests.test_birth_capabilities
+          tests.test_natal_capabilities
+          -v
+
+      - name: Show capability matrix drift
         run: |
-          python -m unittest             tests.test_v19_birth_time_domain_foundation             tests.test_birth_input_resolution             tests.test_birth_location             tests.test_birth_time_views             tests.test_calendar_timezone             tests.test_birth_capabilities             tests.test_natal_capabilities -v
+          cp docs/qualification/capability-matrix.md /tmp/capability-matrix.before.md
+          python tools/build_capability_qualification_matrix.py
+          git diff -- docs/qualification/capability-matrix.md || true
+          cp /tmp/capability-matrix.before.md docs/qualification/capability-matrix.md
 
       - name: Run affected governance tests
-        run: |
-          python -m unittest             tests.test_capability_qualification_matrix             tests.test_pilot1_start_seal             tests.test_pilot2_start_seal             tests.test_pilot3_start_seal             tests.test_pilot4_start_seal             tests.test_pilot5_start_seal             tests.test_pilot6_start_seal             tests.test_visualization_bazi_decadal             tests.test_visualization_svg -v
+        run: >
+          python -m unittest
+          tests.test_capability_qualification_matrix
+          tests.test_pilot1_start_seal
+          tests.test_pilot2_start_seal
+          tests.test_pilot3_start_seal
+          tests.test_pilot4_start_seal
+          tests.test_pilot5_start_seal
+          tests.test_pilot6_start_seal
+          tests.test_visualization_bazi_decadal
+          tests.test_visualization_svg
+          -v
 
       - name: Build portable AI distribution
         if: always()
