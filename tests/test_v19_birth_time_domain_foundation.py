@@ -17,6 +17,7 @@ from engine.calendar.models import CalendarResolverException
 from engine.calendar.precision import TimePrecision
 from engine.calendar.timezone import enumerate_local_time_occurrences
 from engine.distribution.runtime import dispatch
+from engine.natal.orchestration import build_project_natal
 
 
 class _SystemZoneProviderForTest:
@@ -192,6 +193,44 @@ class V19BirthTimeDomainFoundationTests(unittest.TestCase):
         self.assertTrue(resolution.ok, resolution.error)
         self.assertEqual(resolution.context.normalized_time.utc_offset, "-05:00")
         self.assertEqual(resolution.context.normalized_time.local_datetime.fold, 1)
+
+
+    def test_public_full_build_does_not_auto_select_a_fold_occurrence(self):
+        result = dispatch(
+            "build_natal",
+            {
+                "birth": {
+                    "sex": "male",
+                    "birth_date": "2026-11-01",
+                    "birth_time": "01:30",
+                    "birth_place": "New York City",
+                },
+                "resolved_location": _new_york_place().to_dict(),
+            },
+        )
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["error"]["code"], "ambiguous_local_time")
+        self.assertEqual(len(result["error"]["details"]["candidates"]), 2)
+
+    def test_internal_natal_build_can_materialize_each_fold_occurrence(self):
+        birth = _birth_input(2026, 11, 1, 1, 30)
+        first = build_project_natal(
+            birth,
+            resolved_location=_new_york_place(),
+            utc_offset_hint="-04:00",
+        )
+        second = build_project_natal(
+            birth,
+            resolved_location=_new_york_place(),
+            utc_offset_hint="-05:00",
+        )
+        self.assertNotEqual(
+            first.birth["reported_datetime"],
+            second.birth["reported_datetime"],
+        )
+        self.assertEqual(first.birth["reported_datetime"], "2026-11-01T01:30:00-04:00")
+        self.assertEqual(second.birth["reported_datetime"], "2026-11-01T01:30:00-05:00")
+        self.assertNotEqual(first.ziwei, second.ziwei)
 
     def test_true_solar_adjustment_preserves_second_fold_occurrence_identity(self):
         resolution = resolve_birth_calendar(
