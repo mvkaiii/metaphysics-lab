@@ -9,9 +9,9 @@
 | Capability | Scope | Profile | Implementation | Maturity | Routing | Rule | Evidence | Promotion |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `bazi.natal_chart` | `default` | `default` | `implemented` | `experimental` | `on_demand` | `1.0-exp` | `partial` | `not_decided` |
-| `birth.input_resolution` | `default` | `default` | `implemented` | `experimental` | `on_demand` | `1.0-exp` | `partial` | `not_decided` |
+| `birth.input_resolution` | `default` | `default` | `implemented` | `experimental` | `on_demand` | `2.0-exp` | `needs_verification` | `not_decided` |
 | `birth.location_resolution` | `default` | `default` | `implemented` | `experimental` | `on_demand` | `1.0-exp` | `partial` | `not_decided` |
-| `birth.true_solar_time` | `default` | `default` | `implemented` | `experimental` | `on_demand` | `1.0-exp` | `partial` | `not_decided` |
+| `birth.true_solar_time` | `default` | `default` | `implemented` | `experimental` | `on_demand` | `1.1-exp` | `needs_verification` | `not_decided` |
 | `distribution.evidence_engine` | `default` | `default` | `implemented` | `experimental` | `on_demand` | `lin_tianji_v1.5-exp` | `partial` | `not_decided` |
 | `distribution.historical_personalization` | `default` | `default` | `implemented` | `experimental` | `on_demand` | `lin_tianji_historical_personalization_v1-exp` | `partial` | `not_decided` |
 | `distribution.interpretation_contract` | `default` | `lin_tianji_interpretation_contract_v1-exp` | `implemented` | `experimental` | `on_demand` | `lin_tianji_interpretation_contract_v1-exp` | `partial` | `not_decided` |
