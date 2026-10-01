@@ -1,7 +1,7 @@
 import hashlib,json
 from pathlib import Path
 import unittest
-from engine.distribution.manifest import capability_manifest_digest
+from tests.historical_manifest_support import historical_capability_manifest_digest
 from tools.validate_prospective_pilot_decision import pilot_start_allowed,validate_decision_receipt
 from tools.validate_pilot4_pre_candidate_gate import candidate_case_processing_allowed,validate_pilot4_pre_candidate_gate
 from tools.pilot4_structural_snapshot_enumerator import STRUCTURAL_SNAPSHOT_ENUMERATION_PROFILE,STRUCTURAL_SNAPSHOT_ENUMERATION_RULE
@@ -14,7 +14,7 @@ class Pilot4StartSealTests(unittest.TestCase):
  def test_exact_candidate_package_run_and_artifact_bound(self):
   f=self.seal["frozen_candidate"];self.assertEqual(f["candidate_commit"],"f94318651d065a3e677993fb6044518e31c7754c");self.assertEqual(f["hosted_validation_run_id"],36430731730);self.assertEqual(f["hosted_artifact_id"],10973427099);self.assertEqual(f["package_sha256"],"cb175e2d482fe9ca8e2d46d6c55c4b0237f1cbb9a631e0d3c50aef75f8e1e0c4")
  def test_capability_manifest_recomputes(self):
-  self.assertEqual(capability_manifest_digest(),"d11a63ec5194fb49939f4b02583a8bddf7bcfb0e9e7bbd9f547af1047837e7b0");self.assertEqual(capability_manifest_digest(),self.seal["frozen_candidate"]["capability_manifest_sha256"])
+  self.assertEqual(historical_capability_manifest_digest(self.seal["frozen_candidate"]["candidate_commit"]),"d11a63ec5194fb49939f4b02583a8bddf7bcfb0e9e7bbd9f547af1047837e7b0");self.assertEqual(historical_capability_manifest_digest(self.seal["frozen_candidate"]["candidate_commit"]),self.seal["frozen_candidate"]["capability_manifest_sha256"])
  def test_final_protocol_and_window_digests_recompute(self):
   self.assertEqual(hashlib.sha256(PROTOCOL.read_bytes()).hexdigest(),"9b2b5aba437a5f0d707f91194acc9a495e14b287698453cc7b74b2dff910ca02");self.assertEqual(hashlib.sha256(WINDOW.read_bytes()).hexdigest(),"175bb93452a662df969f890a38d732e7eafb5722aa35914e7d780f38c9623212")
  def test_enum01_and_agg01_digests_and_identities_bound(self):
