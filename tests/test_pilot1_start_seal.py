@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 import unittest
 
-from engine.distribution.manifest import capability_manifest_digest
+from tests.historical_manifest_support import historical_capability_manifest_digest
 from tools.validate_prospective_pilot_decision import (
     pilot_start_allowed,
     validate_decision_receipt,
@@ -39,7 +39,7 @@ class Pilot1StartSealTests(unittest.TestCase):
 
     def test_manifest_digest_is_recomputed_from_canonical_registry_truth(self):
         self.assertEqual(
-            capability_manifest_digest(),
+            historical_capability_manifest_digest(self.seal["frozen_candidate"]["candidate_commit"]),
             self.seal["frozen_candidate"]["capability_manifest_sha256"],
         )
         self.assertEqual(
