@@ -534,7 +534,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         print("capability matrix is up to date")
         return 0
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(rendered, encoding="utf-8", newline="\n")
+    output.write_bytes(rendered.encode("utf-8"))
     print("wrote capability matrix: %s" % output)
     return 0
 
