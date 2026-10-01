@@ -351,6 +351,9 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
                 "subject.prepare_astralium_references": prepare_astralium_references,
             }[action]
             return _ok(action, handler(request))
+        if action == "birth.resolve_location":
+            from .natal import resolve_birth_location
+            return _ok(action, resolve_birth_location(request))
         if action == "build_natal":
             from .natal import build_natal
             return _ok(action, build_natal(request))
