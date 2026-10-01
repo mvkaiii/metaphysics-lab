@@ -1,7 +1,7 @@
 import hashlib,json
 from pathlib import Path
 import unittest
-from engine.distribution.manifest import capability_manifest_digest
+from tests.historical_manifest_support import historical_capability_manifest_digest
 from tools.validate_prospective_pilot_decision import pilot_start_allowed,validate_decision_receipt
 from tools.validate_pilot5_pre_candidate_gate import candidate_case_processing_allowed,validate_pilot5_pre_candidate_gate
 from tools.pilot5_segment_aware_downstream_authority import SEGMENT_AWARE_WINDOW_AUTHORITY_PROFILE,SEGMENT_AWARE_WINDOW_AUTHORITY_RULE,PREDICTION_BRIDGE_RULE
@@ -13,7 +13,7 @@ class Pilot5StartSealTests(unittest.TestCase):
  def test_exact_candidate_package_run_and_artifact_bound(self):
   f=self.seal["frozen_candidate"];self.assertEqual(f["candidate_commit"],"fe6975f0dc223a27a1e885f50c9f111ee24d68d4");self.assertEqual(f["hosted_validation_run_id"],36518507992);self.assertEqual(f["hosted_artifact_id"],11011902436);self.assertEqual(f["package_sha256"],"cb175e2d482fe9ca8e2d46d6c55c4b0237f1cbb9a631e0d3c50aef75f8e1e0c4")
  def test_capability_manifest_recomputes(self):
-  self.assertEqual(capability_manifest_digest(),"d11a63ec5194fb49939f4b02583a8bddf7bcfb0e9e7bbd9f547af1047837e7b0");self.assertEqual(capability_manifest_digest(),self.seal["frozen_candidate"]["capability_manifest_sha256"])
+  self.assertEqual(historical_capability_manifest_digest(self.seal["frozen_candidate"]["candidate_commit"]),"d11a63ec5194fb49939f4b02583a8bddf7bcfb0e9e7bbd9f547af1047837e7b0");self.assertEqual(historical_capability_manifest_digest(self.seal["frozen_candidate"]["candidate_commit"]),self.seal["frozen_candidate"]["capability_manifest_sha256"])
  def test_protocol_window_and_decision_digests_recompute(self):
   f=self.seal["frozen_candidate"];self.assertEqual(hashlib.sha256(PROTOCOL.read_bytes()).hexdigest(),"9e3ba5604cf5d10efb7dc0c85a411100d847a6ca3d631bf96c307da4fea631f2");self.assertEqual(hashlib.sha256(WINDOW.read_bytes()).hexdigest(),"8db18934706ebea7554207eb98177ffe99214a235cdb2d0b15ceb3360ea87847");self.assertEqual(hashlib.sha256(ENUM.read_bytes()).hexdigest(),"356be2be3fad9e2d87d88f71372f365a4573219a9e56c81dc1f26e4c67bed6e6");self.assertEqual(hashlib.sha256(AGG.read_bytes()).hexdigest(),"07b9e8eac94a0bcebb3bca0ecdbbf36a88badc00f25e48f90b0f08be8bccf5e0");self.assertEqual(hashlib.sha256(AUTH.read_bytes()).hexdigest(),"1c3e42d00c4c2b86149457364d3e2280679d8a4a683d92349926b8a2d9c8423c")
  def test_auth01_identity_is_bound(self):
