@@ -1,0 +1,59 @@
+name: Metaphysics Lab v1.9 Development Validation
+
+on:
+  pull_request:
+    paths:
+      - 'engine/**'
+      - 'renderers/**'
+      - 'templates/**'
+      - 'tests/**'
+      - 'tools/**'
+      - 'qualification/**'
+      - 'docs/qualification/**'
+      - '.github/workflows/v19-development-validation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  birth-time-domain-foundation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Run v1.9 birth-time foundation tests
+        run: |
+          python -m unittest             tests.test_v19_birth_time_domain_foundation             tests.test_birth_input_resolution             tests.test_birth_location             tests.test_birth_time_views             tests.test_calendar_timezone             tests.test_birth_capabilities             tests.test_natal_capabilities -v
+
+      - name: Run affected governance tests
+        run: |
+          python -m unittest             tests.test_capability_qualification_matrix             tests.test_pilot1_start_seal             tests.test_pilot2_start_seal             tests.test_pilot3_start_seal             tests.test_pilot4_start_seal             tests.test_pilot5_start_seal             tests.test_pilot6_start_seal             tests.test_visualization_bazi_decadal             tests.test_visualization_svg -v
+
+      - name: Build portable AI distribution
+        run: |
+          python tools/build_ai_distribution.py
+          python tools/build_ai_distribution.py --check
+
+      - name: Upload generated distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: v19-generated-ai-distribution
+          path: dist/ai/
+          if-no-files-found: error
+          retention-days: 7
