@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date, datetime, time
 from typing import Mapping, Optional, Tuple
 
-from engine.calendar.precision import TimePrecision, assess_precision
+from engine.calendar.precision import TimePrecision
 
 from .errors import BirthFoundationError
 from .models import (
@@ -17,6 +17,7 @@ from .models import (
 
 _ALLOWED_ACTIONS = ("ask", "keep_candidates", "downgrade")
 _SUPPORTED_TARGETS = ("bazi_static", "bazi_natal", "ziwei_natal")
+_BIRTH_TIME_PRECISIONS = frozenset(("exact", "bounded", "unknown_time"))
 
 
 def _parse_date(value: object) -> date:
@@ -73,10 +74,47 @@ def _failure(
     )
 
 
-def _birth_time_precision_error(reason: Optional[str]) -> str:
-    if reason in ("ambiguous_input", "insufficient_precision"):
-        return "ambiguous_birth_time"
-    return reason or "ambiguous_birth_time"
+def _time_precision_state(payload: Mapping[str, object]) -> tuple[Optional[str], Optional[BirthInputResolution]]:
+    raw_precision = payload.get("birth_time_precision")
+    has_time = payload.get("birth_time") not in (None, "")
+    raw_range = payload.get("birth_time_range")
+    has_range = raw_range not in (None, "")
+
+    if raw_precision in (None, ""):
+        if has_time and has_range:
+            return None, _failure(error_code="invalid_birth_time_precision_state")
+        if has_time:
+            return "exact", None
+        if has_range:
+            return "bounded", None
+        return None, _failure(
+            missing_fields=("birth_time_precision",),
+            error_code="missing_required_birth_field",
+        )
+
+    if not isinstance(raw_precision, str) or raw_precision not in _BIRTH_TIME_PRECISIONS:
+        return None, _failure(error_code="invalid_birth_time_precision_state")
+
+    precision = raw_precision
+    if precision == "exact":
+        if not has_time:
+            return None, _failure(
+                missing_fields=("birth_time",),
+                error_code="missing_required_birth_field",
+            )
+        if has_range:
+            return None, _failure(error_code="invalid_birth_time_precision_state")
+    elif precision == "bounded":
+        if not has_range:
+            return None, _failure(
+                missing_fields=("birth_time_range",),
+                error_code="missing_required_birth_field",
+            )
+        if has_time:
+            return None, _failure(error_code="invalid_birth_time_precision_state")
+    elif has_time or has_range:
+        return None, _failure(error_code="invalid_birth_time_precision_state")
+    return precision, None
 
 
 def resolve_birth_input(
@@ -88,21 +126,23 @@ def resolve_birth_input(
         raise ValueError("unsupported birth input target: %s" % target)
 
     required = ["birth_date", "birth_place"]
-    if "birth_time" not in payload and "birth_time_range" not in payload:
-        required.append("birth_time")
     if target in ("bazi_natal", "ziwei_natal"):
         required.insert(0, "sex")
-
     missing = tuple(field for field in required if payload.get(field) in (None, ""))
     if missing:
         return _failure(missing_fields=missing, error_code="missing_required_birth_field")
+
+    precision_state, precision_failure = _time_precision_state(payload)
+    if precision_failure is not None:
+        return precision_failure
 
     try:
         birth_date = BirthDateInput(_parse_date(payload["birth_date"]), TimePrecision.DAY)
         birth_place = BirthPlaceInput(str(payload["birth_place"]))
         sex = _parse_sex(payload["sex"]) if payload.get("sex") is not None else None
 
-        if "birth_time_range" in payload:
+        birth_time = None
+        if precision_state == "bounded":
             raw_range = payload["birth_time_range"]
             if not isinstance(raw_range, (list, tuple)) or len(raw_range) != 2:
                 return _failure(error_code="ambiguous_birth_time")
@@ -114,14 +154,7 @@ def resolve_birth_input(
                 TimePrecision.HOUR,
                 "%s-%s" % (raw_range[0], raw_range[1]),
             )
-            precision = assess_precision(
-                TimePrecision.HOUR,
-                TimePrecision.HOUR,
-                is_unique=birth_time.is_exact,
-            )
-            if not precision.can_execute:
-                return _failure(error_code=_birth_time_precision_error(precision.reason))
-        else:
+        elif precision_state == "exact":
             parsed_time = _parse_time(payload["birth_time"])
             birth_time = BirthTimeInput(
                 parsed_time,
@@ -129,13 +162,6 @@ def resolve_birth_input(
                 TimePrecision.HOUR,
                 str(payload["birth_time"]),
             )
-            precision = assess_precision(
-                TimePrecision.HOUR,
-                TimePrecision.HOUR,
-                is_unique=True,
-            )
-            if not precision.can_execute:
-                return _failure(error_code=_birth_time_precision_error(precision.reason))
 
         birth_input = BirthInput(
             sex=sex,
