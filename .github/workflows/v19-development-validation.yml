@@ -46,11 +46,13 @@ jobs:
           python -m unittest             tests.test_capability_qualification_matrix             tests.test_pilot1_start_seal             tests.test_pilot2_start_seal             tests.test_pilot3_start_seal             tests.test_pilot4_start_seal             tests.test_pilot5_start_seal             tests.test_pilot6_start_seal             tests.test_visualization_bazi_decadal             tests.test_visualization_svg -v
 
       - name: Build portable AI distribution
+        if: always()
         run: |
           python tools/build_ai_distribution.py
           python tools/build_ai_distribution.py --check
 
       - name: Upload generated distribution
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: v19-generated-ai-distribution
