@@ -17,6 +17,7 @@ from .models import (
     combine_validation_status,
 )
 from .resolver import resolve_calendar
+from .timezone import LocalTimeOccurrence, enumerate_local_time_occurrences
 
 __all__ = [
     "PrecisionAssessment",
@@ -38,4 +39,6 @@ __all__ = [
     "ValidationMetadata",
     "combine_validation_status",
     "resolve_calendar",
+    "LocalTimeOccurrence",
+    "enumerate_local_time_occurrences",
 ]
