@@ -13,9 +13,9 @@ from engine.ziwei.capabilities import get_capability as get_ziwei_capability
 class NatalCapabilityRegistryTests(unittest.TestCase):
     def test_state_matrix_is_explicit_after_phase2c_activation(self):
         expected = {
-            "birth.input_resolution": ("implemented", "experimental", "on_demand", "1.0-exp"),
+            "birth.input_resolution": ("implemented", "experimental", "on_demand", "2.0-exp"),
             "birth.location_resolution": ("implemented", "experimental", "on_demand", "1.0-exp"),
-            "birth.true_solar_time": ("implemented", "experimental", "on_demand", "1.0-exp"),
+            "birth.true_solar_time": ("implemented", "experimental", "on_demand", "1.1-exp"),
             "bazi.natal_chart": ("implemented", "experimental", "on_demand", "1.0-exp"),
             "ziwei.natal_chart": ("implemented", "experimental", "on_demand", "1.0-exp"),
             "natal.reconciliation": ("implemented", "stable", "on_demand", "1.0"),
