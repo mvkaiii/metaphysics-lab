@@ -43,7 +43,7 @@ class BirthInputResolutionTests(unittest.TestCase):
         self.assertTrue(result.ok)
         self.assertIsNone(result.input.sex)
 
-    def test_time_range_is_not_collapsed_to_midpoint(self):
+    def test_time_range_is_preserved_as_bounded_precision(self):
         result = resolve_birth_input(
             {
                 "sex": "female",
@@ -53,9 +53,10 @@ class BirthInputResolutionTests(unittest.TestCase):
             },
             target="ziwei_natal",
         )
-        self.assertFalse(result.ok)
-        self.assertEqual(result.error_code, "ambiguous_birth_time")
-        self.assertEqual(result.allowed_actions, ("ask", "keep_candidates", "downgrade"))
+        self.assertTrue(result.ok)
+        self.assertEqual(result.birth_time_precision, "bounded")
+        self.assertEqual(result.input.birth_time.start.strftime("%H:%M"), "20:00")
+        self.assertEqual(result.input.birth_time.end.strftime("%H:%M"), "22:00")
 
     def test_invalid_target_is_rejected(self):
         with self.assertRaises(ValueError):
