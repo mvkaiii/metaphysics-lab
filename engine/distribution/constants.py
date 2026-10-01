@@ -12,6 +12,7 @@ SUPPORTED_ACTIONS = (
     "subject.registry_validate",
     "subject.rename",
     "subject.prepare_astralium_references",
+    "birth.resolve_location",
     "build_natal",
     "natal.candidate_envelope",
     "reconcile_natal",
