@@ -288,9 +288,11 @@ def build_guided_natal_state(payload: Mapping[str, object]) -> dict:
             },
         )
 
+    canonical_birth = resolution.input.to_dict()
+
     raw_location = payload.get("resolved_location")
     if raw_location is None:
-        authority = _base_authority(_birth_basis_digest(birth, None))
+        authority = _base_authority(_birth_basis_digest(canonical_birth, None))
         return _finalize(
             stage="resolve_location",
             precision=precision,
@@ -301,7 +303,7 @@ def build_guided_natal_state(payload: Mapping[str, object]) -> dict:
 
     location_model = resolved_location_from_payload(raw_location)
     location = location_model.to_dict()
-    birth_digest = _birth_basis_digest(birth, location)
+    birth_digest = _birth_basis_digest(canonical_birth, location)
     authority = _base_authority(birth_digest)
 
     local_time_resolution = None
