@@ -68,6 +68,17 @@ _CAPABILITIES = {
         "output_classification": "Case governance metadata",
         "ranking_authority": False,
     },
+    "distribution.lock_provenance": {
+        "id": "distribution.lock_provenance",
+        "implementation": "implemented",
+        "maturity": "experimental",
+        "routing": "on_demand",
+        "rule_version": "2.0-exp",
+        "module": "engine.distribution.lock_provenance",
+        "dependencies": ("distribution.case_revision_integrity",),
+        "output_classification": "Lock governance metadata",
+        "ranking_authority": False,
+    },
     "distribution.interpretation_contract": {
         "id": "distribution.interpretation_contract",
         "implementation": "implemented",
