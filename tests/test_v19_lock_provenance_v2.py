@@ -3,6 +3,7 @@ import unittest
 
 from engine.distribution.prospective import METHOD_VERSION, resolve_query_anchor
 from engine.distribution.runtime import dispatch
+from tests.test_distribution_historical_calibration import SELECTOR_RESULT, point
 
 
 LOCATION = {
@@ -245,6 +246,49 @@ class V19LockProvenanceV2Tests(unittest.TestCase):
         self.assertTrue(result["ok"], result)
         self.assertEqual(result["data"]["method_version"], METHOD_VERSION)
         self.assertNotIn("lock_provenance", result["data"])
+
+    def historical_calibration_lock(self, case_data):
+        return dispatch(
+            "lock_historical_calibration",
+            {
+                "calibration_id": "HC-v19-lock-provenance",
+                "subject_id": IDENTITY["subject_id"],
+                "selector_result": SELECTOR_RESULT,
+                "canonical_test_points": [
+                    point(2016),
+                    point(2018),
+                    point(2020),
+                    point(2023),
+                    point(2019, "control"),
+                ],
+                "supplemental_blind_points": [],
+                "locked_at": "2026-10-02T14:20:00+08:00",
+                "case_files": case_data["files"],
+                "updated_at": "2026-10-02T14:20:00+08:00",
+                "last_modified_by": "test",
+            },
+        )
+
+    def test_historical_calibration_blind_lock_on_1_3_binds_revision_provenance(self):
+        case_data = self.export("old", "1.3")
+        result = self.historical_calibration_lock(case_data)
+        self.assertTrue(result["ok"], result)
+        locked = result["data"]["locked_payload"]
+        provenance = locked["lock_provenance"]
+        self.assertEqual(provenance["profile_id"], PROFILE_ID)
+        self.assertEqual(provenance["rule_version"], RULE_VERSION)
+        self.assertEqual(provenance["subject_id"], IDENTITY["subject_id"])
+        self.assertEqual(provenance["natal_revision_id"], case_data["natal_revision_id"])
+        self.assertEqual(provenance["base_case_digest"], case_data["base_case_digest"])
+        self.assertEqual(provenance["source_slots_used"], list(BASE_SLOTS))
+        self.assertEqual(provenance["source_files_used"], self.source_names())
+        self.assertEqual(provenance["method_version"], SELECTOR_RESULT["rule_version"])
+
+    def test_historical_calibration_legacy_1_2_lock_is_not_backfilled(self):
+        legacy = self.export("old", "1.2")
+        result = self.historical_calibration_lock(legacy)
+        self.assertTrue(result["ok"], result)
+        self.assertNotIn("lock_provenance", result["data"]["locked_payload"])
 
     def test_historical_stage1_blind_lock_on_1_3_uses_same_revision_binding(self):
         case_data = self.export("old", "1.3")
