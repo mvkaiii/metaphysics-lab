@@ -136,3 +136,58 @@ def build_lock_provenance(payload: Mapping[str, object], method_version: str) ->
         "source_files_used": canonical_files,
         "method_version": method,
     }
+
+def build_lock_provenance_from_case(
+    case_files: Mapping[str, object],
+    subject_id: str,
+    method_version: str,
+) -> dict:
+    """Project a full Case to the exact 00-04 source snapshot used by a lock."""
+
+    if not isinstance(case_files, Mapping):
+        raise DistributionError(
+            "invalid_case_payload",
+            "case_files must be a structured mapping",
+        )
+    actual_by_canonical = {}
+    base_files = {}
+    for actual, content in case_files.items():
+        if not isinstance(actual, str) or not isinstance(content, str):
+            raise DistributionError(
+                "invalid_case_markdown",
+                "Case filenames and contents must be text",
+            )
+        try:
+            parsed = parse_case_filename(actual, CASE_FILES)
+        except ValueError:
+            # External reference files are not lock source slots.
+            continue
+        canonical = parsed["canonical_filename"]
+        if canonical not in BASE_CASE_FILES:
+            continue
+        if canonical in actual_by_canonical:
+            raise DistributionError(
+                "case_file_set_mismatch",
+                "lock source Case contains duplicate Base Case slots",
+                {"canonical_filename": canonical},
+            )
+        actual_by_canonical[canonical] = actual
+        base_files[actual] = content
+
+    missing = [name for name in BASE_CASE_FILES if name not in actual_by_canonical]
+    if missing:
+        raise DistributionError(
+            "case_file_set_mismatch",
+            "lock source Case must contain all Base Case slots",
+            {"missing_base": missing},
+        )
+    source_files = [actual_by_canonical[name] for name in BASE_CASE_FILES]
+    return build_lock_provenance(
+        {
+            "subject_id": subject_id,
+            "source_files_used": source_files,
+            "source_case_files": base_files,
+        },
+        method_version,
+    )
+
