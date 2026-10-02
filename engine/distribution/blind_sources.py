@@ -23,7 +23,7 @@ from .case_pack import (
     parse_front_matter,
 )
 from .case_revision import PROJECT_CONTRACT_V13, base_case_digest
-from .constants import CASE_SCHEMA_VERSION, PROJECT_CONTRACT_VERSION
+from .constants import CASE_SCHEMA_VERSION
 from .errors import DistributionError
 
 
@@ -160,7 +160,7 @@ def validate_blind_source_case(case_files: Mapping[str, object], subject_id: str
             "blind subject-aware Case schema version is not supported by this runtime",
             {"case_schema_version": schema},
         )
-    if contract not in (PROJECT_CONTRACT_VERSION, PROJECT_CONTRACT_V13):
+    if contract not in ("1.2", PROJECT_CONTRACT_V13):
         raise DistributionError(
             "case_contract_incompatible",
             "blind subject-aware Case Project Contract version is not supported by this runtime",
