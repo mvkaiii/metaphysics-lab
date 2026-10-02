@@ -360,6 +360,9 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
         if action == "natal.candidate_envelope":
             from .natal import build_candidate_natal
             return _ok(action, build_candidate_natal(request))
+        if action == "natal.guided_build_state":
+            from .guided_natal_build import build_guided_natal_state
+            return _ok(action, build_guided_natal_state(request))
         if action == "reconcile_natal":
             from .natal import reconcile_natal
             return _ok(action, reconcile_natal(request))
