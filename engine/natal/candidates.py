@@ -15,8 +15,8 @@ import re
 from datetime import date, datetime, timedelta
 from typing import Mapping, Optional
 
-from engine.bazi.capabilities import BAZI_CAPABILITIES
-from engine.birth.capabilities import BIRTH_CAPABILITIES
+from engine.bazi.capabilities import get_capability as get_bazi_capability
+from engine.birth.capabilities import get_capability as get_birth_capability
 from engine.birth.errors import BirthFoundationError
 from engine.birth.input_resolution import resolve_birth_input
 from engine.birth.models import ResolvedBirthPlace
@@ -26,7 +26,7 @@ from engine.calendar.timezone import (
     TIMEZONE_SOURCE_REVISION,
     enumerate_local_time_occurrences,
 )
-from engine.ziwei.capabilities import ZIWEI_CAPABILITIES
+from engine.ziwei.capabilities import get_capability as get_ziwei_capability
 
 from .errors import NatalFoundationError
 from .orchestration import build_project_natal
@@ -296,10 +296,10 @@ def _evaluation_identity(location: ResolvedBirthPlace) -> str:
     payload = {
         "candidate_profile": _PROFILE_ID,
         "candidate_rule_version": _RULE_VERSION,
-        "birth_input_rule_version": BIRTH_CAPABILITIES["birth.input_resolution"]["rule_version"],
-        "true_solar_rule_version": BIRTH_CAPABILITIES["birth.true_solar_time"]["rule_version"],
-        "bazi_rule_version": BAZI_CAPABILITIES["bazi.natal_chart"]["rule_version"],
-        "ziwei_rule_version": ZIWEI_CAPABILITIES["ziwei.natal_chart"]["rule_version"],
+        "birth_input_rule_version": get_birth_capability("birth.input_resolution")["rule_version"],
+        "true_solar_rule_version": get_birth_capability("birth.true_solar_time")["rule_version"],
+        "bazi_rule_version": get_bazi_capability("bazi.natal_chart")["rule_version"],
+        "ziwei_rule_version": get_ziwei_capability("ziwei.natal_chart")["rule_version"],
         "location": {
             "canonical_name": location.canonical_name,
             "latitude": location.latitude,
