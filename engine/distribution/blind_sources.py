@@ -18,9 +18,11 @@ from .case_pack import (
     _REQUIRED_FRONT_MATTER,
     _identity_from_metadata,
     _manifest_expected_line,
+    _validate_natal_revision_contract,
     canonical_case_filename,
     parse_front_matter,
 )
+from .case_revision import PROJECT_CONTRACT_V13, base_case_digest
 from .constants import CASE_SCHEMA_VERSION, PROJECT_CONTRACT_VERSION
 from .errors import DistributionError
 
@@ -84,6 +86,7 @@ def validate_blind_source_case(case_files: Mapping[str, object], subject_id: str
 
     versions = set()
     contracts = set()
+    metadata_by_canonical = {}
     subject = None
     identity = None
     display_name = None
@@ -91,6 +94,7 @@ def validate_blind_source_case(case_files: Mapping[str, object], subject_id: str
 
     for canonical in BASE_CASE_FILES:
         metadata, _ = parse_front_matter(files[canonical])
+        metadata_by_canonical[canonical] = metadata
         missing_meta = [key for key in _REQUIRED_FRONT_MATTER if key not in metadata]
         if missing_meta:
             raise DistributionError(
@@ -156,7 +160,7 @@ def validate_blind_source_case(case_files: Mapping[str, object], subject_id: str
             "blind subject-aware Case schema version is not supported by this runtime",
             {"case_schema_version": schema},
         )
-    if contract != PROJECT_CONTRACT_VERSION:
+    if contract not in (PROJECT_CONTRACT_VERSION, PROJECT_CONTRACT_V13):
         raise DistributionError(
             "case_contract_incompatible",
             "blind subject-aware Case Project Contract version is not supported by this runtime",
@@ -200,7 +204,8 @@ def validate_blind_source_case(case_files: Mapping[str, object], subject_id: str
             )
         progressive_state[canonical] = present
 
-    return {
+    revision = _validate_natal_revision_contract(metadata_by_canonical, contract)
+    result = {
         "status": "compatible",
         "subject_id": identity["subject_id"],
         "subject_display_name": display_name,
@@ -211,3 +216,9 @@ def validate_blind_source_case(case_files: Mapping[str, object], subject_id: str
         "canonical_slots": list(BASE_CASE_FILES),
         "manifest_progressive_state": progressive_state,
     }
+    if revision is not None:
+        result.update({
+            "natal_revision_id": revision,
+            "base_case_digest": base_case_digest(case_files),
+        })
+    return result
