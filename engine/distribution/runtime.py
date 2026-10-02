@@ -432,6 +432,13 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
             from .case_pack import migrate_case, update_case_record, validate_case
             handler = {"validate_case": validate_case, "migrate_case": migrate_case, "update_case_record": update_case_record}[action]
             return _ok(action, handler(request))
+        if action in ("case.base_digest", "case.replace_natal_base"):
+            from .case_revision import build_base_case_digest, replace_natal_base
+            handler = {
+                "case.base_digest": build_base_case_digest,
+                "case.replace_natal_base": replace_natal_base,
+            }[action]
+            return _ok(action, handler(request))
     except DistributionError as exc:
         return _error(action, exc.code, str(exc), exc.details)
     return _error(action, "unsupported_action", "unsupported distribution runtime action", {"supported_actions": list(SUPPORTED_ACTIONS)})
