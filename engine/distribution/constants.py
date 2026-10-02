@@ -15,6 +15,7 @@ SUPPORTED_ACTIONS = (
     "birth.resolve_location",
     "build_natal",
     "natal.candidate_envelope",
+    "natal.guided_build_state",
     "reconcile_natal",
     "render_bazi_decadal_timeline",
     "resolve_forecast_context",
