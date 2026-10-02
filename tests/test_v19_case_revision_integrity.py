@@ -252,7 +252,7 @@ class V19CaseRevisionIntegrityTests(unittest.TestCase):
         )
 
     def test_safe_replacement_upgrades_legacy_1_2_and_preserves_05_08_exact_bytes(self):
-        legacy = self.export_full("old")
+        legacy = self.export_full("old", contract="1.2")
         self.assertEqual(legacy["project_contract_version"], "1.2")
         files = self.append_tracking(legacy["files"])
         tracking_before = {actual(slot): files[actual(slot)] for slot in TRACKING_SLOTS}
