@@ -16,6 +16,8 @@ from .case_identity import parse_case_filename
 from .case_pack import BASE_CASE_FILES, CASE_FILES, set_case_calibration_status, update_case_record
 from .errors import DistributionError
 from .historical_lock_authority import load_historical_lock, persist_historical_lock
+from .lock_provenance import build_lock_provenance
+from .prospective import METHOD_VERSION
 
 
 _VERIFICATION_STATES = frozenset(("matched", "partial", "not_matched", "cannot_recall"))
@@ -47,13 +49,14 @@ def canonical_digest(value: object) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
-def _canonical_case_sources(sources, subject_id=None, source_case_files=None) -> Tuple[list, list]:
+def _canonical_case_sources(sources, subject_id=None, source_case_files=None) -> Tuple[list, list, Optional[dict]]:
     if not isinstance(sources, (list, tuple)):
         raise DistributionError("blind_source_violation", "source_files_used must be a list of Case files")
     canonical = []
     actual = []
     subject_short_ids = set()
     legacy_count = 0
+    source_validation = None
     for source in sources:
         if not isinstance(source, str):
             raise DistributionError("blind_source_violation", "source_files_used entries must be text")
@@ -97,14 +100,14 @@ def _canonical_case_sources(sources, subject_id=None, source_case_files=None) ->
                 {"actual_sources": actual, "provided_sources": sorted(str(key) for key in source_case_files)},
             )
         resolved_subject = str(subject_id or "")
-        validation = validate_blind_source_case(source_case_files, resolved_subject)
-        if validation.get("subject_id") != resolved_subject:
+        source_validation = validate_blind_source_case(source_case_files, resolved_subject)
+        if source_validation.get("subject_id") != resolved_subject:
             raise DistributionError(
                 "blind_source_violation",
                 "subject-aware blind sources must match the full payload subject_id",
-                {"subject_id": resolved_subject, "source_subject_id": validation.get("subject_id"), "actual_sources": actual},
+                {"subject_id": resolved_subject, "source_subject_id": source_validation.get("subject_id"), "actual_sources": actual},
             )
-    return canonical, actual
+    return canonical, actual, source_validation
 
 
 def _actual_case_filename(case_files: Mapping[str, object], canonical: str) -> str:
@@ -130,7 +133,7 @@ def _actual_case_filename(case_files: Mapping[str, object], canonical: str) -> s
 def lock_blind_forecast(payload: Mapping[str, object]) -> dict:
     payload = _mapping(payload, "payload")
     subject_id = _text(payload.get("subject_id"), "subject_id")
-    canonical_sources, actual_sources = _canonical_case_sources(
+    canonical_sources, actual_sources, source_validation = _canonical_case_sources(
         payload.get("source_files_used"), subject_id, payload.get("source_case_files")
     )
     if len(canonical_sources) != len(BASE_CASE_FILES) or set(canonical_sources) != set(BASE_CASE_FILES):
@@ -156,6 +159,18 @@ def lock_blind_forecast(payload: Mapping[str, object]) -> dict:
         "forbidden_source_slots": list(CASE_FILES[5:]),
         "blind_forecast_payload": _jsonable(_mapping(payload.get("blind_forecast_payload"), "blind_forecast_payload")),
     }
+    if isinstance(source_validation, Mapping) and source_validation.get("project_contract_version") == "1.3":
+        provenance = build_lock_provenance(
+            {
+                "subject_id": subject_id,
+                "source_files_used": actual_sources,
+                "source_case_files": payload.get("source_case_files"),
+            },
+            METHOD_VERSION,
+        )
+        locked["source_files_used"] = list(provenance["source_files_used"])
+        locked["method_version"] = METHOD_VERSION
+        locked["lock_provenance"] = provenance
     return {"locked_payload": locked, "payload_digest": canonical_digest(locked)}
 
 
