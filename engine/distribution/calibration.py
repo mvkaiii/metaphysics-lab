@@ -13,10 +13,10 @@ from engine.historical.selection_integrity import verify_selection_result
 
 from .blind_sources import validate_blind_source_case
 from .case_identity import parse_case_filename
-from .case_pack import BASE_CASE_FILES, CASE_FILES, set_case_calibration_status, update_case_record
+from .case_pack import BASE_CASE_FILES, CASE_FILES, set_case_calibration_status, update_case_record, validate_case
 from .errors import DistributionError
 from .historical_lock_authority import load_historical_lock, persist_historical_lock
-from .lock_provenance import build_lock_provenance
+from .lock_provenance import build_lock_provenance, build_lock_provenance_from_case
 from .prospective import METHOD_VERSION
 
 
@@ -318,13 +318,22 @@ def lock_historical_calibration(payload: Mapping[str, object]) -> dict:
         "canonical_test_points": normalized,
         "supplemental_blind_points": normalized_supplemental,
     }
+    case_files = payload.get("case_files")
+    if case_files is not None:
+        case_validation = validate_case({"case_files": case_files})
+        if case_validation.get("project_contract_version") == "1.3":
+            locked["lock_provenance"] = build_lock_provenance_from_case(
+                case_files,
+                locked["subject_id"],
+                _text(selector.get("rule_version"), "selector_rule_version"),
+            )
+
     digest = canonical_digest(locked)
     result = {
         "canonical_selection_digest": selection_digest,
         "locked_payload": locked,
         "payload_digest": digest,
     }
-    case_files = payload.get("case_files")
     if case_files is not None:
         persisted = persist_historical_lock(
             case_files,
