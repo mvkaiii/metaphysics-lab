@@ -36,6 +36,8 @@ SUPPORTED_ACTIONS = (
     "diagnose_case",
     "plan_case_reconciliation",
     "validate_case",
+    "case.base_digest",
+    "case.replace_natal_base",
     "migrate_case",
     "update_case_record",
 )

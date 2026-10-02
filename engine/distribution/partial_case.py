@@ -21,6 +21,7 @@ from . import natal as distribution_natal
 from .case_pack import (
     BASE_CASE_FILES,
     CASE_FILES,
+    _export_project_contract_version,
     _identity_from_payload,
     _manifest_expected_line,
     _metadata,
@@ -28,6 +29,12 @@ from .case_pack import (
     _text,
     _timestamp,
     canonical_case_filename,
+)
+from .case_revision import (
+    NATAL_REVISION_PROFILE,
+    PROJECT_CONTRACT_V13,
+    base_case_digest,
+    natal_revision_id,
 )
 from .errors import DistributionError
 
@@ -397,12 +404,20 @@ def _validate_builder_authority(payload: Mapping[str, object], envelope: Mapping
         )
 
 
-def _index_body(identity: Mapping[str, str], envelope: Mapping[str, object]) -> str:
+def _index_body(
+    identity: Mapping[str, str],
+    envelope: Mapping[str, object],
+    natal_revision: str = None,
+) -> str:
     lines = [
         "# %s｜Metaphysics Lab Case｜專案索引" % identity["subject_display_name"],
         "",
         "- 命主：%s" % identity["subject_display_name"],
         "- Subject ID: `%s`" % identity["subject_id"],
+        *(
+            ["- Natal Revision ID: `%s`" % natal_revision]
+            if natal_revision is not None else []
+        ),
         "- Case lifecycle: `progressive`",
         "- Natal Status: `partial`",
         "- Birth Time Status: `%s`" % envelope["natal_precision_state"],
@@ -440,7 +455,11 @@ def _index_body(identity: Mapping[str, str], envelope: Mapping[str, object]) -> 
     return "\n".join(lines)
 
 
-def _core_body(identity: Mapping[str, str], envelope: Mapping[str, object]) -> str:
+def _core_body(
+    identity: Mapping[str, str],
+    envelope: Mapping[str, object],
+    natal_revision: str = None,
+) -> str:
     known = envelope.get("known_facts", {})
     invariant = {
         "bazi": envelope.get("invariant_bazi_facts", {}),
@@ -454,6 +473,10 @@ def _core_body(identity: Mapping[str, str], envelope: Mapping[str, object]) -> s
         "# %s｜命盤核心摘要" % identity["subject_display_name"], "",
         "- 命主：%s" % identity["subject_display_name"],
         "- Subject ID: `%s`" % identity["subject_id"],
+        *(
+            ["- Natal Revision ID: `%s`" % natal_revision]
+            if natal_revision is not None else []
+        ),
         "- Natal Status: `partial`",
         "- Birth Time Status: `%s`" % envelope["natal_precision_state"],
         "- Candidate Count: `%s`" % envelope["candidate_count"],
@@ -545,9 +568,14 @@ def export_partial_case_markdown(payload: Mapping[str, object]) -> dict:
     identity = _identity_from_payload(payload)
     generated_at = _timestamp(payload.get("generated_at"), "generated_at")
     modified_by = _text(payload.get("last_modified_by", "ai"), "last_modified_by")
+    contract = _export_project_contract_version(payload)
+    revision = (
+        natal_revision_id("candidate_envelope", envelope)
+        if contract == PROJECT_CONTRACT_V13 else None
+    )
     bodies = {
-        "00_專案索引.md": _index_body(identity, envelope),
-        "01_命盤核心摘要.md": _core_body(identity, envelope),
+        "00_專案索引.md": _index_body(identity, envelope, revision),
+        "01_命盤核心摘要.md": _core_body(identity, envelope, revision),
         "02_命盤資料校驗紀錄.md": _calibration_body(identity, envelope),
         "03_八字結構化資料包.md": _bazi_body(identity, envelope),
         "04_紫微基礎資料包.md": _ziwei_body(identity, envelope),
@@ -557,13 +585,29 @@ def export_partial_case_markdown(payload: Mapping[str, object]) -> dict:
         actual = canonical_case_filename(identity, canonical)
         files[actual] = _render_case_file(
             canonical,
-            _metadata(canonical, identity, generated_at, modified_by),
+            _metadata(
+                canonical,
+                identity,
+                generated_at,
+                modified_by,
+                project_contract_version=contract,
+                natal_revision=revision,
+            ),
             bodies[canonical],
         )
-    return {
+    result = {
         "subject_id": identity["subject_id"],
         "subject": identity,
         "natal_status": "partial",
         "candidate_envelope_profile": envelope.get("profile_id"),
+        "project_contract_version": contract,
         "files": files,
     }
+    if revision is not None:
+        result.update({
+            "natal_revision_profile": NATAL_REVISION_PROFILE,
+            "natal_revision_id": revision,
+            "base_case_digest": base_case_digest(files),
+        })
+    return result
+
