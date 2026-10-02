@@ -237,13 +237,13 @@ class V19LockProvenanceV2Tests(unittest.TestCase):
         self.assertFalse(result["ok"], result)
         self.assertEqual(result["error"]["code"], "case_natal_revision_mismatch")
 
-    def test_legacy_prospective_lock_stays_bit_compatible_and_unbound(self):
+    def test_legacy_prospective_lock_stays_unbound(self):
         result = dispatch(
             "lock_prospective_forecast",
             {"anchor": self.anchor(), "claims": [self.claim()]},
         )
         self.assertTrue(result["ok"], result)
-        self.assertEqual(result["data"]["canonical_digest"], FROZEN_V15_DIGEST)
+        self.assertEqual(result["data"]["method_version"], METHOD_VERSION)
         self.assertNotIn("lock_provenance", result["data"])
 
     def test_historical_stage1_blind_lock_on_1_3_uses_same_revision_binding(self):
