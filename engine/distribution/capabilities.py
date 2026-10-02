@@ -57,6 +57,17 @@ _CAPABILITIES = {
         "output_classification": "Historical personalization metadata",
         "ranking_authority": False,
     },
+    "distribution.case_revision_integrity": {
+        "id": "distribution.case_revision_integrity",
+        "implementation": "implemented",
+        "maturity": "experimental",
+        "routing": "on_demand",
+        "rule_version": "case-revision-v1-exp",
+        "module": "engine.distribution.case_revision",
+        "dependencies": (),
+        "output_classification": "Case governance metadata",
+        "ranking_authority": False,
+    },
     "distribution.interpretation_contract": {
         "id": "distribution.interpretation_contract",
         "implementation": "implemented",
