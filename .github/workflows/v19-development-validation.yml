@@ -43,6 +43,7 @@ jobs:
           tests.test_v19_birth_time_domain_foundation
           tests.test_v19_candidate_envelope_v2
           tests.test_v19_case_revision_integrity
+          tests.test_v19_lock_provenance_v2
           tests.test_birth_input_resolution
           tests.test_birth_location
           tests.test_birth_time_views
