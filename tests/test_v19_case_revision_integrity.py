@@ -1,4 +1,3 @@
-import copy
 import unittest
 
 from engine.distribution.case_pack import parse_front_matter
@@ -275,6 +274,47 @@ class V19CaseRevisionIntegrityTests(unittest.TestCase):
         self.assertIn("Natal Revision Lineage", data["case_files"][actual("02_命盤資料校驗紀錄.md")])
         self.assertEqual(data["revision_lineage"][-1]["previous_revision_authority"], "legacy_unbound")
         self.assertEqual(data["validation"]["status"], "compatible")
+
+    def test_replaced_1_3_base_remains_appendable_with_preserved_1_2_tracking(self):
+        legacy = self.append_tracking(self.export_full("old")["files"])
+        replaced = self.replace(legacy, "new")
+        self.assertTrue(replaced["ok"], replaced)
+
+        before_digest = dispatch(
+            "case.base_digest",
+            {"case_files": replaced["data"]["case_files"]},
+        )
+        self.assertTrue(before_digest["ok"], before_digest)
+
+        appended = dispatch(
+            "update_case_record",
+            {
+                "case_files": replaced["data"]["case_files"],
+                "filename": "05_驗證事件紀錄.md",
+                "operation": "append",
+                "updated_at": "2026-10-02T12:30:00+08:00",
+                "last_modified_by": "test",
+                "entry": {
+                    "record_id": "evt-revision-post-upgrade-001",
+                    "status": "verified",
+                    "summary": "post-upgrade synthetic verified event",
+                },
+            },
+        )
+        self.assertTrue(appended["ok"], appended)
+
+        merged = dict(replaced["data"]["case_files"])
+        merged.update(appended["data"]["changed_files"])
+        validated = dispatch("validate_case", {"case_files": merged})
+        self.assertTrue(validated["ok"], validated)
+        self.assertEqual(validated["data"]["project_contract_version"], "1.3")
+
+        after_digest = dispatch("case.base_digest", {"case_files": merged})
+        self.assertTrue(after_digest["ok"], after_digest)
+        self.assertEqual(
+            after_digest["data"]["base_case_digest"],
+            before_digest["data"]["base_case_digest"],
+        )
 
     def test_second_material_revision_accumulates_lineage_and_same_revision_is_idempotent(self):
         files = self.append_tracking(self.export_full("old", contract="1.3")["files"])
