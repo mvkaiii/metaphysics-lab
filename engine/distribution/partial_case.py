@@ -13,7 +13,6 @@ from datetime import date
 from typing import Mapping
 
 from engine.natal.candidates import (
-    build_candidate_envelope_v1_legacy,
     classify_candidate_applicability,
     classify_candidate_facts,
 )
@@ -375,14 +374,12 @@ def _validate_builder_authority(payload: Mapping[str, object], envelope: Mapping
         )
     try:
         birth_basis = _canonical_birth_basis(envelope)
-        if envelope.get("profile_id") == "natal-candidate-envelope-v1":
-            canonical = build_candidate_envelope_v1_legacy(birth_basis, location)
-        else:
-            rebuilt = distribution_natal.build_candidate_natal({
-                "birth": birth_basis,
-                "resolved_location": raw_location,
-            })
-            canonical = rebuilt.get("candidate_envelope")
+        rebuilt = distribution_natal.build_candidate_natal({
+            "birth": birth_basis,
+            "resolved_location": raw_location,
+            "candidate_profile": envelope.get("profile_id"),
+        })
+        canonical = rebuilt.get("candidate_envelope")
     except (DistributionError, Exception) as exc:
         if isinstance(exc, DistributionError):
             cause = exc.code
