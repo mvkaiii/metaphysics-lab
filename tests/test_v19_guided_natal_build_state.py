@@ -293,6 +293,22 @@ class V19GuidedNatalBuildStateTests(unittest.TestCase):
         self.assertTrue(changed["ok"], changed)
         self.assertNotEqual(first["data"]["state_digest"], changed["data"]["state_digest"])
 
+    def test_case_subject_identity_must_match_current_subject_metadata(self):
+        exported = self.export_case(self.normalized["old"], "1.3")
+        renamed_subject = dict(IDENTITY)
+        renamed_subject["subject_display_name"] = "Kai Renamed"
+        renamed_subject["filename_label"] = "Kai-Renamed"
+
+        result = self.state(
+            birth=exact_birth(),
+            resolved_location=TAIPEI,
+            normalized_natal=self.normalized["old"],
+            subject=renamed_subject,
+            case_files=exported["files"],
+        )
+        self.assertFalse(result["ok"], result)
+        self.assertEqual(result["error"]["code"], "guided_natal_case_subject_mismatch")
+
     def test_semantically_equivalent_complete_birth_forms_share_one_state_digest(self):
         explicit = self.state(
             birth=exact_birth(),
