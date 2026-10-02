@@ -218,9 +218,38 @@ class V19CaseRevisionIntegrityTests(unittest.TestCase):
         with_tracking = self.append_tracking(exported["files"])
         tracked_digest = dispatch("case.base_digest", {"case_files": with_tracking})
         self.assertTrue(tracked_digest["ok"], tracked_digest)
-        self.assertEqual(
+        # First materialization of 05-08 updates 00's manifest. Since the digest
+        # binds exact 00-04 bytes, that manifest change must change the digest.
+        self.assertNotEqual(
             tracked_digest["data"]["base_case_digest"],
             first["data"]["base_case_digest"],
+        )
+
+        # Once the slot is already materialized, a pure append to 05 changes no
+        # 00-04 byte and therefore must not change the Base Case digest.
+        second_event = dispatch(
+            "update_case_record",
+            {
+                "case_files": with_tracking,
+                "filename": "05_驗證事件紀錄.md",
+                "operation": "append",
+                "updated_at": "2026-10-02T10:30:00+08:00",
+                "last_modified_by": "test",
+                "entry": {
+                    "record_id": "evt-revision-002",
+                    "status": "verified",
+                    "summary": "second synthetic verified event",
+                },
+            },
+        )
+        self.assertTrue(second_event["ok"], second_event)
+        after_append = dict(with_tracking)
+        after_append.update(second_event["data"]["changed_files"])
+        after_append_digest = dispatch("case.base_digest", {"case_files": after_append})
+        self.assertTrue(after_append_digest["ok"], after_append_digest)
+        self.assertEqual(
+            after_append_digest["data"]["base_case_digest"],
+            tracked_digest["data"]["base_case_digest"],
         )
 
     def test_safe_replacement_upgrades_legacy_1_2_and_preserves_05_08_exact_bytes(self):
