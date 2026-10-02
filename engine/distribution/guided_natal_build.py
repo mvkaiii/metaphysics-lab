@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime
 from typing import Mapping, Optional
 
 from engine.birth.input_resolution import resolve_birth_input
@@ -398,14 +397,26 @@ def build_guided_natal_state(payload: Mapping[str, object]) -> dict:
         )
 
     case_validation = validate_case({"case_files": case_files})
-    case_subject = case_validation.get("subject_id")
-    if case_subject != subject["subject_id"]:
+    case_identity = case_validation.get("subject")
+    identity_fields = (
+        "subject_id",
+        "subject_display_name",
+        "subject_short_id",
+        "filename_label",
+    )
+    expected_identity = {field: subject.get(field) for field in identity_fields}
+    actual_identity = (
+        {field: case_identity.get(field) for field in identity_fields}
+        if isinstance(case_identity, Mapping)
+        else None
+    )
+    if actual_identity != expected_identity:
         raise DistributionError(
             "guided_natal_case_subject_mismatch",
-            "Case authority belongs to a different subject",
+            "Case authority identity does not match the current subject identity",
             {
-                "subject_id": subject["subject_id"],
-                "case_subject_id": case_subject,
+                "subject": expected_identity,
+                "case_subject": actual_identity,
             },
         )
 
