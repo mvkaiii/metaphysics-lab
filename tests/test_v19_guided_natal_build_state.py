@@ -293,6 +293,28 @@ class V19GuidedNatalBuildStateTests(unittest.TestCase):
         self.assertTrue(changed["ok"], changed)
         self.assertNotEqual(first["data"]["state_digest"], changed["data"]["state_digest"])
 
+    def test_semantically_equivalent_complete_birth_forms_share_one_state_digest(self):
+        explicit = self.state(
+            birth=exact_birth(),
+            resolved_location=TAIPEI,
+        )
+        inferred_birth = exact_birth()
+        inferred_birth.pop("birth_time_precision")
+        inferred = self.state(
+            birth=inferred_birth,
+            resolved_location=TAIPEI,
+        )
+        explicit_calendar = exact_birth()
+        explicit_calendar["calendar_kind"] = "gregorian"
+        with_calendar = self.state(
+            birth=explicit_calendar,
+            resolved_location=TAIPEI,
+        )
+
+        self.assertTrue(explicit["ok"], explicit)
+        self.assertEqual(explicit, inferred)
+        self.assertEqual(explicit, with_calendar)
+
     def test_fixed_state_contract_rejects_unknown_top_level_fields(self):
         result = self.state(birth=exact_birth(), invented_memory="do not trust me")
         self.assertFalse(result["ok"], result)
