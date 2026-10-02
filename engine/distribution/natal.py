@@ -12,7 +12,7 @@ from typing import Mapping, Optional
 from engine.birth.errors import BirthFoundationError
 from engine.birth.models import BirthPlaceInput, ResolvedBirthPlace
 from engine.birth.offline_registry import resolve_offline_birth_place
-from engine.natal.candidates import build_candidate_envelope
+from engine.natal.candidates import build_candidate_envelope, build_candidate_envelope_v1_legacy
 from engine.natal.errors import NatalFoundationError
 from engine.natal.external import import_external_natal
 from engine.natal.models import NatalSource, ProjectNatalView
@@ -196,8 +196,18 @@ def build_candidate_natal(payload: Mapping[str, object]) -> dict:
             {"required_fields": list(_REQUIRED_LOCATION_FIELDS)},
         )
     location = resolved_location_from_payload(raw_location)
+    candidate_profile = payload.get("candidate_profile", "natal-candidate-envelope-v2")
+    if candidate_profile not in ("natal-candidate-envelope-v1", "natal-candidate-envelope-v2"):
+        raise DistributionError(
+            "unsupported_candidate_profile",
+            "candidate_profile is not supported",
+            {"candidate_profile": candidate_profile},
+        )
     try:
-        envelope = build_candidate_envelope(birth_payload, location)
+        if candidate_profile == "natal-candidate-envelope-v1":
+            envelope = build_candidate_envelope_v1_legacy(birth_payload, location)
+        else:
+            envelope = build_candidate_envelope(birth_payload, location)
     except (NatalFoundationError, BirthFoundationError) as exc:
         raise _foundation_error(exc) from exc
     return {"resolved_location": location.to_dict(), "candidate_envelope": envelope}

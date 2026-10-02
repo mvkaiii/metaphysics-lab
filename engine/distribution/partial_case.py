@@ -12,7 +12,10 @@ import re
 from datetime import date
 from typing import Mapping
 
-from engine.natal.candidates import classify_candidate_facts
+from engine.natal.candidates import (
+    classify_candidate_applicability,
+    classify_candidate_facts,
+)
 
 from . import natal as distribution_natal
 from .case_pack import (
@@ -126,21 +129,51 @@ def _validate_known_facts(known: Mapping[str, object]) -> None:
 
 def _validate_envelope(value: object) -> dict:
     raw = dict(_mapping(value, "candidate_envelope"))
-    precision = raw.get("natal_precision_state")
-    if precision not in ("bounded", "unknown_time"):
+    profile_id = raw.get("profile_id")
+    rule_version = raw.get("rule_version")
+    is_v1 = profile_id == "natal-candidate-envelope-v1" and rule_version == "1.0-exp"
+    is_v2 = profile_id == "natal-candidate-envelope-v2" and rule_version == "2.0-exp"
+    if not (is_v1 or is_v2):
         raise DistributionError(
             "invalid_candidate_envelope",
-            "partial Case requires a bounded or unknown_time candidate envelope",
+            "partial Case requires a supported Candidate Envelope profile",
+            {"profile_id": profile_id, "rule_version": rule_version},
+        )
+
+    precision = raw.get("natal_precision_state")
+    if is_v1 and precision not in ("bounded", "unknown_time"):
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "legacy partial Case requires a bounded or unknown_time candidate envelope",
             {"natal_precision_state": precision},
+        )
+    if is_v2 and precision not in ("exact", "bounded", "unknown_time"):
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "v2 partial Case requires exact, bounded, or unknown_time precision",
+            {"natal_precision_state": precision},
+        )
+    if is_v2 and precision == "exact" and raw.get("local_time_resolution") != "ambiguous_fold":
+        raise DistributionError(
+            "invalid_candidate_envelope",
+            "exact Candidate Envelope can persist as partial only for an ambiguous local-time fold",
+            {"local_time_resolution": raw.get("local_time_resolution")},
         )
     candidate_count = raw.get("candidate_count")
     candidates = raw.get("candidates")
     if type(candidate_count) is not int or candidate_count < 1 or not isinstance(candidates, list) or len(candidates) != candidate_count:
         raise DistributionError("invalid_candidate_envelope", "candidate_count must be a true integer matching the candidate list")
-    for field in (
+    required_mappings = [
         "known_facts", "invariant_bazi_facts", "variant_bazi_facts",
         "invariant_ziwei_facts", "variant_ziwei_facts", "provenance",
-    ):
+    ]
+    if is_v2:
+        required_mappings.extend([
+            "candidate_domain", "candidate_coverage",
+            "undetermined_bazi_facts", "unavailable_bazi_facts",
+            "undetermined_ziwei_facts", "unavailable_ziwei_facts",
+        ])
+    for field in required_mappings:
         if not isinstance(raw.get(field), Mapping):
             raise DistributionError("invalid_candidate_envelope", "%s must be a mapping" % field, {"field": field})
     known = raw["known_facts"]
@@ -152,10 +185,10 @@ def _validate_envelope(value: object) -> dict:
             "reported_birth_time must be valid HH:MM text or null",
             {"reported_birth_time": reported_time},
         )
-    if reported_time is not None:
+    if reported_time is not None and not (is_v2 and precision == "exact"):
         raise DistributionError(
             "invalid_candidate_envelope",
-            "partial Case cannot claim one exact reported birth time",
+            "partial Case cannot claim one exact reported birth time outside the v2 fold route",
             {"reported_birth_time": reported_time},
         )
     reported_range = known.get("reported_birth_time_range")
@@ -170,7 +203,7 @@ def _validate_envelope(value: object) -> dict:
         if _time_minutes(reported_range[1]) < _time_minutes(reported_range[0]):
             raise DistributionError(
                 "invalid_candidate_envelope",
-                "reported_birth_time_range cannot cross the civil-date boundary in v1",
+                "reported_birth_time_range cannot cross the civil-date boundary",
             )
     if precision == "unknown_time" and reported_range is not None:
         raise DistributionError(
@@ -182,6 +215,65 @@ def _validate_envelope(value: object) -> dict:
             "invalid_candidate_envelope",
             "bounded candidate envelope requires a two-value reported birth-time range",
         )
+    if is_v2:
+        domain = raw["candidate_domain"]
+        coverage = raw["candidate_coverage"]
+        if domain.get("status") != "ready":
+            raise DistributionError(
+                "invalid_candidate_envelope",
+                "canonical partial Case requires a ready Candidate Domain",
+                {"domain_status": domain.get("status")},
+            )
+        if coverage.get("status") != "complete":
+            raise DistributionError(
+                "invalid_candidate_envelope",
+                "v1.9 P0 does not persist incomplete Candidate Envelope coverage",
+                {"coverage_status": coverage.get("status")},
+            )
+        for field in (
+            "legal_occurrence_count",
+            "materialized_occurrence_count",
+            "unresolved_occurrence_count",
+            "material_state_count",
+        ):
+            if type(coverage.get(field)) is not int or coverage.get(field) < 0:
+                raise DistributionError(
+                    "invalid_candidate_envelope",
+                    "candidate coverage count must be a non-negative integer",
+                    {"field": field},
+                )
+        if coverage["legal_occurrence_count"] < 1:
+            raise DistributionError(
+                "invalid_candidate_envelope",
+                "complete Candidate Envelope coverage requires at least one legal occurrence",
+            )
+        if coverage["materialized_occurrence_count"] != coverage["legal_occurrence_count"]:
+            raise DistributionError(
+                "invalid_candidate_envelope",
+                "complete coverage must materialize every legal occurrence",
+            )
+        if coverage["unresolved_occurrence_count"] != 0:
+            raise DistributionError(
+                "invalid_candidate_envelope",
+                "complete coverage cannot contain unresolved legal occurrences",
+            )
+        if coverage["material_state_count"] != candidate_count:
+            raise DistributionError(
+                "invalid_candidate_envelope",
+                "material_state_count must match candidate_count",
+            )
+        components = coverage.get("components")
+        if not isinstance(components, Mapping):
+            raise DistributionError("invalid_candidate_envelope", "candidate coverage components must be a mapping")
+        for component in ("bazi", "ziwei"):
+            item = components.get(component)
+            if not isinstance(item, Mapping) or item.get("status") != "complete":
+                raise DistributionError(
+                    "invalid_candidate_envelope",
+                    "canonical partial Case requires complete component coverage",
+                    {"component": component},
+                )
+
     for field in ("allowed_analysis", "blocked_analysis", "boundary_ambiguities"):
         if not isinstance(raw.get(field), list):
             raise DistributionError("invalid_candidate_envelope", "%s must be a list" % field, {"field": field})
@@ -213,13 +305,27 @@ def _validate_envelope(value: object) -> dict:
     if any(not isinstance(item, Mapping) for item in candidates):
         raise DistributionError("invalid_candidate_envelope", "candidate entries must be structured mappings")
     try:
-        classified = classify_candidate_facts(candidates)
+        if is_v1:
+            classified = classify_candidate_facts(candidates)
+            classification_fields = (
+                "invariant_bazi_facts", "variant_bazi_facts",
+                "invariant_ziwei_facts", "variant_ziwei_facts",
+            )
+        else:
+            classified = classify_candidate_applicability(
+                candidates,
+                bazi_coverage_complete=True,
+                ziwei_coverage_complete=True,
+            )
+            classification_fields = (
+                "invariant_bazi_facts", "variant_bazi_facts",
+                "undetermined_bazi_facts", "unavailable_bazi_facts",
+                "invariant_ziwei_facts", "variant_ziwei_facts",
+                "undetermined_ziwei_facts", "unavailable_ziwei_facts",
+            )
     except (KeyError, TypeError, ValueError) as exc:
         raise DistributionError("invalid_candidate_envelope", "candidate facts cannot be classified") from exc
-    for field in (
-        "invariant_bazi_facts", "variant_bazi_facts",
-        "invariant_ziwei_facts", "variant_ziwei_facts",
-    ):
+    for field in classification_fields:
         if not _json_semantically_equal(raw[field], classified[field]):
             raise DistributionError(
                 "invalid_candidate_envelope",
@@ -231,12 +337,16 @@ def _validate_envelope(value: object) -> dict:
 
 def _canonical_birth_basis(envelope: Mapping[str, object]) -> dict:
     known = envelope["known_facts"]
+    precision = envelope["natal_precision_state"]
     birth = {
         "sex": known.get("sex"),
         "birth_date": known.get("birth_date"),
         "birth_place": known.get("birth_place"),
+        "birth_time_precision": precision,
     }
-    if envelope["natal_precision_state"] == "bounded":
+    if precision == "exact":
+        birth["birth_time"] = known.get("reported_birth_time")
+    elif precision == "bounded":
         birth["birth_time_range"] = list(known["reported_birth_time_range"])
     return birth
 
@@ -263,17 +373,23 @@ def _validate_builder_authority(payload: Mapping[str, object], envelope: Mapping
             "candidate known facts do not match resolved_location authority",
         )
     try:
+        birth_basis = _canonical_birth_basis(envelope)
         rebuilt = distribution_natal.build_candidate_natal({
-            "birth": _canonical_birth_basis(envelope),
+            "birth": birth_basis,
             "resolved_location": raw_location,
+            "candidate_profile": envelope.get("profile_id"),
         })
-    except DistributionError as exc:
+        canonical = rebuilt.get("candidate_envelope")
+    except (DistributionError, Exception) as exc:
+        if isinstance(exc, DistributionError):
+            cause = exc.code
+        else:
+            cause = getattr(exc, "code", "candidate_builder_failed")
         raise DistributionError(
             "invalid_candidate_envelope",
-            "candidate envelope cannot be reproduced by the canonical builder",
-            {"cause": exc.code},
+            "candidate envelope cannot be reproduced by the versioned canonical builder",
+            {"cause": cause},
         ) from exc
-    canonical = rebuilt.get("candidate_envelope")
     if not isinstance(canonical, Mapping) or not _json_semantically_equal(envelope, canonical):
         raise DistributionError(
             "invalid_candidate_envelope",
@@ -291,6 +407,14 @@ def _index_body(identity: Mapping[str, str], envelope: Mapping[str, object]) -> 
         "- Natal Status: `partial`",
         "- Birth Time Status: `%s`" % envelope["natal_precision_state"],
         "- Candidate Count: `%s`" % envelope["candidate_count"],
+        *(
+            [
+                "- Candidate Coverage: `%s`" % envelope["candidate_coverage"]["status"],
+                "- Legal Occurrences: `%s`" % envelope["candidate_coverage"]["legal_occurrence_count"],
+                "- Evaluated Occurrences: `%s`" % envelope["candidate_coverage"]["materialized_occurrence_count"],
+            ]
+            if isinstance(envelope.get("candidate_coverage"), Mapping) else []
+        ),
         "",
         "## Case Files",
         "",
@@ -333,6 +457,13 @@ def _core_body(identity: Mapping[str, str], envelope: Mapping[str, object]) -> s
         "- Natal Status: `partial`",
         "- Birth Time Status: `%s`" % envelope["natal_precision_state"],
         "- Candidate Count: `%s`" % envelope["candidate_count"],
+        *(
+            [
+                "- Candidate Coverage: `%s`" % envelope["candidate_coverage"]["status"],
+                "- Legal Occurrences: `%s`" % envelope["candidate_coverage"]["legal_occurrence_count"],
+            ]
+            if isinstance(envelope.get("candidate_coverage"), Mapping) else []
+        ),
         "",
         "## 【已確定盤面】", "",
         "```json", _json({"known_facts": known, "invariant_facts": invariant}), "```", "",
@@ -358,6 +489,8 @@ def _calibration_body(identity: Mapping[str, str], envelope: Mapping[str, object
         "confirmed_by_external_record": False,
         "candidate_rectification_used": False,
         "boundary_ambiguities": envelope.get("boundary_ambiguities", []),
+        "candidate_coverage": envelope.get("candidate_coverage"),
+        "candidate_domain": envelope.get("candidate_domain"),
     }
     return "\n".join([
         "# %s｜命盤資料校驗紀錄" % identity["subject_display_name"], "",

@@ -21,7 +21,7 @@
 | `distribution.structural_interpretation` | `default` | `default` | `implemented` | `experimental` | `on_demand` | `lin_tianji_structural_v1-exp` | `partial` | `not_decided` |
 | `historical.activation_selector` | `default` | `historical-activation-bazi-v1` | `implemented` | `experimental` | `on_demand` | `1.0-exp` | `partial` | `not_decided` |
 | `historical.activation_selector` | `default` | `historical-activation-bazi-v2` | `implemented` | `experimental` | `on_demand` | `2.1-exp` | `partial` | `not_decided` |
-| `natal.candidate_envelope` | `default` | `default` | `implemented` | `experimental` | `on_demand` | `1.0-exp` | `partial` | `not_decided` |
+| `natal.candidate_envelope` | `default` | `default` | `implemented` | `experimental` | `on_demand` | `2.0-exp` | `needs_verification` | `not_decided` |
 | `natal.markdown_export` | `default` | `default` | `implemented` | `stable` | `on_demand` | `1.0` | `recorded` | `not_decided` |
 | `natal.reconciliation` | `default` | `default` | `implemented` | `stable` | `on_demand` | `1.0` | `recorded` | `not_decided` |
 | `ziwei.flow_day_flying` | `daily` | `default` | `implemented` | `experimental` | `on_demand` | `1.0-exp` | `partial` | `not_decided` |
