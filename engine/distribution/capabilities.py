@@ -79,6 +79,17 @@ _CAPABILITIES = {
         "output_classification": "Lock governance metadata",
         "ranking_authority": False,
     },
+    "distribution.guided_natal_build": {
+        "id": "distribution.guided_natal_build",
+        "implementation": "implemented",
+        "maturity": "experimental",
+        "routing": "on_demand",
+        "rule_version": "1.0-exp",
+        "module": "engine.distribution.guided_natal_build",
+        "dependencies": ("distribution.case_revision_integrity",),
+        "output_classification": "Natal workflow governance metadata",
+        "ranking_authority": False,
+    },
     "distribution.interpretation_contract": {
         "id": "distribution.interpretation_contract",
         "implementation": "implemented",
