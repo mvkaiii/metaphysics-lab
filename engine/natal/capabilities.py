@@ -15,7 +15,6 @@ _CAPABILITIES = {
             "bazi.natal_chart",
             "ziwei.natal_chart",
         ),
-        "profile_id": "natal-candidate-envelope-v2",
     },
     "natal.reconciliation": {
         "id": "natal.reconciliation",
