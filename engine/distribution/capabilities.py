@@ -86,7 +86,12 @@ _CAPABILITIES = {
         "routing": "on_demand",
         "rule_version": "1.0-exp",
         "module": "engine.distribution.guided_natal_build",
-        "dependencies": ("distribution.case_revision_integrity",),
+        "dependencies": (
+            "birth.input_resolution",
+            "birth.location_resolution",
+            "natal.candidate_envelope",
+            "distribution.case_revision_integrity",
+        ),
         "output_classification": "Natal workflow governance metadata",
         "ranking_authority": False,
     },
