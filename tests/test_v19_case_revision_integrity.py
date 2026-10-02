@@ -276,7 +276,7 @@ class V19CaseRevisionIntegrityTests(unittest.TestCase):
         self.assertEqual(data["validation"]["status"], "compatible")
 
     def test_replaced_1_3_base_remains_appendable_with_preserved_1_2_tracking(self):
-        legacy = self.append_tracking(self.export_full("old")["files"])
+        legacy = self.append_tracking(self.export_full("old", contract="1.2")["files"])
         replaced = self.replace(legacy, "new")
         self.assertTrue(replaced["ok"], replaced)
 
@@ -350,7 +350,7 @@ class V19CaseRevisionIntegrityTests(unittest.TestCase):
             self.assertEqual(second["data"]["case_files"][filename], before, filename)
 
     def test_legacy_contract_1_1_and_1_2_remain_readable_without_forced_migration(self):
-        current = self.export_full("old")
+        current = self.export_full("old", contract="1.2")
         self.assertEqual(current["project_contract_version"], "1.2")
         self.assertNotIn("natal_revision_id", current)
         validated_12 = dispatch("validate_case", {"case_files": current["files"]})
