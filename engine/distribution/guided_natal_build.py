@@ -113,6 +113,7 @@ def _base_authority(birth_digest: str) -> dict:
         "natal_kind": None,
         "natal_revision_id": None,
         "subject_id": None,
+        "subject_identity": None,
         "case_project_contract_version": None,
         "case_natal_revision_id": None,
         "base_case_digest": None,
@@ -384,7 +385,15 @@ def build_guided_natal_state(payload: Mapping[str, object]) -> dict:
             next_step=_next("user_input", required_fields=("subject",)),
         )
     subject = _validate_subject_entry(subject_raw)
+    identity_fields = (
+        "subject_id",
+        "subject_display_name",
+        "subject_short_id",
+        "filename_label",
+    )
+    subject_identity = {field: subject.get(field) for field in identity_fields}
     authority["subject_id"] = subject["subject_id"]
+    authority["subject_identity"] = subject_identity
 
     case_files = payload.get("case_files")
     if case_files is None:
@@ -398,24 +407,17 @@ def build_guided_natal_state(payload: Mapping[str, object]) -> dict:
 
     case_validation = validate_case({"case_files": case_files})
     case_identity = case_validation.get("subject")
-    identity_fields = (
-        "subject_id",
-        "subject_display_name",
-        "subject_short_id",
-        "filename_label",
-    )
-    expected_identity = {field: subject.get(field) for field in identity_fields}
     actual_identity = (
         {field: case_identity.get(field) for field in identity_fields}
         if isinstance(case_identity, Mapping)
         else None
     )
-    if actual_identity != expected_identity:
+    if actual_identity != subject_identity:
         raise DistributionError(
             "guided_natal_case_subject_mismatch",
             "Case authority identity does not match the current subject identity",
             {
-                "subject": expected_identity,
+                "subject": subject_identity,
                 "case_subject": actual_identity,
             },
         )
