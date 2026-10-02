@@ -14,6 +14,7 @@ from typing import Any, Mapping, Sequence
 from zoneinfo import ZoneInfo
 
 from .errors import DistributionError
+from .lock_provenance import build_lock_provenance
 
 
 METHOD_VERSION = "lin_tianji_v1.5-exp"
@@ -372,9 +373,21 @@ def validate_forecast_claim(claim: Mapping[str, object], anchor: Mapping[str, ob
 
 
 def lock_prospective_forecast(payload: Mapping[str, object]) -> dict:
-    """Freeze a deterministic, immutable-by-digest pre-outcome forecast record."""
-    if not isinstance(payload, Mapping) or set(payload) != {"anchor", "claims"}:
-        raise _invalid_forecast("prospective forecast payload must contain exactly anchor and claims")
+    """Freeze a deterministic, immutable-by-digest pre-outcome forecast record.
+
+    Legacy two-field payloads retain the frozen v1.5 serialization. Supplying
+    case_provenance opts into revision-bound v2 lock serialization.
+    """
+    if not isinstance(payload, Mapping):
+        raise _invalid_forecast("prospective forecast payload must be a mapping")
+    fields = set(payload)
+    legacy_fields = {"anchor", "claims"}
+    v2_fields = {"anchor", "claims", "case_provenance"}
+    if fields not in (legacy_fields, v2_fields):
+        raise _invalid_forecast(
+            "prospective forecast payload fields do not match a supported lock profile"
+        )
+    revision_bound = fields == v2_fields
 
     anchor = payload.get("anchor")
     if not isinstance(anchor, Mapping):
@@ -424,6 +437,11 @@ def lock_prospective_forecast(payload: Mapping[str, object]) -> dict:
         "anchor": normalized_anchor,
         "claims": normalized_claims,
     }
+    if revision_bound:
+        locked_body["lock_provenance"] = build_lock_provenance(
+            payload.get("case_provenance"),
+            METHOD_VERSION,
+        )
     digest = hashlib.sha256(
         _canonical_bytes(locked_body, "invalid_prospective_forecast")
     ).hexdigest()

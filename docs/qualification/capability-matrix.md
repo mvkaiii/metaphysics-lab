@@ -17,6 +17,7 @@
 | `distribution.historical_personalization` | `default` | `default` | `implemented` | `experimental` | `on_demand` | `lin_tianji_historical_personalization_v1-exp` | `partial` | `not_decided` |
 | `distribution.interpretation_contract` | `default` | `lin_tianji_interpretation_contract_v1-exp` | `implemented` | `experimental` | `on_demand` | `lin_tianji_interpretation_contract_v1-exp` | `partial` | `not_decided` |
 | `distribution.interpretation_contract` | `default` | `lin_tianji_interpretation_contract_v2-exp` | `implemented` | `experimental` | `on_demand` | `lin_tianji_interpretation_contract_v1-exp` | `partial` | `not_decided` |
+| `distribution.lock_provenance` | `default` | `default` | `implemented` | `experimental` | `on_demand` | `2.0-exp` | `needs_verification` | `not_decided` |
 | `distribution.prospective_forecast_governance` | `default` | `default` | `implemented` | `experimental` | `on_demand` | `lin_tianji_v1.5-exp` | `partial` | `not_decided` |
 | `distribution.prospective_validation` | `default` | `default` | `implemented` | `experimental` | `on_demand` | `prospective-validation-v2-exp` | `partial` | `not_decided` |
 | `distribution.structural_interpretation` | `default` | `default` | `implemented` | `experimental` | `on_demand` | `lin_tianji_structural_v1-exp` | `partial` | `not_decided` |
