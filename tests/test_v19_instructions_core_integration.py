@@ -84,7 +84,7 @@ class V19InstructionsCoreIntegrationTests(unittest.TestCase):
 
     def test_candidate_envelope_profile_is_runtime_authority_not_ai_memory(self):
         for phrase in (
-            "Candidate Envelope v2",
+            "Candidate Envelope profile",
             "runtime validator",
             "不得以舊版 profile 記憶",
         ):
@@ -110,8 +110,9 @@ class V19InstructionsCoreIntegrationTests(unittest.TestCase):
         self.assertIn("Experimental", self.combined)
         self.assertIn("maturity", self.combined)
         self.assertIn("routing", self.combined)
-        self.assertIn("lin_tianji_v1.5-exp", self.combined)
-        self.assertIn("不因", self.combined)
+        self.assertIn("版本切換不得改 prediction method identity", self.combined)
+        self.assertIn("不構成 Stable promotion", self.combined)
+        self.assertNotIn("lin_tianji_v1.5-exp", self.combined)
 
 
 if __name__ == "__main__":
