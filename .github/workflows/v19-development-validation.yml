@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   birth-time-domain-foundation:
@@ -82,21 +82,6 @@ jobs:
         run: |
           python tools/build_ai_distribution.py
           python tools/build_ai_distribution.py --check
-
-      - name: Sync Visualization P1 generated artifacts
-        if: ${{ always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
-        run: |
-          python tools/build_capability_qualification_matrix.py
-          python tools/build_ai_distribution.py
-          if git diff --quiet -- docs/qualification/capability-matrix.md dist/ai; then
-            echo "Generated artifacts already synchronized"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/qualification/capability-matrix.md dist/ai
-          git commit -m "Build v1.9 Visualization P1 artifacts"
-          git push origin HEAD:${{ github.head_ref }}
 
       - name: Upload generated distribution
         if: always()
