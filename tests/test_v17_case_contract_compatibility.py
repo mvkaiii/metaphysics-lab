@@ -42,7 +42,9 @@ class V17CaseContractCompatibilityTests(unittest.TestCase):
         }
 
     def _export(self):
-        exported = dispatch("export_case_markdown", self.payload)
+        payload = dict(self.payload)
+        payload["project_contract_version"] = "1.2"
+        exported = dispatch("export_case_markdown", payload)
         self.assertTrue(exported["ok"], exported)
         return exported["data"]["files"]
 
@@ -60,8 +62,8 @@ class V17CaseContractCompatibilityTests(unittest.TestCase):
             for name, text in self._export().items()
         }
 
-    def test_new_case_uses_current_runtime_without_case_schema_bump(self):
-        self.assertEqual(PROJECT_CONTRACT_VERSION, "1.2")
+    def test_v17_contract_1_2_remains_exportable_without_case_schema_bump(self):
+        self.assertEqual(PROJECT_CONTRACT_VERSION, "1.3")
         self.assertEqual(CASE_SCHEMA_VERSION, "1.1")
         files = self._export()
         for text in files.values():

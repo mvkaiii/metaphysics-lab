@@ -65,7 +65,7 @@ class AIDistributionDocsTests(unittest.TestCase):
             self.assertIn(label, head)
         self.assertIn("下載區", head)
         self.assertIn("GitHub 顯示為 Assets", head)
-        self.assertIn("Metaphysics-Lab-v1.8.0-User-Package.zip", head)
+        self.assertIn("Metaphysics-Lab-v1.9.0-User-Package.zip", head)
         self.assertIn("解壓縮", head)
         self.assertIn("原始碼壓縮檔（Source code ZIP）", head)
         self.assertIn(STARTUP, head)
@@ -155,10 +155,12 @@ class AIDistributionDocsTests(unittest.TestCase):
         self.assertNotIn("ziwei.flowing_stars       planned", self.update)
 
     def test_changelog_has_plain_language_v1_4_0_summary_before_technical_history(self):
-        head = self.changelog[:10000]
-        self.assertIn("## v1.4.0｜2026-08-26", head)
-        self.assertIn("一般使用者摘要", head)
-        self.assertIn("Astralium", head)
+        v140 = self.changelog.index("## v1.4.0｜2026-08-26")
+        v130 = self.changelog.index("## v1.3.0｜2026-08-23")
+        self.assertLess(v140, v130)
+        historical = self.changelog[v140:v130]
+        self.assertIn("一般使用者摘要", historical)
+        self.assertIn("Astralium", historical)
         self.assertIn("metaphysics_lab.py", RELEASE_NOTES.read_text(encoding="utf-8"))
         self.assertIn("GitHub Release", self.changelog)
         self.assertIn("## v1.3.0｜2026-08-23", self.changelog)

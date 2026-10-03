@@ -1,0 +1,196 @@
+name: Release v1.9.0
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/release-v1.9.yml'
+      - 'VERSION.md'
+      - 'CHANGELOG.md'
+      - 'README.md'
+      - 'docs/發布說明-v1.9.0.md'
+      - 'docs/release/v1.9.0-qualification.md'
+      - 'docs/快速開始.md'
+      - 'docs/安裝到ChatGPT-Project.md'
+      - 'docs/更新與版本同步.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  EXPECTED_PACKAGE_SHA256: e263c25ea6efb8184a2d66c2bc2ce3edf31b29324152b2bccb9f96333aa504fa
+
+jobs:
+  release:
+    if: github.repository == 'mvkaiii/metaphysics-lab' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact merged release target
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Confirm exact merged SHA
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          echo "release_target=$GITHUB_SHA"
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install pytest==8.4.2
+
+      - name: Verify v1.8 release identity and UX contract
+        run: |
+          python -m unittest \
+            tests.test_v19_release_execution \
+            tests.test_v19_release_candidate_contract \
+            tests.test_v19_integration_version_contract \
+            tests.test_v19_instructions_core_integration \
+            tests.test_v19_visualization_p1_candidate_envelope \
+            tests.test_v19_guided_natal_build_state \
+            tests.test_v19_lock_provenance_v2 \
+            tests.test_v19_case_revision_integrity \
+            tests.test_v19_candidate_envelope_v2 \
+            tests.test_v19_birth_time_domain_foundation \
+            tests.test_ai_distribution_portability \
+            tests.test_v18_visualization_runtime \
+            tests.test_v18_compact_presentation_policy \
+            tests.test_v171_patch_contract -v
+          python - <<'PY'
+          from engine.bazi.capabilities import get_capability as get_bazi
+          from engine.distribution.constants import (
+              DISTRIBUTION_RUNTIME_VERSION,
+              RELEASE_VERSION,
+              SUPPORTED_ACTIONS,
+          )
+          assert RELEASE_VERSION == "1.9.0"
+          assert DISTRIBUTION_RUNTIME_VERSION == "1.5-exp"
+          assert "render_bazi_decadal_timeline" in SUPPORTED_ACTIONS
+          assert "render_candidate_envelope_summary" in SUPPORTED_ACTIONS
+          assert "natal.guided_build_state" in SUPPORTED_ACTIONS
+          bazi = get_bazi("bazi.natal_chart")
+          assert bazi["maturity"] == "experimental"
+          assert bazi["routing"] == "on_demand"
+          assert bazi["rule_version"] == "1.0-exp"
+          print("release identity / maturity boundary: PASS")
+          PY
+
+      - name: Rebuild and verify AI distribution
+        run: |
+          python tools/build_ai_distribution.py
+          python tools/build_ai_distribution.py --check
+
+      - name: Run backward-compatible release surfaces
+        run: |
+          python tools/run_v15_release_surface_validation.py --json
+          python tools/run_v16_release_surface_validation.py --json
+          python tools/run_v17_release_surface_validation.py --json
+
+      - name: Full repository regression
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+
+      - name: Python 3.9 compile check
+        run: |
+          python -m compileall -q engine renderers tools tests
+          python -c "compile(open('dist/ai/metaphysics_lab.py', encoding='utf-8').read(), 'dist/ai/metaphysics_lab.py', 'exec')"
+
+      - name: Private outcome contamination scan
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          forbidden_names = {'驗證事件紀錄.md', 'Kai_CDBF04_05_驗證事件紀錄.md', 'adjudication-1.json'}
+          bad = []
+          for root in (Path('dist/ai'), Path('docs/release')):
+              if root.exists():
+                  bad.extend(str(path) for path in root.rglob('*') if path.is_file() and path.name in forbidden_names)
+          if bad:
+              raise SystemExit('forbidden private/outcome release artifacts: ' + ', '.join(sorted(bad)))
+          print('private/outcome release-artifact scan: PASS')
+          PY
+
+      - name: Verify clean release tree before package output
+        run: git diff --exit-code && test -z "$(git status --porcelain)"
+
+      - name: Build deterministic v1.9.0 User Package twice and verify frozen digest
+        shell: bash
+        run: |
+          package="$RUNNER_TEMP/Metaphysics-Lab-v1.9.0-User-Package.zip"
+          second="$RUNNER_TEMP/Metaphysics-Lab-v1.9.0-User-Package.second.zip"
+          python tools/build_release_package.py --verify --output "$package"
+          python tools/build_release_package.py --verify --output "$second"
+          cmp "$package" "$second"
+          actual="$(sha256sum "$package" | awk '{print $1}')"
+          test "$actual" = "$EXPECTED_PACKAGE_SHA256"
+          test "$(python - <<'PY'
+          from pathlib import Path
+          print(len(Path('dist/ai/project_instructions.txt').read_text(encoding='utf-8')))
+          PY
+          )" -le 8000
+          echo "package_sha256=$actual"
+
+      - name: Refuse conflicting v1.9.0 identity
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view v1.9.0 >/dev/null 2>&1; then
+            existing_target="$(gh release view v1.9.0 --json targetCommitish --jq .targetCommitish)"
+            echo "v1.9.0 already exists with target=$existing_target"
+            test "$existing_target" = "$GITHUB_SHA"
+            exit 0
+          fi
+          if git rev-parse -q --verify "refs/tags/v1.9.0" >/dev/null; then
+            echo "tag v1.9.0 exists without matching GitHub Release; refusing ambiguous identity"
+            exit 1
+          fi
+
+      - name: Publish immutable v1.9.0 tag and GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          if gh release view v1.9.0 >/dev/null 2>&1; then
+            echo "matching release already exists; no mutation"
+            exit 0
+          fi
+          gh release create v1.9.0 \
+            --target "$GITHUB_SHA" \
+            --title "Metaphysics Lab v1.9.0" \
+            --notes-file docs/發布說明-v1.9.0.md \
+            "$RUNNER_TEMP/Metaphysics-Lab-v1.9.0-User-Package.zip" \
+            dist/ai/metaphysics_lab.py \
+            dist/ai/metaphysics_core.md \
+            dist/ai/project_instructions.txt
+
+      - name: Verify published target and assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          git fetch --tags --force
+          test "$(git rev-list -n 1 v1.9.0)" = "$GITHUB_SHA"
+          gh release view v1.9.0 --json isDraft,isPrerelease,targetCommitish --jq \
+            'select(.isDraft == false and .isPrerelease == false and .targetCommitish == env.GITHUB_SHA)'
+          assets="$(gh release view v1.9.0 --json assets --jq '[.assets[].name] | sort | join("\n")')"
+          expected="$(printf '%s\n' \
+            Metaphysics-Lab-v1.9.0-User-Package.zip \
+            metaphysics_core.md \
+            metaphysics_lab.py \
+            project_instructions.txt | sort)"
+          test "$assets" = "$expected"
+          mkdir -p "$RUNNER_TEMP/release-download"
+          gh release download v1.9.0 \
+            --pattern 'Metaphysics-Lab-v1.9.0-User-Package.zip' \
+            --dir "$RUNNER_TEMP/release-download"
+          actual="$(sha256sum "$RUNNER_TEMP/release-download/Metaphysics-Lab-v1.9.0-User-Package.zip" | awk '{print $1}')"
+          test "$actual" = "$EXPECTED_PACKAGE_SHA256"
+          echo "published_package_sha256=$actual"

@@ -28,13 +28,16 @@ class CapabilityQualificationMatrixTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             build_matrix(manifest, index, REPO_ROOT)
 
-    def test_rule_scope_hash_mismatch_rejected(self):
-        manifest = self._manifest(rule_version="1.0")
-        index = self._index(rule_version="2.0")
+    def test_prior_rule_evidence_becomes_visible_requalification_gap(self):
+        manifest = self._manifest(rule_version="2.0")
+        index = self._index(rule_version="1.0-exp", evidence_status="recorded")
 
-        errors = validate_evidence_index(manifest, index, REPO_ROOT)
-
-        self.assertTrue(any("rule_version" in error for error in errors))
+        self.assertEqual(validate_evidence_index(manifest, index, REPO_ROOT), [])
+        row = build_matrix(manifest, index, REPO_ROOT)["entries"][0]
+        self.assertEqual(row["rule_version"], "2.0")
+        self.assertEqual(row["evidence_status"], "needs_verification")
+        self.assertEqual(row["evidence_refs"], [])
+        self.assertTrue(any("prior rule_version" in item for item in row["known_limitations"]))
 
     def test_unsupported_scope_is_rejected(self):
         manifest = self._manifest(supported_scopes=["daily"])
@@ -63,9 +66,10 @@ class CapabilityQualificationMatrixTests(unittest.TestCase):
         )
         index = self._index(profile_id="v2", rule_version="1.0-exp")
 
-        errors = validate_evidence_index(manifest, index, REPO_ROOT)
-
-        self.assertTrue(any("profile" in error and "rule_version" in error for error in errors))
+        self.assertEqual(validate_evidence_index(manifest, index, REPO_ROOT), [])
+        stale = build_matrix(manifest, index, REPO_ROOT)["entries"][0]
+        self.assertEqual(stale["rule_version"], "2.1-exp")
+        self.assertEqual(stale["evidence_status"], "needs_verification")
 
         index["entries"][0]["rule_version"] = "2.1-exp"
         self.assertEqual(validate_evidence_index(manifest, index, REPO_ROOT), [])

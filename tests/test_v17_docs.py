@@ -3,8 +3,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CURRENT_VERSION = "v1.8.0"
-USER_PACKAGE = "Metaphysics-Lab-v1.8.0-User-Package.zip"
+CURRENT_VERSION = "v1.9.0"
+USER_PACKAGE = "Metaphysics-Lab-v1.9.0-User-Package.zip"
 CURRENT_DOCS = (
     ROOT / "README.md",
     ROOT / "docs" / "快速開始.md",
@@ -16,7 +16,7 @@ HISTORICAL_V170_RELEASE_NOTES = ROOT / "docs" / "發布說明-v1.7.0.md"
 
 
 class V17DocsTests(unittest.TestCase):
-    def test_current_user_docs_identify_v18_and_case_schema_1_1(self):
+    def test_current_user_docs_identify_v19_and_case_schema_1_1(self):
         for path in CURRENT_DOCS:
             text = path.read_text(encoding="utf-8")
             with self.subTest(path=path.name):
@@ -28,7 +28,7 @@ class V17DocsTests(unittest.TestCase):
                     f"{path}: must explicitly preserve existing user data without destructive rebuild",
                 )
 
-    def test_install_surfaces_point_to_v18_three_file_user_package(self):
+    def test_install_surfaces_point_to_v19_three_file_user_package(self):
         for relative in (
             "README.md",
             "docs/快速開始.md",

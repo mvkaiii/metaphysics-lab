@@ -3,6 +3,7 @@ import json
 import unittest
 from pathlib import Path
 
+from engine.distribution.constants import DISTRIBUTION_RUNTIME_VERSION, RELEASE_VERSION
 from engine.distribution.manifest import capability_manifest_digest, load_capability_manifest
 from engine.visualization.bazi_decadal import canonical_json_bytes, project_bazi_decadal
 from engine.visualization.contract import validate_chart
@@ -12,14 +13,36 @@ ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_PATH = ROOT / "tests" / "fixtures" / "visualization" / "bazi-decadal-engine-view.v1.json"
 
 
-def _fixture():
+def _raw_fixture():
     return json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
+
+
+def _fixture():
+    fixture = _raw_fixture()
+    manifest = load_capability_manifest()
+    fixture["provenance"]["source_commit"] = None
+    fixture["provenance"]["release_version"] = RELEASE_VERSION
+    fixture["provenance"]["distribution_runtime_version"] = DISTRIBUTION_RUNTIME_VERSION
+    fixture["provenance"]["manifest_sha256"] = capability_manifest_digest(manifest)
+    return fixture
 
 
 class BaziDecadalVisualizationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.manifest = load_capability_manifest()
+
+    def test_manifest_digest_mismatch_fails_closed(self):
+        fixture = _raw_fixture()
+        chart = project_bazi_decadal(
+            fixture,
+            self.manifest,
+            as_of="2005-01-01T00:00:00+08:00",
+            timezone="Asia/Taipei",
+            visibility_mode="blind",
+        )
+        self.assertEqual(chart["status"], "unsupported")
+        self.assertIn("MANIFEST_DIGEST_MISMATCH", chart["reason_codes"])
 
     def test_projection_preserves_engine_period_values(self):
         fixture = _fixture()

@@ -182,6 +182,25 @@ class _Candidate:
     offset: timedelta
 
 
+@dataclass(frozen=True)
+class LocalTimeOccurrence:
+    local_datetime: datetime
+    utc_datetime: datetime
+    utc_offset: str
+    timezone: str
+    fold: int
+
+    def to_dict(self) -> dict:
+        return {
+            "civil_datetime": self.local_datetime.replace(tzinfo=None).isoformat(),
+            "local_datetime": self.local_datetime.isoformat(),
+            "utc_datetime": self.utc_datetime.isoformat(),
+            "utc_offset": self.utc_offset,
+            "timezone": self.timezone,
+            "fold": self.fold,
+        }
+
+
 def _local_candidates(naive: datetime, zone: ZoneInfo) -> list[_Candidate]:
     candidates: dict[tuple[datetime, timedelta], _Candidate] = {}
     for fold in (0, 1):
@@ -197,6 +216,34 @@ def _local_candidates(naive: datetime, zone: ZoneInfo) -> list[_Candidate]:
             continue
         candidates[(utc_value, offset)] = _Candidate(aware, utc_value, offset)
     return sorted(candidates.values(), key=lambda candidate: candidate.utc)
+
+
+def enumerate_local_time_occurrences(
+    civil_datetime: str,
+    timezone_name: str,
+    *,
+    provider: PinnedTzdataProvider | None = None,
+) -> tuple[LocalTimeOccurrence, ...]:
+    """Return every legal physical occurrence of one local civil-time label.
+
+    A nonexistent local label returns an empty tuple. An ordinary label returns
+    one occurrence. A fold returns each legal occurrence in UTC chronological
+    order. The function never selects one occurrence by majority or default.
+    """
+
+    naive = _parse_civil(civil_datetime)
+    active_provider = provider if provider is not None else PinnedTzdataProvider()
+    zone = active_provider.zone(timezone_name)
+    return tuple(
+        LocalTimeOccurrence(
+            local_datetime=candidate.local,
+            utc_datetime=candidate.utc,
+            utc_offset=_offset_text(candidate.offset),
+            timezone=timezone_name,
+            fold=int(candidate.local.fold),
+        )
+        for candidate in _local_candidates(naive, zone)
+    )
 
 
 def normalize_local_time(

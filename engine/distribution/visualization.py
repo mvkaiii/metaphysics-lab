@@ -7,7 +7,9 @@ from typing import Mapping
 
 from engine.bazi.natal_models import BaziNatalProfile
 from engine.visualization.bazi_decadal import canonical_json_bytes, project_bazi_decadal
+from engine.visualization.candidate_envelope import project_candidate_envelope_summary
 from renderers.svg.bazi_decadal import render_bazi_decadal_svg, render_bazi_decadal_text
+from renderers.svg.candidate_envelope import render_candidate_envelope_svg, render_candidate_envelope_text
 
 from .constants import DISTRIBUTION_RUNTIME_VERSION, RELEASE_VERSION
 from .errors import DistributionError
@@ -162,5 +164,59 @@ def render_bazi_decadal_timeline(payload: Mapping[str, object]) -> dict:
             "fallback": "text",
             "ranking_authority": False,
             "predictive_evidence": False,
+        },
+    }
+
+
+def render_candidate_envelope_summary(payload: Mapping[str, object]) -> dict:
+    if not isinstance(payload, Mapping):
+        raise DistributionError("invalid_visualization_payload", "visualization payload must be a mapping")
+    allowed = {"candidate_envelope"}
+    unknown = sorted(set(payload) - allowed)
+    if unknown:
+        raise DistributionError(
+            "invalid_visualization_payload",
+            "visualization payload contains unknown fields",
+            {"unknown_fields": unknown},
+        )
+    envelope = payload.get("candidate_envelope")
+    if not isinstance(envelope, Mapping):
+        raise DistributionError(
+            "invalid_candidate_visualization_source",
+            "candidate_envelope must be a structured mapping",
+        )
+    if (
+        envelope.get("profile_id") != "natal-candidate-envelope-v2"
+        or envelope.get("rule_version") != "2.0-exp"
+    ):
+        raise DistributionError(
+            "visualization_candidate_envelope_v2_required",
+            "Candidate Envelope visualization requires v2 source authority",
+        )
+    try:
+        chart = project_candidate_envelope_summary(envelope)
+        svg = render_candidate_envelope_svg(chart)
+        text = render_candidate_envelope_text(chart)
+    except (TypeError, ValueError) as exc:
+        raise DistributionError(
+            "invalid_candidate_visualization_source",
+            str(exc),
+        ) from exc
+    return {
+        "chart": chart,
+        "svg": svg,
+        "text": text,
+        "artifact": {
+            "suggested_filename": "candidate-envelope-summary.svg",
+            "media_type": "image/svg+xml",
+            "text_fallback_filename": "candidate-envelope-summary.txt",
+        },
+        "presentation": {
+            "surface": "experimental",
+            "preferred": "svg",
+            "fallback": "text",
+            "ranking_authority": False,
+            "predictive_evidence": False,
+            "candidate_selection_authority": False,
         },
     }

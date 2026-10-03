@@ -1,8 +1,36 @@
 # Metaphysics Lab 版本
 
-> `VERSION.md` 是給開發、驗證與版本治理看的**技術版本表**。第一次使用請先看 `README.md` 或 `docs/快速開始.md`；一般使用者版 v1.8.0 發布說明見 `docs/發布說明-v1.8.0.md`。
+> `VERSION.md` 是給開發、驗證與版本治理看的**技術版本表**。第一次使用請先看 `README.md` 或 `docs/快速開始.md`；一般使用者版 v1.9.0 發布說明見 `docs/發布說明-v1.9.0.md`。
 >
 > 歷史 Release snapshot 不因後續 qualification 或文件更新回寫改造。正式發版只固定 release identity；**release 本身不改變 capability maturity**，目前執行能力仍以 `runtime_info` 為技術權威來源。
+
+## v1.9.0 Release Snapshot
+
+v1.9.0 的 release identity / scope、Fresh-host qualification與RC freeze已於 **2026-10-03** 完成。Product RC為 `6529d34eb047c6fbbda3d85be83e211566e69565`，qualification receipt head為 `d85386fca2f3afb08076c3629f095223f5614e33`；正式tag / GitHub Release只允許在merged main SHA通過 `release-v1.9.yml` 完整驗證後建立。
+
+```text
+Release Version            1.9.0
+Project Contract           1.3
+Runtime Schema             1.1
+Case Schema                1.1
+AI Distribution Runtime    1.5-exp
+Capability Manifest        1.0
+```
+
+- Birth-Time Domain Foundation把出生時間狀態固定為 `exact / bounded / unknown_time`；range、DST fold / gap與候選展開由runtime authority處理。
+- Candidate Envelope升為 **v2 / 2.0-exp**，明確記錄candidate domain、coverage、materialized/unresolved occurrence與invariant/variant/undetermined boundaries。
+- Project Contract升到 **1.3**，新增 `natal_revision_id` 與 `base_case_digest`；Case Schema仍為 **1.1**。
+- Case Revision Integrity提供 `case.replace_natal_base`；Base Case 00～04可安全換版，05～08與revision lineage保留。
+- Lock Provenance v2為新lock綁定subject、natal revision、Base Case digest、canonical sources與method version；歷史lock維持原bytes，不回填、不重簽。
+- Guided Natal Build以 `natal.guided_build_state` 作為流程authority；AI不能自行挑選fold、中點或candidate。
+- Visualization P1新增 `render_candidate_envelope_summary`；Candidate Envelope摘要可輸出deterministic SVG/text，但無ranking、probability、candidate-selection或predictive-evidence authority。
+- Instructions/Core已切到runtime-owned state authority；固定文件不硬編Candidate Envelope或prediction method的動態版本。
+- selector v1 / interpretation v1仍為default；prospective method identity仍為 `lin_tianji_v1.5-exp`。
+- Experimental capability不因v1.9軟體release自動升級maturity。
+- deterministic v1.9.0 User Package SHA256：`e263c25ea6efb8184a2d66c2bc2ce3edf31b29324152b2bccb9f96333aa504fa`。
+- Project Instructions：7998字元，維持在ChatGPT Project 8000字元限制內。
+
+---
 
 ## v1.8.0 Release Snapshot
 
@@ -73,16 +101,17 @@ Capability Manifest       1.0
 
 ## 最新正式發布
 
-- Metaphysics Lab Core：**v1.8.0**
-- 發布日期：**2026-09-30**
-- Git tag / GitHub Release：`v1.8.0` 由 `release-v1.8.yml` 在 PR #233 merged SHA 完整驗證後建立；tag target 是正式 release identity authority。
-- Frozen product RC：`a0e0a1ca668e022a7c13f35875803d968f7547df`；release-infrastructure/public-doc descendant不得改User Package bytes。
-- Project Contract / Runtime Schema / Case Schema：`1.2 / 1.1 / 1.1`，沒有 migration。
-- AI Distribution Runtime：`1.4-exp`。
-- `render_bazi_decadal_timeline` 已進 User Package public runtime；Visualization仍是 Experimental presentation surface。
-- 一般命理回答預設 `compact`，`explain` 按需展開、`audit` 僅技術稽核；呈現收斂不改ranking、claim consumption、specificity、confidence或盲判。
-- Selector v1 / interpretation v1 保持 default；`bazi.natal_chart` 維持 Experimental / On-demand；Pilot-6仍為 `OBSERVATION_PENDING`。
-- deterministic v1.8.0 User Package SHA256：`f9b22d4b97949b873261793c404d2530a0bc384d77e970e1bba7aec35edc82cf`。
+- Metaphysics Lab Core：**v1.9.0**
+- 發布日期：**2026-10-03**
+- Git tag / GitHub Release：`v1.9.0`由 `release-v1.9.yml` 在merged main SHA完整驗證後建立；tag target是正式release identity authority。
+- Product RC：`6529d34eb047c6fbbda3d85be83e211566e69565`；qualification receipt head：`d85386fca2f3afb08076c3629f095223f5614e33`。
+- Project Contract / Runtime Schema / Case Schema：`1.3 / 1.1 / 1.1`。
+- AI Distribution Runtime：`1.5-exp`。
+- Candidate Envelope v2、Case Revision Integrity、Lock Provenance v2、Guided Natal Build與Visualization P1已進User Package runtime。
+- 既有Project Contract 1.2 Case仍可讀；舊lock保持不可變，不回填provenance、不重簽、不重算digest。
+- Selector v1 / interpretation v1保持default；prospective method identity仍為 `lin_tianji_v1.5-exp`。
+- 未另行promotion的capability維持既有maturity；軟體release不等於預測效度promotion。
+- deterministic v1.9.0 User Package SHA256：`e263c25ea6efb8184a2d66c2bc2ce3edf31b29324152b2bccb9f96333aa504fa`。
 
 主要元件：
 
@@ -99,10 +128,10 @@ Capability Manifest       1.0
 - Ziwei Fine Cycle：v1.0-exp
 - Ziwei Flowing Stars：v1.0-exp
 - Historical Activation Selector：v1.0-exp
-- AI Distribution Runtime：v1.4-exp
+- AI Distribution Runtime：v1.5-exp
 - Runtime Schema：v1.1
 - Build Format：v1.1
-- Project Contract：v1.2
+- Project Contract：v1.3
 - Case Schema：v1.1
 - Capability Manifest：v1.0
 - 問事追蹤制度：v1.0

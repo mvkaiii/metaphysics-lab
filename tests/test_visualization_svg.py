@@ -7,7 +7,8 @@ import unittest
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from engine.distribution.manifest import load_capability_manifest
+from engine.distribution.constants import DISTRIBUTION_RUNTIME_VERSION, RELEASE_VERSION
+from engine.distribution.manifest import capability_manifest_digest, load_capability_manifest
 from engine.visualization.bazi_decadal import project_bazi_decadal
 from renderers.svg.bazi_decadal import render_bazi_decadal_svg, render_bazi_decadal_text
 
@@ -16,11 +17,21 @@ ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_PATH = ROOT / "tests" / "fixtures" / "visualization" / "bazi-decadal-engine-view.v1.json"
 
 
-def _chart():
+def _current_fixture():
     fixture = json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
+    manifest = load_capability_manifest()
+    fixture["provenance"]["source_commit"] = None
+    fixture["provenance"]["release_version"] = RELEASE_VERSION
+    fixture["provenance"]["distribution_runtime_version"] = DISTRIBUTION_RUNTIME_VERSION
+    fixture["provenance"]["manifest_sha256"] = capability_manifest_digest(manifest)
+    return fixture, manifest
+
+
+def _chart():
+    fixture, manifest = _current_fixture()
     return project_bazi_decadal(
         fixture,
-        load_capability_manifest(),
+        manifest,
         as_of="2005-01-01T00:00:00+08:00",
         timezone="Asia/Taipei",
         visibility_mode="blind",
@@ -28,11 +39,11 @@ def _chart():
 
 
 def _unsupported_chart():
-    fixture = json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
+    fixture, manifest = _current_fixture()
     fixture["resolved_candidate_count"] = 2
     return project_bazi_decadal(
         fixture,
-        load_capability_manifest(),
+        manifest,
         as_of="2005-01-01T00:00:00+08:00",
         timezone="Asia/Taipei",
         visibility_mode="blind",

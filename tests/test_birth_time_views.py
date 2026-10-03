@@ -47,7 +47,7 @@ class BirthTimeViewTests(unittest.TestCase):
         calendar = resolve_birth_calendar(birth_input(), place()).context
         views = build_birth_time_views(calendar, place())
         self.assertEqual(views.true_solar.profile_id, "true-solar-noaa-gamma-v1")
-        self.assertEqual(views.true_solar.rule_version, "1.0-exp")
+        self.assertEqual(views.true_solar.rule_version, "1.1-exp")
         self.assertAlmostEqual(views.true_solar.adjustment_minutes, -3.5750772239, places=6)
         self.assertEqual(views.true_solar.local_datetime.strftime("%Y-%m-%d %H:%M:%S"), "1984-03-13 19:16:25")
         self.assertFalse(views.true_solar.boundary_effect["date_changed"])

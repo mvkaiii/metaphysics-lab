@@ -351,18 +351,27 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
                 "subject.prepare_astralium_references": prepare_astralium_references,
             }[action]
             return _ok(action, handler(request))
+        if action == "birth.resolve_location":
+            from .natal import resolve_birth_location
+            return _ok(action, resolve_birth_location(request))
         if action == "build_natal":
             from .natal import build_natal
             return _ok(action, build_natal(request))
         if action == "natal.candidate_envelope":
             from .natal import build_candidate_natal
             return _ok(action, build_candidate_natal(request))
+        if action == "natal.guided_build_state":
+            from .guided_natal_build import build_guided_natal_state
+            return _ok(action, build_guided_natal_state(request))
         if action == "reconcile_natal":
             from .natal import reconcile_natal
             return _ok(action, reconcile_natal(request))
         if action == "render_bazi_decadal_timeline":
             from .visualization import render_bazi_decadal_timeline
             return _ok(action, render_bazi_decadal_timeline(request))
+        if action == "render_candidate_envelope_summary":
+            from .visualization import render_candidate_envelope_summary
+            return _ok(action, render_candidate_envelope_summary(request))
         if action == "resolve_forecast_context":
             from .forecast import resolve_forecast_context
             return _ok(action, resolve_forecast_context(request))
@@ -428,6 +437,13 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
         if action in ("validate_case", "migrate_case", "update_case_record"):
             from .case_pack import migrate_case, update_case_record, validate_case
             handler = {"validate_case": validate_case, "migrate_case": migrate_case, "update_case_record": update_case_record}[action]
+            return _ok(action, handler(request))
+        if action in ("case.base_digest", "case.replace_natal_base"):
+            from .case_revision import build_base_case_digest, replace_natal_base
+            handler = {
+                "case.base_digest": build_base_case_digest,
+                "case.replace_natal_base": replace_natal_base,
+            }[action]
             return _ok(action, handler(request))
     except DistributionError as exc:
         return _error(action, exc.code, str(exc), exc.details)

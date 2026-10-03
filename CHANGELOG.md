@@ -1,6 +1,24 @@
 # 變更紀錄
 
-這份文件保存正式版本與尚未發布變更的技術紀錄。第一次使用 Metaphysics Lab 請先看 `README.md`；目前正式版本為 **v1.8.0｜2026-09-30**，一般使用者發布說明見 `docs/發布說明-v1.8.0.md`。
+這份文件保存正式版本與尚未發布變更的技術紀錄。第一次使用 Metaphysics Lab 請先看 `README.md`；目前正式版本為 **v1.9.0｜2026-10-03**，一般使用者發布說明見 `docs/發布說明-v1.9.0.md`。
+
+## v1.9.0｜2026-10-03
+
+### 正式軟體 Release
+
+- Release Version升為 **1.9.0**；AI Distribution Runtime為 **1.5-exp**，Project Contract / Runtime Schema / Case Schema為 **1.3 / 1.1 / 1.1**。
+- Birth-Time Domain Foundation把出生時間明確分成 `exact / bounded / unknown_time`，DST fold / gap與區間候選由runtime fail-closed處理，不使用中點、預設時間或AI猜測。
+- **Candidate Envelope v2** 固定完整candidate domain / coverage語意，部分coverage不能冒充invariant authority。
+- **Case Revision Integrity** 新增 `natal_revision_id`、`base_case_digest`與 `case.replace_natal_base`；安全替換00～04時保留05～08與revision lineage。
+- **Lock Provenance v2** 讓新的prospective、Stage 1 blind與Historical Calibration lock綁定subject、natal revision、Base Case digest、canonical sources與method version；舊lock不回填、不重簽、不重算digest。
+- **Guided Natal Build** 以 `natal.guided_build_state` 作為建立本命流程authority，AI只執行runtime回傳的下一步，不以聊天記憶挑候選或宣告完成。
+- **Visualization P1** 新增 `render_candidate_envelope_summary`，提供Candidate Envelope deterministic SVG/text/structured summary；不具ranking、probability、candidate-selection或predictive-evidence authority。
+- Instructions/Core已整合上述runtime authority，同時保留Guided Inquiry、blindness、specificity ceiling、Historical Calibration optional與portable Birth Data first等既有契約。
+- Fresh-host qualification在repo外三檔User Package、`python -S`環境驗證離線台北本命、Candidate Envelope v2、Visualization P1、Guided Natal Build與Project Contract 1.3 Case流程。
+- Product RC SHA：`6529d34eb047c6fbbda3d85be83e211566e69565`；qualification receipt head：`d85386fca2f3afb08076c3629f095223f5614e33`。
+- deterministic User Package：`Metaphysics-Lab-v1.9.0-User-Package.zip`，SHA256 `e263c25ea6efb8184a2d66c2bc2ce3edf31b29324152b2bccb9f96333aa504fa`。
+- selector v1 / interpretation v1 default不變；prospective method identity仍為 `lin_tianji_v1.5-exp`；所有未另行promotion的能力維持原maturity。
+- v1.9.0 release execution只在merged main SHA通過 `release-v1.9.yml` 的完整驗證後建立tag/GitHub Release。
 
 ## v1.8.0｜2026-09-30
 

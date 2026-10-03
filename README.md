@@ -4,16 +4,16 @@ Metaphysics Lab 是一套把**命盤計算**和**AI 命理解讀**分開的命�
 
 核心概念很簡單：**Python 負責固定計算，AI 負責解讀。** 一般使用者不需要先理解程式碼儲存庫、模組或內部功能狀態，也不需要自己決定八字／紫微該執行哪個程式。
 
-目前最新正式版本為 **v1.8.0｜2026-09-30**。既有命主資料與個案紀錄可以直接沿用，不需要重新建立。這一版新增八字大運時間軸，並讓一般命理解讀預設以較精簡的方式呈現；仍在實驗階段的功能維持原本狀態，不會因版本更新自動轉為正式穩定功能。
+目前最新正式版本為 **v1.9.0｜2026-10-03**。既有命主資料與個案紀錄可以沿用；本版新增出生時間不確定性的完整流程、Case Revision Integrity、Lock Provenance v2、Guided Natal Build與Candidate Envelope摘要視覺化。Case Schema仍維持1.1。
 
-正式下載頁：[Metaphysics Lab v1.8.0](https://github.com/mvkaiii/metaphysics-lab/releases/tag/v1.8.0)。到 GitHub 正式發布頁的**下載區（GitHub 顯示為 Assets）**，優先下載 `Metaphysics-Lab-v1.8.0-User-Package.zip`。**不要把 GitHub 自動產生的原始碼壓縮檔（Source code ZIP）當成使用者安裝包。**
+正式下載頁：[Metaphysics Lab v1.9.0](https://github.com/mvkaiii/metaphysics-lab/releases/tag/v1.9.0)。到 GitHub 正式發布頁的**下載區（GitHub 顯示為 Assets）**，優先下載 `Metaphysics-Lab-v1.9.0-User-Package.zip`。**不要把 GitHub 自動產生的原始碼壓縮檔（Source code ZIP）當成使用者安裝包。**
 
 ## 最新版安裝／升級操作
 
-1. 下載 `Metaphysics-Lab-v1.8.0-User-Package.zip`。
+1. 下載 `Metaphysics-Lab-v1.9.0-User-Package.zip`。
 2. 解壓縮後確認只有 `metaphysics_lab.py`、`metaphysics_core.md`、`project_instructions.txt` 三個正式檔案。
 3. 新建 ChatGPT Project／Claude Project：上傳 `metaphysics_lab.py` 與 `metaphysics_core.md`，再把 `project_instructions.txt` 全文貼到 Project Instructions。
-4. 從 v1.7.1 升到 v1.8.0：**三檔一起同步**。v1.8 同時更新執行程式、核心呈現規則與 Project Instructions。
+4. 從 v1.8.0 升到 v1.9.0：**三檔一起同步**。v1.9 將 Project Contract 升到1.3，因此執行程式、核心規則與 Project Instructions 必須同版。
 5. **保留** `命主索引.md`、既有個案資料、本命資料、驗證事件、追蹤紀錄與所有已鎖定預測；不要重建 `subject_id`、清空 05～08，或重做既有已鎖定的第一版盲判。
 6. 完成後請 AI 執行 `runtime_info`，確認目前執行程式與功能狀態正常。需要技術版本資訊時，再查看本頁後面的「技術版本資訊」。
 
@@ -27,7 +27,7 @@ Metaphysics Lab 是一套把**命盤計算**和**AI 命理解讀**分開的命�
 | **命理分析核心規則** | `metaphysics_core.md` | 上傳到同一個 ChatGPT Project／Claude Project |
 | **Project 設定指令** | `project_instructions.txt` | 打開後，把全文貼到 Project Instructions |
 
-如果你已經是 **v1.7.1**，升到 **v1.8.0** 請同步三檔：`metaphysics_lab.py`、`metaphysics_core.md` 與 `project_instructions.txt`。既有命主資料與個案紀錄可以直接沿用，不需要重建。
+如果你已經是 **v1.8.0**，升到 **v1.9.0** 請同步三檔：`metaphysics_lab.py`、`metaphysics_core.md` 與 `project_instructions.txt`。既有1.2 Case仍可讀，私人歷史紀錄與舊lock都應保留。
 
 設定完成後，先對 AI 說：
 
@@ -64,7 +64,7 @@ Astralium 仍然可以提供八字／紫微第三方排盤，但它是**可選�
 - [命盤資料準備指南](docs/命盤資料準備指南.md)
 - [Astralium 資料取得指南](docs/Astralium資料取得指南.md)
 - [更新與版本同步](docs/更新與版本同步.md)
-- [v1.8.0 發布說明](docs/發布說明-v1.8.0.md)
+- [v1.9.0 發布說明](docs/發布說明-v1.9.0.md)
 
 ## 命盤資料可以怎麼提供？
 
@@ -118,11 +118,11 @@ python metaphysics_lab.py request --input request.json --pretty
 
 一般使用者不需要記住下面這些版本號；需要技術驗證、更新檢查或除錯時再查看即可。
 
-- 正式發布版本（Release Version）：`1.8.0`
-- 專案規格（Project Contract）：`1.2`
+- 正式發布版本（Release Version）：`1.9.0`
+- 專案規格（Project Contract）：`1.3`
 - 執行資料格式（Runtime Schema）：`1.1`
 - 個案資料格式（Case Schema）：`1.1`
-- AI 執行環境版本（AI Distribution Runtime）：`1.4-exp`
+- AI 執行環境版本（AI Distribution Runtime）：`1.5-exp`
 - 功能清單版本（Capability Manifest）：`1.0`
 
 目前實際可執行的能力仍以程式回傳的 `runtime_info` 為技術權威來源；正式發版不會自動把仍在實驗中的能力升級為穩定狀態（Stable）。

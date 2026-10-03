@@ -43,7 +43,13 @@ def base_case_files():
         actual = canonical_case_filename(identity, canonical)
         files[actual] = _render_case_file(
             canonical,
-            _metadata(canonical, identity, WHEN, "test"),
+            _metadata(
+                canonical,
+                identity,
+                WHEN,
+                "test",
+                project_contract_version="1.2",
+            ),
             bodies[canonical],
         )
     return files

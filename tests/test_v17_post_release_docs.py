@@ -3,10 +3,10 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CURRENT_RELEASE_VERSION = "v1.8.0"
-CURRENT_RELEASE_DATE = "2026-09-30"
-CURRENT_USER_PACKAGE = "Metaphysics-Lab-v1.8.0-User-Package.zip"
-CURRENT_USER_PACKAGE_SHA256 = "f9b22d4b97949b873261793c404d2530a0bc384d77e970e1bba7aec35edc82cf"
+CURRENT_RELEASE_VERSION = "v1.9.0"
+CURRENT_RELEASE_DATE = "2026-10-03"
+CURRENT_USER_PACKAGE = "Metaphysics-Lab-v1.9.0-User-Package.zip"
+CURRENT_USER_PACKAGE_SHA256 = "e263c25ea6efb8184a2d66c2bc2ce3edf31b29324152b2bccb9f96333aa504fa"
 
 V171_RELEASE_DATE = "2026-09-25"
 V171_USER_PACKAGE = "Metaphysics-Lab-v1.7.1-User-Package.zip"
@@ -19,7 +19,7 @@ V170_USER_PACKAGE_SHA256 = "7de4285c0e7c79e2d4a311ec8a16b0866ac0820a303eb9a288dd
 
 
 class V17PostReleaseDocsTests(unittest.TestCase):
-    def test_current_user_docs_identify_published_v18(self):
+    def test_current_user_docs_identify_published_v19(self):
         for relative in (
             "README.md",
             "docs/快速開始.md",

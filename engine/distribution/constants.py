@@ -1,10 +1,10 @@
 """Version constants for the portable AI distribution contract."""
 
-RELEASE_VERSION = "1.8.0"
-PROJECT_CONTRACT_VERSION = "1.2"
+RELEASE_VERSION = "1.9.0"
+PROJECT_CONTRACT_VERSION = "1.3"
 RUNTIME_SCHEMA_VERSION = "1.1"
 CASE_SCHEMA_VERSION = "1.1"
-DISTRIBUTION_RUNTIME_VERSION = "1.4-exp"
+DISTRIBUTION_RUNTIME_VERSION = "1.5-exp"
 
 SUPPORTED_ACTIONS = (
     "runtime_info",
@@ -12,10 +12,13 @@ SUPPORTED_ACTIONS = (
     "subject.registry_validate",
     "subject.rename",
     "subject.prepare_astralium_references",
+    "birth.resolve_location",
     "build_natal",
     "natal.candidate_envelope",
+    "natal.guided_build_state",
     "reconcile_natal",
     "render_bazi_decadal_timeline",
+    "render_candidate_envelope_summary",
     "resolve_forecast_context",
     "resolve_query_anchor",
     "lock_prospective_forecast",
@@ -35,6 +38,8 @@ SUPPORTED_ACTIONS = (
     "diagnose_case",
     "plan_case_reconciliation",
     "validate_case",
+    "case.base_digest",
+    "case.replace_natal_base",
     "migrate_case",
     "update_case_record",
 )

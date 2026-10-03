@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from math import cos, pi, sin
 from typing import Mapping, Optional
 
@@ -22,7 +22,7 @@ class TrueSolarTimeProfile:
 
 TRUE_SOLAR_NOAA_GAMMA_V1 = TrueSolarTimeProfile(
     profile_id="true-solar-noaa-gamma-v1",
-    rule_version="1.0-exp",
+    rule_version="1.1-exp",
     longitude_correction=True,
     equation_of_time=True,
 )
@@ -152,6 +152,15 @@ def _civil_view(
     )
 
 
+def _shift_on_utc_timeline(dt: datetime, adjustment_minutes: float) -> datetime:
+    """Apply a clock adjustment without losing fold occurrence identity."""
+
+    _require_aware(dt)
+    zone = dt.tzinfo
+    shifted_utc = dt.astimezone(timezone.utc) + timedelta(minutes=adjustment_minutes)
+    return shifted_utc.astimezone(zone)
+
+
 def build_birth_time_views(
     calendar: CalendarContext,
     location: ResolvedBirthPlace,
@@ -175,7 +184,7 @@ def build_birth_time_views(
         location.longitude,
         profile,
     )
-    true_solar = normalized + timedelta(minutes=adjustment)
+    true_solar = _shift_on_utc_timeline(normalized, adjustment)
 
     return BirthTimeViews(
         reported_civil=_civil_view("reported_civil", reported, calendar=calendar),

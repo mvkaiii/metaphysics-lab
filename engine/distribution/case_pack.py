@@ -20,6 +20,13 @@ from engine.natal.models import ExternalNatalView
 from engine.natal.orchestration import build_normalized_natal
 
 from .case_identity import build_case_filename, parse_case_filename
+from .case_revision import (
+    NATAL_REVISION_PROFILE,
+    PROJECT_CONTRACT_V13,
+    base_case_digest,
+    natal_revision_id,
+    validate_natal_revision_id,
+)
 from .constants import CASE_SCHEMA_VERSION, DISTRIBUTION_RUNTIME_VERSION, PROJECT_CONTRACT_VERSION
 from .errors import DistributionError
 from .natal import _source_from_payload, project_natal_from_payload
@@ -89,7 +96,7 @@ _LEGACY_SUBJECT_PATTERN = re.compile(r"^[A-Za-z0-9._-]+$")
 _OPAQUE_SUBJECT_PATTERN = re.compile(r"^subj_[0-9a-f]{12,}$")
 _SHORT_ID_PATTERN = re.compile(r"^[0-9A-F]{6,}$")
 _CALIBRATION_STATES = frozenset(("uncalibrated", "basic", "calibrated"))
-_READABLE_PROJECT_CONTRACT_VERSIONS = frozenset(("1.1", PROJECT_CONTRACT_VERSION))
+_READABLE_PROJECT_CONTRACT_VERSIONS = frozenset(("1.1", "1.2", PROJECT_CONTRACT_V13))
 _RESERVED_INTERNAL_RECORD_TYPES = frozenset(("historical_calibration_lock",))
 _RECORD_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:@+-]*$")
 
@@ -167,6 +174,17 @@ def _timestamp(value: object, field_name: str) -> str:
     except ValueError as exc:
         raise DistributionError("invalid_case_timestamp", "%s must be an ISO datetime" % field_name, {"field": field_name, "value": text}) from exc
     return text
+
+
+def _export_project_contract_version(payload: Mapping[str, object]) -> str:
+    value = payload.get("project_contract_version", PROJECT_CONTRACT_VERSION)
+    if not isinstance(value, str) or value not in ("1.2", PROJECT_CONTRACT_V13):
+        raise DistributionError(
+            "case_contract_incompatible",
+            "Case export supports Project Contract 1.2 or 1.3",
+            {"project_contract_version": value},
+        )
+    return value
 
 
 def _subject_id(value: object, *, opaque: bool = False) -> str:
@@ -263,15 +281,34 @@ def parse_front_matter(text: object) -> Tuple[dict, str]:
     return metadata, "".join(lines[body_start:])
 
 
-def _metadata(canonical: str, identity: Mapping[str, str], created_at: str, modified_by: str) -> dict:
-    return {
-        "case_schema_version": CASE_SCHEMA_VERSION, "project_contract_version": PROJECT_CONTRACT_VERSION,
+def _metadata(
+    canonical: str,
+    identity: Mapping[str, str],
+    created_at: str,
+    modified_by: str,
+    *,
+    project_contract_version: Optional[str] = None,
+    natal_revision: Optional[str] = None,
+) -> dict:
+    contract = project_contract_version or PROJECT_CONTRACT_VERSION
+    metadata = {
+        "case_schema_version": CASE_SCHEMA_VERSION, "project_contract_version": contract,
         "record_type": _RECORD_TYPES[canonical], "subject_id": identity["subject_id"],
         "subject_display_name": identity["subject_display_name"], "subject_short_id": identity["subject_short_id"],
         "filename_label": identity["filename_label"], "created_at": created_at, "last_updated_at": created_at,
         "last_modified_by": modified_by, "runtime_version_if_applicable": DISTRIBUTION_RUNTIME_VERSION,
         "source_classification": _SOURCE_CLASSIFICATION[canonical], "mutation_policy": _MUTATION_POLICY[canonical],
     }
+    if canonical in BASE_CASE_FILES and contract == PROJECT_CONTRACT_V13:
+        if natal_revision is None:
+            raise DistributionError(
+                "invalid_case_revision",
+                "Project Contract 1.3 Base Case metadata requires natal_revision_id",
+                {"canonical_filename": canonical},
+            )
+        metadata["natal_revision_profile"] = NATAL_REVISION_PROFILE
+        metadata["natal_revision_id"] = validate_natal_revision_id(natal_revision)
+    return metadata
 
 
 def _external_from_payload(value: object) -> Optional[ExternalNatalView]:
@@ -332,12 +369,21 @@ def _rename_title(body: str, old_display_name: str, new_display_name: str) -> st
     return "\n".join(lines).rstrip() + "\n"
 
 
-def _core_summary(chart, identity: Mapping[str, str], analysis: str) -> str:
+def _core_summary(
+    chart,
+    identity: Mapping[str, str],
+    analysis: str,
+    natal_revision: Optional[str] = None,
+) -> str:
     project = None if chart.project is None else chart.project.to_dict()
     external = None if chart.external is None else chart.external.to_dict()
     lines = [
         "# %s｜命盤核心摘要" % identity["subject_display_name"], "", "- 命主：%s" % identity["subject_display_name"],
         "- Subject ID: `%s`" % identity["subject_id"], "- Normalized Natal Identity: `%s`" % chart.identity,
+        *(
+            ["- Natal Revision ID: `%s`" % natal_revision]
+            if natal_revision is not None else []
+        ),
         "- Validation: `%s`" % chart.validation.get("overall_status", "unknown"),
     ]
     if project is not None:
@@ -384,12 +430,22 @@ def _manifest_expected_line(canonical: str, actual: str, present: bool) -> str:
     return "- %s %s %s｜`%s`" % ("✓" if present else "○", canonical[:2], labels[canonical[:2]], actual)
 
 
-def _index_body(chart, identity: Mapping[str, str], materialized, calibration_status: str) -> str:
+def _index_body(
+    chart,
+    identity: Mapping[str, str],
+    materialized,
+    calibration_status: str,
+    natal_revision: Optional[str] = None,
+) -> str:
     project_name = None if chart.project is None else chart.project.source.source_name
     external_name = None if chart.external is None else chart.external.source.source_name
     lines = [
         "# %s｜Metaphysics Lab Case｜專案索引" % identity["subject_display_name"], "", "- 命主：%s" % identity["subject_display_name"],
         "- Subject ID: `%s`" % identity["subject_id"], "- Normalized Natal Identity: `%s`" % chart.identity,
+        *(
+            ["- Natal Revision ID: `%s`" % natal_revision]
+            if natal_revision is not None else []
+        ),
         "- Project source: `%s`" % (project_name or "none"), "- External source: `%s`" % (external_name or "none"),
         "- Case lifecycle: `progressive`", "", "## Case Files", "",
     ]
@@ -400,10 +456,16 @@ def _index_body(chart, identity: Mapping[str, str], materialized, calibration_st
     return "\n".join(lines)
 
 
-def _astralium_reference_metadata(identity: Mapping[str, str], created_at: str, modified_by: str, source_name: str) -> dict:
+def _astralium_reference_metadata(
+    identity: Mapping[str, str],
+    created_at: str,
+    modified_by: str,
+    source_name: str,
+    project_contract_version: str,
+) -> dict:
     return {
         "case_schema_version": CASE_SCHEMA_VERSION,
-        "project_contract_version": PROJECT_CONTRACT_VERSION,
+        "project_contract_version": project_contract_version,
         "record_type": "external_natal_reference",
         "subject_id": identity["subject_id"],
         "subject_display_name": identity["subject_display_name"],
@@ -432,7 +494,15 @@ def _astralium_reference_body(display_name: str, title: str, facts: Mapping[str,
     ) % (display_name, title, facts_json, source_json)
 
 
-def _append_astralium_reference_files(files: dict, payload: Mapping[str, object], chart, identity: Mapping[str, str], generated_at: str, modified_by: str) -> None:
+def _append_astralium_reference_files(
+    files: dict,
+    payload: Mapping[str, object],
+    chart,
+    identity: Mapping[str, str],
+    generated_at: str,
+    modified_by: str,
+    project_contract_version: str,
+) -> None:
     if chart.external is None or payload.get("external_subject_display_name") is None:
         return
     external = chart.external.to_dict()
@@ -448,7 +518,13 @@ def _append_astralium_reference_files(files: dict, payload: Mapping[str, object]
             "external natal reference subject does not match the Case subject",
             {"case_subject_display_name": official_name, "external_subject_display_name": external_name},
         )
-    metadata = _astralium_reference_metadata(identity, generated_at, modified_by, source_name)
+    metadata = _astralium_reference_metadata(
+        identity,
+        generated_at,
+        modified_by,
+        source_name,
+        project_contract_version,
+    )
     reference_specs = (
         ("bazi", "03-1_Astralium八字資料包.md", "Astralium八字資料包"),
         ("ziwei", "04-1_Astralium紫微資料包.md", "Astralium紫微資料包"),
@@ -467,11 +543,18 @@ def export_case_markdown(payload: Mapping[str, object]) -> dict:
     identity = _identity_from_payload(payload)
     generated_at = _timestamp(payload.get("generated_at"), "generated_at")
     modified_by = _text(payload.get("last_modified_by", "ai"), "last_modified_by")
+    contract = _export_project_contract_version(payload)
+    revision = (
+        natal_revision_id("normalized_natal", chart.to_dict())
+        if contract == PROJECT_CONTRACT_V13 else None
+    )
     generated_date = datetime.fromisoformat(generated_at).date()
     analysis = _analysis_section(payload.get("analysis_sections"))
     bodies = {
-        "00_專案索引.md": _index_body(chart, identity, BASE_CASE_FILES, "uncalibrated"),
-        "01_命盤核心摘要.md": _core_summary(chart, identity, analysis),
+        "00_專案索引.md": _index_body(
+            chart, identity, BASE_CASE_FILES, "uncalibrated", revision
+        ),
+        "01_命盤核心摘要.md": _core_summary(chart, identity, analysis, revision),
         "02_命盤資料校驗紀錄.md": _prefix_title(export_calibration_markdown(chart, generated_date), identity["subject_display_name"]),
         "03_八字結構化資料包.md": _prefix_title(export_bazi_markdown(chart, generated_date), identity["subject_display_name"]),
         "04_紫微基礎資料包.md": _prefix_title(export_ziwei_markdown(chart, generated_date), identity["subject_display_name"]),
@@ -479,9 +562,40 @@ def export_case_markdown(payload: Mapping[str, object]) -> dict:
     files = {}
     for canonical in BASE_CASE_FILES:
         actual = canonical_case_filename(identity, canonical)
-        files[actual] = _render_case_file(canonical, _metadata(canonical, identity, generated_at, modified_by), bodies[canonical])
-    _append_astralium_reference_files(files, payload, chart, identity, generated_at, modified_by)
-    return {"subject_id": identity["subject_id"], "subject": identity, "files": files}
+        files[actual] = _render_case_file(
+            canonical,
+            _metadata(
+                canonical,
+                identity,
+                generated_at,
+                modified_by,
+                project_contract_version=contract,
+                natal_revision=revision,
+            ),
+            bodies[canonical],
+        )
+    _append_astralium_reference_files(
+        files,
+        payload,
+        chart,
+        identity,
+        generated_at,
+        modified_by,
+        contract,
+    )
+    result = {
+        "subject_id": identity["subject_id"],
+        "subject": identity,
+        "project_contract_version": contract,
+        "files": files,
+    }
+    if revision is not None:
+        result.update({
+            "natal_revision_profile": NATAL_REVISION_PROFILE,
+            "natal_revision_id": revision,
+            "base_case_digest": base_case_digest(files),
+        })
+    return result
 
 
 def _case_files(value: object):
@@ -515,15 +629,54 @@ def _validate_manifest(files: Mapping[str, str], actual_by_canonical: Mapping[st
             raise DistributionError("case_manifest_mismatch", "00 Case manifest does not match materialized files", {"filename": actual, "expected_line": expected})
 
 
+def _validate_natal_revision_contract(
+    metadata_by_canonical: Mapping[str, Mapping[str, str]],
+    contract: str,
+) -> Optional[str]:
+    if contract != PROJECT_CONTRACT_V13:
+        return None
+    revisions = set()
+    for canonical in BASE_CASE_FILES:
+        metadata = metadata_by_canonical.get(canonical)
+        if not isinstance(metadata, Mapping):
+            raise DistributionError(
+                "invalid_case_metadata",
+                "Project Contract 1.3 requires all Base Case metadata",
+                {"canonical_filename": canonical},
+            )
+        if metadata.get("natal_revision_profile") != NATAL_REVISION_PROFILE:
+            raise DistributionError(
+                "invalid_case_metadata",
+                "Project Contract 1.3 Base Case has unsupported natal revision profile",
+                {
+                    "canonical_filename": canonical,
+                    "natal_revision_profile": metadata.get("natal_revision_profile"),
+                },
+            )
+        revisions.add(validate_natal_revision_id(metadata.get("natal_revision_id")))
+    if len(revisions) != 1:
+        raise DistributionError(
+            "case_natal_revision_mismatch",
+            "Project Contract 1.3 Base Case files do not share one natal_revision_id",
+            {"natal_revision_ids": sorted(revisions)},
+        )
+    return next(iter(revisions))
+
+
 def validate_case(payload: Mapping[str, object]) -> dict:
     payload = _mapping(payload, "payload")
     files, actual_by_canonical, parsed_by_canonical = _case_files(payload.get("case_files"))
     subject = display_name = identity = None
-    versions, contracts = set(), set()
+    versions = set()
+    contracts = set()
+    base_contracts = set()
+    tracking_contracts = set()
+    metadata_by_canonical = {}
     for canonical in CASE_FILES:
         if canonical not in files:
             continue
         metadata, body = parse_front_matter(files[canonical])
+        metadata_by_canonical[canonical] = metadata
         missing = [key for key in _REQUIRED_FRONT_MATTER if key not in metadata]
         if missing:
             raise DistributionError("invalid_case_metadata", "Case file is missing required metadata", {"filename": actual_by_canonical[canonical], "missing_fields": missing})
@@ -533,6 +686,10 @@ def validate_case(payload: Mapping[str, object]) -> dict:
             _record_entries(body, legacy_record_ids=metadata["case_schema_version"] == "1.0")
         versions.add(metadata["case_schema_version"])
         contracts.add(metadata["project_contract_version"])
+        if canonical in BASE_CASE_FILES:
+            base_contracts.add(metadata["project_contract_version"])
+        else:
+            tracking_contracts.add(metadata["project_contract_version"])
         current_subject = metadata["subject_id"]
         if subject is None:
             subject = current_subject
@@ -549,26 +706,68 @@ def validate_case(payload: Mapping[str, object]) -> dict:
                 identity, display_name = current_identity, current_identity["subject_display_name"]
             elif current_identity != identity:
                 raise DistributionError("case_subject_mismatch", "all Case files must use identical subject identity metadata", {"filename": actual_by_canonical[canonical]})
-    if len(versions) != 1 or len(contracts) != 1:
-        raise DistributionError("case_version_mismatch", "all Case files must use one schema and contract version", {"case_schema_versions": sorted(versions), "project_contract_versions": sorted(contracts)})
-    schema, contract = next(iter(versions)), next(iter(contracts))
+
+    if len(versions) != 1:
+        raise DistributionError(
+            "case_version_mismatch",
+            "all Case files must use one schema version",
+            {"case_schema_versions": sorted(versions), "project_contract_versions": sorted(contracts)},
+        )
+    schema = next(iter(versions))
+
     if schema == "1.0":
+        if len(contracts) != 1:
+            raise DistributionError("case_version_mismatch", "legacy Case files must use one contract version", {"project_contract_versions": sorted(contracts)})
+        contract = next(iter(contracts))
         if set(files) != set(CASE_FILES) or contract != "1.0" or any(not parsed_by_canonical[name]["legacy"] for name in CASE_FILES):
             raise DistributionError("case_schema_incompatible", "legacy Case schema 1.0 requires the complete bare nine-file contract 1.0 pack")
     elif schema == CASE_SCHEMA_VERSION:
+        if len(base_contracts) != 1:
+            raise DistributionError(
+                "case_version_mismatch",
+                "all 00-04 Base Case files must use one Project Contract version",
+                {"base_project_contract_versions": sorted(base_contracts)},
+            )
+        contract = next(iter(base_contracts))
         if contract not in _READABLE_PROJECT_CONTRACT_VERSIONS:
             raise DistributionError("case_contract_incompatible", "Case Project Contract version is not supported by this runtime", {"project_contract_version": contract})
+        if contract != PROJECT_CONTRACT_V13 and contracts != {contract}:
+            raise DistributionError(
+                "case_version_mismatch",
+                "legacy subject-aware Case files must use one Project Contract version",
+                {"project_contract_versions": sorted(contracts)},
+            )
+        if contract == PROJECT_CONTRACT_V13:
+            unsupported_tracking = sorted(
+                value for value in tracking_contracts
+                if value not in _READABLE_PROJECT_CONTRACT_VERSIONS
+            )
+            if unsupported_tracking:
+                raise DistributionError(
+                    "case_contract_incompatible",
+                    "Project Contract 1.3 Base Case contains unreadable legacy tracking files",
+                    {"tracking_project_contract_versions": unsupported_tracking},
+                )
         if identity is None:
             raise DistributionError("invalid_case_metadata", "Case schema 1.1 requires subject identity metadata")
         _validate_manifest(files, actual_by_canonical, identity)
     else:
         raise DistributionError("case_schema_incompatible", "Case schema version is not supported by this runtime", {"case_schema_version": schema})
-    return {
+
+    revision = _validate_natal_revision_contract(metadata_by_canonical, contract)
+    result = {
         "status": "compatible", "subject_id": subject, "subject_display_name": display_name, "subject": identity,
         "case_schema_version": schema, "project_contract_version": contract,
         "validated_files": [actual_by_canonical[name] for name in CASE_FILES if name in files],
         "canonical_slots": [name for name in CASE_FILES if name in files],
     }
+    if revision is not None:
+        result.update({
+            "natal_revision_profile": NATAL_REVISION_PROFILE,
+            "natal_revision_id": revision,
+            "base_case_digest": base_case_digest(payload.get("case_files")),
+        })
+    return result
 
 
 def _replace_manifest_lines(body: str, identity: Mapping[str, str], materialized) -> str:
@@ -597,7 +796,15 @@ def migrate_case(payload: Mapping[str, object]) -> dict:
     for canonical in CASE_FILES:
         metadata, body = parse_front_matter(files[canonical])
         old_subject = metadata.get("subject_id")
-        metadata.update(_metadata(canonical, identity, metadata["created_at"], metadata.get("last_modified_by", "ai")))
+        metadata.update(
+            _metadata(
+                canonical,
+                identity,
+                metadata["created_at"],
+                metadata.get("last_modified_by", "ai"),
+                project_contract_version="1.2",
+            )
+        )
         metadata["last_updated_at"] = _timestamp(payload.get("updated_at"), "updated_at")
         metadata["legacy_subject_id"] = old_subject
         if canonical in _TRACKING_FILES:

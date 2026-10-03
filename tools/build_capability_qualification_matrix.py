@@ -328,8 +328,6 @@ def validate_evidence_index(
             if _nonblank(profile_id) and profile_id not in profile_rule_versions:
                 errors.append("%s profile_id is not supported by manifest" % entry_key)
             expected_rule_version = profile_rule_versions.get(profile_id)
-            if expected_rule_version is not None and entry.get("rule_version") != expected_rule_version:
-                errors.append("%s profile rule_version does not match manifest" % entry_key)
         if entry.get("evidence_status") not in _STATUSES:
             errors.append("%s evidence_status is unsupported" % entry_key)
         if entry.get("promotion_decision") not in _PROMOTION_DECISIONS:
@@ -348,7 +346,7 @@ def validate_evidence_index(
                         source_commit,
                         scope,
                         profile_id,
-                        expected_rule_version or entry.get("rule_version"),
+                        entry.get("rule_version"),
                     )
                 )
 
@@ -375,6 +373,14 @@ def build_matrix(
     for entry in evidence_index["entries"]:
         capability = capabilities[entry["capability_id"]]
         rule_version = _profile_rule_versions(capability)[entry["profile_id"]]
+        indexed_rule_version = entry["rule_version"]
+        stale_rule_evidence = indexed_rule_version != rule_version
+        known_limitations = list(entry["known_limitations"])
+        if stale_rule_evidence:
+            known_limitations.append(
+                "Evidence index is bound to prior rule_version %s; current rule_version %s requires fresh qualification."
+                % (indexed_rule_version, rule_version)
+            )
         row = {
             "capability_id": entry["capability_id"],
             "scope": entry["scope"],
@@ -385,8 +391,8 @@ def build_matrix(
             "rule_version": rule_version,
             "module": capability.get("module"),
             "dependencies": capability.get("dependencies", []),
-            "evidence_status": entry["evidence_status"],
-            "evidence_refs": entry.get("evidence_refs", []),
+            "evidence_status": "needs_verification" if stale_rule_evidence else entry["evidence_status"],
+            "evidence_refs": [] if stale_rule_evidence else entry.get("evidence_refs", []),
             "deterministic_contract": entry["deterministic_contract"],
             "boundary_cases": entry["boundary_cases"],
             "fixture_refs": entry["fixture_refs"],
@@ -394,9 +400,9 @@ def build_matrix(
             "reference_qualification": entry["reference_qualification"],
             "prospective_evidence": entry["prospective_evidence"],
             "failure_modes": entry["failure_modes"],
-            "known_limitations": entry["known_limitations"],
+            "known_limitations": known_limitations,
             "promotion_criteria": entry["promotion_criteria"],
-            "promotion_decision": entry["promotion_decision"],
+            "promotion_decision": "not_decided" if stale_rule_evidence else entry["promotion_decision"],
         }
         rows.append(row)
     rows.sort(key=lambda row: (row["capability_id"], row["scope"], row["profile_id"]))
@@ -528,7 +534,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         print("capability matrix is up to date")
         return 0
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(rendered, encoding="utf-8", newline="\n")
+    output.write_bytes(rendered.encode("utf-8"))
     print("wrote capability matrix: %s" % output)
     return 0
 

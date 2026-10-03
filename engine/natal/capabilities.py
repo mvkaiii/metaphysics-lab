@@ -7,9 +7,14 @@ _CAPABILITIES = {
         "implementation": "implemented",
         "maturity": "experimental",
         "routing": "on_demand",
-        "rule_version": "1.0-exp",
+        "rule_version": "2.0-exp",
         "module": "engine.natal.candidates",
-        "dependencies": ("birth.input_resolution", "bazi.natal_chart", "ziwei.natal_chart"),
+        "dependencies": (
+            "birth.input_resolution",
+            "birth.true_solar_time",
+            "bazi.natal_chart",
+            "ziwei.natal_chart",
+        ),
     },
     "natal.reconciliation": {
         "id": "natal.reconciliation",

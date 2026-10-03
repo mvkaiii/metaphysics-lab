@@ -114,7 +114,7 @@ class NatalEndToEndTests(unittest.TestCase):
             "birth_place": "Taipei City",
         })
         self.assertFalse(result.ok)
-        self.assertEqual(result.missing_fields, ("sex", "birth_time"))
+        self.assertEqual(result.missing_fields, ("sex", "birth_time_precision"))
         self.assertEqual(result.allowed_actions, ("ask", "keep_candidates", "downgrade"))
         payload = result.to_dict()
         self.assertEqual(payload["error_code"], "missing_required_birth_field")

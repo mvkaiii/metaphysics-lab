@@ -111,17 +111,17 @@ Markdown 是 Project 內的正式資料；ZIP 與單獨 `.md` 都由同一批 ca
 
 AI 依序執行：
 
-1. 先確認首次建立的 5 項必填資料：**命主稱呼、性別、出生年月日、出生時間、出生地**；只詢問缺少欄位，不重問已知資料。
+1. 先確認**命主稱呼、性別、出生年月日、出生時間狀態、出生地**。出生時間狀態用 `birth_time_precision = exact / bounded / unknown_time`；使用者說「不知道出生時間」即 `unknown_time`，不得強迫補時刻。只有 `exact` 才需要 `birth_time`，`bounded` 才需要 `birth_time_range`。
 2. **命主稱呼必填**，作為 `subject_display_name` 與後續 `filename_label` 的人類可讀來源，**用於檔名**；可填暱稱／代號，**不一定要真名**。不得使用 Project 擁有者的名字代填，也不得使用目前聊天者的名字代填；也不得因為使用者說「幫我排盤」就自動假定命主是目前聊天者。
 3. 讀取核心規範與 `runtime_info`。
 4. 讀取 `命主索引.md`；若不存在，在第一位命主建立時 materialize。
 5. 判斷這是既有 subject 或新命主。
 6. 既有 subject：沿用原 `subject_id`。新命主：由 AI 發起 `subject.create_identity`，**opaque `subject_id` 必須由 runtime 產生**，不得由命主稱呼、姓名／生日／出生地拼出或 hash PII。
 7. 保存 `subject_display_name`、`subject_short_id`、`filename_label` 至 `命主索引.md`；產生本命基礎檔案時，檔名前綴使用這次明確提供的命主稱呼所衍生的 `filename_label`。
-8. 遵守 `Precision must be earned by input`；模糊時間不得自行取中點或 default time。
-9. 取得或確認出生地解析結果；保留 provenance。
-10. exact input：呼叫 runtime 建立單一 Project 原生本命。bounded / unknown time：若 `natal.candidate_envelope` 可執行且 location/timezone basis 完整，建立 Candidate Envelope；不得自己挑一個候選。
-11. 若使用者有 Astralium、已知四柱或其他 structured external chart，保留 External view，再執行 reconciliation；External 與 Project raw views 不互相覆寫。Astralium 若要另存成 03-1／04-1 可選外部參考附件，先依 3.3 的命主一致規則處理。
+8. 取得或確認出生地解析結果並保留 provenance；不得自行取中點或 default time。
+9. 將當次已知的 birth facts、resolved location、目前 natal artifact、subject identity 與 Case（若有）送入 `natal.guided_build_state`。這是 stateless snapshot authority；不得以聊天／session memory 取代。相同事實應得到相同 `state_digest`。
+10. **只執行 runtime 回傳的 `next.action`**。若 next 要 user input，只問 `required_fields`；若導向 `build_natal`、`natal.candidate_envelope`、`export_case_markdown` 或 `case.replace_natal_base`，執行後把新 artifact／Case 再送回 state authority 重算。AI 不得自行選 fold occurrence、Candidate 或替 nonexistent local time 補值。
+11. Candidate Envelope profile／rule version 以當次 `runtime_info` 與 runtime validator 為準，**不得以舊版 profile 記憶**模擬；若使用者有 Astralium、已知四柱或其他 structured external chart，External 與 Project raw views 仍分開，再執行 reconciliation。
 12. 查看 BLOCKING conflict / partial blocked scopes。若仍有 material conflict 或唯一時辰未解，不把高精度單一盤分析當確定基礎。
 13. AI 依 deterministic facts 完成本命解讀；解讀必須標為命理推論，不得寫回盤面事實。
 14. 產生 Base Case Markdown；**Base Case 對外稱「本命基礎檔案」**，聊天中不需要介紹 canonical slot、schema 或 materialize 流程。
@@ -171,6 +171,15 @@ Historical Calibration = uncalibrated
 ```
 
 **不得在首次建盤時預先建立 05～08**；不得因為「以後可能會用到」就建立空檔。首次建盤對使用者只需說已整理好「本命基礎檔案」。
+
+### 3.2.1 Guided state 與 Case revision authority
+
+`natal.guided_build_state` 必須以**當次結構化事實**重算，不把聊天記憶、舊 state object 或舊 `state_digest` 當資料來源。技術稽核時可使用 `natal_revision_id` 與 `base_case_digest` 判斷當前 natal artifact／Base Case authority；一般使用者只需知道是否需要更新本命基礎檔案。
+
+- `ready_case_export`：目前 natal artifact 已可建立新的本命基礎檔案。
+- `complete`：目前 Case subject identity 與 natal revision 已和當次 artifact 一致。
+- `case_revision_upgrade_required`：呼叫 `case.replace_natal_base`，不得只在聊天宣稱升級。安全替換只重建 revision-bound 00～04，**保留 05～08**既有紀錄與 lineage；**不得回填**、重簽或改 digest，**舊 lock 保持 immutable**。
+- artifact basis mismatch、subject mismatch 或 Case revision mismatch 一律 fail closed，不得沿用舊完成狀態。
 
 ## 3.3 Astralium 可選外部參考附件
 
@@ -257,6 +266,8 @@ Candidate rectification 只可排序候選；即使只剩一個最高候選，�
 若 partial Case 仍 block 單一盤 forecast，先維持 partial/invariant 分析或處理 candidate uncertainty，不得自行挑候選後繼續。
 
 第一版需要進入校準流程時，先使用 runtime 的 blind-forecast lock action固定內容與 digest；鎖定後不得改寫。
+
+**新 Stage 1** 正式 lock 前，重新用 `natal.guided_build_state` 驗證當前 Case。revision-aware新流程以 `complete` 為 authority；若回報 `case_revision_upgrade_required`，先完成 `case.replace_natal_base` 再 lock。新 lock 的 `lock_provenance` 必須綁定**目前 Case revision**、`natal_revision_id`、`base_case_digest`、canonical source files 與 runtime method version。Legacy Case／舊 lock 仍可讀，但舊 lock 保持 immutable，**不得回填** provenance、不得重簽或重算 digest。軟體**版本切換不得改 prediction method identity**，也**不構成 Stable promotion**。
 
 ## 5.2 第一次未來問事且尚未完成 Historical Calibration
 
@@ -545,7 +556,7 @@ Guided Inquiry 是對話導引，不是背景推播，也不是新的預測 auth
 - 不得自行補值；不得為了滿足下游 API 補假日期、假時間、假出生地、假座標、假 timezone、假性別或假四柱。
 - Calendar infrastructure 只負責 runtime manifest 與 provenance 定義的曆法責任；八字、紫微、奇門的命理時間 profile 必須分離。
 
-完整單一本命的盤面計算通常需要：性別、Gregorian 出生日期、出生時間、出生地。首次建立私人命盤專案時，另有一項使用者層必填資料：**命主稱呼**。因此首次建立固定收集：**命主稱呼、性別、出生年月日、出生時間、出生地**。命主稱呼**用於檔名**，可使用暱稱／代號，**不一定要真名**；不得使用 Project 擁有者的名字代填，也不得使用目前聊天者的名字代填。若由 AI host／使用者提供 pre-resolved 座標與 IANA timezone，必須保存 provenance，不得冒充 runtime 自己查得。
+首次建立私人命盤專案時，先收集**命主稱呼、性別、Gregorian 出生日期、出生時間狀態、出生地**。出生時間狀態以 `birth_time_precision = exact / bounded / unknown_time` 表示；使用者說「不知道出生時間」就是 `unknown_time`，不是要求他補一個假時刻。只有 `exact` 需要 `birth_time`，`bounded` 需要 `birth_time_range`。命主稱呼**用於檔名**，可使用暱稱／代號，**不一定要真名**；不得使用 Project 擁有者或目前聊天者名字代填。若由 AI host／使用者提供 pre-resolved 座標與 IANA timezone，必須保存 provenance，不得冒充 runtime 自己查得。
 
 ### 出生時間未知／有範圍
 
@@ -570,6 +581,12 @@ external_only
 - 缺出生地／timezone provenance 時，Candidate Envelope 同樣 fail closed，不猜 basis。
 
 Candidate rectification 可排序候選，但不是出生時間外部驗證；即使只剩一個最高候選，也不得寫成 verified birth time，除非取得出生證明、戶籍或同等外部證據。
+
+### Guided Natal Build state authority
+
+完成基本輸入收集後，以 `natal.guided_build_state` 作建盤流程 authority。它是 stateless deterministic snapshot：每次都以當次 structured birth facts、resolved location、natal artifact、subject identity、Case files重算；**不得以聊天記憶**、先前口頭結論或舊 `state_digest` 取代輸入。
+
+AI **只執行 runtime 回傳的 `next.action`**，user-input stage 只追問 `required_fields`。exact local time 的 `ambiguous_fold`／`nonexistent`、單盤或 Candidate Envelope 路由均由 runtime 判斷；AI **不得自行選 fold occurrence**、**不得自行取中點**或補不存在的local time。Candidate Envelope profile／rule version 以 `runtime_info` 與 runtime validator 為準，**不得以舊版 profile 記憶**自行模擬。
 
 ---
 
@@ -627,6 +644,10 @@ Rename 必須一次更新 `命主索引.md`、該 subject 所有已 materialize 
 
 **不得在首次建盤時預先建立 05～08**。內部的 Base Case 對外稱「本命基礎檔案」；使用者不需要知道 slot、schema、materialize 等檔案生命週期術語。
 
+### Natal revision 與安全替換
+
+技術 authority 使用 `natal_revision_id` 綁定 natal artifact，`base_case_digest` 綁定當下 00～04 canonical bytes。若 `natal.guided_build_state` 回報 `case_revision_upgrade_required`，必須執行 `case.replace_natal_base`，不得用聊天內容假裝已更新。安全替換只重建 revision-bound base，**保留 05～08**既有追蹤資料與 lineage；舊 lock 保持 immutable，**不得回填** provenance、不得重簽、不得重算舊 digest。subject／artifact／revision mismatch 一律 fail closed。
+
 ## Astralium 可選外部參考附件
 
 使用者提供 Astralium 八字或紫微資料時，可以另外建立 `03-1_Astralium八字資料包.md`、`04-1_Astralium紫微資料包.md`。它們是**非 canonical** 的**可選外部參考附件**，不屬於 Case Schema 00～08、不得取代 03／04，也不得被 00 manifest 當成新的 canonical slot。沒有來源資料就不建立。
@@ -683,6 +704,8 @@ Legacy schema 1.0 的完整 bare 9-file Case 可繼續讀取；explicit migratio
 至少回答：最活躍領域、事件類型、機會來源、風險來源、有利與不利時間窗、進攻／觀察／防守、重要觀察指標。
 
 第一版完成後先鎖定；不得利用後續歷史答案改寫。
+
+**新 Stage 1** lock 前先重新檢查 guided state 與目前 Case revision。revision-aware新流程只有 `complete` 可直接建立新鎖；若需升級先執行 `case.replace_natal_base`。新鎖的 `lock_provenance` 必須綁定**目前 Case revision**、`natal_revision_id`、`base_case_digest`、canonical 00～04 source files 與 runtime method version。Legacy Case仍保持readable；**舊 lock 保持 immutable**，不得回填／重簽。軟體**版本切換不得改 prediction method identity**，也**不構成 Stable promotion**；capability maturity／routing仍以當次runtime manifest為準。
 
 ## 第一次未來問事且尚未 Historical Calibration
 
