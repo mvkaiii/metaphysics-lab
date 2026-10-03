@@ -42,7 +42,13 @@ def _subject_aware_base5(subject_id: str, short_id: str, display_name: str = "Ka
         actual = canonical_case_filename(identity, canonical)
         files[actual] = _render_case_file(
             canonical,
-            _metadata(canonical, identity, _CREATED_AT, "test"),
+            _metadata(
+                canonical,
+                identity,
+                _CREATED_AT,
+                "test",
+                project_contract_version="1.2",
+            ),
             bodies[canonical],
         )
     return files
