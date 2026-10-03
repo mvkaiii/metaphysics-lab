@@ -118,6 +118,32 @@ def project_candidate_envelope_summary(envelope: Mapping[str, object]) -> dict:
     if material_states != candidate_count:
         raise ValueError("candidate coverage material_state_count does not match candidate_count")
 
+    domain_status = domain.get("status")
+    if coverage_status == "complete":
+        if unresolved != 0 or materialized != legal or legal == 0 or candidate_count == 0:
+            raise ValueError("complete candidate coverage must resolve every legal occurrence")
+        if domain_status != "ready":
+            raise ValueError("complete candidate coverage requires a ready candidate domain")
+    elif coverage_status == "partial":
+        if legal == 0 or unresolved == 0 or materialized >= legal:
+            raise ValueError("partial candidate coverage must leave at least one legal occurrence unresolved")
+        if domain_status != "ready":
+            raise ValueError("partial candidate coverage requires a ready candidate domain")
+    else:
+        if legal != 0 or materialized != 0 or unresolved != 0 or candidate_count != 0:
+            raise ValueError("unsupported candidate coverage cannot contain materialized candidate authority")
+        if domain_status != "unsupported":
+            raise ValueError("unsupported candidate coverage requires an unsupported candidate domain")
+
+    invariant_bazi = _mapping(envelope.get("invariant_bazi_facts", {}), "invariant_bazi_facts")
+    invariant_ziwei = _mapping(envelope.get("invariant_ziwei_facts", {}), "invariant_ziwei_facts")
+    undetermined_bazi = _mapping(envelope.get("undetermined_bazi_facts", {}), "undetermined_bazi_facts")
+    undetermined_ziwei = _mapping(envelope.get("undetermined_ziwei_facts", {}), "undetermined_ziwei_facts")
+    if coverage_status != "complete" and (invariant_bazi or invariant_ziwei):
+        raise ValueError("incomplete candidate coverage cannot authorize invariant facts")
+    if coverage_status == "complete" and (undetermined_bazi or undetermined_ziwei):
+        raise ValueError("complete candidate coverage cannot retain undetermined facts")
+
     spans = []
     seen = set()
     for index, raw in enumerate(candidates):
