@@ -6,9 +6,9 @@
 
 ## 1. 下載與安裝
 
-目前最新正式版本為 **v1.8.0｜2026-09-30**。既有命主資料與個案紀錄可以直接沿用，不需要重新建立。
+目前最新正式版本為 **v1.9.0｜2026-10-03**。既有命主資料與個案紀錄可以沿用；Project Contract升為1.3，Case Schema仍維持1.1。
 
-優先下載 `Metaphysics-Lab-v1.8.0-User-Package.zip`；解壓後就是下面三個檔案。也可以在正式發布頁的下載區（Assets）單獨下載。
+優先下載 `Metaphysics-Lab-v1.9.0-User-Package.zip`；解壓後就是下面三個檔案。也可以在正式發布頁的下載區（Assets）單獨下載。
 
 | 用途 | 實際檔名 | 安裝方式 |
 |---|---|---|
@@ -24,7 +24,7 @@
 
 也就是**兩個上傳檔＋一份貼進 Project Instructions 的文字**。不需要下載 GitHub 自動產生的原始碼壓縮檔（Source code），也不需要解壓縮專案原始碼。
 
-從 **v1.7.1 升到 v1.8.0** 請同步三檔：替換 `metaphysics_lab.py`、替換 `metaphysics_core.md`、重新貼上新版 `project_instructions.txt`。保留 `命主索引.md`、既有個案資料、驗證事件、流年／問事／重大決策紀錄與已鎖定預測。
+從 **v1.8.0 升到 v1.9.0** 請同步三檔：替換 `metaphysics_lab.py`、替換 `metaphysics_core.md`、重新貼上新版 `project_instructions.txt`。保留 `命主索引.md`、既有個案資料、驗證事件、流年／問事／重大決策紀錄與已鎖定預測；既有1.2 Case仍可讀，舊lock不回填或重簽。
 
 ChatGPT Project 與 Claude Project 的介面名稱可能不同，但概念相同。
 
@@ -157,4 +157,4 @@ python metaphysics_lab.py request --input - --pretty
 
 `命主索引.md`、出生資料、個案資料 Markdown、事件紀錄、第三方原始命盤資料、PDF 與截圖都屬私人資料，不要提交回公開／共用 GitHub 儲存庫。
 
-完整升級規則請見[更新與版本同步](更新與版本同步.md)與[v1.8.0 發布說明](發布說明-v1.8.0.md)。
+完整升級規則請見[更新與版本同步](更新與版本同步.md)與[v1.9.0 發布說明](發布說明-v1.9.0.md)。
