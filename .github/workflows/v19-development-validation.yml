@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   birth-time-domain-foundation:
@@ -82,20 +82,6 @@ jobs:
         run: |
           python tools/build_ai_distribution.py
           python tools/build_ai_distribution.py --check
-
-      - name: Refresh Visualization P1 distribution
-        if: ${{ always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
-        run: |
-          python tools/build_ai_distribution.py
-          if git diff --quiet -- dist/ai; then
-            echo "Distribution already synchronized"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add dist/ai
-          git commit -m "Refresh v1.9 Visualization P1 distribution"
-          git push origin HEAD:${{ github.head_ref }}
 
       - name: Upload generated distribution
         if: always()
