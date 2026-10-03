@@ -45,7 +45,14 @@ class ProjectUXContractTests(unittest.TestCase):
             "不得使用目前聊天者",
         ):
             self.assertIn(phrase, combined)
-        self.assertIn("命主稱呼、性別、出生年月日、出生時間、出生地", combined)
+        for phrase in (
+            "命主稱呼、性別、出生年月日、出生時間狀態、出生地",
+            "birth_time_precision",
+            "exact",
+            "bounded",
+            "unknown_time",
+        ):
+            self.assertIn(phrase, combined)
 
     def test_post_natal_flow_recommends_previous_ten_years_and_materializes_markdown_when_used(self):
         combined = self._read(ANALYSIS_RULES) + "\n" + self._read(AI_WORKFLOW)

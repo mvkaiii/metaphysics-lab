@@ -46,6 +46,7 @@ jobs:
           tests.test_v19_lock_provenance_v2
           tests.test_v19_guided_natal_build_state
           tests.test_v19_integration_version_contract
+          tests.test_v19_instructions_core_integration
           tests.test_birth_input_resolution
           tests.test_birth_location
           tests.test_birth_time_views
