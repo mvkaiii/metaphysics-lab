@@ -57,7 +57,10 @@ V17_PUBLIC_ACTIONS = frozenset((
 
 class V17ReleaseContractTests(unittest.TestCase):
     def test_v17_schema_contract_remains_compatible(self):
-        self.assertEqual(PROJECT_CONTRACT_VERSION, "1.2")
+        # v1.9 changes the current Project Contract default, but the schemas
+        # introduced in the v1.7 line remain unchanged and legacy 1.2 Cases
+        # are covered by dedicated compatibility tests.
+        self.assertEqual(PROJECT_CONTRACT_VERSION, "1.3")
         self.assertEqual(RUNTIME_SCHEMA_VERSION, "1.1")
         self.assertEqual(CASE_SCHEMA_VERSION, "1.1")
 
