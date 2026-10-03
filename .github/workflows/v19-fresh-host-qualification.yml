@@ -1,0 +1,302 @@
+name: Metaphysics Lab v1.9 Fresh Host Qualification
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CANDIDATE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+
+jobs:
+  fresh-host-user-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.CANDIDATE_SHA }}
+          fetch-depth: 0
+
+      - name: Confirm exact candidate
+        run: |
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          echo "candidate_sha=$CANDIDATE_SHA"
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Verify committed distribution is deterministic
+        run: |
+          python tools/build_ai_distribution.py --check
+
+      - name: Build deterministic v1.9.0 User Package twice
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/v19-fresh-host"
+          first="$RUNNER_TEMP/v19-fresh-host/Metaphysics-Lab-v1.9.0-User-Package.zip"
+          second="$RUNNER_TEMP/v19-fresh-host/Metaphysics-Lab-v1.9.0-User-Package.second.zip"
+          python tools/build_release_package.py --verify --output "$first" \
+            > "$RUNNER_TEMP/v19-fresh-host/package-report.json"
+          python tools/build_release_package.py --verify --output "$second" > /dev/null
+          cmp "$first" "$second"
+          rm "$second"
+          sha256sum "$first"
+
+      - name: Extract package outside repository
+        shell: bash
+        run: |
+          package="$RUNNER_TEMP/v19-fresh-host/Metaphysics-Lab-v1.9.0-User-Package.zip"
+          host="$RUNNER_TEMP/v19-fresh-host/clean-project"
+          mkdir -p "$host"
+          python - <<'PY'
+          import os
+          import zipfile
+          from pathlib import Path
+
+          package = Path(os.environ["RUNNER_TEMP"]) / "v19-fresh-host" / "Metaphysics-Lab-v1.9.0-User-Package.zip"
+          host = Path(os.environ["RUNNER_TEMP"]) / "v19-fresh-host" / "clean-project"
+          with zipfile.ZipFile(package, "r") as archive:
+              archive.extractall(host)
+          names = sorted(path.name for path in host.iterdir())
+          expected = ["metaphysics_core.md", "metaphysics_lab.py", "project_instructions.txt"]
+          if names != expected:
+              raise SystemExit("unexpected package members: %r" % names)
+          print("fresh_host_members=" + ",".join(names))
+          PY
+
+      - name: Run repo-independent python -S v1.9 smoke
+        shell: bash
+        run: |
+          host="$RUNNER_TEMP/v19-fresh-host/clean-project"
+          cd "$host"
+          test "$(find . -maxdepth 1 -type f | wc -l)" -eq 3
+          test "$(find . -maxdepth 1 -type d | wc -l)" -eq 1
+          python -S - <<'PY'
+          import json
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          bundle = Path("metaphysics_lab.py").resolve()
+
+          def request(action, payload):
+              raw = json.dumps(
+                  {"action": action, "payload": payload},
+                  ensure_ascii=False,
+                  sort_keys=True,
+                  separators=(",", ":"),
+              )
+              completed = subprocess.run(
+                  [sys.executable, "-S", str(bundle), "request", "--input", "-"],
+                  input=raw,
+                  text=True,
+                  capture_output=True,
+                  check=False,
+                  cwd=str(bundle.parent),
+              )
+              if completed.returncode != 0:
+                  raise AssertionError(
+                      "%s CLI failed rc=%s stderr=%s stdout=%s"
+                      % (action, completed.returncode, completed.stderr, completed.stdout)
+                  )
+              value = json.loads(completed.stdout)
+              if not value.get("ok"):
+                  raise AssertionError("%s returned error: %r" % (action, value))
+              return value["data"]
+
+          runtime = request("runtime_info", {})
+          assert runtime["release_version"] == "1.9.0"
+          assert runtime["project_contract_version"] == "1.3"
+          assert runtime["runtime_schema_version"] == "1.1"
+          assert runtime["case_schema_version"] == "1.1"
+          assert runtime["distribution_runtime_version"] == "1.5-exp"
+          required_actions = {
+              "birth.resolve_location",
+              "build_natal",
+              "natal.candidate_envelope",
+              "natal.guided_build_state",
+              "render_candidate_envelope_summary",
+              "render_bazi_decadal_timeline",
+              "export_case_markdown",
+              "validate_case",
+              "case.base_digest",
+              "case.replace_natal_base",
+          }
+          assert required_actions.issubset(set(runtime["supported_actions"]))
+          bundled = runtime["bundled_dependencies"]
+          assert bundled["lunar_python"]["available"] is True
+          assert bundled["tzdata"]["available"] is True
+
+          exact_birth = {
+              "sex": "male",
+              "birth_date": "1984-03-13",
+              "birth_time_precision": "exact",
+              "birth_time": "19:20",
+              "birth_place": "台北市",
+          }
+          bounded_birth = {
+              "sex": "male",
+              "birth_date": "1984-03-13",
+              "birth_time_precision": "bounded",
+              "birth_time_range": ["19:20", "19:21"],
+              "birth_place": "台北市",
+          }
+          identity = {
+              "subject_id": "subj_freshhost01",
+              "subject_display_name": "Fresh Host",
+              "subject_short_id": "FRESH1",
+              "filename_label": "FreshHost",
+          }
+
+          location = request("birth.resolve_location", {"birth_place": "台北市"})["resolved_location"]
+          assert location["timezone"] == "Asia/Taipei"
+
+          natal = request("build_natal", {"birth": exact_birth})
+          normalized = natal["normalized_natal"]
+          assert normalized["project"]["time_basis"]["timezone"] == "Asia/Taipei"
+          assert len(normalized["project"]["ziwei"]["palaces"]) == 12
+
+          candidate = request(
+              "natal.candidate_envelope",
+              {"birth": bounded_birth, "resolved_location": location},
+          )["candidate_envelope"]
+          assert candidate["profile_id"] == "natal-candidate-envelope-v2"
+          assert candidate["candidate_coverage"]["status"] == "complete"
+          assert candidate["candidate_count"] >= 1
+
+          visual = request(
+              "render_candidate_envelope_summary",
+              {"candidate_envelope": candidate},
+          )
+          assert visual["chart"]["chart_type"] == "candidate_envelope_summary"
+          assert visual["presentation"]["ranking_authority"] is False
+          assert visual["presentation"]["predictive_evidence"] is False
+          assert visual["presentation"]["candidate_selection_authority"] is False
+          serialized_visual = json.dumps(visual, ensure_ascii=False, sort_keys=True)
+          assert '"selected_candidate"' not in serialized_visual
+          assert '"probability"' not in serialized_visual
+          assert "<svg" in visual["svg"]
+
+          guided = request(
+              "natal.guided_build_state",
+              {
+                  "birth": exact_birth,
+                  "resolved_location": location,
+                  "normalized_natal": normalized,
+                  "subject": dict(identity, status="active"),
+              },
+          )
+          assert guided["stage"] == "ready_case_export"
+
+          exported = request(
+              "export_case_markdown",
+              dict(
+                  identity,
+                  normalized_natal=normalized,
+                  generated_at="2026-10-03T18:31:00+08:00",
+                  last_modified_by="fresh-host-qualification",
+              ),
+          )
+          assert exported["project_contract_version"] == "1.3"
+          assert exported["natal_revision_id"].startswith("nrev_")
+          assert exported["base_case_digest"].startswith("bcase_")
+
+          validated = request("validate_case", {"case_files": exported["files"]})
+          assert validated["project_contract_version"] == "1.3"
+          assert validated["natal_revision_id"] == exported["natal_revision_id"]
+
+          base_digest = request("case.base_digest", {"case_files": exported["files"]})
+          assert base_digest["base_case_digest"] == exported["base_case_digest"]
+
+          complete = request(
+              "natal.guided_build_state",
+              {
+                  "birth": exact_birth,
+                  "resolved_location": location,
+                  "normalized_natal": normalized,
+                  "subject": dict(identity, status="active"),
+                  "case_files": exported["files"],
+              },
+          )
+          assert complete["stage"] == "complete"
+          assert complete["authority"]["natal_revision_id"] == exported["natal_revision_id"]
+
+          print("fresh_host_runtime_smoke=PASS")
+          PY
+
+      - name: Verify package text surfaces and clean candidate
+        shell: bash
+        run: |
+          host="$RUNNER_TEMP/v19-fresh-host/clean-project"
+          count="$(HOST="$host" python - <<'PY'
+          import os
+          from pathlib import Path
+          print(len((Path(os.environ["HOST"]) / "project_instructions.txt").read_text(encoding="utf-8")))
+          PY
+          )"
+          test "$count" -le 8000
+          grep -q "metaphysics_core.md" "$host/project_instructions.txt"
+          grep -q "runtime_info" "$host/metaphysics_core.md"
+          git diff --exit-code
+          test -z "$(git status --porcelain)"
+
+      - name: Record fresh-host manifest
+        shell: bash
+        run: |
+          export PACKAGE_PATH="$RUNNER_TEMP/v19-fresh-host/Metaphysics-Lab-v1.9.0-User-Package.zip"
+          export MANIFEST_PATH="$RUNNER_TEMP/v19-fresh-host/v1.9.0-fresh-host-manifest.json"
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          import zipfile
+          from pathlib import Path
+          from engine.distribution.constants import (
+              CASE_SCHEMA_VERSION,
+              DISTRIBUTION_RUNTIME_VERSION,
+              PROJECT_CONTRACT_VERSION,
+              RELEASE_VERSION,
+              RUNTIME_SCHEMA_VERSION,
+          )
+
+          package = Path(os.environ["PACKAGE_PATH"])
+          with zipfile.ZipFile(package, "r") as archive:
+              members = sorted(archive.namelist())
+          manifest = {
+              "schema_version": "1.0",
+              "qualification": "fresh-host",
+              "candidate_sha": os.environ["CANDIDATE_SHA"],
+              "release_version": RELEASE_VERSION,
+              "distribution_runtime_version": DISTRIBUTION_RUNTIME_VERSION,
+              "project_contract_version": PROJECT_CONTRACT_VERSION,
+              "runtime_schema_version": RUNTIME_SCHEMA_VERSION,
+              "case_schema_version": CASE_SCHEMA_VERSION,
+              "package_name": package.name,
+              "package_sha256": hashlib.sha256(package.read_bytes()).hexdigest(),
+              "members": members,
+              "python_mode": "-S",
+              "repo_independent_runtime_smoke": "PASS",
+              "release_authorized": False,
+          }
+          Path(os.environ["MANIFEST_PATH"]).write_text(
+              json.dumps(manifest, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          print(json.dumps(manifest, ensure_ascii=False, sort_keys=True))
+          PY
+
+      - name: Upload fresh-host qualification artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: metaphysics-lab-v1.9.0-fresh-host-${{ env.CANDIDATE_SHA }}
+          path: |
+            ${{ runner.temp }}/v19-fresh-host/Metaphysics-Lab-v1.9.0-User-Package.zip
+            ${{ runner.temp }}/v19-fresh-host/v1.9.0-fresh-host-manifest.json
+            ${{ runner.temp }}/v19-fresh-host/package-report.json
+          if-no-files-found: error
+          retention-days: 90
