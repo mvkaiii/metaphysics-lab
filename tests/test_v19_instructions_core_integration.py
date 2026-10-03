@@ -97,10 +97,15 @@ class V19InstructionsCoreIntegrationTests(unittest.TestCase):
         for phrase in (
             "natal.guided_build_state",
             "birth_time_precision",
-            "case.replace_natal_base",
         ):
             with self.subTest(prompt_phrase=phrase):
                 self.assertIn(phrase, dist_prompt)
+
+        for phrase in (
+            "natal.guided_build_state",
+            "birth_time_precision",
+            "case.replace_natal_base",
+        ):
             with self.subTest(core_phrase=phrase):
                 self.assertIn(phrase, dist_core)
 
