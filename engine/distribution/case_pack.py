@@ -796,7 +796,15 @@ def migrate_case(payload: Mapping[str, object]) -> dict:
     for canonical in CASE_FILES:
         metadata, body = parse_front_matter(files[canonical])
         old_subject = metadata.get("subject_id")
-        metadata.update(_metadata(canonical, identity, metadata["created_at"], metadata.get("last_modified_by", "ai")))
+        metadata.update(
+            _metadata(
+                canonical,
+                identity,
+                metadata["created_at"],
+                metadata.get("last_modified_by", "ai"),
+                project_contract_version="1.2",
+            )
+        )
         metadata["last_updated_at"] = _timestamp(payload.get("updated_at"), "updated_at")
         metadata["legacy_subject_id"] = old_subject
         if canonical in _TRACKING_FILES:
