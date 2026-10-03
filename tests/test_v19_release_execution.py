@@ -46,7 +46,7 @@ class V19ReleaseExecutionContractTests(unittest.TestCase):
             "python tools/run_v17_release_surface_validation.py --json",
             "python -m unittest discover -s tests -p 'test_*.py' -v",
             "Private outcome contamination scan",
-            "Run merged-package python -S smoke",
+            "tests.test_ai_distribution_portability",
             "Build deterministic v1.9.0 User Package twice and verify frozen digest",
             EXPECTED_PACKAGE_SHA256,
             "gh release create v1.9.0",
@@ -62,7 +62,7 @@ class V19ReleaseExecutionContractTests(unittest.TestCase):
         package = text.index(
             "Build deterministic v1.9.0 User Package twice and verify frozen digest"
         )
-        smoke = text.index("Run merged-package python -S smoke")
+        smoke = text.index("tests.test_ai_distribution_portability")
         self.assertLess(full, publish)
         self.assertLess(package, publish)
         self.assertLess(smoke, publish)
