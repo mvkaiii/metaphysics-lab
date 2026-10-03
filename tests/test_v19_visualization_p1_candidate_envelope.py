@@ -122,6 +122,10 @@ class V19VisualizationP1CandidateEnvelopeTests(unittest.TestCase):
         envelope["candidate_coverage"]["unresolved_occurrence_count"] = 1
         envelope["undetermined_bazi_facts"] = {"day_master": "丙"}
         envelope["invariant_bazi_facts"] = {}
+        envelope["undetermined_ziwei_facts"] = copy.deepcopy(
+            envelope["invariant_ziwei_facts"]
+        )
+        envelope["invariant_ziwei_facts"] = {}
 
         result = self.render(envelope)
         self.assertTrue(result["ok"], result)
