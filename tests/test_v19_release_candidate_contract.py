@@ -104,8 +104,7 @@ class V19ReleaseCandidateContractTests(unittest.TestCase):
             "Build deterministic v1.9.0 User Package twice and verify frozen digest",
             EXPECTED_PACKAGE_SHA256,
             "Private outcome contamination scan",
-            "release_authorized",
-            "false",
+            '"release_authorized": False',
         ):
             self.assertIn(required, text)
         for forbidden in (
