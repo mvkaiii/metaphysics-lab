@@ -18,6 +18,7 @@ SUPPORTED_ACTIONS = (
     "natal.guided_build_state",
     "reconcile_natal",
     "render_bazi_decadal_timeline",
+    "render_candidate_envelope_summary",
     "resolve_forecast_context",
     "resolve_query_anchor",
     "lock_prospective_forecast",

@@ -12,6 +12,7 @@
 | `birth.input_resolution` | `default` | `default` | `implemented` | `experimental` | `on_demand` | `2.0-exp` | `needs_verification` | `not_decided` |
 | `birth.location_resolution` | `default` | `default` | `implemented` | `experimental` | `on_demand` | `1.0-exp` | `partial` | `not_decided` |
 | `birth.true_solar_time` | `default` | `default` | `implemented` | `experimental` | `on_demand` | `1.1-exp` | `needs_verification` | `not_decided` |
+| `distribution.candidate_envelope_visualization` | `default` | `default` | `implemented` | `experimental` | `on_demand` | `1.0-exp` | `needs_verification` | `not_decided` |
 | `distribution.case_revision_integrity` | `default` | `default` | `implemented` | `experimental` | `on_demand` | `case-revision-v1-exp` | `needs_verification` | `not_decided` |
 | `distribution.evidence_engine` | `default` | `default` | `implemented` | `experimental` | `on_demand` | `lin_tianji_v1.5-exp` | `partial` | `not_decided` |
 | `distribution.guided_natal_build` | `default` | `default` | `implemented` | `experimental` | `on_demand` | `1.0-exp` | `needs_verification` | `not_decided` |

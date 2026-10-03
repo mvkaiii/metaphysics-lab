@@ -369,6 +369,9 @@ def dispatch(action: str, payload: Optional[Mapping[str, object]] = None) -> dic
         if action == "render_bazi_decadal_timeline":
             from .visualization import render_bazi_decadal_timeline
             return _ok(action, render_bazi_decadal_timeline(request))
+        if action == "render_candidate_envelope_summary":
+            from .visualization import render_candidate_envelope_summary
+            return _ok(action, render_candidate_envelope_summary(request))
         if action == "resolve_forecast_context":
             from .forecast import resolve_forecast_context
             return _ok(action, resolve_forecast_context(request))
