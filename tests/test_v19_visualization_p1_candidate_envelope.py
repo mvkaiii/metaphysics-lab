@@ -135,6 +135,24 @@ class V19VisualizationP1CandidateEnvelopeTests(unittest.TestCase):
             chart["fact_counts"]["invariant"]["bazi"],
         )
 
+    def test_coverage_semantics_fail_closed_before_presentation(self):
+        complete_with_unresolved = copy.deepcopy(self.envelope)
+        legal = complete_with_unresolved["candidate_coverage"]["legal_occurrence_count"]
+        complete_with_unresolved["candidate_coverage"]["materialized_occurrence_count"] = legal - 1
+        complete_with_unresolved["candidate_coverage"]["unresolved_occurrence_count"] = 1
+        result = self.render(complete_with_unresolved)
+        self.assertFalse(result["ok"], result)
+        self.assertEqual(result["error"]["code"], "invalid_candidate_visualization_source")
+
+        partial_with_invariant = copy.deepcopy(self.envelope)
+        partial_with_invariant["candidate_coverage"]["status"] = "partial"
+        partial_with_invariant["candidate_coverage"]["materialized_occurrence_count"] = legal - 1
+        partial_with_invariant["candidate_coverage"]["unresolved_occurrence_count"] = 1
+        partial_with_invariant["invariant_bazi_facts"] = {"day_master": "丙"}
+        result = self.render(partial_with_invariant)
+        self.assertFalse(result["ok"], result)
+        self.assertEqual(result["error"]["code"], "invalid_candidate_visualization_source")
+
     def test_v1_candidate_envelope_is_not_silently_upgraded(self):
         envelope = copy.deepcopy(self.envelope)
         envelope["profile_id"] = "natal-candidate-envelope-v1"
