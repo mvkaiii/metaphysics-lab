@@ -1,0 +1,176 @@
+name: Metaphysics Lab v1.9 Release Candidate Validation
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CANDIDATE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+  EXPECTED_PACKAGE_SHA256: e263c25ea6efb8184a2d66c2bc2ce3edf31b29324152b2bccb9f96333aa504fa
+
+jobs:
+  release-candidate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.CANDIDATE_SHA }}
+          fetch-depth: 0
+
+      - name: Confirm candidate SHA
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          echo "candidate_sha=$CANDIDATE_SHA"
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install pytest==8.4.2
+
+      - name: Verify v1.9 RC identity and completed slices
+        run: |
+          python -m unittest \
+            tests.test_v19_release_candidate_contract \
+            tests.test_v19_integration_version_contract \
+            tests.test_v19_instructions_core_integration \
+            tests.test_v19_visualization_p1_candidate_envelope \
+            tests.test_v19_guided_natal_build_state \
+            tests.test_v19_lock_provenance_v2 \
+            tests.test_v19_case_revision_integrity \
+            tests.test_v19_candidate_envelope_v2 \
+            tests.test_v19_birth_time_domain_foundation \
+            tests.test_v18_visualization_runtime \
+            tests.test_v18_compact_presentation_policy \
+            -v
+          python tools/build_ai_distribution.py --check
+
+      - name: Run backward-compatible release surfaces
+        run: |
+          python tools/run_v15_release_surface_validation.py --json
+          python tools/run_v16_release_surface_validation.py --json
+          python tools/run_v17_release_surface_validation.py --json
+
+      - name: Full repository regression
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+
+      - name: Python 3.9 compile check
+        run: |
+          python -m compileall -q engine renderers tools tests
+          python -c "compile(open('dist/ai/metaphysics_lab.py', encoding='utf-8').read(), 'dist/ai/metaphysics_lab.py', 'exec')"
+
+      - name: Private outcome contamination scan
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          forbidden_names = {
+              '驗證事件紀錄.md',
+              'Kai_CDBF04_05_驗證事件紀錄.md',
+              'adjudication-1.json',
+          }
+          bad = []
+          for root in (Path('dist/ai'), Path('docs/release')):
+              if root.exists():
+                  bad.extend(
+                      str(path)
+                      for path in root.rglob('*')
+                      if path.is_file() and path.name in forbidden_names
+                  )
+          if bad:
+              raise SystemExit(
+                  'forbidden private/outcome release artifacts: '
+                  + ', '.join(sorted(bad))
+              )
+          print('private/outcome release-artifact scan: PASS')
+          PY
+
+      - name: Verify clean tree before package output
+        run: |
+          git diff --exit-code
+          test -z "$(git status --porcelain)"
+
+      - name: Build deterministic v1.9.0 User Package twice and verify frozen digest
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/v19-release-candidate"
+          package="$RUNNER_TEMP/v19-release-candidate/Metaphysics-Lab-v1.9.0-User-Package.zip"
+          second="$RUNNER_TEMP/v19-release-candidate/Metaphysics-Lab-v1.9.0-User-Package.second.zip"
+          python tools/build_release_package.py --verify --output "$package" \
+            > "$RUNNER_TEMP/v19-release-candidate/package-report.json"
+          python tools/build_release_package.py --verify --output "$second" > /dev/null
+          cmp "$package" "$second"
+          actual="$(sha256sum "$package" | awk '{print $1}')"
+          test "$actual" = "$EXPECTED_PACKAGE_SHA256"
+          rm "$second"
+          test "$(python - <<'PY'
+          from pathlib import Path
+          print(len(Path('dist/ai/project_instructions.txt').read_text(encoding='utf-8')))
+          PY
+          )" -le 8000
+          echo "package_sha256=$actual"
+
+      - name: Record exact RC manifest
+        shell: bash
+        run: |
+          export PACKAGE_PATH="$RUNNER_TEMP/v19-release-candidate/Metaphysics-Lab-v1.9.0-User-Package.zip"
+          export MANIFEST_PATH="$RUNNER_TEMP/v19-release-candidate/v1.9.0-release-candidate-manifest.json"
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          import zipfile
+          from pathlib import Path
+          from engine.distribution.constants import (
+              CASE_SCHEMA_VERSION,
+              DISTRIBUTION_RUNTIME_VERSION,
+              PROJECT_CONTRACT_VERSION,
+              RELEASE_VERSION,
+              RUNTIME_SCHEMA_VERSION,
+          )
+
+          package = Path(os.environ["PACKAGE_PATH"])
+          with zipfile.ZipFile(package, "r") as archive:
+              members = sorted(archive.namelist())
+          manifest = {
+              "schema_version": "1.0",
+              "candidate_sha": os.environ["CANDIDATE_SHA"],
+              "release_version": RELEASE_VERSION,
+              "distribution_runtime_version": DISTRIBUTION_RUNTIME_VERSION,
+              "project_contract_version": PROJECT_CONTRACT_VERSION,
+              "runtime_schema_version": RUNTIME_SCHEMA_VERSION,
+              "case_schema_version": CASE_SCHEMA_VERSION,
+              "package_name": package.name,
+              "package_sha256": hashlib.sha256(package.read_bytes()).hexdigest(),
+              "members": members,
+              "stable_promotion": False,
+              "default_switch": False,
+              "release_authorized": False,
+          }
+          Path(os.environ["MANIFEST_PATH"]).write_text(
+              json.dumps(manifest, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          print(json.dumps(manifest, ensure_ascii=False, sort_keys=True))
+          PY
+
+      - name: Upload v1.9.0 release-candidate package
+        uses: actions/upload-artifact@v4
+        with:
+          name: metaphysics-lab-v1.9.0-release-candidate-${{ env.CANDIDATE_SHA }}
+          path: |
+            ${{ runner.temp }}/v19-release-candidate/Metaphysics-Lab-v1.9.0-User-Package.zip
+            ${{ runner.temp }}/v19-release-candidate/v1.9.0-release-candidate-manifest.json
+            ${{ runner.temp }}/v19-release-candidate/package-report.json
+          if-no-files-found: error
+          retention-days: 90
