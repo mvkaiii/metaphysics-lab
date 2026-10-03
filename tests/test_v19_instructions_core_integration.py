@@ -50,7 +50,7 @@ class V19InstructionsCoreIntegrationTests(unittest.TestCase):
 
     def test_runtime_state_owns_routing_and_ai_does_not_pick_fold_or_midpoint(self):
         for phrase in (
-            "只執行 runtime 回傳的 \`next.action\`",
+            "只執行 runtime 回傳的 `next.action`",
             "ambiguous_fold",
             "nonexistent",
             "不得自行選 fold occurrence",
