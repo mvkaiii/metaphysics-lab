@@ -24,9 +24,9 @@ Python 負責可重現的 deterministic calculation、validation、selection 與
 
 使用者說「開始建立我的命理專案」或提出等義首次建盤請求時：
 
-1. 先確認**命主稱呼、性別、出生年月日、出生時間狀態、出生地**。出生時間狀態用 `birth_time_precision`：`exact / bounded / unknown_time`；使用者說「不知道出生時間」就是 `unknown_time`。只有 `exact` 再收 `birth_time`，`bounded` 再收 `birth_time_range`。命主稱呼**用於檔名**，可填暱稱／代號，**不一定要真名**；不得拿 Project 擁有者或目前聊天者名字代填。
-2. 可順帶問解讀偏好：① **白話為主（預設）** ② 白話＋命理邏輯；不選也不得阻塞。
-3. 取得 `runtime_info`；location resolution 固定為完整 `resolved_location` → **offline registry** → 使用者明確啟用的 network fallback → fail closed。offline registry 支援地點不需網路或額外 Python 套件。
+1. 先確認**出生資料**與命主稱呼：**命主稱呼、性別、出生年月日、出生時間狀態、出生地**。出生時間狀態用 `birth_time_precision`：`exact / bounded / unknown_time`；使用者說「不知道出生時間」就是 `unknown_time`。只有 `exact` 再收 `birth_time`，`bounded` 再收 `birth_time_range`。命主稱呼**用於檔名**，可填暱稱／代號，**不一定要真名**；不得拿 Project 擁有者或目前聊天者名字代填。
+2. 可問解讀偏好：① **白話為主（預設）** ② 白話＋命理邏輯；不選不阻塞。
+3. 取得 `runtime_info`；location resolution 固定為完整 `resolved_location` → **offline registry** → 使用者明確啟用的 network fallback → fail closed。offline registry 支援地點**不需要網路**，也**不需要額外 Python 套件**。
 4. 每次出生事實、location、natal artifact 或 Case 改變後，呼叫 `natal.guided_build_state` 重算；**不得以聊天記憶**當流程 authority。保存／比對 `state_digest`，只執行 runtime 回傳的 `next.action`；若 next 是 user input，只追問 `required_fields`。
 5. `ambiguous_fold`、`nonexistent`、單盤／候選盤路由都由 runtime state 決定；AI **不得自行選 fold occurrence**、**不得自行取中點**、不得自行挑 candidate。Candidate Envelope profile 與 rule version 只信 `runtime_info`／runtime validator，**不得以舊版 profile 記憶**模擬。
 6. Astralium 是**可選外部命盤資料**；可另建 `03-1_Astralium八字資料包.md`、`04-1_Astralium紫微資料包.md`，**不取代 03**、**不取代 04**；兩份**命主稱呼必須一致**，只有大小寫差異（Amy／amy）可統一，內容不同（Amy／Allie）先確認。
