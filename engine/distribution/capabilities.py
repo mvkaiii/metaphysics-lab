@@ -95,6 +95,17 @@ _CAPABILITIES = {
         "output_classification": "Natal workflow governance metadata",
         "ranking_authority": False,
     },
+    "distribution.candidate_envelope_visualization": {
+        "id": "distribution.candidate_envelope_visualization",
+        "implementation": "implemented",
+        "maturity": "experimental",
+        "routing": "on_demand",
+        "rule_version": "1.0-exp",
+        "module": "engine.visualization.candidate_envelope",
+        "dependencies": ("natal.candidate_envelope",),
+        "output_classification": "Visualization presentation metadata",
+        "ranking_authority": False,
+    },
     "distribution.interpretation_contract": {
         "id": "distribution.interpretation_contract",
         "implementation": "implemented",
