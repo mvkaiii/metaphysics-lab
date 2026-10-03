@@ -129,7 +129,7 @@ jobs:
           }
           assert required_actions.issubset(set(runtime["supported_actions"]))
           bundled = runtime["bundled_dependencies"]
-          assert bundled["lunar_python"]["available"] is True
+          assert bundled["lunar-python"]["available"] is True
           assert bundled["tzdata"]["available"] is True
 
           exact_birth = {
@@ -147,9 +147,9 @@ jobs:
               "birth_place": "台北市",
           }
           identity = {
-              "subject_id": "subj_freshhost01",
+              "subject_id": "subj_7f3a2c91d4e8",
               "subject_display_name": "Fresh Host",
-              "subject_short_id": "FRESH1",
+              "subject_short_id": "7F3A2C",
               "filename_label": "FreshHost",
           }
 
