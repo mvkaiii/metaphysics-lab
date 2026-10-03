@@ -150,7 +150,7 @@ jobs:
               "subject_id": "subj_7f3a2c91d4e8",
               "subject_display_name": "Fresh Host",
               "subject_short_id": "7F3A2C",
-              "filename_label": "FreshHost",
+              "filename_label": "Fresh-Host",
           }
 
           location = request("birth.resolve_location", {"birth_place": "台北市"})["resolved_location"]
