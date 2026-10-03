@@ -6,7 +6,7 @@ from tools.check_phase2c_rule_source import check_phase2c_rule_source
 class Phase2CRuleSourceTests(unittest.TestCase):
     def test_current_approved_phase2c_state_matches_rule_source(self):
         report = check_phase2c_rule_source()
-        expected_release = "v1.8.0"
+        expected_release = "v1.9.0"
         self.assertEqual(report["release_identity"], expected_release)
         self.assertEqual(report["expected_release_identity"], expected_release)
         self.assertEqual(report["status"], "PASS")
