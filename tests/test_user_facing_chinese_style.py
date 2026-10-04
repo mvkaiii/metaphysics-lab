@@ -94,7 +94,18 @@ def test_latest_release_note_uses_natural_zh_tw():
         assert phrase not in text, f"{path}: avoid mixed-language phrase: {phrase}"
 
     prose = _remove_allowed_phrases(text)
-    prose = re.sub(r"v\d+(?:\.\d+)+(?:-[A-Za-z0-9.]+)?", "", prose)
+    # Version identifiers are formal tokens, including short forms such as v1/v2
+    # and component versions such as 1.5-exp. Do not flag them as prose English.
+    prose = re.sub(
+        r"(?<![A-Za-z0-9_])v\d+(?:\.\d+)*(?:-[A-Za-z0-9.]+)?(?![A-Za-z0-9_])",
+        "",
+        prose,
+    )
+    prose = re.sub(
+        r"(?<![A-Za-z0-9_])\d+(?:\.\d+)+(?:-[A-Za-z0-9.]+)?(?![A-Za-z0-9_])",
+        "",
+        prose,
+    )
     prose = re.sub(r"\b[A-Fa-f0-9]{16,}\b", "", prose)
 
     unexpected = []
