@@ -4,7 +4,7 @@ Metaphysics Lab 是一套把**命盤計算**和**AI 命理解讀**分開的命�
 
 核心概念很簡單：**Python 負責固定計算，AI 負責解讀。** 一般使用者不需要先理解程式碼儲存庫、模組或內部功能狀態，也不需要自己決定八字／紫微該執行哪個程式。
 
-目前最新正式版本為 **v1.9.0｜2026-10-03**。既有命主資料與個案紀錄可以沿用；本版新增出生時間不確定性的完整流程、Case Revision Integrity、Lock Provenance v2、Guided Natal Build與Candidate Envelope摘要視覺化。Case Schema仍維持1.1。
+目前最新正式版本為 **v1.9.0｜2026-10-03**。既有命主資料與個案紀錄可以沿用；本版新增出生時間不確定性的完整流程、個案本命修訂完整性（Case Revision Integrity）、鎖定來源追溯（Lock Provenance v2）、引導式本命建立（Guided Natal Build）與候選盤面集合（Candidate Envelope）摘要視覺化。個案資料格式（Case Schema）仍維持1.1。
 
 正式下載頁：[Metaphysics Lab v1.9.0](https://github.com/mvkaiii/metaphysics-lab/releases/tag/v1.9.0)。到 GitHub 正式發布頁的**下載區（GitHub 顯示為 Assets）**，優先下載 `Metaphysics-Lab-v1.9.0-User-Package.zip`。**不要把 GitHub 自動產生的原始碼壓縮檔（Source code ZIP）當成使用者安裝包。**
 
