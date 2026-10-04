@@ -21,6 +21,7 @@ ALLOWED_PHRASES = (
     "AI Distribution Runtime",
     "Capability Manifest",
     "Git tag",
+    "Base Case",
 )
 
 ALLOWED_WORDS = {
