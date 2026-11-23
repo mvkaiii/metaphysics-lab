@@ -5,6 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+env:
+  EXPECTED_PACKAGE_SHA256: aed00ed82c0066b77639fdd5c5bae92c82b7566d6de4cafe27a2f5cbd09207e7
+
 permissions:
   contents: read
 
@@ -48,6 +51,8 @@ jobs:
           python tools/build_release_package.py --verify --output "$RUNNER_TEMP/v191-second.zip"
           cmp "$RUNNER_TEMP/v191-first.zip" "$RUNNER_TEMP/v191-second.zip"
           sha256sum "$RUNNER_TEMP/v191-first.zip"
+          actual="$(sha256sum "$RUNNER_TEMP/v191-first.zip" | cut -d ' ' -f1)"
+          test "$actual" = "$EXPECTED_PACKAGE_SHA256"
           python - <<'PY'
           from pathlib import Path
           assert len(Path('dist/ai/project_instructions.txt').read_text(encoding='utf-8')) <= 8000

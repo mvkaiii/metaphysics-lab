@@ -53,6 +53,13 @@ class V191PatchContractTests(unittest.TestCase):
         interpretation = distribution_capability("distribution.interpretation_contract")
         self.assertEqual(interpretation["rule_version"], "lin_tianji_interpretation_contract_v1-exp")
 
+    def test_pinned_package_digest_matches_candidate_receipt(self):
+        digest = "aed00ed82c0066b77639fdd5c5bae92c82b7566d6de4cafe27a2f5cbd09207e7"
+        receipt = (ROOT / "docs/release/v1.9.1-qualification.md").read_text(encoding="utf-8")
+        workflow = (ROOT / ".github/workflows/v191-release-candidate-validation.yml").read_text(encoding="utf-8")
+        self.assertIn("user_package_sha256: " + digest, receipt)
+        self.assertIn("EXPECTED_PACKAGE_SHA256: " + digest, workflow)
+        self.assertIn('test "$actual" = "$EXPECTED_PACKAGE_SHA256"', workflow)
     def test_candidate_does_not_claim_published_status(self):
         notes = (ROOT / "docs/發布說明-v1.9.1.md").read_text(encoding="utf-8")
         self.assertIn("尚未正式發布", notes)
