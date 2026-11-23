@@ -1,8 +1,29 @@
 # Metaphysics Lab 版本
 
-> `VERSION.md` 是給開發、驗證與版本治理看的**技術版本表**。第一次使用請先看 `README.md` 或 `docs/快速開始.md`；一般使用者版 v1.9.0 發布說明見 `docs/發布說明-v1.9.0.md`。
+> `VERSION.md` 是給開發、驗證與版本治理看的**技術版本表**。第一次使用請先看 `README.md` 或 `docs/快速開始.md`；一般使用者版 v1.9.1 發布說明見 `docs/發布說明-v1.9.1.md`。
 >
 > 歷史 Release snapshot 不因後續 qualification 或文件更新回寫改造。正式發版只固定 release identity；**release 本身不改變 capability maturity**，目前執行能力仍以 `runtime_info` 為技術權威來源。
+
+## v1.9.1 Release Snapshot
+
+**正式發布日期：2026-11-23（台灣時間）**。本修補版更新正式版本識別，並延續v1.9.0後已合併的台灣繁體中文文件品質改善，不修改命理演算法。
+
+```text
+Release Version            1.9.1
+Project Contract           1.3
+Runtime Schema             1.1
+Case Schema                1.1
+AI Distribution Runtime    1.5-exp
+Capability Manifest        1.0
+```
+
+- 使用者安裝包：`Metaphysics-Lab-v1.9.1-User-Package.zip`，SHA256：`aed00ed82c0066b77639fdd5c5bae92c82b7566d6de4cafe27a2f5cbd09207e7`。
+- 已安裝v1.9.0者只需更換`metaphysics_lab.py`；核心規則及專案固定指令位元內容沒有改變。
+- 選擇器v1、解讀器v1與功能成熟度不變；不以本次軟體發布宣稱預測效度提升。
+- 私人個案、歷史鎖定紀錄和v1.9.0正式發布資產均原樣保留。
+- 授權的PR #249合併後，仍須經過`release-v1.9.1.yml`在精確合併提交上的完整驗證，才可建立正式標籤與發布檔案。
+
+---
 
 ## v1.9.0 Release Snapshot
 
@@ -27,7 +48,7 @@ Capability Manifest        1.0
 - Instructions/Core已切到runtime-owned state authority；固定文件不硬編Candidate Envelope或prediction method的動態版本。
 - selector v1 / interpretation v1仍為default；prospective method identity仍為 `lin_tianji_v1.5-exp`。
 - Experimental capability不因v1.9軟體release自動升級maturity。
-- deterministic v1.9.0 User Package SHA256：`e263c25ea6efb8184a2d66c2bc2ce3edf31b29324152b2bccb9f96333aa504fa`。
+- v1.9.1使用者安裝包SHA256：`aed00ed82c0066b77639fdd5c5bae92c82b7566d6de4cafe27a2f5cbd09207e7`。
 - Project Instructions：7998字元，維持在ChatGPT Project 8000字元限制內。
 
 ---
@@ -101,9 +122,9 @@ Capability Manifest       1.0
 
 ## 最新正式發布
 
-- Metaphysics Lab Core：**v1.9.0**
-- 發布日期：**2026-10-03**
-- Git tag / GitHub Release：`v1.9.0`由 `release-v1.9.yml` 在merged main SHA完整驗證後建立；tag target是正式release identity authority。
+- Metaphysics Lab Core：**v1.9.1**
+- 發布日期：**2026-11-23**
+- Git標籤與GitHub Release：`v1.9.1`由`release-v1.9.1.yml`在合併提交通過完整驗證後建立。
 - Product RC：`6529d34eb047c6fbbda3d85be83e211566e69565`；qualification receipt head：`d85386fca2f3afb08076c3629f095223f5614e33`。
 - Project Contract / Runtime Schema / Case Schema：`1.3 / 1.1 / 1.1`。
 - AI Distribution Runtime：`1.5-exp`。

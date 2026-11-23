@@ -34,7 +34,7 @@ class V18ReleaseCandidateContractTests(unittest.TestCase):
         self.assertIn("Metaphysics-Lab-v1.8.0-User-Package.zip", workflow)
 
     def test_current_v19_candidate_identity_does_not_relabel_task3(self):
-        self.assertEqual(RELEASE_VERSION, "1.9.0")
+        self.assertEqual(RELEASE_VERSION, "1.9.1")
         self.assertEqual(DISTRIBUTION_RUNTIME_VERSION, "1.5-exp")
         self.assertEqual(PROJECT_CONTRACT_VERSION, "1.3")
         self.assertEqual(RUNTIME_SCHEMA_VERSION, "1.1")
@@ -43,7 +43,7 @@ class V18ReleaseCandidateContractTests(unittest.TestCase):
         info = dispatch("runtime_info", {})
         self.assertTrue(info["ok"], info)
         data = info["data"]
-        self.assertEqual(data["release_version"], "1.9.0")
+        self.assertEqual(data["release_version"], "1.9.1")
         self.assertEqual(data["distribution_runtime_version"], "1.5-exp")
         self.assertEqual(data["project_contract_version"], "1.3")
         self.assertEqual(data["runtime_schema_version"], "1.1")
@@ -59,7 +59,7 @@ class V18ReleaseCandidateContractTests(unittest.TestCase):
         self.assertEqual(build_release_package.RELEASE_VERSION, RELEASE_VERSION)
         self.assertEqual(
             build_release_package.USER_PACKAGE_NAME,
-            "Metaphysics-Lab-v1.9.0-User-Package.zip",
+            "Metaphysics-Lab-v1.9.1-User-Package.zip",
         )
         self.assertEqual(
             set(build_release_package.USER_ASSETS),

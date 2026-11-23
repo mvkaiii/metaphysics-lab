@@ -3,10 +3,10 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CURRENT_RELEASE_VERSION = "v1.9.0"
-CURRENT_RELEASE_DATE = "2026-10-03"
-CURRENT_USER_PACKAGE = "Metaphysics-Lab-v1.9.0-User-Package.zip"
-CURRENT_USER_PACKAGE_SHA256 = "e263c25ea6efb8184a2d66c2bc2ce3edf31b29324152b2bccb9f96333aa504fa"
+CURRENT_RELEASE_VERSION = "v1.9.1"
+CURRENT_RELEASE_DATE = "2026-11-23"
+CURRENT_USER_PACKAGE = "Metaphysics-Lab-v1.9.1-User-Package.zip"
+CURRENT_USER_PACKAGE_SHA256 = "aed00ed82c0066b77639fdd5c5bae92c82b7566d6de4cafe27a2f5cbd09207e7"
 
 V171_RELEASE_DATE = "2026-09-25"
 V171_USER_PACKAGE = "Metaphysics-Lab-v1.7.1-User-Package.zip"

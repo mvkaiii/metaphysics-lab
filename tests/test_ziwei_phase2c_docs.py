@@ -99,7 +99,7 @@ class ZiweiPhase2CDocsTests(unittest.TestCase):
 
     def test_current_release_is_v19_without_flowing_star_promotion(self):
         text = _read("VERSION.md")
-        self.assertIn("Metaphysics Lab Core：**v1.9.0**", text)
+        self.assertIn("Metaphysics Lab Core：**v1.9.1**", text)
         self.assertIn("## v1.7.1 Release Snapshot", text)
         self.assertIn("Ziwei Flowing Stars：v1.0-exp", text)
         self.assertIn("`ziwei.flowing_stars` | implemented | experimental | on_demand", text)

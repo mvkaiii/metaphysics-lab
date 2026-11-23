@@ -3,8 +3,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CURRENT_VERSION = "v1.9.0"
-USER_PACKAGE = "Metaphysics-Lab-v1.9.0-User-Package.zip"
+CURRENT_VERSION = "v1.9.1"
+USER_PACKAGE = "Metaphysics-Lab-v1.9.1-User-Package.zip"
 CURRENT_DOCS = (
     ROOT / "README.md",
     ROOT / "docs" / "快速開始.md",

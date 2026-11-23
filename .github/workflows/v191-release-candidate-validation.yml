@@ -1,0 +1,71 @@
+name: Metaphysics Lab v1.9.1 Candidate Validation
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  EXPECTED_PACKAGE_SHA256: aed00ed82c0066b77639fdd5c5bae92c82b7566d6de4cafe27a2f5cbd09207e7
+
+permissions:
+  contents: read
+
+jobs:
+  candidate:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout exact candidate HEAD
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - name: Report exact candidate SHA
+        run: git rev-parse HEAD
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pip install pytest==8.4.2
+      - name: Verify current identity and historical release contracts
+        run: |
+          python -m unittest tests.test_v191_patch_contract tests.test_v19_release_execution tests.test_v19_release_candidate_contract tests.test_v19_integration_version_contract tests.test_v18_release_candidate_contract -v
+      - name: Check generated distribution from source
+        run: python tools/build_ai_distribution.py --check
+      - name: Run backward compatibility and complete regression
+        run: |
+          python tools/run_v17_release_surface_validation.py --json
+          python -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Python 3.9 compilation and isolated portable runtime checks
+        run: |
+          python -m compileall -q engine renderers tools tests
+          python -c "compile(open('dist/ai/metaphysics_lab.py', encoding='utf-8').read(), 'dist/ai/metaphysics_lab.py', 'exec')"
+          python -m unittest tests.test_ai_distribution_portability -v
+      - name: Deterministic double-build and candidate digest output
+        shell: bash
+        run: |
+          python tools/build_release_package.py --verify --output "$RUNNER_TEMP/v191-first.zip"
+          python tools/build_release_package.py --verify --output "$RUNNER_TEMP/v191-second.zip"
+          cmp "$RUNNER_TEMP/v191-first.zip" "$RUNNER_TEMP/v191-second.zip"
+          sha256sum "$RUNNER_TEMP/v191-first.zip"
+          actual="$(sha256sum "$RUNNER_TEMP/v191-first.zip" | cut -d ' ' -f1)"
+          test "$actual" = "$EXPECTED_PACKAGE_SHA256"
+          python - <<'PY'
+          from pathlib import Path
+          assert len(Path('dist/ai/project_instructions.txt').read_text(encoding='utf-8')) <= 8000
+          PY
+      - name: Check no private outcome assets and clean working tree
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          forbidden = {'驗證事件紀錄.md', 'adjudication-1.json'}
+          for root in (Path('dist/ai'), Path('docs/release')):
+              for item in root.rglob('*'):
+                  assert not (item.is_file() and (item.name in forbidden or item.name.endswith('_05_驗證事件紀錄.md'))), str(item)
+          PY
+          git diff --exit-code
+          test -z "$(git status --porcelain)"

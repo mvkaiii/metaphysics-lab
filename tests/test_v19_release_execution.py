@@ -19,15 +19,15 @@ EXPECTED_PACKAGE_SHA256 = "e263c25ea6efb8184a2d66c2bc2ce3edf31b29324152b2bccb9f9
 
 
 class V19ReleaseExecutionContractTests(unittest.TestCase):
-    def test_release_identity_is_exact_and_package_digest_stays_frozen(self):
-        self.assertEqual(RELEASE_VERSION, "1.9.0")
+    def test_v19_historical_digest_frozen_and_current_identity_independent(self):
+        self.assertEqual(RELEASE_VERSION, "1.9.1")
         self.assertEqual(DISTRIBUTION_RUNTIME_VERSION, "1.5-exp")
         self.assertEqual(PROJECT_CONTRACT_VERSION, "1.3")
         self.assertEqual(RUNTIME_SCHEMA_VERSION, "1.1")
         self.assertEqual(CASE_SCHEMA_VERSION, "1.1")
         self.assertEqual(
             build_release_package.USER_PACKAGE_NAME,
-            "Metaphysics-Lab-v1.9.0-User-Package.zip",
+            "Metaphysics-Lab-v1.9.1-User-Package.zip",
         )
 
     def test_release_workflow_publishes_only_from_verified_merged_main_sha(self):
@@ -75,45 +75,19 @@ class V19ReleaseExecutionContractTests(unittest.TestCase):
         ):
             self.assertNotIn(forbidden, text)
 
-    def test_public_docs_switch_latest_release_to_v19_without_claiming_stable(self):
-        paths = (
-            ROOT / "README.md",
-            ROOT / "docs" / "快速開始.md",
-            ROOT / "docs" / "安裝到ChatGPT-Project.md",
-            ROOT / "docs" / "更新與版本同步.md",
-            ROOT / "VERSION.md",
-            ROOT / "CHANGELOG.md",
-        )
-        for path in paths:
-            text = path.read_text(encoding="utf-8")
-            with self.subTest(path=path.name):
-                self.assertIn("v1.9.0", text)
-                self.assertIn("2026-10-03", text)
-
-        readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn(
-            "https://github.com/mvkaiii/metaphysics-lab/releases/tag/v1.9.0",
-            readme,
-        )
-        self.assertIn("Metaphysics-Lab-v1.9.0-User-Package.zip", readme)
-
+    def test_v19_published_snapshot_remains_separate_from_v191(self):
         version = (ROOT / "VERSION.md").read_text(encoding="utf-8")
+        changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
         self.assertIn("## v1.9.0 Release Snapshot", version)
+        self.assertIn("## v1.9.1 Release Snapshot", version)
+        self.assertIn("## v1.9.0｜2026-10-03", changelog)
+        self.assertIn("## v1.9.1｜2026-11-23", changelog)
+        self.assertIn(EXPECTED_PACKAGE_SHA256, version)
+        self.assertIn("Metaphysics-Lab-v1.9.1-User-Package.zip", readme)
+        self.assertIn("https://github.com/mvkaiii/metaphysics-lab/releases/tag/v1.9.1", readme)
         self.assertIn("Project Contract           1.3", version)
         self.assertIn("AI Distribution Runtime    1.5-exp", version)
-        self.assertIn(EXPECTED_PACKAGE_SHA256, version)
-
-        changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-        self.assertRegex(changelog, r"## v1\.9\.0｜2026-10-03")
-        self.assertIn("Candidate Envelope v2", changelog)
-        self.assertIn("Lock Provenance v2", changelog)
-        self.assertIn("Guided Natal Build", changelog)
-        self.assertIn("Visualization P1", changelog)
-
-        combined = "\n".join(path.read_text(encoding="utf-8") for path in paths)
-        self.assertNotIn("v1.9.0 將", combined)
-        self.assertNotRegex(combined, re.compile(r"v1\.9\.0.{0,40}(?:Stable|穩定功能)", re.S))
-
     def test_release_notes_state_upgrade_and_compatibility_boundaries(self):
         self.assertTrue(RELEASE_NOTES.is_file(), "v1.9 release notes are missing")
         text = RELEASE_NOTES.read_text(encoding="utf-8")

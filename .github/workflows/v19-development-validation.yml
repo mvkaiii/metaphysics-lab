@@ -18,7 +18,7 @@ permissions:
 
 jobs:
   birth-time-domain-foundation:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout exact candidate
         uses: actions/checkout@v4
@@ -93,7 +93,7 @@ jobs:
           retention-days: 7
 
   legacy-compatibility:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout exact candidate
         uses: actions/checkout@v4
