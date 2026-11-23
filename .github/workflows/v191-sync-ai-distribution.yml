@@ -1,0 +1,39 @@
+name: v1.9.1 one-time candidate distribution regeneration
+
+on:
+  push:
+    branches:
+      - release/v1.9.1-documentation-identity-rc
+    paths:
+      - .github/workflows/v191-sync-ai-distribution.yml
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.repository == 'mvkaiii/metaphysics-lab' && github.ref == 'refs/heads/release/v1.9.1-documentation-identity-rc'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch that is allowed to receive generated files
+        uses: actions/checkout@v4
+        with:
+          ref: release/v1.9.1-documentation-identity-rc
+          persist-credentials: true
+      - name: Setup Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - name: Rebuild generated artifacts from source and verify
+        run: |
+          python tools/build_ai_distribution.py
+          python tools/build_ai_distribution.py --check
+      - name: Commit only generated distribution on candidate branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- dist/ai/metaphysics_lab.py dist/ai/metaphysics_core.md dist/ai/project_instructions.txt
+          if ! git diff --cached --quiet; then
+            git commit -m "build(v1.9.1): regenerate distribution from source"
+            git push origin HEAD:release/v1.9.1-documentation-identity-rc
+          fi
