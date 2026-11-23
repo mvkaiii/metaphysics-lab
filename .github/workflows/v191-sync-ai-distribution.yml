@@ -13,7 +13,7 @@ permissions:
 jobs:
   sync:
     if: github.repository == 'mvkaiii/metaphysics-lab' && github.ref == 'refs/heads/release/v1.9.1-documentation-identity-rc'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout branch that is allowed to receive generated files
         uses: actions/checkout@v4
