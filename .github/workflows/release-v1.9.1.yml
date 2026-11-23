@@ -33,7 +33,7 @@ permissions:
 
 jobs:
   release:
-    if: github.repository == 'mvkaiii/metaphysics-lab' && github.ref == 'refs/heads/main' && ((github.event_name == 'push' && contains(github.event.head_commit.message, 'Merge pull request #249')) || (github.event_name == 'workflow_dispatch' && inputs.release_authorized == true && github.sha == inputs.expected_merged_sha))
+    if: "github.repository == 'mvkaiii/metaphysics-lab' && github.ref == 'refs/heads/main' && ((github.event_name == 'push' && contains(github.event.head_commit.message, 'Merge pull request #249')) || (github.event_name == 'workflow_dispatch' && inputs.release_authorized == true && github.sha == inputs.expected_merged_sha))"
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout exact merged SHA
