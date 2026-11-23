@@ -23,7 +23,7 @@ env:
 
 jobs:
   release:
-    if: github.repository == 'mvkaiii/metaphysics-lab' && github.ref == 'refs/heads/main'
+    if: github.repository == 'mvkaiii/metaphysics-lab' && github.ref == 'refs/heads/main' && github.sha == '30a16e4f00e55044f1197e93a77727f159119d0f'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout exact merged release target

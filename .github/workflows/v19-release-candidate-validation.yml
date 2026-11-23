@@ -13,6 +13,7 @@ env:
 
 jobs:
   release-candidate:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/tags/v1.9.0'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout exact candidate
