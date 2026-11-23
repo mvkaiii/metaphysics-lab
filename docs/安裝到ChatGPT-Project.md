@@ -1,16 +1,14 @@
 # 安裝到 ChatGPT / Claude Project
 
-> 發布狀態：v1.9.1目前為待驗證候選，尚未正式發布。一般使用者請繼續使用v1.9.0正式安裝包；這次修補不要求重建私人個案資料。
-
 這份文件只處理安裝與第一次啟動。一般使用者不需要理解開發用的程式碼儲存庫，也不需要自己拼裝 Python 模組。
 
 > 以下姓名、日期與識別碼都是**虛構示例**。
 
 ## 1. 下載與安裝
 
-目前最新正式版本為 **v1.9.0｜2026-10-03**。既有命主資料與個案紀錄可以沿用；專案規格（Project Contract）升為1.3，個案資料格式（Case Schema）仍維持1.1。
+目前最新正式版本為 **v1.9.1｜2026-11-23**。既有命主資料與個案紀錄可以沿用；專案規格（Project Contract）升為1.3，個案資料格式（Case Schema）仍維持1.1。
 
-優先下載 `Metaphysics-Lab-v1.9.0-User-Package.zip`；解壓後就是下面三個檔案。也可以在正式發布頁的下載區（Assets）單獨下載。
+優先下載 `Metaphysics-Lab-v1.9.1-User-Package.zip`；解壓後就是下面三個檔案。也可以在正式發布頁的下載區（Assets）單獨下載。
 
 | 用途 | 實際檔名 | 安裝方式 |
 |---|---|---|
@@ -26,7 +24,7 @@
 
 也就是**兩個上傳檔＋一份貼進 Project Instructions 的文字**。不需要下載 GitHub 自動產生的原始碼壓縮檔（Source code），也不需要解壓縮專案原始碼。
 
-從 **v1.8.0 升到 v1.9.0** 請同步三檔：替換 `metaphysics_lab.py`、替換 `metaphysics_core.md`、重新貼上新版 `project_instructions.txt`。保留 `命主索引.md`、既有個案資料、驗證事件、流年／問事／重大決策紀錄與已鎖定預測；既有1.2 Case仍可讀，舊lock不回填或重簽。
+從v1.9.0升到v1.9.1只需替換`metaphysics_lab.py`。從 **v1.8.0 升到 v1.9.0** 時仍請同步三檔：替換 `metaphysics_lab.py`、替換 `metaphysics_core.md`、重新貼上新版 `project_instructions.txt`。保留 `命主索引.md`、既有個案資料、驗證事件、流年／問事／重大決策紀錄與已鎖定預測；既有1.2 Case仍可讀，舊lock不回填或重簽。
 
 ChatGPT Project 與 Claude Project 的介面名稱可能不同，但概念相同。
 
