@@ -1,4 +1,4 @@
-name: Release v1.9.1 (authorized PR #249)
+name: "Release v1.9.1 (authorized PR #249, UTF-8 gate fix)"
 
 on:
   push:
@@ -33,7 +33,7 @@ permissions:
 
 jobs:
   release:
-    if: "github.repository == 'mvkaiii/metaphysics-lab' && github.ref == 'refs/heads/main' && ((github.event_name == 'push' && contains(github.event.head_commit.message, 'Merge pull request #249')) || (github.event_name == 'workflow_dispatch' && inputs.release_authorized == true && github.sha == inputs.expected_merged_sha))"
+    if: "github.repository == 'mvkaiii/metaphysics-lab' && github.ref == 'refs/heads/main' && ((github.event_name == 'push' && contains(github.event.head_commit.message, 'Release v1.9.1 gate-fix integration')) || (github.event_name == 'workflow_dispatch' && inputs.release_authorized == true && github.sha == inputs.expected_merged_sha))"
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout exact merged SHA
@@ -52,7 +52,7 @@ jobs:
       - name: Verify exact authorized source and release scope
         run: |
           git merge-base --is-ancestor "$APPROVED_RC_BASE_SHA" "$GITHUB_SHA"
-          git diff --name-only "$APPROVED_RC_BASE_SHA" "$GITHUB_SHA" | while IFS= read -r changed; do
+          git diff --name-only -z "$APPROVED_RC_BASE_SHA" "$GITHUB_SHA" | while IFS= read -r -d '' changed; do
             case "$changed" in
               VERSION.md|CHANGELOG.md|README.md|docs/架構說明.md|docs/快速開始.md|docs/安裝到ChatGPT-Project.md|docs/更新與版本同步.md|docs/發布說明-v1.9.1.md|docs/release/v1.9.1-qualification.md|tests/test_v191_patch_contract.py|tests/test_v17_docs.py|tests/test_v17_post_release_docs.py|tests/test_ai_distribution_acceptance.py|tests/test_v19_release_execution.py|tests/test_ai_distribution_docs.py|tests/test_rule_source_reconciliation.py|tests/test_ziwei_phase2b_docs.py|tests/test_ziwei_phase2c_acceptance.py|tests/test_ziwei_phase2c_docs.py|tests/test_ziwei_phase2c_rule_source.py|tools/check_phase2c_rule_source.py|.github/workflows/release-v1.9.1.yml) ;;
               *) echo "Unapproved release-scope change: $changed"; exit 1 ;;
