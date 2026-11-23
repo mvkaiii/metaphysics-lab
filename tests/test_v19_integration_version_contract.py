@@ -92,7 +92,7 @@ class V19IntegrationVersionContractTests(unittest.TestCase):
         self.assertEqual(data["case_schema_version"], "1.1")
 
     def test_release_package_builder_uses_v19_candidate_identity(self):
-        self.assertEqual(build_release_package.RELEASE_VERSION, "1.9.0")
+        self.assertEqual(build_release_package.RELEASE_VERSION, RELEASE_VERSION)
         self.assertEqual(
             build_release_package.USER_PACKAGE_NAME,
             "Metaphysics-Lab-v1.9.1-User-Package.zip",
