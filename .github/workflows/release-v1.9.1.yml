@@ -23,7 +23,7 @@ permissions:
 jobs:
   release:
     if: github.repository == 'mvkaiii/metaphysics-lab' && github.ref == 'refs/heads/main' && inputs.release_authorized == true && github.sha == inputs.expected_merged_sha
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout exact merged SHA
         uses: actions/checkout@v4
