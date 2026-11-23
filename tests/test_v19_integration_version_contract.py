@@ -76,7 +76,7 @@ class V19IntegrationVersionContractTests(unittest.TestCase):
         return dispatch("export_case_markdown", payload)
 
     def test_v19_candidate_version_contract_is_explicit(self):
-        self.assertEqual(RELEASE_VERSION, "1.9.1"
+        self.assertEqual(RELEASE_VERSION, "1.9.1")
         self.assertEqual(DISTRIBUTION_RUNTIME_VERSION, "1.5-exp")
         self.assertEqual(PROJECT_CONTRACT_VERSION, "1.3")
         self.assertEqual(RUNTIME_SCHEMA_VERSION, "1.1")

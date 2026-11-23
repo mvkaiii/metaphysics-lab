@@ -23,7 +23,7 @@ EXPECTED_PACKAGE_SHA256 = "e263c25ea6efb8184a2d66c2bc2ce3edf31b29324152b2bccb9f9
 
 class V19ReleaseCandidateContractTests(unittest.TestCase):
     def test_v19_schemas_and_frozen_history_remain_unchanged(self):
-        self.assertEqual(RELEASE_VERSION, "1.9.1"
+        self.assertEqual(RELEASE_VERSION, "1.9.1")
         self.assertEqual(DISTRIBUTION_RUNTIME_VERSION, "1.5-exp")
         self.assertEqual(PROJECT_CONTRACT_VERSION, "1.3")
         self.assertEqual(RUNTIME_SCHEMA_VERSION, "1.1")
