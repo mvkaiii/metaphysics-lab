@@ -22,15 +22,15 @@ EXPECTED_PACKAGE_SHA256 = "e263c25ea6efb8184a2d66c2bc2ce3edf31b29324152b2bccb9f9
 
 
 class V19ReleaseCandidateContractTests(unittest.TestCase):
-    def test_v19_release_identity_and_schema_contract_are_frozen(self):
-        self.assertEqual(RELEASE_VERSION, "1.9.0")
+    def test_v19_schemas_and_frozen_history_remain_unchanged(self):
+        self.assertEqual(RELEASE_VERSION, "1.9.1"
         self.assertEqual(DISTRIBUTION_RUNTIME_VERSION, "1.5-exp")
         self.assertEqual(PROJECT_CONTRACT_VERSION, "1.3")
         self.assertEqual(RUNTIME_SCHEMA_VERSION, "1.1")
         self.assertEqual(CASE_SCHEMA_VERSION, "1.1")
         self.assertEqual(
             build_release_package.USER_PACKAGE_NAME,
-            "Metaphysics-Lab-v1.9.0-User-Package.zip",
+            "Metaphysics-Lab-v1.9.1-User-Package.zip",
         )
         self.assertEqual(
             set(build_release_package.USER_ASSETS),

@@ -4,6 +4,22 @@
 >
 > 歷史 Release snapshot 不因後續 qualification 或文件更新回寫改造。正式發版只固定 release identity；**release 本身不改變 capability maturity**，目前執行能力仍以 `runtime_info` 為技術權威來源。
 
+## v1.9.1候選（尚未正式發布）
+
+此候選修補正式發布版本識別，並承接v1.9.0之後已合併的台灣繁體中文文件品質改善。**最新正式發布仍為v1.9.0**；v1.9.1尚未通過發布資格驗證，也未取得合併及正式發布授權。
+
+```text
+Release Version            1.9.1
+Project Contract           1.3
+Runtime Schema             1.1
+Case Schema                1.1
+AI Distribution Runtime    1.5-exp
+Capability Manifest        1.0
+```
+
+本次不修改命理演算法、預設選擇器或解讀器、功能成熟度與私人個案資料。候選SHA、套件摘要及驗證紀錄待實際建置確認。v1.9.0歷史快照與發布資產保持不變。
+
+---
 ## v1.9.0 Release Snapshot
 
 v1.9.0 的 release identity / scope、Fresh-host qualification與RC freeze已於 **2026-10-03** 完成。Product RC為 `6529d34eb047c6fbbda3d85be83e211566e69565`，qualification receipt head為 `d85386fca2f3afb08076c3629f095223f5614e33`；正式tag / GitHub Release只允許在merged main SHA通過 `release-v1.9.yml` 完整驗證後建立。

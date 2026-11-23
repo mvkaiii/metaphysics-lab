@@ -76,7 +76,7 @@ class V19IntegrationVersionContractTests(unittest.TestCase):
         return dispatch("export_case_markdown", payload)
 
     def test_v19_candidate_version_contract_is_explicit(self):
-        self.assertEqual(RELEASE_VERSION, "1.9.0")
+        self.assertEqual(RELEASE_VERSION, "1.9.1"
         self.assertEqual(DISTRIBUTION_RUNTIME_VERSION, "1.5-exp")
         self.assertEqual(PROJECT_CONTRACT_VERSION, "1.3")
         self.assertEqual(RUNTIME_SCHEMA_VERSION, "1.1")
@@ -85,7 +85,7 @@ class V19IntegrationVersionContractTests(unittest.TestCase):
         info = dispatch("runtime_info", {})
         self.assertTrue(info["ok"], info)
         data = info["data"]
-        self.assertEqual(data["release_version"], "1.9.0")
+        self.assertEqual(data["release_version"], "1.9.1")
         self.assertEqual(data["distribution_runtime_version"], "1.5-exp")
         self.assertEqual(data["project_contract_version"], "1.3")
         self.assertEqual(data["runtime_schema_version"], "1.1")
@@ -95,7 +95,7 @@ class V19IntegrationVersionContractTests(unittest.TestCase):
         self.assertEqual(build_release_package.RELEASE_VERSION, "1.9.0")
         self.assertEqual(
             build_release_package.USER_PACKAGE_NAME,
-            "Metaphysics-Lab-v1.9.0-User-Package.zip",
+            "Metaphysics-Lab-v1.9.1-User-Package.zip",
         )
 
     def test_default_full_case_export_is_revision_bound_contract_1_3(self):
