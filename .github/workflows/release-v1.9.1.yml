@@ -54,7 +54,7 @@ jobs:
           git merge-base --is-ancestor "$APPROVED_RC_BASE_SHA" "$GITHUB_SHA"
           git diff --name-only "$APPROVED_RC_BASE_SHA" "$GITHUB_SHA" | while IFS= read -r changed; do
             case "$changed" in
-              VERSION.md|CHANGELOG.md|README.md|docs/架構說明.md|docs/快速開始.md|docs/安裝到ChatGPT-Project.md|docs/更新與版本同步.md|docs/發布說明-v1.9.1.md|docs/release/v1.9.1-qualification.md|tests/test_v191_patch_contract.py|tests/test_v17_docs.py|tests/test_v17_post_release_docs.py|tests/test_ai_distribution_acceptance.py|tests/test_v19_release_execution.py|.github/workflows/release-v1.9.1.yml) ;;
+              VERSION.md|CHANGELOG.md|README.md|docs/架構說明.md|docs/快速開始.md|docs/安裝到ChatGPT-Project.md|docs/更新與版本同步.md|docs/發布說明-v1.9.1.md|docs/release/v1.9.1-qualification.md|tests/test_v191_patch_contract.py|tests/test_v17_docs.py|tests/test_v17_post_release_docs.py|tests/test_ai_distribution_acceptance.py|tests/test_v19_release_execution.py|tests/test_ai_distribution_docs.py|tests/test_rule_source_reconciliation.py|tests/test_ziwei_phase2b_docs.py|tests/test_ziwei_phase2c_acceptance.py|tests/test_ziwei_phase2c_docs.py|tests/test_ziwei_phase2c_rule_source.py|tools/check_phase2c_rule_source.py|.github/workflows/release-v1.9.1.yml) ;;
               *) echo "Unapproved release-scope change: $changed"; exit 1 ;;
             esac
           done
@@ -64,7 +64,7 @@ jobs:
         run: |
           ! grep -q '尚未正式發布' docs/發布說明-v1.9.1.md
           grep -Fq 'Metaphysics Lab Core：**v1.9.1**' VERSION.md
-          grep -Fq 'status: RELEASE_EXECUTION_APPROVED_REQUALIFICATION_REQUIRED' docs/release/v1.9.1-qualification.md
+          grep -Fq 'status: RELEASE_EXECUTION_APPROVED_EXACT_HEAD_GATED' docs/release/v1.9.1-qualification.md
       - name: Set up Python 3.9
         uses: actions/setup-python@v5
         with:

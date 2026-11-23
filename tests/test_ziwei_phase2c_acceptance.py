@@ -97,7 +97,7 @@ class ZiweiPhase2CAcceptanceTests(unittest.TestCase):
 
     def test_current_release_is_v19_while_phase2c_qualification_snapshot_keeps_origin(self):
         text = (ROOT / "VERSION.md").read_text(encoding="utf-8")
-        self.assertIn("Metaphysics Lab Core：**v1.9.0**", text)
+        self.assertIn("Metaphysics Lab Core：**v1.9.1**", text)
         self.assertIn("## v1.7.1 Release Snapshot", text)
         self.assertIn("Ziwei Flowing Stars：v1.0-exp", text)
         # The qualification summary is historical evidence produced before the

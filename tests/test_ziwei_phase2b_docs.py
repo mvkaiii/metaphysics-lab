@@ -74,7 +74,7 @@ class ZiweiPhase2BDocumentationTests(unittest.TestCase):
         self.assertNotIn('## Unreleased｜Phase 2B', self.changelog)
 
     def test_current_release_is_v19_without_phase2b_promotion(self):
-        self.assertIn('Metaphysics Lab Core：**v1.9.0**', self.version)
+        self.assertIn('Metaphysics Lab Core：**v1.9.1**', self.version)
         self.assertIn('## v1.7.1 Release Snapshot', self.version)
         self.assertIn('Ziwei Fine Cycle：v1.0-exp', self.version)
         self.assertIn('紫微流月／流日／流時 stem | implemented | experimental | on_demand', self.version)
