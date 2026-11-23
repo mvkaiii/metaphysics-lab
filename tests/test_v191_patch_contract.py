@@ -60,14 +60,18 @@ class V191PatchContractTests(unittest.TestCase):
         self.assertIn("user_package_sha256: " + digest, receipt)
         self.assertIn("EXPECTED_PACKAGE_SHA256: " + digest, workflow)
         self.assertIn('test "$actual" = "$EXPECTED_PACKAGE_SHA256"', workflow)
-    def test_candidate_does_not_claim_published_status(self):
+    def test_final_release_docs_and_unchanged_contract(self):
         notes = (ROOT / "docs/發布說明-v1.9.1.md").read_text(encoding="utf-8")
-        self.assertIn("尚未正式發布", notes)
+        self.assertIn("# Metaphysics Lab v1.9.1｜發布說明", notes)
+        self.assertIn("aed00ed82c0066b77639fdd5c5bae92c82b7566d6de4cafe27a2f5cbd09207e7", notes)
+        self.assertNotIn("尚未正式發布", notes)
         for name in ("README.md", "docs/快速開始.md",
                      "docs/安裝到ChatGPT-Project.md", "docs/更新與版本同步.md"):
             text = (ROOT / name).read_text(encoding="utf-8")
-            self.assertIn("v1.9.0", text)
-            self.assertIn("v1.9.1", text)
+            self.assertIn("v1.9.1｜2026-11-23", text)
+        release = (ROOT / ".github/workflows/release-v1.9.1.yml").read_text(encoding="utf-8")
+        self.assertIn("sha256sum -c -", release)
+        self.assertIn("gh release create v1.9.1", release)
 
 
 if __name__ == "__main__":
