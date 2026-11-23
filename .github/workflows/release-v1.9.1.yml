@@ -1,6 +1,13 @@
-name: Release v1.9.1 (manual authorization required)
+name: Release v1.9.1 (authorized PR #249)
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/release-v1.9.1.yml'
+      - 'docs/發布說明-v1.9.1.md'
+      - 'docs/release/v1.9.1-qualification.md'
+      - 'VERSION.md'
   workflow_dispatch:
     inputs:
       release_authorized:
@@ -17,31 +24,47 @@ on:
         required: true
         type: string
 
+env:
+  APPROVED_RC_BASE_SHA: 4771e3dedf11676c882368ade9f532794fe5e8b9
+  EXPECTED_PACKAGE_SHA256: aed00ed82c0066b77639fdd5c5bae92c82b7566d6de4cafe27a2f5cbd09207e7
+
 permissions:
   contents: write
 
 jobs:
   release:
-    if: github.repository == 'mvkaiii/metaphysics-lab' && github.ref == 'refs/heads/main' && inputs.release_authorized == true && github.sha == inputs.expected_merged_sha
+    if: github.repository == 'mvkaiii/metaphysics-lab' && github.ref == 'refs/heads/main' && ((github.event_name == 'push' && contains(github.event.head_commit.message, 'Merge pull request #249')) || (github.event_name == 'workflow_dispatch' && inputs.release_authorized == true && github.sha == inputs.expected_merged_sha))
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout exact merged SHA
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.expected_merged_sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 0
       - name: Verify exact main SHA and frozen digest input
         env:
-          EXPECTED_SHA: ${{ inputs.expected_merged_sha }}
-          EXPECTED_DIGEST: ${{ inputs.expected_package_sha256 }}
+          EXPECTED_SHA: ${{ github.sha }}
+          EXPECTED_DIGEST: ${{ env.EXPECTED_PACKAGE_SHA256 }}
         run: |
           test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
           test "$(git rev-parse origin/main)" = "$EXPECTED_SHA"
           echo "$EXPECTED_DIGEST" | grep -Eq '^[a-f0-9]{64}$'
+      - name: Verify exact authorized source and release scope
+        run: |
+          git merge-base --is-ancestor "$APPROVED_RC_BASE_SHA" "$GITHUB_SHA"
+          git diff --name-only "$APPROVED_RC_BASE_SHA" "$GITHUB_SHA" | while IFS= read -r changed; do
+            case "$changed" in
+              VERSION.md|CHANGELOG.md|README.md|docs/架構說明.md|docs/快速開始.md|docs/安裝到ChatGPT-Project.md|docs/更新與版本同步.md|docs/發布說明-v1.9.1.md|docs/release/v1.9.1-qualification.md|tests/test_v191_patch_contract.py|tests/test_v17_docs.py|tests/test_v17_post_release_docs.py|tests/test_ai_distribution_acceptance.py|tests/test_v19_release_execution.py|.github/workflows/release-v1.9.1.yml) ;;
+              *) echo "Unapproved release-scope change: $changed"; exit 1 ;;
+            esac
+          done
+          grep -Fxq 'release_execution_authorized: true' docs/release/v1.9.1-qualification.md
+          test "$(git rev-parse origin/main)" = "$GITHUB_SHA"
       - name: Refuse publication of unfinished release documentation
         run: |
           ! grep -q '尚未正式發布' docs/發布說明-v1.9.1.md
           grep -Fq 'Metaphysics Lab Core：**v1.9.1**' VERSION.md
+          grep -Fq 'status: RELEASE_EXECUTION_APPROVED_REQUALIFICATION_REQUIRED' docs/release/v1.9.1-qualification.md
       - name: Set up Python 3.9
         uses: actions/setup-python@v5
         with:
@@ -56,6 +79,7 @@ jobs:
           python tools/build_ai_distribution.py --check
           python tools/run_v17_release_surface_validation.py --json
           python -m unittest discover -s tests -p 'test_*.py' -v
+          python -m unittest tests.test_ai_distribution_portability -v
           python -m compileall -q engine renderers tools tests
           python -c "compile(open('dist/ai/metaphysics_lab.py', encoding='utf-8').read(), 'dist/ai/metaphysics_lab.py', 'exec')"
       - name: Scan release assets and verify clean tree
@@ -70,7 +94,7 @@ jobs:
           test -z "$(git status --porcelain)"
       - name: Double-build verified package with pinned SHA256
         env:
-          EXPECTED_DIGEST: ${{ inputs.expected_package_sha256 }}
+          EXPECTED_DIGEST: ${{ env.EXPECTED_PACKAGE_SHA256 }}
         run: |
           python tools/build_release_package.py --verify --output "$RUNNER_TEMP/Metaphysics-Lab-v1.9.1-User-Package.zip"
           python tools/build_release_package.py --verify --output "$RUNNER_TEMP/second.zip"
@@ -96,7 +120,7 @@ jobs:
       - name: Verify tag, release assets and downloaded package digest
         env:
           GH_TOKEN: ${{ github.token }}
-          EXPECTED_DIGEST: ${{ inputs.expected_package_sha256 }}
+          EXPECTED_DIGEST: ${{ env.EXPECTED_PACKAGE_SHA256 }}
         run: |
           git fetch --tags
           test "$(git rev-list -n 1 v1.9.1)" = "$GITHUB_SHA"
