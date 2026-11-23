@@ -57,10 +57,10 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          forbidden = {'驗證事件紀錄.md', 'Kai_CDBF04_05_驗證事件紀錄.md', 'adjudication-1.json'}
+          forbidden = {'驗證事件紀錄.md', 'adjudication-1.json'}
           for root in (Path('dist/ai'), Path('docs/release')):
               for item in root.rglob('*'):
-                  assert not (item.is_file() and item.name in forbidden), str(item)
+                  assert not (item.is_file() and (item.name in forbidden or item.name.endswith('_05_驗證事件紀錄.md'))), str(item)
           PY
           git diff --exit-code
           test -z "$(git status --porcelain)"
